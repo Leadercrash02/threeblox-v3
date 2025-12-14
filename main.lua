@@ -1,5 +1,5 @@
 --// THREEBLOX HUB - FISH IT
---// FULL GUI (DRAG + MINIMIZE + ICON TAB)
+--// FULL GUI (DRAG + MINIMIZE + ICON TAB + CLOSE)
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -74,15 +74,28 @@ rightText.TextXAlignment = Enum.TextXAlignment.Right
 rightText.TextColor3 = Color3.fromRGB(40, 40, 40)
 rightText.Text = "Premium | discord.gg/yourcode"
 rightText.AnchorPoint = Vector2.new(1, 0)
-rightText.Position = UDim2.new(1, -40, 0, 12)
+rightText.Position = UDim2.new(1, -70, 0, 12)
 rightText.Size = UDim2.new(0.4, 0, 1, 0)
 rightText.Parent = header
+
+-- Close button [X]
+local closeBtn = Instance.new("TextButton")
+closeBtn.Name = "Close"
+closeBtn.AnchorPoint = Vector2.new(1, 0.5)
+closeBtn.Position = UDim2.new(1, -8, 0.5, 0)
+closeBtn.Size = UDim2.new(0, 24, 0, 24)
+closeBtn.BackgroundTransparency = 1
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 18
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+closeBtn.Parent = header
 
 -- Minimize button [-]
 local miniBtn = Instance.new("TextButton")
 miniBtn.Name = "Minimize"
 miniBtn.AnchorPoint = Vector2.new(1, 0.5)
-miniBtn.Position = UDim2.new(1, -8, 0.5, 0)
+miniBtn.Position = UDim2.new(1, -32, 0.5, 0)
 miniBtn.Size = UDim2.new(0, 24, 0, 24)
 miniBtn.BackgroundTransparency = 1
 miniBtn.Font = Enum.Font.GothamBold
@@ -117,6 +130,10 @@ end)
 miniIcon.MouseButton1Click:Connect(function()
     main.Visible = true
     miniIcon.Visible = false
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
 end)
 
 --========== DRAG LOGIC ==========--
@@ -195,7 +212,7 @@ paddingContent.PaddingLeft = UDim.new(0, 12)
 paddingContent.PaddingRight = UDim.new(0, 12)
 paddingContent.PaddingBottom = UDim.new(0, 8)
 
---========== TAB BUTTON CREATOR (DENGAN ICON) ==========--
+--========== TAB BUTTON CREATOR (ICON) ==========--
 local function createTabButton(text, imageId)
     local btn = Instance.new("TextButton")
     btn.Size = UDim2.new(1, 0, 0, 32)
@@ -206,7 +223,7 @@ local function createTabButton(text, imageId)
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 14
     btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.Text = "   " .. text  -- spasi buat icon kiri
+    btn.Text = "   " .. text
 
     local c = Instance.new("UICorner", btn)
     c.CornerRadius = UDim.new(0, 6)
@@ -221,8 +238,7 @@ local function createTabButton(text, imageId)
     icon.Size = UDim2.new(0, 18, 0, 18)
     icon.Position = UDim2.new(0, 8, 0.5, 0)
     icon.AnchorPoint = Vector2.new(0, 0.5)
-    -- GANTI ID ICON DI SINI
-    if imageId then
+    if imageId and imageId ~= 0 then
         icon.Image = "rbxassetid://" .. tostring(imageId)
     end
     icon.Parent = btn
@@ -231,13 +247,16 @@ local function createTabButton(text, imageId)
     return btn
 end
 
---========== PAGES & TABS ==========--
+--========== TABS & PAGES ==========--
 local tabInfo = {
-    Main     = 0,  -- isi ID icon lu
-    Auto     = 0,
-    Teleport = 0,
-    Misc     = 0,
-    Info     = 0,
+    ["Main"]        = 0,
+    ["Auto Fish"]   = 0,
+    ["Backpack"]    = 0,
+    ["Teleport"]    = 0,
+    ["Quest"]       = 0,
+    ["Shop & Trade"]= 0,
+    ["Misc"]        = 0,
+    ["Info"]        = 0,
 }
 
 local pages = {}
@@ -273,7 +292,7 @@ for name, btn in pairs(buttons) do
     end)
 end
 
---========== INFO PAGE (Information / Update) ==========--
+--========== INFO PAGE ==========--
 local infoPage = pages["Info"]
 
 local infoTitle = Instance.new("TextLabel")
@@ -316,8 +335,7 @@ createInfoLine("- Added Teleport Menu", 1)
 createInfoLine("- Added Custom Settings", 2)
 
 --========== MAIN PAGE ==========--
-local mainPage = pages["AUTO FISH"]
-
+local mainPage = pages["Main"]
 local mainLabel = Instance.new("TextLabel")
 mainLabel.BackgroundTransparency = 1
 mainLabel.Font = Enum.Font.GothamBold
@@ -329,23 +347,56 @@ mainLabel.Position = UDim2.new(0, 4, 0, 2)
 mainLabel.Size = UDim2.new(1, -8, 0, 24)
 mainLabel.Parent = mainPage
 
---========== MAIN PAGE ==========--
-local mainPage = pages["Backpack"]
+--========== AUTO FISH PAGE ==========--
+local autoPage = pages["Auto Fish"]
+local autoTitle = Instance.new("TextLabel")
+autoTitle.BackgroundTransparency = 1
+autoTitle.Font = Enum.Font.GothamBold
+autoTitle.TextSize = 18
+autoTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoTitle.TextXAlignment = Enum.TextXAlignment.Left
+autoTitle.Text = "Auto Fish"
+autoTitle.Position = UDim2.new(0, 4, 0, 2)
+autoTitle.Size = UDim2.new(1, -8, 0, 24)
+autoTitle.Parent = autoPage
 
-local mainLabel = Instance.new("TextLabel")
-mainLabel.BackgroundTransparency = 1
-mainLabel.Font = Enum.Font.GothamBold
-mainLabel.TextSize = 18
-mainLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-mainLabel.TextXAlignment = Enum.TextXAlignment.Left
-mainLabel.Text = "Backpack"
-mainLabel.Position = UDim2.new(0, 4, 0, 2)
-mainLabel.Size = UDim2.new(1, -8, 0, 24)
-mainLabel.Parent = backpackPage
+-- dummy toggle
+local autoBtn = Instance.new("TextButton")
+autoBtn.BackgroundColor3 = Color3.fromRGB(20, 30, 45)
+autoBtn.BorderSizePixel = 0
+autoBtn.Font = Enum.Font.Gotham
+autoBtn.TextSize = 14
+autoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+autoBtn.Text = "Auto Fish [OFF]"
+autoBtn.Position = UDim2.new(0, 4, 0, 34)
+autoBtn.Size = UDim2.new(0, 160, 0, 28)
+autoBtn.Parent = autoPage
+
+local autoBtnCorner = Instance.new("UICorner", autoBtn)
+autoBtnCorner.CornerRadius = UDim.new(0, 6)
+
+local autoState = false
+autoBtn.MouseButton1Click:Connect(function()
+    autoState = not autoState
+    autoBtn.Text = "Auto Fish [" .. (autoState and "ON" or "OFF") .. "]"
+    -- logic auto fish lu taruh di sini
+end)
+
+--========== BACKPACK PAGE ==========--
+local backpackPage = pages["Backpack"]
+local backpackLabel = Instance.new("TextLabel")
+backpackLabel.BackgroundTransparency = 1
+backpackLabel.Font = Enum.Font.GothamBold
+backpackLabel.TextSize = 18
+backpackLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+backpackLabel.TextXAlignment = Enum.TextXAlignment.Left
+backpackLabel.Text = "Backpack"
+backpackLabel.Position = UDim2.new(0, 4, 0, 2)
+backpackLabel.Size = UDim2.new(1, -8, 0, 24)
+backpackLabel.Parent = backpackPage
 
 --========== TELEPORT PAGE ==========--
 local tpPage = pages["Teleport"]
-
 local tpTitle = Instance.new("TextLabel")
 tpTitle.BackgroundTransparency = 1
 tpTitle.Font = Enum.Font.GothamBold
@@ -357,37 +408,34 @@ tpTitle.Position = UDim2.new(0, 4, 0, 2)
 tpTitle.Size = UDim2.new(1, -8, 0, 24)
 tpTitle.Parent = tpPage
 
---========== Quest ==========--
-local tpPage = pages["Quest"]
+--========== QUEST PAGE ==========--
+local questPage = pages["Quest"]
+local questTitle = Instance.new("TextLabel")
+questTitle.BackgroundTransparency = 1
+questTitle.Font = Enum.Font.GothamBold
+questTitle.TextSize = 18
+questTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+questTitle.TextXAlignment = Enum.TextXAlignment.Left
+questTitle.Text = "Quest"
+questTitle.Position = UDim2.new(0, 4, 0, 2)
+questTitle.Size = UDim2.new(1, -8, 0, 24)
+questTitle.Parent = questPage
 
-local tpTitle = Instance.new("TextLabel")
-tpTitle.BackgroundTransparency = 1
-tpTitle.Font = Enum.Font.GothamBold
-tpTitle.TextSize = 18
-tpTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-tpTitle.TextXAlignment = Enum.TextXAlignment.Left
-tpTitle.Text = "Quest"
-tpTitle.Position = UDim2.new(0, 4, 0, 2)
-tpTitle.Size = UDim2.new(1, -8, 0, 24)
-tpTitle.Parent = QuestPage
-
---========== Shop & Trade ==========--
-local tpPage = pages["Shop & Trade"]
-
-local tpTitle = Instance.new("TextLabel")
-tpTitle.BackgroundTransparency = 1
-tpTitle.Font = Enum.Font.GothamBold
-tpTitle.TextSize = 18
-tpTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-tpTitle.TextXAlignment = Enum.TextXAlignment.Left
-tpTitle.Text = "Shop & Trade"
-tpTitle.Position = UDim2.new(0, 4, 0, 2)
-tpTitle.Size = UDim2.new(1, -8, 0, 24)
-tpTitle.Parent = Shop&tradePage
+--========== SHOP & TRADE PAGE ==========--
+local shopPage = pages["Shop & Trade"]
+local shopTitle = Instance.new("TextLabel")
+shopTitle.BackgroundTransparency = 1
+shopTitle.Font = Enum.Font.GothamBold
+shopTitle.TextSize = 18
+shopTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+shopTitle.TextXAlignment = Enum.TextXAlignment.Left
+shopTitle.Text = "Shop & Trade"
+shopTitle.Position = UDim2.new(0, 4, 0, 2)
+shopTitle.Size = UDim2.new(1, -8, 0, 24)
+shopTitle.Parent = shopPage
 
 --========== MISC PAGE ==========--
 local miscPage = pages["Misc"]
-
 local miscTitle = Instance.new("TextLabel")
 miscTitle.BackgroundTransparency = 1
 miscTitle.Font = Enum.Font.GothamBold
