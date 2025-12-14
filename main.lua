@@ -1,5 +1,5 @@
 --// THREEBLOX HUB - FISH IT
---// FIX 1 FULL GUI (RIGHT TAB, PAGE SYSTEM OK)
+--// FIX 2 FULL GUI (RIGHT TAB + DRAG + MINIMIZE + CLOSE)
 
 --================ SERVICES ================--
 local Players = game:GetService("Players")
@@ -17,11 +17,10 @@ pcall(function()
 end)
 
 --================ ROOT ================--
-local gui = Instance.new("ScreenGui")
+local gui = Instance.new("ScreenGui", pg)
 gui.Name = "ThreebloxHub"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
-gui.Parent = pg
 
 --================ MAIN PANEL ================--
 local main = Instance.new("Frame", gui)
@@ -35,25 +34,76 @@ main.BorderSizePixel = 0
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 18)
 Instance.new("UIStroke", main).Transparency = 0.6
 
---================ HEADER ================--
+--================ HEADER (DRAG AREA) ================--
 local header = Instance.new("Frame", main)
-header.Size = UDim2.new(1, -120, 0, 46)
+header.Size = UDim2.new(1, -140, 0, 40)
 header.Position = UDim2.new(0, 20, 0, 14)
 header.BackgroundTransparency = 1
 
 local title = Instance.new("TextLabel", header)
-title.Size = UDim2.new(1, 0, 1, 0)
+title.Size = UDim2.new(1, -60, 1, 0)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
-title.TextSize = 26
+title.TextSize = 24
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.TextColor3 = Color3.fromRGB(255,255,255)
 title.Text = "Information"
 
+--================ HEADER BUTTONS ================--
+local btnClose = Instance.new("TextButton", header)
+btnClose.Size = UDim2.new(0, 28, 0, 28)
+btnClose.Position = UDim2.new(1, -28, 0.5, -14)
+btnClose.BackgroundColor3 = Color3.fromRGB(200, 60, 60)
+btnClose.Text = "X"
+btnClose.Font = Enum.Font.GothamBold
+btnClose.TextSize = 14
+btnClose.TextColor3 = Color3.new(1,1,1)
+btnClose.BorderSizePixel = 0
+Instance.new("UICorner", btnClose).CornerRadius = UDim.new(1,0)
+
+local btnMin = Instance.new("TextButton", header)
+btnMin.Size = UDim2.new(0, 28, 0, 28)
+btnMin.Position = UDim2.new(1, -62, 0.5, -14)
+btnMin.BackgroundColor3 = Color3.fromRGB(255, 191, 0)
+btnMin.Text = "-"
+btnMin.Font = Enum.Font.GothamBold
+btnMin.TextSize = 18
+btnMin.TextColor3 = Color3.new(0,0,0)
+btnMin.BorderSizePixel = 0
+Instance.new("UICorner", btnMin).CornerRadius = UDim.new(1,0)
+
+--================ MINIMIZED ICON ================--
+local mini = Instance.new("TextButton", gui)
+mini.Visible = false
+mini.Size = UDim2.new(0, 140, 0, 34)
+mini.Position = UDim2.new(0, 20, 1, -50)
+mini.AnchorPoint = Vector2.new(0,1)
+mini.BackgroundColor3 = Color3.fromRGB(18,22,32)
+mini.Text = "Threeblox Hub"
+mini.Font = Enum.Font.Gotham
+mini.TextSize = 14
+mini.TextColor3 = Color3.new(1,1,1)
+mini.BorderSizePixel = 0
+Instance.new("UICorner", mini).CornerRadius = UDim.new(0,12)
+
+btnMin.MouseButton1Click:Connect(function()
+    main.Visible = false
+    mini.Visible = true
+end)
+
+mini.MouseButton1Click:Connect(function()
+    main.Visible = true
+    mini.Visible = false
+end)
+
+btnClose.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
+
 --================ CONTENT AREA ================--
 local content = Instance.new("Frame", main)
 content.Position = UDim2.new(0, 20, 0, 70)
-content.Size = UDim2.new(1, -140, 1, -90)
+content.Size = UDim2.new(1, -160, 1, -90)
 content.BackgroundTransparency = 1
 
 --================ PAGE SYSTEM ================--
@@ -78,7 +128,7 @@ local function createPage(name)
     return page
 end
 
---================ INFORMATION PAGE (ISI) ================--
+--================ INFORMATION PAGE ================--
 local infoPage = createPage("Information")
 
 local scroll = Instance.new("ScrollingFrame", infoPage)
@@ -116,24 +166,25 @@ layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
     scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 10)
 end)
 
---================ OTHER PAGES (DUMMY BUT REAL) ================--
-local function dummyContent(page, text)
-    local lbl = Instance.new("TextLabel", page)
+--================ OTHER PAGES (DUMMY) ================--
+local function dummy(pageName)
+    local p = createPage(pageName)
+    local lbl = Instance.new("TextLabel", p)
     lbl.Position = UDim2.new(0,0,0,40)
     lbl.Size = UDim2.new(1,0,0,24)
     lbl.BackgroundTransparency = 1
     lbl.Font = Enum.Font.Gotham
     lbl.TextSize = 16
     lbl.TextColor3 = Color3.fromRGB(200,200,200)
-    lbl.Text = text
+    lbl.Text = pageName.." UI will be here"
 end
 
-dummyContent(createPage("Auto Option"), "Auto Option UI will be here")
-dummyContent(createPage("Teleport"), "Teleport UI will be here")
-dummyContent(createPage("Misc"), "Miscellaneous options will be here")
-dummyContent(createPage("Event"), "Event menu will be here")
-dummyContent(createPage("Quest"), "Quest helper UI will be here")
-dummyContent(createPage("Shop & Trade"), "Shop & Trade UI will be here")
+dummy("Auto Option")
+dummy("Teleport")
+dummy("Misc")
+dummy("Event")
+dummy("Quest")
+dummy("Shop & Trade")
 
 --================ RIGHT TAB BAR ================--
 local tabBar = Instance.new("Frame", main)
@@ -156,7 +207,6 @@ local tabs = {
 }
 
 local buttons = {}
-local activeBtn
 
 local function switchTab(name)
     for n,p in pairs(pages) do
@@ -166,7 +216,8 @@ local function switchTab(name)
 
     for n,b in pairs(buttons) do
         TweenService:Create(b, TweenInfo.new(0.2), {
-            BackgroundColor3 = n==name and Color3.fromRGB(255,191,0) or Color3.fromRGB(28,32,44)
+            BackgroundColor3 = n==name and Color3.fromRGB(255,191,0)
+                or Color3.fromRGB(28,32,44)
         }):Play()
     end
 end
@@ -191,12 +242,12 @@ for _,name in ipairs(tabs) do
     buttons[name] = btn
 end
 
---================ DEFAULT PAGE ================--
+--================ DEFAULT TAB ================--
 switchTab("Information")
 
---================ DRAG WINDOW ================--
+--================ DRAG LOGIC ================--
 local dragging, dragStart, startPos
-main.InputBegan:Connect(function(i)
+header.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
         dragStart = i.Position
