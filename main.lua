@@ -1,5 +1,5 @@
 --// THREEBLOX HUB | FISH IT
---// FINAL UPDATE (MINIMIZE TOP-RIGHT + DRAGGABLE LOGO)
+--// FINAL FIX (TOP-RIGHT BUTTONS, STABLE)
 
 -- SERVICES
 local Players = game:GetService("Players")
@@ -10,7 +10,7 @@ local pg = lp:WaitForChild("PlayerGui")
 
 -- ROOT GUI
 local gui = Instance.new("ScreenGui")
-gui.Name = "ThreebloxHub_Final"
+gui.Name = "ThreebloxHub_FinalFix"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
 gui.Parent = pg
@@ -30,7 +30,7 @@ miniLogo.ZIndex = 100
 miniLogo.Active = true
 Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
 
--- ================= MAIN =================
+-- ================= MAIN WINDOW =================
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0, 720, 0, 420)
 main.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -48,6 +48,7 @@ header.BackgroundColor3 = Color3.fromRGB(26,30,44)
 header.BorderSizePixel = 0
 header.Active = true
 header.ZIndex = 20
+header.ClipsDescendants = false
 Instance.new("UICorner", header).CornerRadius = UDim.new(0,16)
 
 -- TITLE
@@ -62,10 +63,10 @@ title.TextColor3 = Color3.fromRGB(255,255,255)
 title.Text = "Threeblox | Fish It"
 title.ZIndex = 25
 
--- MINIMIZE (TOP RIGHT)
+-- MINIMIZE (TOP RIGHT - FIXED)
 local minBtn = Instance.new("TextButton", header)
 minBtn.Size = UDim2.new(0, 26, 0, 26)
-minBtn.Position = UDim2.new(1, -66, 8, 0)
+minBtn.Position = UDim2.new(1, -66, 0, 8) -- ✅ FIX
 minBtn.BackgroundColor3 = Color3.fromRGB(255,200,0)
 minBtn.Text = "-"
 minBtn.Font = Enum.Font.GothamBold
@@ -75,10 +76,10 @@ minBtn.BorderSizePixel = 0
 minBtn.ZIndex = 30
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
 
--- CLOSE (TOP RIGHT)
+-- CLOSE (TOP RIGHT - FIXED)
 local closeBtn = Instance.new("TextButton", header)
 closeBtn.Size = UDim2.new(0, 26, 0, 26)
-closeBtn.Position = UDim2.new(1, -34, 8, 0)
+closeBtn.Position = UDim2.new(1, -34, 0, 8) -- ✅ FIX
 closeBtn.BackgroundColor3 = Color3.fromRGB(200,70,70)
 closeBtn.Text = "X"
 closeBtn.Font = Enum.Font.GothamBold
