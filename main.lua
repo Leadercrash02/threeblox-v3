@@ -1,7 +1,6 @@
 --// THREEBLOX V3 | FISH IT
---// FULL UI FINAL | ALL PAGE + ICON FIX
---// UI ONLY | SAFE TO MERGE FEATURE LOGIC
---// PC + ANDROID (XENO / DELTA)
+--// FULL UI FINAL | ICON TEXT (ANTI BLOCK)
+--// UI ONLY | PC + ANDROID SAFE (XENO / DELTA)
 
 --================ SERVICES =================--
 local Players = game:GetService("Players")
@@ -29,25 +28,13 @@ local TEXT   = Color3.fromRGB(235,235,235)
 local MUTED  = Color3.fromRGB(180,180,180)
 local ACCENT = Color3.fromRGB(170,80,255)
 
--- ICON ASSET (PUBLIC ROBLOX)
-local ICONS = {
-	AutoFishing = "rbxassetid://6034509993",
-	Legit       = "rbxassetid://6031068433",
-	Blatant     = "rbxassetid://6034287525",
-	Farm        = "rbxassetid://6034328955",
-	Favorite    = "rbxassetid://6031265976",
-	Sell        = "rbxassetid://6034509983",
-	Totem       = "rbxassetid://6035047377",
-	Potion      = "rbxassetid://6034328940",
-}
-
 --================ ROOT GUI =================--
 local gui = Instance.new("ScreenGui", pg)
 gui.Name = "ThreebloxV3"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
 
---================ MINI LOGO (MINIMIZE) =================--
+--================ MINI LOGO =================--
 local mini = Instance.new("ImageButton", gui)
 mini.Size = UDim2.new(0,56,0,56)
 mini.Position = UDim2.new(0,20,1,-80)
@@ -74,7 +61,7 @@ do
 	UIS.InputEnded:Connect(function() drag=false end)
 end
 
---================ MAIN WINDOW =================--
+--================ MAIN =================--
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0,900,0,520)
 main.Position = UDim2.new(0.5,0,0.5,0)
@@ -192,19 +179,20 @@ list.Padding = UDim.new(0,10)
 Instance.new("UIPadding", auto).PaddingTop = UDim.new(0,16)
 Instance.new("UIPadding", auto).PaddingLeft = UDim.new(0,16)
 
-local function autoItem(text, iconId)
+local function autoItem(icon, text)
 	local f = Instance.new("Frame", auto)
 	f.Size = UDim2.new(1,-32,0,42)
 	f.BackgroundColor3 = CARD
-	f.BorderSizePixel = 0
 	Instance.new("UICorner", f).CornerRadius = UDim.new(0,10)
 
-	local icon = Instance.new("ImageLabel", f)
-	icon.Size = UDim2.new(0,20,0,20)
-	icon.Position = UDim2.new(0,14,0.5,-10)
-	icon.BackgroundTransparency = 1
-	icon.Image = iconId
-	icon.ImageColor3 = MUTED
+	local ic = Instance.new("TextLabel", f)
+	ic.Size = UDim2.new(0,32,1,0)
+	ic.Position = UDim2.new(0,10,0,0)
+	ic.BackgroundTransparency = 1
+	ic.Font = Enum.Font.GothamBold
+	ic.TextSize = 18
+	ic.TextColor3 = ACCENT
+	ic.Text = icon
 
 	local t = Instance.new("TextLabel", f)
 	t.Text = text
@@ -217,23 +205,23 @@ local function autoItem(text, iconId)
 	t.TextXAlignment = Enum.TextXAlignment.Left
 
 	local arrow = Instance.new("TextLabel", f)
-	arrow.Text = ">"
+	arrow.Text = "›"
 	arrow.Font = Enum.Font.GothamBold
-	arrow.TextSize = 18
+	arrow.TextSize = 22
 	arrow.TextColor3 = MUTED
 	arrow.BackgroundTransparency = 1
 	arrow.Size = UDim2.new(0,24,1,0)
 	arrow.Position = UDim2.new(1,-28,0,0)
 end
 
-autoItem("Auto Fishing", ICONS.AutoFishing)
-autoItem("Legit Perfect", ICONS.Legit)
-autoItem("Blatant Fishing", ICONS.Blatant)
-autoItem("Auto Farm Island", ICONS.Farm)
-autoItem("Auto Favorite", ICONS.Favorite)
-autoItem("Auto Sell", ICONS.Sell)
-autoItem("Auto Totem", ICONS.Totem)
-autoItem("Auto Potion", ICONS.Potion)
+autoItem("🎣","Auto Fishing")
+autoItem("🧠","Legit Perfect")
+autoItem("🔥","Blatant Fishing")
+autoItem("🏝️","Auto Farm Island")
+autoItem("⭐","Auto Favorite")
+autoItem("💰","Auto Sell")
+autoItem("🗿","Auto Totem")
+autoItem("🧪","Auto Potion")
 
 pages["Auto Option"].Visible = true
 
