@@ -1,5 +1,5 @@
 --// THREEBLOX HUB | FISH IT
---// FINAL FIX (STABLE, MANUAL UI)
+--// FINAL UPDATE (MINIMIZE TOP-RIGHT + DRAGGABLE LOGO)
 
 -- SERVICES
 local Players = game:GetService("Players")
@@ -15,10 +15,10 @@ gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
 gui.Parent = pg
 
--- ================= MINI LOGO =================
+-- ================= MINI LOGO (DRAGGABLE) =================
 local miniLogo = Instance.new("TextButton", gui)
-miniLogo.Size = UDim2.new(0, 46, 0, 46)
-miniLogo.Position = UDim2.new(0, 16, 0.5, -23)
+miniLogo.Size = UDim2.new(0, 48, 0, 48)
+miniLogo.Position = UDim2.new(0, 20, 0.5, -24)
 miniLogo.BackgroundColor3 = Color3.fromRGB(255,200,0)
 miniLogo.Text = "TB"
 miniLogo.Font = Enum.Font.GothamBold
@@ -27,6 +27,7 @@ miniLogo.TextColor3 = Color3.fromRGB(30,30,30)
 miniLogo.BorderSizePixel = 0
 miniLogo.Visible = false
 miniLogo.ZIndex = 100
+miniLogo.Active = true
 Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
 
 -- ================= MAIN =================
@@ -42,6 +43,7 @@ Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 -- ================= HEADER =================
 local header = Instance.new("Frame", main)
 header.Size = UDim2.new(1, 0, 0, 42)
+header.Position = UDim2.new(0, 0, 0, 0)
 header.BackgroundColor3 = Color3.fromRGB(26,30,44)
 header.BorderSizePixel = 0
 header.Active = true
@@ -60,7 +62,7 @@ title.TextColor3 = Color3.fromRGB(255,255,255)
 title.Text = "Threeblox | Fish It"
 title.ZIndex = 25
 
--- MINIMIZE
+-- MINIMIZE (TOP RIGHT)
 local minBtn = Instance.new("TextButton", header)
 minBtn.Size = UDim2.new(0, 26, 0, 26)
 minBtn.Position = UDim2.new(1, -66, 8, 0)
@@ -73,7 +75,7 @@ minBtn.BorderSizePixel = 0
 minBtn.ZIndex = 30
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
 
--- CLOSE
+-- CLOSE (TOP RIGHT)
 local closeBtn = Instance.new("TextButton", header)
 closeBtn.Size = UDim2.new(0, 26, 0, 26)
 closeBtn.Position = UDim2.new(1, -34, 8, 0)
@@ -136,13 +138,7 @@ boxText.TextWrapped = true
 boxText.TextXAlignment = Enum.TextXAlignment.Left
 boxText.TextYAlignment = Enum.TextYAlignment.Top
 boxText.TextColor3 = Color3.fromRGB(220,220,220)
-boxText.Text =
-[[Update v2.0
-- Added Auto Option
-- Added Teleport Menu
-- Added Quest System
-- Improved UI Stability
-]]
+boxText.Text = "Information page content."
 
 -- ================= MENU =================
 local menus = {
@@ -156,7 +152,6 @@ local menus = {
 }
 
 local activeBtn
-
 for _,name in ipairs(menus) do
     local btn = Instance.new("TextButton", sidebar)
     btn.Size = UDim2.new(1, -20, 0, 36)
@@ -178,9 +173,8 @@ for _,name in ipairs(menus) do
         btn.BackgroundColor3 = Color3.fromRGB(255,200,0)
         btn.TextColor3 = Color3.fromRGB(30,30,30)
         activeBtn = btn
-
         pageTitle.Text = name
-        boxText.Text = name.." page content here."
+        boxText.Text = name.." page content."
     end)
 
     if name == "Information" then
@@ -190,7 +184,7 @@ for _,name in ipairs(menus) do
     end
 end
 
--- ================= DRAG =================
+-- ================= DRAG MAIN =================
 local dragging, dragStart, startPos
 header.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -210,6 +204,30 @@ header.InputChanged:Connect(function(i)
         main.Position = UDim2.new(
             startPos.X.Scale, startPos.X.Offset + delta.X,
             startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- ================= DRAG MINI LOGO =================
+local logoDrag, logoStart, logoPos
+miniLogo.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        logoDrag = true
+        logoStart = i.Position
+        logoPos = miniLogo.Position
+    end
+end)
+miniLogo.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        logoDrag = false
+    end
+end)
+miniLogo.InputChanged:Connect(function(i)
+    if logoDrag and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = i.Position - logoStart
+        miniLogo.Position = UDim2.new(
+            logoPos.X.Scale, logoPos.X.Offset + delta.X,
+            logoPos.Y.Scale, logoPos.Y.Offset + delta.Y
         )
     end
 end)
