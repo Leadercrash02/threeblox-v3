@@ -1,4 +1,5 @@
---// Threeblox Hub - Fish It (Draggable + Minimize)
+--// THREEBLOX HUB - FISH IT
+--// FULL GUI (DRAG + MINIMIZE + ICON TAB)
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -6,7 +7,7 @@ local UserInputService = game:GetService("UserInputService")
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
---===== ROOT GUI =====--
+--========== ROOT GUI ==========--
 local gui = Instance.new("ScreenGui")
 gui.Name = "ThreebloxHub"
 gui.ResetOnSpawn = false
@@ -14,7 +15,7 @@ gui.IgnoreGuiInset = true
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = pg
 
---===== MAIN WINDOW =====--
+--========== MAIN WINDOW ==========--
 local main = Instance.new("Frame")
 main.Name = "MainWindow"
 main.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -32,7 +33,7 @@ mainStroke.Color = Color3.fromRGB(0, 0, 0)
 mainStroke.Thickness = 1
 mainStroke.Transparency = 0.4
 
---===== HEADER (drag handle) =====--
+--========== HEADER (DRAG HANDLE) ==========--
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 40)
@@ -90,7 +91,7 @@ miniBtn.Text = "-"
 miniBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 miniBtn.Parent = header
 
---===== MINIMIZED ICON =====--
+--========== MINIMIZED ICON ==========--
 local miniIcon = Instance.new("TextButton")
 miniIcon.Name = "MiniIcon"
 miniIcon.Visible = false
@@ -108,21 +109,21 @@ miniIcon.Parent = gui
 local miniCorner = Instance.new("UICorner", miniIcon)
 miniCorner.CornerRadius = UDim.new(0, 6)
 
-miniIcon.MouseButton1Click:Connect(function()
-    main.Visible = true
-    miniIcon.Visible = false
-end)
-
 miniBtn.MouseButton1Click:Connect(function()
     main.Visible = false
     miniIcon.Visible = true
 end)
 
---===== DRAG FUNCTION (header drag main) =====--
+miniIcon.MouseButton1Click:Connect(function()
+    main.Visible = true
+    miniIcon.Visible = false
+end)
+
+--========== DRAG LOGIC ==========--
 local dragging = false
 local dragInput, dragStart, startPos
 
-local function update(input)
+local function updateDrag(input)
     local delta = input.Position - dragStart
     main.Position = UDim2.new(
         startPos.X.Scale,
@@ -156,15 +157,15 @@ end)
 
 UserInputService.InputChanged:Connect(function(input)
     if input == dragInput and dragging then
-        update(input)
+        updateDrag(input)
     end
 end)
 
---===== SIDEBAR / CONTENT / PAGES SAMA PERSIS SEBELUMNYA =====--
+--========== SIDEBAR ==========--
 local sidebar = Instance.new("Frame")
 sidebar.Name = "Sidebar"
 sidebar.Position = UDim2.new(0, 0, 0, 40)
-sidebar.Size = UDim2.new(0, 140, 1, -40)
+sidebar.Size = UDim2.new(0, 150, 1, -40)
 sidebar.BackgroundColor3 = Color3.fromRGB(10, 15, 22)
 sidebar.BorderSizePixel = 0
 sidebar.Parent = main
@@ -176,36 +177,14 @@ sideLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 
 local paddingSide = Instance.new("UIPadding", sidebar)
 paddingSide.PaddingTop = UDim.new(0, 8)
-paddingSide.PaddingLeft = UDim.new(0, 10)
-paddingSide.PaddingRight = UDim.new(0, 10)
+paddingSide.PaddingLeft = UDim.new(0, 8)
+paddingSide.PaddingRight = UDim.new(0, 8)
 
-local function createTabButton(text)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(18, 26, 38)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BorderSizePixel = 0
-    btn.AutoButtonColor = false
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    btn.Text = text
-
-    local c = Instance.new("UICorner", btn)
-    c.CornerRadius = UDim.new(0, 6)
-
-    local stroke = Instance.new("UIStroke", btn)
-    stroke.Color = Color3.fromRGB(0, 0, 0)
-    stroke.Thickness = 1
-    stroke.Transparency = 0.6
-
-    btn.Parent = sidebar
-    return btn
-end
-
+--========== CONTENT AREA ==========--
 local content = Instance.new("Frame")
 content.Name = "Content"
-content.Position = UDim2.new(0, 140, 0, 40)
-content.Size = UDim2.new(1, -140, 1, -40)
+content.Position = UDim2.new(0, 150, 0, 40)
+content.Size = UDim2.new(1, -150, 1, -40)
 content.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
 content.BorderSizePixel = 0
 content.Parent = main
@@ -216,10 +195,55 @@ paddingContent.PaddingLeft = UDim.new(0, 12)
 paddingContent.PaddingRight = UDim.new(0, 12)
 paddingContent.PaddingBottom = UDim.new(0, 8)
 
-local tabNames = {"Main", "Auto", "Teleport", "Misc", "Info"}
-local pages, buttons = {}, {}
+--========== TAB BUTTON CREATOR (DENGAN ICON) ==========--
+local function createTabButton(text, imageId)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(18, 26, 38)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Text = "   " .. text  -- spasi buat icon kiri
 
-for _, name in ipairs(tabNames) do
+    local c = Instance.new("UICorner", btn)
+    c.CornerRadius = UDim.new(0, 6)
+
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(0, 0, 0)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.6
+
+    local icon = Instance.new("ImageLabel")
+    icon.BackgroundTransparency = 1
+    icon.Size = UDim2.new(0, 18, 0, 18)
+    icon.Position = UDim2.new(0, 8, 0.5, 0)
+    icon.AnchorPoint = Vector2.new(0, 0.5)
+    -- GANTI ID ICON DI SINI
+    if imageId then
+        icon.Image = "rbxassetid://" .. tostring(imageId)
+    end
+    icon.Parent = btn
+
+    btn.Parent = sidebar
+    return btn
+end
+
+--========== PAGES & TABS ==========--
+local tabInfo = {
+    Main     = 0,  -- isi ID icon lu
+    Auto     = 0,
+    Teleport = 0,
+    Misc     = 0,
+    Info     = 0,
+}
+
+local pages = {}
+local buttons = {}
+
+for name, imgId in pairs(tabInfo) do
     local page = Instance.new("Frame")
     page.Name = name .. "Page"
     page.Size = UDim2.new(1, 0, 1, 0)
@@ -228,7 +252,7 @@ for _, name in ipairs(tabNames) do
     page.Parent = content
     pages[name] = page
 
-    local btn = createTabButton(name)
+    local btn = createTabButton(name, imgId)
     buttons[name] = btn
 end
 
@@ -249,7 +273,7 @@ for name, btn in pairs(buttons) do
     end)
 end
 
--- Info page
+--========== INFO PAGE (Information / Update) ==========--
 local infoPage = pages["Info"]
 
 local infoTitle = Instance.new("TextLabel")
@@ -291,8 +315,9 @@ createInfoLine("- Added Auto Fish (edit sendiri)", 0)
 createInfoLine("- Added Teleport Menu", 1)
 createInfoLine("- Added Custom Settings", 2)
 
--- Main page
+--========== MAIN PAGE ==========--
 local mainPage = pages["Main"]
+
 local mainLabel = Instance.new("TextLabel")
 mainLabel.BackgroundTransparency = 1
 mainLabel.Font = Enum.Font.GothamBold
@@ -304,8 +329,9 @@ mainLabel.Position = UDim2.new(0, 4, 0, 2)
 mainLabel.Size = UDim2.new(1, -8, 0, 24)
 mainLabel.Parent = mainPage
 
--- Auto page (dummy toggle)
+--========== AUTO PAGE (DUMMY TOGGLE) ==========--
 local autoPage = pages["Auto"]
+
 local autoTitle = Instance.new("TextLabel")
 autoTitle.BackgroundTransparency = 1
 autoTitle.Font = Enum.Font.GothamBold
@@ -335,11 +361,12 @@ local autoState = false
 autoBtn.MouseButton1Click:Connect(function()
     autoState = not autoState
     autoBtn.Text = "Auto Fish [" .. (autoState and "ON" or "OFF") .. "]"
-    -- logic auto fish lu taruh di sini
+    -- TARUH LOGIC AUTO FISH DI SINI
 end)
 
--- Teleport page
+--========== TELEPORT PAGE ==========--
 local tpPage = pages["Teleport"]
+
 local tpTitle = Instance.new("TextLabel")
 tpTitle.BackgroundTransparency = 1
 tpTitle.Font = Enum.Font.GothamBold
@@ -351,8 +378,9 @@ tpTitle.Position = UDim2.new(0, 4, 0, 2)
 tpTitle.Size = UDim2.new(1, -8, 0, 24)
 tpTitle.Parent = tpPage
 
--- Misc page
+--========== MISC PAGE ==========--
 local miscPage = pages["Misc"]
+
 local miscTitle = Instance.new("TextLabel")
 miscTitle.BackgroundTransparency = 1
 miscTitle.Font = Enum.Font.GothamBold
@@ -364,5 +392,5 @@ miscTitle.Position = UDim2.new(0, 4, 0, 2)
 miscTitle.Size = UDim2.new(1, -8, 0, 24)
 miscTitle.Parent = miscPage
 
--- Default tab
+--========== DEFAULT TAB ==========--
 setActiveTab("Main")
