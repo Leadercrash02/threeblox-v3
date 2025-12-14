@@ -1,510 +1,283 @@
 --// THREEBLOX HUB - FISH IT
---// FULL GUI (DRAG + MINIMIZE + CLOSE + ICON TAB)
+--// UPDATE 1 - FULL STABLE VERSION (ANTI NIL ERROR)
 
-
+--================ SERVICES ================--
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-
+local TweenService = game:GetService("TweenService")
 
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
+--================ SAFE GUARD ================--
+pcall(function()
+    if pg:FindFirstChild("ThreebloxHub") then
+        pg.ThreebloxHub:Destroy()
+    end
+end)
 
---========== ROOT GUI ==========--
+--================ ROOT GUI ================--
 local gui = Instance.new("ScreenGui")
 gui.Name = "ThreebloxHub"
 gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
-gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = pg
 
-
---========== MAIN WINDOW ==========--
+--================ MAIN WINDOW ================--
 local main = Instance.new("Frame")
-main.Name = "MainWindow"
 main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.Position = UDim2.new(0.5, 0, 0.45, 0)
 main.Size = UDim2.new(0, 620, 0, 360)
 main.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
 main.BorderSizePixel = 0
 main.Parent = gui
 
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
+Instance.new("UIStroke", main).Transparency = 0.4
 
-local mainCorner = Instance.new("UICorner", main)
-mainCorner.CornerRadius = UDim.new(0, 10)
+TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {
+    Position = UDim2.new(0.5, 0, 0.5, 0)
+}):Play()
 
-
-local mainStroke = Instance.new("UIStroke", main)
-mainStroke.Color = Color3.fromRGB(0, 0, 0)
-mainStroke.Thickness = 1
-mainStroke.Transparency = 0.4
-
-
---========== HEADER (DRAG HANDLE) ==========--
+--================ HEADER ================--
 local header = Instance.new("Frame")
-header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 40)
 header.BackgroundColor3 = Color3.fromRGB(255, 191, 0)
 header.BorderSizePixel = 0
 header.Parent = main
+Instance.new("UICorner", header).CornerRadius = UDim.new(0, 10)
 
-
-local headerCorner = Instance.new("UICorner", header)
-headerCorner.CornerRadius = UDim.new(0, 10)
-
+local grad = Instance.new("UIGradient", header)
+grad.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255,191,0)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(255,140,0))
+}
 
 local title = Instance.new("TextLabel")
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 title.TextSize = 16
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.TextColor3 = Color3.fromRGB(0, 0, 0)
+title.TextColor3 = Color3.new(0,0,0)
 title.Text = "Threeblox Hub"
 title.Position = UDim2.new(0, 16, 0, 4)
 title.Size = UDim2.new(0.5, 0, 0.5, 0)
 title.Parent = header
 
-
 local subtitle = Instance.new("TextLabel")
 subtitle.BackgroundTransparency = 1
 subtitle.Font = Enum.Font.Gotham
 subtitle.TextSize = 13
-subtitle.TextXAlignment = Enum.TextXAlignment.Left
-subtitle.TextColor3 = Color3.fromRGB(40, 40, 40)
+subtitle.TextColor3 = Color3.fromRGB(40,40,40)
 subtitle.Text = "Fish It"
 subtitle.Position = UDim2.new(0, 16, 0, 20)
 subtitle.Size = UDim2.new(0.5, 0, 0.5, 0)
 subtitle.Parent = header
 
-
-local rightText = Instance.new("TextLabel")
-rightText.BackgroundTransparency = 1
-rightText.Font = Enum.Font.Gotham
-rightText.TextSize = 13
-rightText.TextXAlignment = Enum.TextXAlignment.Right
-rightText.TextColor3 = Color3.fromRGB(40, 40, 40)
-rightText.Text = "Premium | discord.gg/yourcode"
-rightText.AnchorPoint = Vector2.new(1, 0)
-rightText.Position = UDim2.new(1, -70, 0, 12)
-rightText.Size = UDim2.new(0.4, 0, 1, 0)
-rightText.Parent = header
-
-
--- Close button [X]
+-- Close
 local closeBtn = Instance.new("TextButton")
-closeBtn.Name = "Close"
 closeBtn.AnchorPoint = Vector2.new(1, 0.5)
-closeBtn.Position = UDim2.new(1, -8, 0.5, 0)
+closeBtn.Position = UDim2.new(1, -10, 0.5, 0)
 closeBtn.Size = UDim2.new(0, 24, 0, 24)
 closeBtn.BackgroundTransparency = 1
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.TextSize = 18
 closeBtn.Text = "X"
-closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+closeBtn.TextColor3 = Color3.new(0,0,0)
 closeBtn.Parent = header
 
-
--- Minimize button [-]
+-- Minimize
 local miniBtn = Instance.new("TextButton")
-miniBtn.Name = "Minimize"
 miniBtn.AnchorPoint = Vector2.new(1, 0.5)
-miniBtn.Position = UDim2.new(1, -32, 0.5, 0)
+miniBtn.Position = UDim2.new(1, -36, 0.5, 0)
 miniBtn.Size = UDim2.new(0, 24, 0, 24)
 miniBtn.BackgroundTransparency = 1
 miniBtn.Font = Enum.Font.GothamBold
 miniBtn.TextSize = 18
 miniBtn.Text = "-"
-miniBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+miniBtn.TextColor3 = Color3.new(0,0,0)
 miniBtn.Parent = header
 
-
---========== MINIMIZED ICON ==========--
+--================ MINI ICON ================--
 local miniIcon = Instance.new("TextButton")
-miniIcon.Name = "MiniIcon"
 miniIcon.Visible = false
-miniIcon.Size = UDim2.new(0, 120, 0, 30)
+miniIcon.Size = UDim2.new(0, 130, 0, 30)
 miniIcon.Position = UDim2.new(0, 10, 1, -40)
-miniIcon.AnchorPoint = Vector2.new(0, 1)
-miniIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
-miniIcon.BorderSizePixel = 0
+miniIcon.AnchorPoint = Vector2.new(0,1)
+miniIcon.BackgroundColor3 = Color3.fromRGB(15,20,30)
 miniIcon.Text = "Threeblox Hub"
 miniIcon.Font = Enum.Font.Gotham
 miniIcon.TextSize = 14
-miniIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+miniIcon.TextColor3 = Color3.new(1,1,1)
 miniIcon.Parent = gui
-
-
-local miniCorner = Instance.new("UICorner", miniIcon)
-miniCorner.CornerRadius = UDim.new(0, 6)
-
+Instance.new("UICorner", miniIcon).CornerRadius = UDim.new(0,6)
 
 miniBtn.MouseButton1Click:Connect(function()
-    main.Visible = false
-    miniIcon.Visible = true
+    main.Visible = false
+    miniIcon.Visible = true
 end)
-
 
 miniIcon.MouseButton1Click:Connect(function()
-    main.Visible = true
-    miniIcon.Visible = false
+    main.Visible = true
+    miniIcon.Visible = false
 end)
-
 
 closeBtn.MouseButton1Click:Connect(function()
-    gui:Destroy()
+    gui:Destroy()
 end)
 
-
---========== DRAG LOGIC ==========--
-local dragging = false
-local dragInput, dragStart, startPos
-
-
-local function updateDrag(input)
-    local delta = input.Position - dragStart
-    main.Position = UDim2.new(
-        startPos.X.Scale,
-        startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
-        startPos.Y.Offset + delta.Y
-    )
-end
-
-
+--================ DRAG ================--
+local dragging, dragStart, startPos
 header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = main.Position
-
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
 end)
-
-
-header.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
 
 UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        updateDrag(input)
-    end
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
 end)
 
-
---========== SIDEBAR ==========--
+--================ SIDEBAR ================--
 local sidebar = Instance.new("Frame")
-sidebar.Name = "Sidebar"
 sidebar.Position = UDim2.new(0, 0, 0, 40)
 sidebar.Size = UDim2.new(0, 150, 1, -40)
 sidebar.BackgroundColor3 = Color3.fromRGB(10, 15, 22)
-sidebar.BorderSizePixel = 0
 sidebar.Parent = main
 
-
-local sideLayout = Instance.new("UIListLayout")
-sideLayout.Padding = UDim.new(0, 4)
+local sideLayout = Instance.new("UIListLayout", sidebar)
+sideLayout.Padding = UDim.new(0, 6)
 sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-sideLayout.VerticalAlignment = Enum.VerticalAlignment.Top
-sideLayout.Parent = sidebar
 
+Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,8)
 
-local paddingSide = Instance.new("UIPadding")
-paddingSide.PaddingTop   = UDim.new(0, 8)
-paddingSide.PaddingLeft  = UDim.new(0, 8)
-paddingSide.PaddingRight = UDim.new(0, 8)
-paddingSide.Parent = sidebar
-
-
-
-
---========== CONTENT AREA ==========--
+--================ CONTENT ================--
 local content = Instance.new("Frame")
-content.Name = "Content"
-content.Position = UDim2.new(0, 150, 0, 40)
-content.Size = UDim2.new(1, -150, 1, -40)
-content.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
-content.BorderSizePixel = 0
+content.Position = UDim2.new(0,150,0,40)
+content.Size = UDim2.new(1,-150,1,-40)
+content.BackgroundColor3 = Color3.fromRGB(12,18,28)
 content.Parent = main
 
+Instance.new("UIPadding", content).PaddingTop = UDim.new(0,8)
 
-local paddingContent = Instance.new("UIPadding", content)
-paddingContent.PaddingTop = UDim.new(0, 8)
-paddingContent.PaddingLeft = UDim.new(0, 12)
-paddingContent.PaddingRight = UDim.new(0, 12)
-paddingContent.PaddingBottom = UDim.new(0, 8)
+--================ TAB CREATOR ================--
+local function createTab(name)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1,0,0,32)
+    btn.BackgroundColor3 = Color3.fromRGB(18,26,38)
+    btn.Text = "   "..name
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Parent = sidebar
 
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
---========== TAB BUTTON CREATOR (ICON) ==========--
-local function createTabButton(text, imageId)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(18, 26, 38)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BorderSizePixel = 0
-    btn.AutoButtonColor = false
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.Text = "   " .. text
+    btn.MouseEnter:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {
+            BackgroundColor3 = Color3.fromRGB(28,38,55)
+        }):Play()
+    end)
 
+    btn.MouseLeave:Connect(function()
+        TweenService:Create(btn, TweenInfo.new(0.15), {
+            BackgroundColor3 = Color3.fromRGB(18,26,38)
+        }):Play()
+    end)
 
-    local c = Instance.new("UICorner", btn)
-    c.CornerRadius = UDim.new(0, 6)
-
-
-    local stroke = Instance.new("UIStroke", btn)
-    stroke.Color = Color3.fromRGB(0, 0, 0)
-    stroke.Thickness = 1
-    stroke.Transparency = 0.6
-
-
-    local icon = Instance.new("ImageLabel")
-    icon.BackgroundTransparency = 1
-    icon.Size = UDim2.new(0, 18, 0, 18)
-    icon.Position = UDim2.new(0, 8, 0.5, 0)
-    icon.AnchorPoint = Vector2.new(0, 0.5)
-    if imageId and imageId ~= 0 then
-        icon.Image = "rbxassetid://" .. tostring(imageId)
-    end
-    icon.Parent = btn
-
-
-    btn.Parent = sidebar
-    return btn
+    return btn
 end
 
+--================ PAGES ================--
+local tabs = {"Main","Auto Fish","Teleport","Misc","Info"}
+local pages, buttons = {}, {}
 
---========== TABS & PAGES ==========--
-local tabInfo = {
-    ["Main"]         = 0,
-    ["Auto Fish"]    = 0,
-    ["Backpack"]     = 0,
-    ["Teleport"]     = 0,
-    ["Quest"]        = 0,
-    ["Shop & Trade"] = 0,
-    ["Misc"]         = 0,
-    ["Info"]         = 0,
-}
+for _,name in ipairs(tabs) do
+    local page = Instance.new("Frame")
+    page.Size = UDim2.new(1,0,1,0)
+    page.BackgroundTransparency = 1
+    page.Visible = false
+    page.Parent = content
+    pages[name] = page
 
-
-local pages = {}
-local buttons = {}
-
-
-for name, imgId in pairs(tabInfo) do
-    local page = Instance.new("Frame")
-    page.Name = name .. "Page"
-    page.Size = UDim2.new(1, 0, 1, 0)
-    page.BackgroundTransparency = 1
-    page.Visible = false
-    page.Parent = content
-    pages[name] = page
-
-
-    local btn = createTabButton(name, imgId)
-    buttons[name] = btn
+    local btn = createTab(name)
+    buttons[name] = btn
 end
 
-
-local function setActiveTab(name)
-    for n, pg in pairs(pages) do
-        pg.Visible = (n == name)
-    end
-    for n, btn in pairs(buttons) do
-        btn.BackgroundColor3 = (n == name)
-            and Color3.fromRGB(35, 49, 70)
-            or  Color3.fromRGB(18, 26, 38)
-    end
+local function setTab(name)
+    for n,p in pairs(pages) do
+        p.Visible = (n == name)
+    end
+    for n,b in pairs(buttons) do
+        TweenService:Create(b, TweenInfo.new(0.2), {
+            BackgroundColor3 = n==name and Color3.fromRGB(35,49,70) or Color3.fromRGB(18,26,38)
+        }):Play()
+    end
 end
 
-
-for name, btn in pairs(buttons) do
-    btn.MouseButton1Click:Connect(function()
-        setActiveTab(name)
-    end)
+for n,b in pairs(buttons) do
+    b.MouseButton1Click:Connect(function()
+        setTab(n)
+    end)
 end
 
+--================ AUTO FISH LOGIC (SAFE) ================--
+local AutoFish = {Enabled = false}
 
---========== INFO PAGE ==========--
-local infoPage = pages["Info"]
-
-
-local infoTitle = Instance.new("TextLabel")
-infoTitle.BackgroundTransparency = 1
-infoTitle.Font = Enum.Font.GothamBold
-infoTitle.TextSize = 18
-infoTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-infoTitle.TextXAlignment = Enum.TextXAlignment.Left
-infoTitle.Text = "Information"
-infoTitle.Position = UDim2.new(0, 4, 0, 2)
-infoTitle.Size = UDim2.new(1, -8, 0, 24)
-infoTitle.Parent = infoPage
-
-
-local updateTitle = Instance.new("TextLabel")
-updateTitle.BackgroundTransparency = 1
-updateTitle.Font = Enum.Font.GothamBold
-updateTitle.TextSize = 16
-updateTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-updateTitle.TextXAlignment = Enum.TextXAlignment.Left
-updateTitle.Text = "Update : v1.0"
-updateTitle.Position = UDim2.new(0, 4, 0, 30)
-updateTitle.Size = UDim2.new(1, -8, 0, 22)
-updateTitle.Parent = infoPage
-
-
-local function createInfoLine(text, order)
-    local lbl = Instance.new("TextLabel")
-    lbl.BackgroundTransparency = 1
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 14
-    lbl.TextColor3 = Color3.fromRGB(210, 210, 210)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Text = text
-    lbl.Position = UDim2.new(0, 10, 0, 30 + 24 + (order * 20))
-    lbl.Size = UDim2.new(1, -20, 0, 20)
-    lbl.Parent = infoPage
+function AutoFish:Start()
+    if self.Enabled then return end
+    self.Enabled = true
+    task.spawn(function()
+        while self.Enabled do
+            -- taro logic auto fish di sini
+            task.wait(0.25)
+        end
+    end)
 end
 
+function AutoFish:Stop()
+    self.Enabled = false
+end
 
-createInfoLine("- Added Auto Fish (edit sendiri)", 0)
-createInfoLine("- Added Teleport Menu", 1)
-createInfoLine("- Added Custom Settings", 2)
-
-
---========== MAIN PAGE ==========--
-local mainPage = pages["Main"]
-local mainLabel = Instance.new("TextLabel")
-mainLabel.BackgroundTransparency = 1
-mainLabel.Font = Enum.Font.GothamBold
-mainLabel.TextSize = 18
-mainLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-mainLabel.TextXAlignment = Enum.TextXAlignment.Left
-mainLabel.Text = "Main"
-mainLabel.Position = UDim2.new(0, 4, 0, 2)
-mainLabel.Size = UDim2.new(1, -8, 0, 24)
-mainLabel.Parent = mainPage
-
-
---========== AUTO FISH PAGE ==========--
+-- Auto Fish Page
 local autoPage = pages["Auto Fish"]
-local autoTitle = Instance.new("TextLabel")
-autoTitle.BackgroundTransparency = 1
-autoTitle.Font = Enum.Font.GothamBold
-autoTitle.TextSize = 18
-autoTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoTitle.TextXAlignment = Enum.TextXAlignment.Left
-autoTitle.Text = "Auto Fish"
-autoTitle.Position = UDim2.new(0, 4, 0, 2)
-autoTitle.Size = UDim2.new(1, -8, 0, 24)
-autoTitle.Parent = autoPage
-
 
 local autoBtn = Instance.new("TextButton")
-autoBtn.BackgroundColor3 = Color3.fromRGB(20, 30, 45)
-autoBtn.BorderSizePixel = 0
+autoBtn.Size = UDim2.new(0,180,0,30)
+autoBtn.Position = UDim2.new(0,10,0,10)
+autoBtn.BackgroundColor3 = Color3.fromRGB(20,30,45)
+autoBtn.Text = "Auto Fish : DISABLED"
 autoBtn.Font = Enum.Font.Gotham
 autoBtn.TextSize = 14
-autoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoBtn.Text = "Auto Fish [OFF]"
-autoBtn.Position = UDim2.new(0, 4, 0, 34)
-autoBtn.Size = UDim2.new(0, 160, 0, 28)
+autoBtn.TextColor3 = Color3.new(1,1,1)
 autoBtn.Parent = autoPage
+Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0,6)
 
-
-local autoBtnCorner = Instance.new("UICorner", autoBtn)
-autoBtnCorner.CornerRadius = UDim.new(0, 6)
-
-
-local autoState = false
 autoBtn.MouseButton1Click:Connect(function()
-    autoState = not autoState
-    autoBtn.Text = "Auto Fish [" .. (autoState and "ON" or "OFF") .. "]"
-    -- TARUH LOGIC AUTO FISH DI SINI
+    if AutoFish.Enabled then
+        AutoFish:Stop()
+        autoBtn.Text = "Auto Fish : DISABLED"
+    else
+        AutoFish:Start()
+        autoBtn.Text = "Auto Fish : ENABLED"
+    end
 end)
 
-
---========== BACKPACK PAGE ==========--
-local backpackPage = pages["Backpack"]
-local backpackLabel = Instance.new("TextLabel")
-backpackLabel.BackgroundTransparency = 1
-backpackLabel.Font = Enum.Font.GothamBold
-backpackLabel.TextSize = 18
-backpackLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-backpackLabel.TextXAlignment = Enum.TextXAlignment.Left
-backpackLabel.Text = "Backpack"
-backpackLabel.Position = UDim2.new(0, 4, 0, 2)
-backpackLabel.Size = UDim2.new(1, -8, 0, 24)
-backpackLabel.Parent = backpackPage
-
-
---========== TELEPORT PAGE ==========--
-local tpPage = pages["Teleport"]
-local tpTitle = Instance.new("TextLabel")
-tpTitle.BackgroundTransparency = 1
-tpTitle.Font = Enum.Font.GothamBold
-tpTitle.TextSize = 18
-tpTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-tpTitle.TextXAlignment = Enum.TextXAlignment.Left
-tpTitle.Text = "Teleport"
-tpTitle.Position = UDim2.new(0, 4, 0, 2)
-tpTitle.Size = UDim2.new(1, -8, 0, 24)
-tpTitle.Parent = tpPage
-
-
---========== QUEST PAGE ==========--
-local questPage = pages["Quest"]
-local questTitle = Instance.new("TextLabel")
-questTitle.BackgroundTransparency = 1
-questTitle.Font = Enum.Font.GothamBold
-questTitle.TextSize = 18
-questTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-questTitle.TextXAlignment = Enum.TextXAlignment.Left
-questTitle.Text = "Quest"
-questTitle.Position = UDim2.new(0, 4, 0, 2)
-questTitle.Size = UDim2.new(1, -8, 0, 24)
-questTitle.Parent = questPage
-
-
---========== SHOP & TRADE PAGE ==========--
-local shopPage = pages["Shop & Trade"]
-local shopTitle = Instance.new("TextLabel")
-shopTitle.BackgroundTransparency = 1
-shopTitle.Font = Enum.Font.GothamBold
-shopTitle.TextSize = 18
-shopTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-shopTitle.TextXAlignment = Enum.TextXAlignment.Left
-shopTitle.Text = "Shop & Trade"
-shopTitle.Position = UDim2.new(0, 4, 0, 2)
-shopTitle.Size = UDim2.new(1, -8, 0, 24)
-shopTitle.Parent = shopPage
-
-
---========== MISC PAGE ==========--
-local miscPage = pages["Misc"]
-local miscTitle = Instance.new("TextLabel")
-miscTitle.BackgroundTransparency = 1
-miscTitle.Font = Enum.Font.GothamBold
-miscTitle.TextSize = 18
-miscTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-miscTitle.TextXAlignment = Enum.TextXAlignment.Left
-miscTitle.Text = "Misc"
-miscTitle.Position = UDim2.new(0, 4, 0, 2)
-miscTitle.Size = UDim2.new(1, -8, 0, 24)
-miscTitle.Parent = miscPage
-
-
---========== DEFAULT TAB ==========--
-setActiveTab("Main")
+--================ DEFAULT TAB ================--
+setTab("Main")
