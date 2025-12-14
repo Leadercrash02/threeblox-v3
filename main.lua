@@ -1,5 +1,5 @@
 --// THREEBLOX HUB - FISH IT
---// UPDATE 1 - FULL STABLE VERSION (ANTI NIL ERROR)
+--// GUI UPDATE FULL (FOCUS GUI ONLY, NO GAME LOGIC)
 
 --================ SERVICES ================--
 local Players = game:GetService("Players")
@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
---================ SAFE GUARD ================--
+--================ CLEAN DUPLICATE ================--
 pcall(function()
     if pg:FindFirstChild("ThreebloxHub") then
         pg.ThreebloxHub:Destroy()
@@ -35,7 +35,7 @@ main.Parent = gui
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 10)
 Instance.new("UIStroke", main).Transparency = 0.4
 
-TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Quart), {
+TweenService:Create(main, TweenInfo.new(0.35, Enum.EasingStyle.Quart), {
     Position = UDim2.new(0.5, 0, 0.5, 0)
 }):Play()
 
@@ -57,7 +57,7 @@ local title = Instance.new("TextLabel")
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 title.TextSize = 16
-title.TextColor3 = Color3.new(0,0,0)
+title.TextColor3 = Color3.fromRGB(0,0,0)
 title.Text = "Threeblox Hub"
 title.Position = UDim2.new(0, 16, 0, 4)
 title.Size = UDim2.new(0.5, 0, 0.5, 0)
@@ -68,9 +68,9 @@ subtitle.BackgroundTransparency = 1
 subtitle.Font = Enum.Font.Gotham
 subtitle.TextSize = 13
 subtitle.TextColor3 = Color3.fromRGB(40,40,40)
-subtitle.Text = "Fish It"
+subtitle.Text = "Fish It | Premium GUI"
 subtitle.Position = UDim2.new(0, 16, 0, 20)
-subtitle.Size = UDim2.new(0.5, 0, 0.5, 0)
+subtitle.Size = UDim2.new(0.6, 0, 0.5, 0)
 subtitle.Parent = header
 
 -- Close
@@ -100,7 +100,7 @@ miniBtn.Parent = header
 --================ MINI ICON ================--
 local miniIcon = Instance.new("TextButton")
 miniIcon.Visible = false
-miniIcon.Size = UDim2.new(0, 130, 0, 30)
+miniIcon.Size = UDim2.new(0, 140, 0, 30)
 miniIcon.Position = UDim2.new(0, 10, 1, -40)
 miniIcon.AnchorPoint = Vector2.new(0,1)
 miniIcon.BackgroundColor3 = Color3.fromRGB(15,20,30)
@@ -144,10 +144,8 @@ UserInputService.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
         main.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
         )
     end
 end)
@@ -155,29 +153,32 @@ end)
 --================ SIDEBAR ================--
 local sidebar = Instance.new("Frame")
 sidebar.Position = UDim2.new(0, 0, 0, 40)
-sidebar.Size = UDim2.new(0, 150, 1, -40)
+sidebar.Size = UDim2.new(0, 160, 1, -40)
 sidebar.BackgroundColor3 = Color3.fromRGB(10, 15, 22)
+sidebar.BorderSizePixel = 0
 sidebar.Parent = main
 
 local sideLayout = Instance.new("UIListLayout", sidebar)
 sideLayout.Padding = UDim.new(0, 6)
 sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
-Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,8)
+Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,10)
 
 --================ CONTENT ================--
 local content = Instance.new("Frame")
-content.Position = UDim2.new(0,150,0,40)
-content.Size = UDim2.new(1,-150,1,-40)
+content.Position = UDim2.new(0,160,0,40)
+content.Size = UDim2.new(1,-160,1,-40)
 content.BackgroundColor3 = Color3.fromRGB(12,18,28)
+content.BorderSizePixel = 0
 content.Parent = main
 
-Instance.new("UIPadding", content).PaddingTop = UDim.new(0,8)
+Instance.new("UIPadding", content).PaddingTop = UDim.new(0,10)
+Instance.new("UIPadding", content).PaddingLeft = UDim.new(0,12)
 
 --================ TAB CREATOR ================--
-local function createTab(name)
+local function createTabButton(name)
     local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1,0,0,32)
+    btn.Size = UDim2.new(1, -10, 0, 34)
     btn.BackgroundColor3 = Color3.fromRGB(18,26,38)
     btn.Text = "   "..name
     btn.Font = Enum.Font.Gotham
@@ -196,19 +197,31 @@ local function createTab(name)
     end)
 
     btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.15), {
-            BackgroundColor3 = Color3.fromRGB(18,26,38)
-        }):Play()
+        if btn.BackgroundColor3 ~= Color3.fromRGB(35,49,70) then
+            TweenService:Create(btn, TweenInfo.new(0.15), {
+                BackgroundColor3 = Color3.fromRGB(18,26,38)
+            }):Play()
+        end
     end)
 
     return btn
 end
 
---================ PAGES ================--
-local tabs = {"Main","Auto Fish","Teleport","Misc","Info"}
-local pages, buttons = {}, {}
+--================ TABS & PAGES ================--
+local tabNames = {
+    "Auto Fish",
+    "Backpack",
+    "Teleport",
+    "Quest",
+    "Shop & Trade",
+    "Misc",
+    "Info"
+}
 
-for _,name in ipairs(tabs) do
+local pages = {}
+local buttons = {}
+
+for _,name in ipairs(tabNames) do
     local page = Instance.new("Frame")
     page.Size = UDim2.new(1,0,1,0)
     page.BackgroundTransparency = 1
@@ -216,68 +229,39 @@ for _,name in ipairs(tabs) do
     page.Parent = content
     pages[name] = page
 
-    local btn = createTab(name)
+    local title = Instance.new("TextLabel")
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 18
+    title.TextColor3 = Color3.new(1,1,1)
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.Text = name
+    title.Position = UDim2.new(0,0,0,0)
+    title.Size = UDim2.new(1,0,0,26)
+    title.Parent = page
+
+    local btn = createTabButton(name)
     buttons[name] = btn
 end
 
-local function setTab(name)
-    for n,p in pairs(pages) do
-        p.Visible = (n == name)
+local function setTab(active)
+    for name,page in pairs(pages) do
+        page.Visible = (name == active)
     end
-    for n,b in pairs(buttons) do
-        TweenService:Create(b, TweenInfo.new(0.2), {
-            BackgroundColor3 = n==name and Color3.fromRGB(35,49,70) or Color3.fromRGB(18,26,38)
+    for name,btn in pairs(buttons) do
+        TweenService:Create(btn, TweenInfo.new(0.2), {
+            BackgroundColor3 = name == active
+                and Color3.fromRGB(35,49,70)
+                or Color3.fromRGB(18,26,38)
         }):Play()
     end
 end
 
-for n,b in pairs(buttons) do
-    b.MouseButton1Click:Connect(function()
-        setTab(n)
+for name,btn in pairs(buttons) do
+    btn.MouseButton1Click:Connect(function()
+        setTab(name)
     end)
 end
-
---================ AUTO FISH LOGIC (SAFE) ================--
-local AutoFish = {Enabled = false}
-
-function AutoFish:Start()
-    if self.Enabled then return end
-    self.Enabled = true
-    task.spawn(function()
-        while self.Enabled do
-            -- taro logic auto fish di sini
-            task.wait(0.25)
-        end
-    end)
-end
-
-function AutoFish:Stop()
-    self.Enabled = false
-end
-
--- Auto Fish Page
-local autoPage = pages["Auto Fish"]
-
-local autoBtn = Instance.new("TextButton")
-autoBtn.Size = UDim2.new(0,180,0,30)
-autoBtn.Position = UDim2.new(0,10,0,10)
-autoBtn.BackgroundColor3 = Color3.fromRGB(20,30,45)
-autoBtn.Text = "Auto Fish : DISABLED"
-autoBtn.Font = Enum.Font.Gotham
-autoBtn.TextSize = 14
-autoBtn.TextColor3 = Color3.new(1,1,1)
-autoBtn.Parent = autoPage
-Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0,6)
-
-autoBtn.MouseButton1Click:Connect(function()
-    if AutoFish.Enabled then
-        AutoFish:Stop()
-        autoBtn.Text = "Auto Fish : DISABLED"
-    else
-        AutoFish:Start()
-        autoBtn.Text = "Auto Fish : ENABLED"
-    end
-end)
 
 --================ DEFAULT TAB ================--
-setTab("Main")
+setTab("Auto Fish")
