@@ -316,7 +316,7 @@ createInfoLine("- Added Teleport Menu", 1)
 createInfoLine("- Added Custom Settings", 2)
 
 --========== MAIN PAGE ==========--
-local mainPage = pages["Main"]
+local mainPage = pages["AUTO FISH"]
 
 local mainLabel = Instance.new("TextLabel")
 mainLabel.BackgroundTransparency = 1
@@ -329,40 +329,19 @@ mainLabel.Position = UDim2.new(0, 4, 0, 2)
 mainLabel.Size = UDim2.new(1, -8, 0, 24)
 mainLabel.Parent = mainPage
 
---========== AUTO PAGE (DUMMY TOGGLE) ==========--
-local autoPage = pages["Auto"]
+--========== MAIN PAGE ==========--
+local mainPage = pages["Backpack"]
 
-local autoTitle = Instance.new("TextLabel")
-autoTitle.BackgroundTransparency = 1
-autoTitle.Font = Enum.Font.GothamBold
-autoTitle.TextSize = 18
-autoTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoTitle.TextXAlignment = Enum.TextXAlignment.Left
-autoTitle.Text = "Auto"
-autoTitle.Position = UDim2.new(0, 4, 0, 2)
-autoTitle.Size = UDim2.new(1, -8, 0, 24)
-autoTitle.Parent = autoPage
-
-local autoBtn = Instance.new("TextButton")
-autoBtn.BackgroundColor3 = Color3.fromRGB(20, 30, 45)
-autoBtn.BorderSizePixel = 0
-autoBtn.Font = Enum.Font.Gotham
-autoBtn.TextSize = 14
-autoBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-autoBtn.Text = "Auto Fish [OFF]"
-autoBtn.Position = UDim2.new(0, 4, 0, 34)
-autoBtn.Size = UDim2.new(0, 160, 0, 28)
-autoBtn.Parent = autoPage
-
-local autoBtnCorner = Instance.new("UICorner", autoBtn)
-autoBtnCorner.CornerRadius = UDim.new(0, 6)
-
-local autoState = false
-autoBtn.MouseButton1Click:Connect(function()
-    autoState = not autoState
-    autoBtn.Text = "Auto Fish [" .. (autoState and "ON" or "OFF") .. "]"
-    -- TARUH LOGIC AUTO FISH DI SINI
-end)
+local mainLabel = Instance.new("TextLabel")
+mainLabel.BackgroundTransparency = 1
+mainLabel.Font = Enum.Font.GothamBold
+mainLabel.TextSize = 18
+mainLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+mainLabel.TextXAlignment = Enum.TextXAlignment.Left
+mainLabel.Text = "Backpack"
+mainLabel.Position = UDim2.new(0, 4, 0, 2)
+mainLabel.Size = UDim2.new(1, -8, 0, 24)
+mainLabel.Parent = backpackPage
 
 --========== TELEPORT PAGE ==========--
 local tpPage = pages["Teleport"]
@@ -377,6 +356,34 @@ tpTitle.Text = "Teleport"
 tpTitle.Position = UDim2.new(0, 4, 0, 2)
 tpTitle.Size = UDim2.new(1, -8, 0, 24)
 tpTitle.Parent = tpPage
+
+--========== Quest ==========--
+local tpPage = pages["Quest"]
+
+local tpTitle = Instance.new("TextLabel")
+tpTitle.BackgroundTransparency = 1
+tpTitle.Font = Enum.Font.GothamBold
+tpTitle.TextSize = 18
+tpTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpTitle.TextXAlignment = Enum.TextXAlignment.Left
+tpTitle.Text = "Quest"
+tpTitle.Position = UDim2.new(0, 4, 0, 2)
+tpTitle.Size = UDim2.new(1, -8, 0, 24)
+tpTitle.Parent = QuestPage
+
+--========== Shop & Trade ==========--
+local tpPage = pages["Shop & Trade"]
+
+local tpTitle = Instance.new("TextLabel")
+tpTitle.BackgroundTransparency = 1
+tpTitle.Font = Enum.Font.GothamBold
+tpTitle.TextSize = 18
+tpTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpTitle.TextXAlignment = Enum.TextXAlignment.Left
+tpTitle.Text = "Shop & Trade"
+tpTitle.Position = UDim2.new(0, 4, 0, 2)
+tpTitle.Size = UDim2.new(1, -8, 0, 24)
+tpTitle.Parent = Shop&tradePage
 
 --========== MISC PAGE ==========--
 local miscPage = pages["Misc"]
