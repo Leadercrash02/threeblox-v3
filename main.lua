@@ -1,6 +1,7 @@
--- THREEBLOX V3 | FISH IT
--- PREMIUM CLEAN GUI (STABLE, DRAG + MINIMIZE)
+--// THREEBLOX HUB | FISH IT
+--// MANUAL UI (NO FRAMEWORK, STABLE)
 
+-- SERVICES
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 
@@ -8,194 +9,202 @@ local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
 -- ROOT GUI
-local gui = Instance.new("ScreenGui", pg)
-gui.Name = "ThreebloxV3_Premium"
+local gui = Instance.new("ScreenGui")
+gui.Name = "ThreebloxHub"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
+gui.Parent = pg
 
--- MAIN WINDOW
+-- ================= MAIN =================
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 680, 0, 400)
+main.Size = UDim2.new(0, 720, 0, 420)
 main.Position = UDim2.new(0.5, 0, 0.5, 0)
 main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.BackgroundColor3 = Color3.fromRGB(22, 26, 36)
+main.BackgroundColor3 = Color3.fromRGB(20, 25, 35)
 main.BorderSizePixel = 0
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 16)
 
--- SHADOW (FAKE)
-local shadow = Instance.new("Frame", gui)
-shadow.Size = main.Size
-shadow.Position = main.Position + UDim2.new(0, 4, 0, 6)
-shadow.AnchorPoint = main.AnchorPoint
-shadow.BackgroundColor3 = Color3.fromRGB(0,0,0)
-shadow.BackgroundTransparency = 0.6
-shadow.ZIndex = 0
-Instance.new("UICorner", shadow).CornerRadius = UDim.new(0, 16)
-
-main.ZIndex = 1
-
--- HEADER
+-- ================= HEADER =================
 local header = Instance.new("Frame", main)
-header.Size = UDim2.new(1, 0, 0, 44)
-header.BackgroundColor3 = Color3.fromRGB(28, 32, 46)
+header.Size = UDim2.new(1, 0, 0, 42)
+header.BackgroundColor3 = Color3.fromRGB(25, 30, 45)
 header.BorderSizePixel = 0
 header.Active = true
 Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)
 
--- FIX CORNER HEADER
-local fix = Instance.new("Frame", header)
-fix.Size = UDim2.new(1,0,0,22)
-fix.Position = UDim2.new(0,0,1,-22)
-fix.BackgroundColor3 = header.BackgroundColor3
-fix.BorderSizePixel = 0
-
 -- TITLE
 local title = Instance.new("TextLabel", header)
-title.Position = UDim2.new(0, 16, 0, 0)
-title.Size = UDim2.new(1, -140, 1, 0)
+title.Position = UDim2.new(0, 14, 0, 0)
+title.Size = UDim2.new(1, -120, 1, 0)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
-title.TextSize = 20
+title.TextSize = 18
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.TextColor3 = Color3.fromRGB(255,255,255)
-title.Text = "Threeblox V3 | Fish It"
+title.Text = "Threeblox | Fish It"
 
--- CLOSE BUTTON (TOP RIGHT)
-local closeBtn = Instance.new("TextButton", header)
-closeBtn.Size = UDim2.new(0, 28, 0, 28)
-closeBtn.Position = UDim2.new(1, -36, 8, 0)
-closeBtn.Text = "✕"
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 16
-closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
-closeBtn.BorderSizePixel = 0
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
-
--- MINIMIZE BUTTON (LEFT OF CLOSE)
+-- MINIMIZE
 local minBtn = Instance.new("TextButton", header)
-minBtn.Size = UDim2.new(0, 28, 0, 28)
-minBtn.Position = UDim2.new(1, -72, 8, 0)
-minBtn.Text = "—"
+minBtn.Size = UDim2.new(0, 26, 0, 26)
+minBtn.Position = UDim2.new(1, -66, 8, 0)
+minBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+minBtn.Text = "-"
 minBtn.Font = Enum.Font.GothamBold
 minBtn.TextSize = 18
-minBtn.TextColor3 = Color3.fromRGB(20,20,20)
-minBtn.BackgroundColor3 = Color3.fromRGB(255, 191, 0)
+minBtn.TextColor3 = Color3.fromRGB(30,30,30)
 minBtn.BorderSizePixel = 0
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
 
--- SIDEBAR
+-- CLOSE
+local closeBtn = Instance.new("TextButton", header)
+closeBtn.Size = UDim2.new(0, 26, 0, 26)
+closeBtn.Position = UDim2.new(1, -34, 8, 0)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
+closeBtn.Text = "X"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+closeBtn.BorderSizePixel = 0
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
+
+-- ================= SIDEBAR =================
 local sidebar = Instance.new("Frame", main)
-sidebar.Position = UDim2.new(0, 0, 0, 44)
-sidebar.Size = UDim2.new(0, 160, 1, -44)
-sidebar.BackgroundColor3 = Color3.fromRGB(18, 22, 30)
+sidebar.Position = UDim2.new(0, 0, 0, 42)
+sidebar.Size = UDim2.new(0, 170, 1, -42)
+sidebar.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
 sidebar.BorderSizePixel = 0
 
--- CONTENT
+local sidePad = Instance.new("UIPadding", sidebar)
+sidePad.PaddingTop = UDim.new(0, 10)
+
+local sideLayout = Instance.new("UIListLayout", sidebar)
+sideLayout.Padding = UDim.new(0, 6)
+sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- ================= CONTENT =================
 local content = Instance.new("Frame", main)
-content.Position = UDim2.new(0, 160, 0, 44)
-content.Size = UDim2.new(1, -160, 1, -44)
+content.Position = UDim2.new(0, 170, 0, 42)
+content.Size = UDim2.new(1, -170, 1, -42)
 content.BackgroundColor3 = Color3.fromRGB(24, 28, 40)
 content.BorderSizePixel = 0
 
--- CONTENT TEXT
-local contentText = Instance.new("TextLabel", content)
-contentText.Position = UDim2.new(0, 20, 0, 20)
-contentText.Size = UDim2.new(1, -40, 1, -40)
-contentText.BackgroundTransparency = 1
-contentText.Font = Enum.Font.GothamBold
-contentText.TextSize = 18
-contentText.TextXAlignment = Enum.TextXAlignment.Left
-contentText.TextYAlignment = Enum.TextYAlignment.Top
-contentText.TextWrapped = true
-contentText.TextColor3 = Color3.fromRGB(230,230,230)
-contentText.Text = "Information\n\nWelcome to Threeblox V3 | Fish It"
+local contentPad = Instance.new("UIPadding", content)
+contentPad.PaddingTop = UDim.new(0, 16)
+contentPad.PaddingLeft = UDim.new(0, 16)
 
--- MENU
+-- TITLE CONTENT
+local pageTitle = Instance.new("TextLabel", content)
+pageTitle.Size = UDim2.new(1, -32, 0, 28)
+pageTitle.BackgroundTransparency = 1
+pageTitle.Font = Enum.Font.GothamBold
+pageTitle.TextSize = 22
+pageTitle.TextXAlignment = Enum.TextXAlignment.Left
+pageTitle.TextColor3 = Color3.fromRGB(255,255,255)
+pageTitle.Text = "Information"
+
+-- CONTENT BOX
+local box = Instance.new("Frame", content)
+box.Position = UDim2.new(0, 0, 0, 36)
+box.Size = UDim2.new(1, -32, 1, -52)
+box.BackgroundColor3 = Color3.fromRGB(30, 36, 52)
+box.BorderSizePixel = 0
+Instance.new("UICorner", box).CornerRadius = UDim.new(0, 14)
+
+local boxText = Instance.new("TextLabel", box)
+boxText.Position = UDim2.new(0, 14, 0, 14)
+boxText.Size = UDim2.new(1, -28, 1, -28)
+boxText.BackgroundTransparency = 1
+boxText.Font = Enum.Font.Gotham
+boxText.TextSize = 15
+boxText.TextWrapped = true
+boxText.TextXAlignment = Enum.TextXAlignment.Left
+boxText.TextYAlignment = Enum.TextYAlignment.Top
+boxText.TextColor3 = Color3.fromRGB(220,220,220)
+boxText.Text =
+[[Update v2.0
+- Added Auto Option
+- Added Teleport Menu
+- Added Quest System
+- Improved UI Stability
+]]
+
+-- ================= MENU DATA =================
 local menus = {
-    Information = "Information\n\n• Stable build\n• Optimized for Xeno & Delta\n• Premium clean UI",
-    ["Auto Fish"] = "Auto Fish\n\n• Toggle system\n• Safe placeholder",
-    Teleport = "Teleport\n\n• Fishing Spot\n• Market\n• Spawn",
-    Quest = "Quest\n\n• Daily quest\n• Progress tracking",
-    Shop = "Shop\n\n• Rod\n• Bait\n• Trade"
+    "Information",
+    "Auto Option",
+    "Teleport",
+    "Misc",
+    "Event",
+    "Quest",
+    "Shop & Trade"
 }
 
-local y = 12
-for name,text in pairs(menus) do
+local activeBtn
+
+for _,name in ipairs(menus) do
     local btn = Instance.new("TextButton", sidebar)
     btn.Size = UDim2.new(1, -20, 0, 36)
-    btn.Position = UDim2.new(0, 10, 0, y)
-    btn.BackgroundColor3 = Color3.fromRGB(30, 34, 48)
-    btn.BorderSizePixel = 0
+    btn.BackgroundColor3 = Color3.fromRGB(28, 34, 48)
+    btn.Text = name
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 14
     btn.TextColor3 = Color3.fromRGB(235,235,235)
-    btn.Text = name
+    btn.BorderSizePixel = 0
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
 
     btn.MouseButton1Click:Connect(function()
-        contentText.Text = text
+        if activeBtn then
+            activeBtn.BackgroundColor3 = Color3.fromRGB(28, 34, 48)
+        end
+        btn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+        btn.TextColor3 = Color3.fromRGB(30,30,30)
+        activeBtn = btn
+
+        pageTitle.Text = name
+        boxText.Text = name .. " page content here."
     end)
 
-    y = y + 44
+    if name == "Information" then
+        btn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+        btn.TextColor3 = Color3.fromRGB(30,30,30)
+        activeBtn = btn
+    end
 end
 
--- MINIMIZED LOGO
-local logoBtn = Instance.new("TextButton", gui)
-logoBtn.Size = UDim2.new(0, 52, 0, 52)
-logoBtn.Position = UDim2.new(0, 14, 0.5, -26)
-logoBtn.BackgroundColor3 = Color3.fromRGB(255, 191, 0)
-logoBtn.Text = "TB"
-logoBtn.Font = Enum.Font.GothamBlack
-logoBtn.TextSize = 20
-logoBtn.TextColor3 = Color3.fromRGB(20,20,20)
-logoBtn.Visible = false
-logoBtn.BorderSizePixel = 0
-Instance.new("UICorner", logoBtn).CornerRadius = UDim.new(1,0)
+-- ================= DRAG =================
+local dragging, dragStart, startPos
 
--- BUTTON LOGIC
-minBtn.MouseButton1Click:Connect(function()
-    main.Visible = false
-    shadow.Visible = false
-    logoBtn.Visible = true
-end)
-
-logoBtn.MouseButton1Click:Connect(function()
-    main.Visible = true
-    shadow.Visible = true
-    logoBtn.Visible = false
-end)
-
-closeBtn.MouseButton1Click:Connect(function()
-    gui:Destroy()
-    shadow:Destroy()
-end)
-
--- DRAG (HEADER ONLY, SAFE)
-local dragging = false
-local dragStart, startPos
-
-header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+header.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
-        dragStart = input.Position
+        dragStart = i.Position
         startPos = main.Position
     end
 end)
 
-header.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+header.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = false
     end
 end)
 
-header.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - dragStart
+header.InputChanged:Connect(function(i)
+    if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = i.Position - dragStart
         main.Position = UDim2.new(
             startPos.X.Scale, startPos.X.Offset + delta.X,
             startPos.Y.Scale, startPos.Y.Offset + delta.Y
         )
-        shadow.Position = main.Position + UDim2.new(0,4,0,6)
     end
+end)
+
+-- ================= MINIMIZE / CLOSE =================
+local mini = false
+minBtn.MouseButton1Click:Connect(function()
+    mini = not mini
+    main.Visible = not mini
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
 end)
