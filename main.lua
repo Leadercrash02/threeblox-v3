@@ -1,7 +1,8 @@
---// Threeblox Hub - Fish It
---// LocalScript / Executor
+--// Threeblox Hub - Fish It (Draggable + Minimize)
 
 local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
@@ -31,7 +32,7 @@ mainStroke.Color = Color3.fromRGB(0, 0, 0)
 mainStroke.Thickness = 1
 mainStroke.Transparency = 0.4
 
---===== HEADER TOP =====--
+--===== HEADER (drag handle) =====--
 local header = Instance.new("Frame")
 header.Name = "Header"
 header.Size = UDim2.new(1, 0, 0, 40)
@@ -72,28 +73,94 @@ rightText.TextXAlignment = Enum.TextXAlignment.Right
 rightText.TextColor3 = Color3.fromRGB(40, 40, 40)
 rightText.Text = "Premium | discord.gg/yourcode"
 rightText.AnchorPoint = Vector2.new(1, 0)
-rightText.Position = UDim2.new(1, -16, 0, 12)
+rightText.Position = UDim2.new(1, -40, 0, 12)
 rightText.Size = UDim2.new(0.4, 0, 1, 0)
 rightText.Parent = header
 
--- Close button (X)
-local closeBtn = Instance.new("TextButton")
-closeBtn.Name = "Close"
-closeBtn.AnchorPoint = Vector2.new(1, 0.5)
-closeBtn.Position = UDim2.new(1, -8, 0.5, 0)
-closeBtn.Size = UDim2.new(0, 24, 0, 24)
-closeBtn.BackgroundTransparency = 1
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 18
-closeBtn.Text = "X"
-closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
-closeBtn.Parent = header
+-- Minimize button [-]
+local miniBtn = Instance.new("TextButton")
+miniBtn.Name = "Minimize"
+miniBtn.AnchorPoint = Vector2.new(1, 0.5)
+miniBtn.Position = UDim2.new(1, -8, 0.5, 0)
+miniBtn.Size = UDim2.new(0, 24, 0, 24)
+miniBtn.BackgroundTransparency = 1
+miniBtn.Font = Enum.Font.GothamBold
+miniBtn.TextSize = 18
+miniBtn.Text = "-"
+miniBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
+miniBtn.Parent = header
 
-closeBtn.MouseButton1Click:Connect(function()
-    gui.Enabled = not gui.Enabled
+--===== MINIMIZED ICON =====--
+local miniIcon = Instance.new("TextButton")
+miniIcon.Name = "MiniIcon"
+miniIcon.Visible = false
+miniIcon.Size = UDim2.new(0, 120, 0, 30)
+miniIcon.Position = UDim2.new(0, 10, 1, -40)
+miniIcon.AnchorPoint = Vector2.new(0, 1)
+miniIcon.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
+miniIcon.BorderSizePixel = 0
+miniIcon.Text = "Threeblox Hub"
+miniIcon.Font = Enum.Font.Gotham
+miniIcon.TextSize = 14
+miniIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
+miniIcon.Parent = gui
+
+local miniCorner = Instance.new("UICorner", miniIcon)
+miniCorner.CornerRadius = UDim.new(0, 6)
+
+miniIcon.MouseButton1Click:Connect(function()
+    main.Visible = true
+    miniIcon.Visible = false
 end)
 
---===== SIDEBAR TABS =====--
+miniBtn.MouseButton1Click:Connect(function()
+    main.Visible = false
+    miniIcon.Visible = true
+end)
+
+--===== DRAG FUNCTION (header drag main) =====--
+local dragging = false
+local dragInput, dragStart, startPos
+
+local function update(input)
+    local delta = input.Position - dragStart
+    main.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+header.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        update(input)
+    end
+end)
+
+--===== SIDEBAR / CONTENT / PAGES SAMA PERSIS SEBELUMNYA =====--
 local sidebar = Instance.new("Frame")
 sidebar.Name = "Sidebar"
 sidebar.Position = UDim2.new(0, 0, 0, 40)
@@ -135,7 +202,6 @@ local function createTabButton(text)
     return btn
 end
 
---===== CONTENT CONTAINER =====--
 local content = Instance.new("Frame")
 content.Name = "Content"
 content.Position = UDim2.new(0, 140, 0, 40)
@@ -150,10 +216,8 @@ paddingContent.PaddingLeft = UDim.new(0, 12)
 paddingContent.PaddingRight = UDim.new(0, 12)
 paddingContent.PaddingBottom = UDim.new(0, 8)
 
---===== PAGES SETUP =====--
 local tabNames = {"Main", "Auto", "Teleport", "Misc", "Info"}
-local pages = {}
-local buttons = {}
+local pages, buttons = {}, {}
 
 for _, name in ipairs(tabNames) do
     local page = Instance.new("Frame")
@@ -168,17 +232,14 @@ for _, name in ipairs(tabNames) do
     buttons[name] = btn
 end
 
--- helper: set active tab
 local function setActiveTab(name)
     for n, pg in pairs(pages) do
         pg.Visible = (n == name)
     end
     for n, btn in pairs(buttons) do
-        if n == name then
-            btn.BackgroundColor3 = Color3.fromRGB(35, 49, 70)
-        else
-            btn.BackgroundColor3 = Color3.fromRGB(18, 26, 38)
-        end
+        btn.BackgroundColor3 = (n == name)
+            and Color3.fromRGB(35, 49, 70)
+            or  Color3.fromRGB(18, 26, 38)
     end
 end
 
@@ -188,7 +249,7 @@ for name, btn in pairs(buttons) do
     end)
 end
 
---===== INFO PAGE (mirip panel Information / Update) =====--
+-- Info page
 local infoPage = pages["Info"]
 
 local infoTitle = Instance.new("TextLabel")
@@ -230,9 +291,8 @@ createInfoLine("- Added Auto Fish (edit sendiri)", 0)
 createInfoLine("- Added Teleport Menu", 1)
 createInfoLine("- Added Custom Settings", 2)
 
---===== MAIN PAGE (judul & placeholder) =====--
+-- Main page
 local mainPage = pages["Main"]
-
 local mainLabel = Instance.new("TextLabel")
 mainLabel.BackgroundTransparency = 1
 mainLabel.Font = Enum.Font.GothamBold
@@ -244,20 +304,8 @@ mainLabel.Position = UDim2.new(0, 4, 0, 2)
 mainLabel.Size = UDim2.new(1, -8, 0, 24)
 mainLabel.Parent = mainPage
 
-local mainDesc = Instance.new("TextLabel")
-mainDesc.BackgroundTransparency = 1
-mainDesc.Font = Enum.Font.Gotham
-mainDesc.TextSize = 14
-mainDesc.TextColor3 = Color3.fromRGB(210, 210, 210)
-mainDesc.TextXAlignment = Enum.TextXAlignment.Left
-mainDesc.Text = "Taruh toggle / tombol utama lu di sini."
-mainDesc.Position = UDim2.new(0, 4, 0, 30)
-mainDesc.Size = UDim2.new(1, -8, 0, 20)
-mainDesc.Parent = mainPage
-
---===== AUTO PAGE (placeholder) =====--
+-- Auto page (dummy toggle)
 local autoPage = pages["Auto"]
-
 local autoTitle = Instance.new("TextLabel")
 autoTitle.BackgroundTransparency = 1
 autoTitle.Font = Enum.Font.GothamBold
@@ -269,7 +317,6 @@ autoTitle.Position = UDim2.new(0, 4, 0, 2)
 autoTitle.Size = UDim2.new(1, -8, 0, 24)
 autoTitle.Parent = autoPage
 
--- contoh toggle dummy (belum ada fungsi)
 local autoBtn = Instance.new("TextButton")
 autoBtn.BackgroundColor3 = Color3.fromRGB(20, 30, 45)
 autoBtn.BorderSizePixel = 0
@@ -288,12 +335,11 @@ local autoState = false
 autoBtn.MouseButton1Click:Connect(function()
     autoState = not autoState
     autoBtn.Text = "Auto Fish [" .. (autoState and "ON" or "OFF") .. "]"
-    -- taruh logic auto fish lu di sini
+    -- logic auto fish lu taruh di sini
 end)
 
---===== TELEPORT PAGE (placeholder) =====--
+-- Teleport page
 local tpPage = pages["Teleport"]
-
 local tpTitle = Instance.new("TextLabel")
 tpTitle.BackgroundTransparency = 1
 tpTitle.Font = Enum.Font.GothamBold
@@ -305,9 +351,8 @@ tpTitle.Position = UDim2.new(0, 4, 0, 2)
 tpTitle.Size = UDim2.new(1, -8, 0, 24)
 tpTitle.Parent = tpPage
 
---===== MISC PAGE (placeholder) =====--
+-- Misc page
 local miscPage = pages["Misc"]
-
 local miscTitle = Instance.new("TextLabel")
 miscTitle.BackgroundTransparency = 1
 miscTitle.Font = Enum.Font.GothamBold
@@ -319,5 +364,5 @@ miscTitle.Position = UDim2.new(0, 4, 0, 2)
 miscTitle.Size = UDim2.new(1, -8, 0, 24)
 miscTitle.Parent = miscPage
 
---===== DEFAULT TAB =====--
+-- Default tab
 setActiveTab("Main")
