@@ -1,5 +1,5 @@
 --// THREEBLOX HUB - FISH IT
---// FULL GUI (DRAG + MINIMIZE + CLOSE + ICON TAB)
+--// FINAL GUI (DRAG + MINIMIZE + CLOSE + ICON TAB)
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -25,13 +25,15 @@ main.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
 main.BorderSizePixel = 0
 main.Parent = gui
 
-local mainCorner = Instance.new("UICorner", main)
+local mainCorner = Instance.new("UICorner")
 mainCorner.CornerRadius = UDim.new(0, 10)
+mainCorner.Parent = main
 
-local mainStroke = Instance.new("UIStroke", main)
+local mainStroke = Instance.new("UIStroke")
 mainStroke.Color = Color3.fromRGB(0, 0, 0)
 mainStroke.Thickness = 1
 mainStroke.Transparency = 0.4
+mainStroke.Parent = main
 
 --========== HEADER (DRAG HANDLE) ==========--
 local header = Instance.new("Frame")
@@ -41,8 +43,9 @@ header.BackgroundColor3 = Color3.fromRGB(255, 191, 0)
 header.BorderSizePixel = 0
 header.Parent = main
 
-local headerCorner = Instance.new("UICorner", header)
+local headerCorner = Instance.new("UICorner")
 headerCorner.CornerRadius = UDim.new(0, 10)
+headerCorner.Parent = header
 
 local title = Instance.new("TextLabel")
 title.BackgroundTransparency = 1
@@ -119,8 +122,9 @@ miniIcon.TextSize = 14
 miniIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
 miniIcon.Parent = gui
 
-local miniCorner = Instance.new("UICorner", miniIcon)
+local miniCorner = Instance.new("UICorner")
 miniCorner.CornerRadius = UDim.new(0, 6)
+miniCorner.Parent = miniIcon
 
 miniBtn.MouseButton1Click:Connect(function()
     main.Visible = false
@@ -178,16 +182,26 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- YANG BENAR (pakai UDim.new)
-paddingSide.PaddingTop    = UDim.new(0, 8)
-paddingSide.PaddingLeft   = UDim.new(0, 8)
-paddingSide.PaddingRight  = UDim.new(0, 8)
+--========== SIDEBAR ==========--
+local sidebar = Instance.new("Frame")
+sidebar.Name = "Sidebar"
+sidebar.Position = UDim2.new(0, 0, 0, 40)
+sidebar.Size = UDim2.new(0, 150, 1, -40)
+sidebar.BackgroundColor3 = Color3.fromRGB(10, 15, 22)
+sidebar.BorderSizePixel = 0
+sidebar.Parent = main
 
-paddingContent.PaddingTop    = UDim.new(0, 8)
-paddingContent.PaddingLeft   = UDim.new(0, 12)
-paddingContent.PaddingRight  = UDim.new(0, 12)
-paddingContent.PaddingBottom = UDim.new(0, 8)
+local sideLayout = Instance.new("UIListLayout")
+sideLayout.Padding = UDim.new(0, 4)
+sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+sideLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+sideLayout.Parent = sidebar
 
+local paddingSide = Instance.new("UIPadding")
+paddingSide.PaddingTop   = UDim.new(0, 8)
+paddingSide.PaddingLeft  = UDim.new(0, 8)
+paddingSide.PaddingRight = UDim.new(0, 8)
+paddingSide.Parent = sidebar
 
 --========== CONTENT AREA ==========--
 local content = Instance.new("Frame")
@@ -198,11 +212,12 @@ content.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
 content.BorderSizePixel = 0
 content.Parent = main
 
-local paddingContent = Instance.new("UIPadding", content)
-paddingContent.PaddingTop = UDim.new(0, 8)
-paddingContent.PaddingLeft = UDim.new(0, 12)
-paddingContent.PaddingRight = UDim.new(0, 12)
+local paddingContent = Instance.new("UIPadding")
+paddingContent.PaddingTop    = UDim.new(0, 8)
+paddingContent.PaddingLeft   = UDim.new(0, 12)
+paddingContent.PaddingRight  = UDim.new(0, 12)
 paddingContent.PaddingBottom = UDim.new(0, 8)
+paddingContent.Parent = content
 
 --========== TAB BUTTON CREATOR (ICON) ==========--
 local function createTabButton(text, imageId)
@@ -217,13 +232,15 @@ local function createTabButton(text, imageId)
     btn.TextXAlignment = Enum.TextXAlignment.Left
     btn.Text = "   " .. text
 
-    local c = Instance.new("UICorner", btn)
+    local c = Instance.new("UICorner")
     c.CornerRadius = UDim.new(0, 6)
+    c.Parent = btn
 
-    local stroke = Instance.new("UIStroke", btn)
+    local stroke = Instance.new("UIStroke")
     stroke.Color = Color3.fromRGB(0, 0, 0)
     stroke.Thickness = 1
     stroke.Transparency = 0.6
+    stroke.Parent = btn
 
     local icon = Instance.new("ImageLabel")
     icon.BackgroundTransparency = 1
@@ -363,8 +380,9 @@ autoBtn.Position = UDim2.new(0, 4, 0, 34)
 autoBtn.Size = UDim2.new(0, 160, 0, 28)
 autoBtn.Parent = autoPage
 
-local autoBtnCorner = Instance.new("UICorner", autoBtn)
+local autoBtnCorner = Instance.new("UICorner")
 autoBtnCorner.CornerRadius = UDim.new(0, 6)
+autoBtnCorner.Parent = autoBtn
 
 local autoState = false
 autoBtn.MouseButton1Click:Connect(function()
