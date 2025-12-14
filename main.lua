@@ -1,6 +1,6 @@
---// THREEBLOX V3 | AUTO OPTION FIX FINAL
---// FIX: COLOR + EMOJI (AUTO SELL & AUTO POTION)
---// SAFE | TRANSPARENT | NO UI ROBLOX BUG
+--// THREEBLOX V3 | FINAL FIX COMPLETE
+--// CLOSE + MINIMIZE RESTORED
+--// NO SCROLL | ANDROID + PC SAFE
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -16,42 +16,38 @@ pcall(function()
 end)
 
 -- CONFIG
-local LOGO_ID = "rbxassetid://121625492591707"
-
 local BG     = Color3.fromRGB(18,20,28)
 local SIDE   = Color3.fromRGB(22,24,34)
 local CARD   = Color3.fromRGB(28,30,42)
 local TEXT   = Color3.fromRGB(235,235,235)
-local MUTED  = Color3.fromRGB(160,160,160)
 local ACCENT = Color3.fromRGB(170,80,255)
 
 local ALPHA_MAIN = 0.08
 local ALPHA_SIDE = 0.05
 local ALPHA_CARD = 0.06
 
--- PAGE ICON (CLEAN)
+-- ICON
 local PAGE_ICONS = {
 	{"Information","ℹ"},
 	{"Auto Option","⚙"},
-	{"Teleport","✦"},
+	{"Teleport",">"},
 	{"Quest","★"},
 	{"Shop & Trade","🛒"},
 	{"Misc","⚡"},
 }
 
--- AUTO OPTION LIST (FIXED & COMPLETE)
 local AUTO_OPTIONS = {
 	{"Auto Fishing","⚙"},
 	{"Legit Perfect","⭕"},
 	{"Blatant Fishing","🔥"},
 	{"Auto Farm Island","✏"},
 	{"Auto Favorite","⭐"},
-	{"Auto Sell","💰"},      -- FIX
+	{"Auto Sell","💰"},
 	{"Auto Totem","➕"},
-	{"Auto Potion","🧪"},   -- FIX
+	{"Auto Potion","🧪"},
 }
 
--- ROOT GUI
+-- ROOT
 local gui = Instance.new("ScreenGui", CoreGui)
 gui.Name = "ThreebloxV3"
 gui.IgnoreGuiInset = true
@@ -77,11 +73,11 @@ title.Position = UDim2.new(0,16,0,0)
 title.BackgroundTransparency = 1
 title.Font = Enum.Font.GothamBold
 title.TextSize = 20
-title.TextColor3 = TEXT
 title.TextXAlignment = Enum.TextXAlignment.Left
+title.TextColor3 = TEXT
 title.Text = "Threeblox V3 | Auto Option"
 
--- DRAG
+-- DRAG WINDOW
 do
 	local d,s,p
 	header.InputBegan:Connect(function(i)
@@ -97,6 +93,28 @@ do
 	end)
 	UIS.InputEnded:Connect(function() d=false end)
 end
+
+-- MINIMIZE BUTTON
+local minBtn = Instance.new("TextButton", header)
+minBtn.Size = UDim2.new(0,30,0,30)
+minBtn.Position = UDim2.new(1,-72,0.5,-15)
+minBtn.Text = "-"
+minBtn.Font = Enum.Font.GothamBold
+minBtn.TextSize = 20
+minBtn.TextColor3 = Color3.new(0,0,0)
+minBtn.BackgroundColor3 = ACCENT
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
+
+-- CLOSE BUTTON
+local closeBtn = Instance.new("TextButton", header)
+closeBtn.Size = UDim2.new(0,30,0,30)
+closeBtn.Position = UDim2.new(1,-36,0.5,-15)
+closeBtn.Text = "X"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.TextColor3 = TEXT
+closeBtn.BackgroundColor3 = Color3.fromRGB(200,60,60)
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
 
 -- SIDEBAR
 local sidebar = Instance.new("Frame", main)
@@ -116,13 +134,13 @@ content.Position = UDim2.new(0,200,0,48)
 content.Size = UDim2.new(1,-200,1,-48)
 content.BackgroundTransparency = 1
 
--- PAGE
+-- PAGE SYSTEM
 local pages = {}
 local function newPage(name)
 	local p = Instance.new("Frame", content)
 	p.Size = UDim2.new(1,0,1,0)
-	p.Visible = false
 	p.BackgroundTransparency = 1
+	p.Visible = false
 	pages[name] = p
 	return p
 end
@@ -134,11 +152,17 @@ newPage("Quest")
 newPage("Shop & Trade")
 newPage("Misc")
 
+local function showPage(name)
+	for _,p in pairs(pages) do p.Visible=false end
+	pages[name].Visible=true
+	title.Text="Threeblox V3 | "..name
+end
+
 -- SIDEBAR BUTTON
-local function sideBtn(name,emoji)
+local function sideBtn(name,icon)
 	local b = Instance.new("TextButton", sidebar)
 	b.Size = UDim2.new(1,-20,0,38)
-	b.Text = emoji.."  "..name
+	b.Text = icon.."  "..name
 	b.Font = Enum.Font.Gotham
 	b.TextSize = 14
 	b.TextColor3 = TEXT
@@ -146,9 +170,7 @@ local function sideBtn(name,emoji)
 	b.BackgroundTransparency = ALPHA_CARD
 	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
 	b.MouseButton1Click:Connect(function()
-		for _,p in pairs(pages) do p.Visible=false end
-		pages[name].Visible=true
-		title.Text="Threeblox V3 | "..name
+		showPage(name)
 	end)
 end
 
@@ -156,26 +178,19 @@ for _,v in ipairs(PAGE_ICONS) do
 	sideBtn(v[1],v[2])
 end
 
--- AUTO OPTION UI
-local scroll = Instance.new("ScrollingFrame", autoPage)
-scroll.Position = UDim2.new(0,16,0,16)
-scroll.Size = UDim2.new(1,-32,1,-32)
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-scroll.ScrollBarThickness = 6
-scroll.BackgroundTransparency = 1
+-- AUTO OPTION (NO SCROLL)
+local list = Instance.new("UIListLayout", autoPage)
+list.Padding = UDim.new(0,10)
+Instance.new("UIPadding", autoPage).PaddingTop = UDim.new(0,16)
+Instance.new("UIPadding", autoPage).PaddingLeft = UDim.new(0,16)
 
-local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0,10)
-
--- AUTO ITEM (WITH COLOR)
 local function autoItem(text,emoji)
-	local f = Instance.new("Frame", scroll)
-	f.Size = UDim2.new(1,0,0,42)
+	local f = Instance.new("Frame", autoPage)
+	f.Size = UDim2.new(1,-32,0,42)
 	f.BackgroundColor3 = CARD
 	f.BackgroundTransparency = ALPHA_CARD
 	Instance.new("UICorner", f).CornerRadius = UDim.new(0,10)
 
-	-- ACCENT BAR
 	local bar = Instance.new("Frame", f)
 	bar.Size = UDim2.new(0,4,1,0)
 	bar.BackgroundColor3 = ACCENT
@@ -189,14 +204,6 @@ local function autoItem(text,emoji)
 	lbl.TextXAlignment = Enum.TextXAlignment.Left
 	lbl.TextColor3 = TEXT
 	lbl.Text = emoji.."  "..text
-
-	-- HOVER EFFECT
-	f.MouseEnter:Connect(function()
-		f.BackgroundTransparency = 0
-	end)
-	f.MouseLeave:Connect(function()
-		f.BackgroundTransparency = ALPHA_CARD
-	end)
 end
 
 for _,v in ipairs(AUTO_OPTIONS) do
@@ -204,3 +211,12 @@ for _,v in ipairs(AUTO_OPTIONS) do
 end
 
 pages["Auto Option"].Visible = true
+
+-- BUTTON ACTION
+minBtn.MouseButton1Click:Connect(function()
+	main.Visible = false
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
