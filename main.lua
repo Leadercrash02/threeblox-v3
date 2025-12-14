@@ -1,5 +1,5 @@
 --// THREEBLOX HUB | FISH IT
---// MANUAL UI (NO FRAMEWORK, STABLE)
+--// FINAL FIX (STABLE, MANUAL UI)
 
 -- SERVICES
 local Players = game:GetService("Players")
@@ -10,27 +10,43 @@ local pg = lp:WaitForChild("PlayerGui")
 
 -- ROOT GUI
 local gui = Instance.new("ScreenGui")
-gui.Name = "ThreebloxHub"
+gui.Name = "ThreebloxHub_Final"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
 gui.Parent = pg
+
+-- ================= MINI LOGO =================
+local miniLogo = Instance.new("TextButton", gui)
+miniLogo.Size = UDim2.new(0, 46, 0, 46)
+miniLogo.Position = UDim2.new(0, 16, 0.5, -23)
+miniLogo.BackgroundColor3 = Color3.fromRGB(255,200,0)
+miniLogo.Text = "TB"
+miniLogo.Font = Enum.Font.GothamBold
+miniLogo.TextSize = 18
+miniLogo.TextColor3 = Color3.fromRGB(30,30,30)
+miniLogo.BorderSizePixel = 0
+miniLogo.Visible = false
+miniLogo.ZIndex = 100
+Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
 
 -- ================= MAIN =================
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0, 720, 0, 420)
 main.Position = UDim2.new(0.5, 0, 0.5, 0)
 main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.BackgroundColor3 = Color3.fromRGB(20, 25, 35)
+main.BackgroundColor3 = Color3.fromRGB(20,25,35)
 main.BorderSizePixel = 0
-Instance.new("UICorner", main).CornerRadius = UDim.new(0, 16)
+main.ZIndex = 10
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
 -- ================= HEADER =================
 local header = Instance.new("Frame", main)
 header.Size = UDim2.new(1, 0, 0, 42)
-header.BackgroundColor3 = Color3.fromRGB(25, 30, 45)
+header.BackgroundColor3 = Color3.fromRGB(26,30,44)
 header.BorderSizePixel = 0
 header.Active = true
-Instance.new("UICorner", header).CornerRadius = UDim.new(0, 16)
+header.ZIndex = 20
+Instance.new("UICorner", header).CornerRadius = UDim.new(0,16)
 
 -- TITLE
 local title = Instance.new("TextLabel", header)
@@ -42,37 +58,41 @@ title.TextSize = 18
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.TextColor3 = Color3.fromRGB(255,255,255)
 title.Text = "Threeblox | Fish It"
+title.ZIndex = 25
 
 -- MINIMIZE
 local minBtn = Instance.new("TextButton", header)
 minBtn.Size = UDim2.new(0, 26, 0, 26)
 minBtn.Position = UDim2.new(1, -66, 8, 0)
-minBtn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+minBtn.BackgroundColor3 = Color3.fromRGB(255,200,0)
 minBtn.Text = "-"
 minBtn.Font = Enum.Font.GothamBold
 minBtn.TextSize = 18
 minBtn.TextColor3 = Color3.fromRGB(30,30,30)
 minBtn.BorderSizePixel = 0
+minBtn.ZIndex = 30
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
 
 -- CLOSE
 local closeBtn = Instance.new("TextButton", header)
 closeBtn.Size = UDim2.new(0, 26, 0, 26)
 closeBtn.Position = UDim2.new(1, -34, 8, 0)
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 70, 70)
+closeBtn.BackgroundColor3 = Color3.fromRGB(200,70,70)
 closeBtn.Text = "X"
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.TextSize = 14
 closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
 closeBtn.BorderSizePixel = 0
+closeBtn.ZIndex = 30
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
 
 -- ================= SIDEBAR =================
 local sidebar = Instance.new("Frame", main)
 sidebar.Position = UDim2.new(0, 0, 0, 42)
 sidebar.Size = UDim2.new(0, 170, 1, -42)
-sidebar.BackgroundColor3 = Color3.fromRGB(18, 22, 32)
+sidebar.BackgroundColor3 = Color3.fromRGB(18,22,32)
 sidebar.BorderSizePixel = 0
+sidebar.ZIndex = 15
 
 local sidePad = Instance.new("UIPadding", sidebar)
 sidePad.PaddingTop = UDim.new(0, 10)
@@ -85,16 +105,13 @@ sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 local content = Instance.new("Frame", main)
 content.Position = UDim2.new(0, 170, 0, 42)
 content.Size = UDim2.new(1, -170, 1, -42)
-content.BackgroundColor3 = Color3.fromRGB(24, 28, 40)
+content.BackgroundColor3 = Color3.fromRGB(24,28,40)
 content.BorderSizePixel = 0
+content.ZIndex = 15
 
-local contentPad = Instance.new("UIPadding", content)
-contentPad.PaddingTop = UDim.new(0, 16)
-contentPad.PaddingLeft = UDim.new(0, 16)
-
--- TITLE CONTENT
 local pageTitle = Instance.new("TextLabel", content)
-pageTitle.Size = UDim2.new(1, -32, 0, 28)
+pageTitle.Position = UDim2.new(0, 16, 0, 10)
+pageTitle.Size = UDim2.new(1, -32, 0, 26)
 pageTitle.BackgroundTransparency = 1
 pageTitle.Font = Enum.Font.GothamBold
 pageTitle.TextSize = 22
@@ -102,13 +119,12 @@ pageTitle.TextXAlignment = Enum.TextXAlignment.Left
 pageTitle.TextColor3 = Color3.fromRGB(255,255,255)
 pageTitle.Text = "Information"
 
--- CONTENT BOX
 local box = Instance.new("Frame", content)
-box.Position = UDim2.new(0, 0, 0, 36)
-box.Size = UDim2.new(1, -32, 1, -52)
-box.BackgroundColor3 = Color3.fromRGB(30, 36, 52)
+box.Position = UDim2.new(0, 16, 0, 44)
+box.Size = UDim2.new(1, -32, 1, -60)
+box.BackgroundColor3 = Color3.fromRGB(30,36,52)
 box.BorderSizePixel = 0
-Instance.new("UICorner", box).CornerRadius = UDim.new(0, 14)
+Instance.new("UICorner", box).CornerRadius = UDim.new(0,14)
 
 local boxText = Instance.new("TextLabel", box)
 boxText.Position = UDim2.new(0, 14, 0, 14)
@@ -128,7 +144,7 @@ boxText.Text =
 - Improved UI Stability
 ]]
 
--- ================= MENU DATA =================
+-- ================= MENU =================
 local menus = {
     "Information",
     "Auto Option",
@@ -144,28 +160,31 @@ local activeBtn
 for _,name in ipairs(menus) do
     local btn = Instance.new("TextButton", sidebar)
     btn.Size = UDim2.new(1, -20, 0, 36)
-    btn.BackgroundColor3 = Color3.fromRGB(28, 34, 48)
-    btn.Text = name
+    btn.BackgroundColor3 = Color3.fromRGB(28,34,48)
+    btn.Text = "  "..name
     btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    btn.TextColor3 = Color3.fromRGB(235,235,235)
+    btn.TextSize = 15
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
     btn.BorderSizePixel = 0
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 10)
+    btn.ZIndex = 20
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
 
     btn.MouseButton1Click:Connect(function()
         if activeBtn then
-            activeBtn.BackgroundColor3 = Color3.fromRGB(28, 34, 48)
+            activeBtn.BackgroundColor3 = Color3.fromRGB(28,34,48)
+            activeBtn.TextColor3 = Color3.fromRGB(255,255,255)
         end
-        btn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(255,200,0)
         btn.TextColor3 = Color3.fromRGB(30,30,30)
         activeBtn = btn
 
         pageTitle.Text = name
-        boxText.Text = name .. " page content here."
+        boxText.Text = name.." page content here."
     end)
 
     if name == "Information" then
-        btn.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(255,200,0)
         btn.TextColor3 = Color3.fromRGB(30,30,30)
         activeBtn = btn
     end
@@ -173,7 +192,6 @@ end
 
 -- ================= DRAG =================
 local dragging, dragStart, startPos
-
 header.InputBegan:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
@@ -181,13 +199,11 @@ header.InputBegan:Connect(function(i)
         startPos = main.Position
     end
 end)
-
 header.InputEnded:Connect(function(i)
     if i.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = false
     end
 end)
-
 header.InputChanged:Connect(function(i)
     if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = i.Position - dragStart
@@ -199,10 +215,14 @@ header.InputChanged:Connect(function(i)
 end)
 
 -- ================= MINIMIZE / CLOSE =================
-local mini = false
 minBtn.MouseButton1Click:Connect(function()
-    mini = not mini
-    main.Visible = not mini
+    main.Visible = false
+    miniLogo.Visible = true
+end)
+
+miniLogo.MouseButton1Click:Connect(function()
+    main.Visible = true
+    miniLogo.Visible = false
 end)
 
 closeBtn.MouseButton1Click:Connect(function()
