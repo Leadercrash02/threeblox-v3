@@ -1,5 +1,4 @@
---// THREEBLOX V3 | UI FIX FINAL
---// UI ONLY - SAFE TO MERGE FEATURE LOGIC
+--// THREEBLOX V3 | UI FIX FINAL (NO ERROR)
 
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
@@ -48,7 +47,7 @@ title.TextColor3 = TEXT
 title.BackgroundTransparency = 1
 title.Position = UDim2.new(0,16,0,0)
 title.Size = UDim2.new(1,-120,1,0)
-title.TextXAlignment = Left
+title.TextXAlignment = Enum.TextXAlignment.Left
 
 -- CLOSE
 local close = Instance.new("TextButton", header)
@@ -81,8 +80,10 @@ side.BorderSizePixel = 0
 
 local sideLayout = Instance.new("UIListLayout", side)
 sideLayout.Padding = UDim.new(0,8)
-sideLayout.HorizontalAlignment = Center
-Instance.new("UIPadding", side).PaddingTop = UDim.new(0,12)
+sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+local sidePad = Instance.new("UIPadding", side)
+sidePad.PaddingTop = UDim.new(0,12)
 
 local function sideBtn(txt)
     local b = Instance.new("TextButton", side)
@@ -94,7 +95,6 @@ local function sideBtn(txt)
     b.BackgroundColor3 = CARD
     b.BorderSizePixel = 0
     Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
-    return b
 end
 
 sideBtn("Information")
@@ -110,10 +110,12 @@ content.Position = UDim2.new(0,200,0,46)
 content.Size = UDim2.new(1,-200,1,-46)
 content.BackgroundTransparency = 1
 
-local layout = Instance.new("UIListLayout", content)
-layout.Padding = UDim.new(0,10)
-Instance.new("UIPadding", content).PaddingTop = UDim.new(0,12)
-Instance.new("UIPadding", content).PaddingLeft = UDim.new(0,16)
+local list = Instance.new("UIListLayout", content)
+list.Padding = UDim.new(0,10)
+
+local pad = Instance.new("UIPadding", content)
+pad.PaddingTop = UDim.new(0,12)
+pad.PaddingLeft = UDim.new(0,16)
 
 -- ITEM BUILDER
 local function item(icon, text)
@@ -138,7 +140,7 @@ local function item(icon, text)
     t.Position = UDim2.new(0,44,0,0)
     t.Size = UDim2.new(1,-80,1,0)
     t.BackgroundTransparency = 1
-    t.TextXAlignment = Left
+    t.TextXAlignment = Enum.TextXAlignment.Left
 
     local arrow = Instance.new("TextLabel", f)
     arrow.Text = ">"
@@ -148,11 +150,9 @@ local function item(icon, text)
     arrow.Size = UDim2.new(0,30,1,0)
     arrow.Position = UDim2.new(1,-30,0,0)
     arrow.BackgroundTransparency = 1
-
-    return f
 end
 
--- AUTO OPTION ITEMS (ICON FIXED)
+-- AUTO OPTION ITEMS (FIXED ICON)
 item("⚙", "Auto Fishing")
 item("⭕", "Legit Perfect")
 item("🔥", "Blatant Fishing")
@@ -162,7 +162,7 @@ item("💰", "Auto Sell")
 item("➕", "Auto Totem")
 item("🧪", "Auto Potion")
 
--- MINIMIZE LOGO
+-- MINI LOGO
 local mini = Instance.new("ImageButton", gui)
 mini.Size = UDim2.new(0,64,0,64)
 mini.Position = UDim2.new(0,20,0.5,-32)
@@ -170,31 +170,31 @@ mini.Image = LOGO_ID
 mini.Visible = false
 mini.BackgroundTransparency = 1
 
--- DRAG FUNCTION
-local function makeDrag(obj)
-    local drag, start, pos
+-- DRAG
+local function drag(obj)
+    local d, s, p
     obj.InputBegan:Connect(function(i)
-        if i.UserInputType == MouseButton1 or i.UserInputType == Touch then
-            drag = true
-            start = i.Position
-            pos = obj.Position
+        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+            d = true
+            s = i.Position
+            p = obj.Position
         end
     end)
     UIS.InputChanged:Connect(function(i)
-        if drag and (i.UserInputType == MouseMovement or i.UserInputType == Touch) then
-            local d = i.Position - start
-            obj.Position = UDim2.new(pos.X.Scale,pos.X.Offset+d.X,pos.Y.Scale,pos.Y.Offset+d.Y)
+        if d and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+            local delta = i.Position - s
+            obj.Position = UDim2.new(p.X.Scale,p.X.Offset+delta.X,p.Y.Scale,p.Y.Offset+delta.Y)
         end
     end)
     UIS.InputEnded:Connect(function()
-        drag = false
+        d = false
     end)
 end
 
-makeDrag(header)
-makeDrag(mini)
+drag(header)
+drag(mini)
 
--- BUTTON ACTION
+-- BUTTON
 min.MouseButton1Click:Connect(function()
     main.Visible = false
     mini.Visible = true
