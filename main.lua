@@ -1,5 +1,5 @@
 --// THREEBLOX HUB - FISH IT
---// FINAL GUI - FIXED & SOLID VERSION
+--// FIX FINAL FULL GUI (CONTENT LEFT, TAB RIGHT, NO DOUBLE TITLE)
 
 --================ SERVICES ================--
 local Players = game:GetService("Players")
@@ -27,14 +27,14 @@ local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0, 720, 0, 400)
 main.Position = UDim2.new(0.5, 0, 0.5, 0)
 main.AnchorPoint = Vector2.new(0.5, 0.5)
-main.BackgroundColor3 = Color3.fromRGB(20, 24, 34) -- SOLID
+main.BackgroundColor3 = Color3.fromRGB(20, 24, 34)
 main.BorderSizePixel = 0
 
 Instance.new("UICorner", main).CornerRadius = UDim.new(0, 18)
 local stroke = Instance.new("UIStroke", main)
 stroke.Transparency = 0.6
 
---================ HEADER (DRAG AREA) ================--
+--================ HEADER (DRAG) ================--
 local header = Instance.new("Frame", main)
 header.Size = UDim2.new(1, -150, 0, 44)
 header.Position = UDim2.new(0, 20, 0, 14)
@@ -100,11 +100,15 @@ btnClose.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
---================ CONTENT AREA ================--
+--================ CONTENT AREA (LEFT) ================--
 local content = Instance.new("Frame", main)
 content.Position = UDim2.new(0, 20, 0, 70)
 content.Size = UDim2.new(1, -170, 1, -90)
 content.BackgroundTransparency = 1
+
+local contentPad = Instance.new("UIPadding", content)
+contentPad.PaddingLeft = UDim.new(0, 10)
+contentPad.PaddingTop  = UDim.new(0, 6)
 
 --================ PAGE SYSTEM ================--
 local pages = {}
@@ -118,7 +122,7 @@ local function createPage(name)
     return page
 end
 
---================ INFORMATION PAGE (REAL CONTENT) ================--
+--================ INFORMATION PAGE ================--
 local infoPage = createPage("Information")
 
 local infoCard = Instance.new("Frame", infoPage)
@@ -159,26 +163,34 @@ for i,text in ipairs(updates) do
     lbl.Text = text
 end
 
---================ OTHER PAGES (DUMMY BUT VISIBLE) ================--
-local function dummy(name)
+--================ OTHER PAGES (CARD STYLE, NO DOUBLE TITLE) ================--
+local function dummyPage(name)
     local p = createPage(name)
-    local lbl = Instance.new("TextLabel", p)
-    lbl.Position = UDim2.new(0, 0, 0, 20)
-    lbl.Size = UDim2.new(1,0,0,28)
+
+    local card = Instance.new("Frame", p)
+    card.Position = UDim2.new(0, 0, 0, 10)
+    card.Size = UDim2.new(1, -10, 0, 140)
+    card.BackgroundColor3 = Color3.fromRGB(30,36,52)
+    card.BorderSizePixel = 0
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,14)
+
+    local lbl = Instance.new("TextLabel", card)
+    lbl.Position = UDim2.new(0, 18, 0, 16)
+    lbl.Size = UDim2.new(1, -36, 0, 26)
     lbl.BackgroundTransparency = 1
     lbl.Font = Enum.Font.GothamBold
-    lbl.TextSize = 22
+    lbl.TextSize = 20
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.TextColor3 = Color3.fromRGB(255,255,255)
-    lbl.Text = name
+    lbl.Text = name.." Page"
 end
 
-dummy("Auto Option")
-dummy("Teleport")
-dummy("Misc")
-dummy("Event")
-dummy("Quest")
-dummy("Shop & Trade")
+dummyPage("Auto Option")
+dummyPage("Teleport")
+dummyPage("Misc")
+dummyPage("Event")
+dummyPage("Quest")
+dummyPage("Shop & Trade")
 
 --================ RIGHT TAB BAR ================--
 local tabBar = Instance.new("Frame", main)
