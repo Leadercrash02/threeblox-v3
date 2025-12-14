@@ -1,12 +1,10 @@
---// THREEBLOX V3 | FINAL FIX COMPLETE
---// CLOSE + MINIMIZE RESTORED
---// NO SCROLL | ANDROID + PC SAFE
+--// THREEBLOX V3 | FINAL STABLE
+--// NO SCROLL | MINIMIZE LOGO | ICON FIX | ANDROID + PC
 
-local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 
--- CLEAN ONLY THREEBLOX
+-- CLEAN OLD
 pcall(function()
 	for _,v in ipairs(CoreGui:GetChildren()) do
 		if v:IsA("ScreenGui") and v.Name == "ThreebloxV3" then
@@ -16,26 +14,29 @@ pcall(function()
 end)
 
 -- CONFIG
+local LOGO_ID = "rbxassetid://121625492591707"
+
 local BG     = Color3.fromRGB(18,20,28)
 local SIDE   = Color3.fromRGB(22,24,34)
 local CARD   = Color3.fromRGB(28,30,42)
 local TEXT   = Color3.fromRGB(235,235,235)
 local ACCENT = Color3.fromRGB(170,80,255)
 
-local ALPHA_MAIN = 0.08
-local ALPHA_SIDE = 0.05
-local ALPHA_CARD = 0.06
+local A_MAIN = 0.08
+local A_SIDE = 0.05
+local A_CARD = 0.06
 
--- ICON
-local PAGE_ICONS = {
+-- PAGE ICONS (TELEPORT FIX)
+local PAGES = {
 	{"Information","ℹ"},
 	{"Auto Option","⚙"},
-	{"Teleport",">"},
+	{"Teleport","➜"}, -- FIX
 	{"Quest","★"},
 	{"Shop & Trade","🛒"},
 	{"Misc","⚡"},
 }
 
+-- AUTO OPTION
 local AUTO_OPTIONS = {
 	{"Auto Fishing","⚙"},
 	{"Legit Perfect","⭕"},
@@ -52,13 +53,42 @@ local gui = Instance.new("ScreenGui", CoreGui)
 gui.Name = "ThreebloxV3"
 gui.IgnoreGuiInset = true
 
+-- MINI LOGO
+local miniLogo = Instance.new("ImageButton", gui)
+miniLogo.Size = UDim2.new(0,56,0,56)
+miniLogo.Position = UDim2.new(0,20,1,-80)
+miniLogo.Image = LOGO_ID
+miniLogo.Visible = false
+miniLogo.BackgroundColor3 = BG
+miniLogo.BackgroundTransparency = A_MAIN
+miniLogo.BorderSizePixel = 0
+miniLogo.AutoButtonColor = false
+Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
+
+-- DRAG MINI LOGO
+do
+	local d,s,p
+	miniLogo.InputBegan:Connect(function(i)
+		if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
+			d=true s=i.Position p=miniLogo.Position
+		end
+	end)
+	UIS.InputChanged:Connect(function(i)
+		if d then
+			local dx=i.Position-s
+			miniLogo.Position=UDim2.new(p.X.Scale,p.X.Offset+dx.X,p.Y.Scale,p.Y.Offset+dx.Y)
+		end
+	end)
+	UIS.InputEnded:Connect(function() d=false end)
+end
+
 -- MAIN
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0,880,0,500)
 main.Position = UDim2.new(0.5,0,0.5,0)
 main.AnchorPoint = Vector2.new(0.5,0.5)
 main.BackgroundColor3 = BG
-main.BackgroundTransparency = ALPHA_MAIN
+main.BackgroundTransparency = A_MAIN
 Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
 -- HEADER
@@ -77,7 +107,7 @@ title.TextXAlignment = Enum.TextXAlignment.Left
 title.TextColor3 = TEXT
 title.Text = "Threeblox V3 | Auto Option"
 
--- DRAG WINDOW
+-- DRAG MAIN
 do
 	local d,s,p
 	header.InputBegan:Connect(function(i)
@@ -94,7 +124,7 @@ do
 	UIS.InputEnded:Connect(function() d=false end)
 end
 
--- MINIMIZE BUTTON
+-- MINIMIZE
 local minBtn = Instance.new("TextButton", header)
 minBtn.Size = UDim2.new(0,30,0,30)
 minBtn.Position = UDim2.new(1,-72,0.5,-15)
@@ -105,7 +135,7 @@ minBtn.TextColor3 = Color3.new(0,0,0)
 minBtn.BackgroundColor3 = ACCENT
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
 
--- CLOSE BUTTON
+-- CLOSE
 local closeBtn = Instance.new("TextButton", header)
 closeBtn.Size = UDim2.new(0,30,0,30)
 closeBtn.Position = UDim2.new(1,-36,0.5,-15)
@@ -121,11 +151,11 @@ local sidebar = Instance.new("Frame", main)
 sidebar.Position = UDim2.new(0,0,0,48)
 sidebar.Size = UDim2.new(0,200,1,-48)
 sidebar.BackgroundColor3 = SIDE
-sidebar.BackgroundTransparency = ALPHA_SIDE
+sidebar.BackgroundTransparency = A_SIDE
 
-local sideLayout = Instance.new("UIListLayout", sidebar)
-sideLayout.Padding = UDim.new(0,8)
-sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+local sLayout = Instance.new("UIListLayout", sidebar)
+sLayout.Padding = UDim.new(0,8)
+sLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,12)
 
 -- CONTENT
@@ -134,23 +164,21 @@ content.Position = UDim2.new(0,200,0,48)
 content.Size = UDim2.new(1,-200,1,-48)
 content.BackgroundTransparency = 1
 
--- PAGE SYSTEM
+-- PAGES
 local pages = {}
 local function newPage(name)
 	local p = Instance.new("Frame", content)
 	p.Size = UDim2.new(1,0,1,0)
-	p.BackgroundTransparency = 1
 	p.Visible = false
-	pages[name] = p
+	p.BackgroundTransparency = 1
+	pages[name]=p
 	return p
 end
 
 local autoPage = newPage("Auto Option")
-newPage("Information")
-newPage("Teleport")
-newPage("Quest")
-newPage("Shop & Trade")
-newPage("Misc")
+for _,v in ipairs(PAGES) do
+	if not pages[v[1]] then newPage(v[1]) end
+end
 
 local function showPage(name)
 	for _,p in pairs(pages) do p.Visible=false end
@@ -167,20 +195,20 @@ local function sideBtn(name,icon)
 	b.TextSize = 14
 	b.TextColor3 = TEXT
 	b.BackgroundColor3 = CARD
-	b.BackgroundTransparency = ALPHA_CARD
+	b.BackgroundTransparency = A_CARD
 	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
 	b.MouseButton1Click:Connect(function()
 		showPage(name)
 	end)
 end
 
-for _,v in ipairs(PAGE_ICONS) do
+for _,v in ipairs(PAGES) do
 	sideBtn(v[1],v[2])
 end
 
--- AUTO OPTION (NO SCROLL)
-local list = Instance.new("UIListLayout", autoPage)
-list.Padding = UDim.new(0,10)
+-- AUTO OPTION ITEMS
+local layout = Instance.new("UIListLayout", autoPage)
+layout.Padding = UDim.new(0,10)
 Instance.new("UIPadding", autoPage).PaddingTop = UDim.new(0,16)
 Instance.new("UIPadding", autoPage).PaddingLeft = UDim.new(0,16)
 
@@ -188,7 +216,7 @@ local function autoItem(text,emoji)
 	local f = Instance.new("Frame", autoPage)
 	f.Size = UDim2.new(1,-32,0,42)
 	f.BackgroundColor3 = CARD
-	f.BackgroundTransparency = ALPHA_CARD
+	f.BackgroundTransparency = A_CARD
 	Instance.new("UICorner", f).CornerRadius = UDim.new(0,10)
 
 	local bar = Instance.new("Frame", f)
@@ -214,7 +242,13 @@ pages["Auto Option"].Visible = true
 
 -- BUTTON ACTION
 minBtn.MouseButton1Click:Connect(function()
-	main.Visible = false
+	main.Visible=false
+	miniLogo.Visible=true
+end)
+
+miniLogo.MouseButton1Click:Connect(function()
+	main.Visible=true
+	miniLogo.Visible=false
 end)
 
 closeBtn.MouseButton1Click:Connect(function()
