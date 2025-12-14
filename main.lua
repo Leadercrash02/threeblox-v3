@@ -1,6 +1,5 @@
 --// THREEBLOX HUB - FISH IT
---// FINAL FIX | LEFT TAB | TOP RIGHT BUTTON | LOGO MINIMIZE
---// LOGO BY USER | ANDROID + PC SAFE
+--// FULL FINAL SCRIPT | DRAG LOGO | PC + ANDROID SAFE
 
 --================ SERVICES ================--
 local Players = game:GetService("Players")
@@ -12,7 +11,7 @@ local pg = lp:WaitForChild("PlayerGui")
 --================ CLEAN OLD GUI ================--
 pcall(function()
 	for _,v in ipairs(pg:GetChildren()) do
-		if v.Name == "ThreebloxHub" then
+		if v.Name:find("Threeblox") then
 			v:Destroy()
 		end
 	end
@@ -20,7 +19,7 @@ end)
 
 --================ CONFIG ================--
 local LOGO_ID = "rbxassetid://121625492591707"
-local ACCENT = Color3.fromRGB(170, 90, 255)
+local ACCENT  = Color3.fromRGB(170, 90, 255)
 local DARK    = Color3.fromRGB(18, 20, 30)
 
 --================ ROOT GUI ================--
@@ -29,6 +28,18 @@ gui.Name = "ThreebloxHub"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
 gui.Parent = pg
+
+--================ MINI LOGO (MINIMIZE MODE) ================--
+local miniLogo = Instance.new("ImageButton", gui)
+miniLogo.Size = UDim2.new(0, 54, 0, 54)
+miniLogo.Position = UDim2.new(0, 16, 1, -80)
+miniLogo.BackgroundColor3 = DARK
+miniLogo.Image = LOGO_ID
+miniLogo.Visible = false
+miniLogo.BorderSizePixel = 0
+miniLogo.ZIndex = 100
+miniLogo.Active = true
+Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
 
 --================ MAIN WINDOW ================--
 local main = Instance.new("Frame", gui)
@@ -43,6 +54,7 @@ Instance.new("UICorner", main).CornerRadius = UDim.new(0, 16)
 local header = Instance.new("Frame", main)
 header.Size = UDim2.new(1, 0, 0, 42)
 header.BackgroundTransparency = 1
+header.Active = true
 
 local title = Instance.new("TextLabel", header)
 title.Size = UDim2.new(1, -120, 1, 0)
@@ -78,16 +90,16 @@ minBtn.BackgroundColor3 = ACCENT
 minBtn.BorderSizePixel = 0
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
 
---================ LEFT TAB ================--
+--================ SIDEBAR ================--
 local sidebar = Instance.new("Frame", main)
 sidebar.Position = UDim2.new(0, 0, 0, 42)
 sidebar.Size = UDim2.new(0, 150, 1, -42)
 sidebar.BackgroundColor3 = Color3.fromRGB(14,16,24)
 sidebar.BorderSizePixel = 0
 
-local list = Instance.new("UIListLayout", sidebar)
-list.Padding = UDim.new(0, 6)
-list.HorizontalAlignment = Enum.HorizontalAlignment.Center
+local sideLayout = Instance.new("UIListLayout", sidebar)
+sideLayout.Padding = UDim.new(0, 6)
+sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0, 10)
 
 --================ CONTENT ================--
@@ -100,7 +112,7 @@ Instance.new("UIPadding", content).PaddingTop = UDim.new(0, 12)
 --================ PAGE SYSTEM ================--
 local pages = {}
 
-local function newPage(name)
+local function createPage(name)
 	local p = Instance.new("Frame", content)
 	p.Size = UDim2.new(1,0,1,0)
 	p.Visible = false
@@ -116,8 +128,6 @@ local function newPage(name)
 	lbl.TextXAlignment = Enum.TextXAlignment.Left
 	lbl.TextColor3 = Color3.fromRGB(255,255,255)
 	lbl.Text = name
-
-	return p
 end
 
 local tabs = {
@@ -131,7 +141,7 @@ local tabs = {
 }
 
 for _,name in ipairs(tabs) do
-	newPage(name)
+	createPage(name)
 
 	local btn = Instance.new("TextButton", sidebar)
 	btn.Size = UDim2.new(1, -20, 0, 34)
@@ -161,21 +171,12 @@ end
 
 pages["Information"].Visible = true
 
---================ LOGO MINIMIZE ICON ================--
-local miniLogo = Instance.new("ImageButton", gui)
-miniLogo.Size = UDim2.new(0, 54, 0, 54)
-miniLogo.Position = UDim2.new(0, 12, 1, -70)
-miniLogo.BackgroundColor3 = DARK
-miniLogo.Image = LOGO_ID
-miniLogo.Visible = false
-miniLogo.BorderSizePixel = 0
-Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
-
---================ DRAG MAIN ================--
+--================ DRAG MAIN WINDOW ================--
 do
 	local dragging, dragStart, startPos
 	header.InputBegan:Connect(function(i)
-		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+		if i.UserInputType == Enum.UserInputType.MouseButton1
+		or i.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = i.Position
 			startPos = main.Position
@@ -188,9 +189,39 @@ do
 	end)
 
 	UserInputService.InputChanged:Connect(function(i)
-		if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then
+		if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
+		or i.UserInputType == Enum.UserInputType.Touch) then
 			local delta = i.Position - dragStart
 			main.Position = UDim2.new(
+				startPos.X.Scale, startPos.X.Offset + delta.X,
+				startPos.Y.Scale, startPos.Y.Offset + delta.Y
+			)
+		end
+	end)
+end
+
+--================ DRAG MINI LOGO ================--
+do
+	local dragging, dragStart, startPos
+	miniLogo.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1
+		or i.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = i.Position
+			startPos = miniLogo.Position
+			i.Changed:Connect(function()
+				if i.UserInputState == Enum.UserInputState.End then
+					dragging = false
+				end
+			end)
+		end
+	end)
+
+	UserInputService.InputChanged:Connect(function(i)
+		if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
+		or i.UserInputType == Enum.UserInputType.Touch) then
+			local delta = i.Position - dragStart
+			miniLogo.Position = UDim2.new(
 				startPos.X.Scale, startPos.X.Offset + delta.X,
 				startPos.Y.Scale, startPos.Y.Offset + delta.Y
 			)
