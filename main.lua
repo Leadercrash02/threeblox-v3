@@ -1,5 +1,5 @@
 --// THREEBLOX V3 | FISH IT
---// FULL UI FINAL | ICON TEXT (ANTI BLOCK)
+--// FULL UI FINAL | SIDEBAR + ITEM EMOJI (ANTI BLOCK)
 --// UI ONLY | PC + ANDROID SAFE (XENO / DELTA)
 
 --================ SERVICES =================--
@@ -28,7 +28,7 @@ local TEXT   = Color3.fromRGB(235,235,235)
 local MUTED  = Color3.fromRGB(180,180,180)
 local ACCENT = Color3.fromRGB(170,80,255)
 
---================ ROOT GUI =================--
+--================ ROOT =================--
 local gui = Instance.new("ScreenGui", pg)
 gui.Name = "ThreebloxV3"
 gui.IgnoreGuiInset = true
@@ -108,7 +108,7 @@ Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
 --================ SIDEBAR =================--
 local side = Instance.new("Frame", main)
 side.Position = UDim2.new(0,0,0,48)
-side.Size = UDim2.new(0,200,1,-48)
+side.Size = UDim2.new(0,220,1,-48)
 side.BackgroundColor3 = SIDE
 side.BorderSizePixel = 0
 
@@ -119,13 +119,12 @@ Instance.new("UIPadding", side).PaddingTop = UDim.new(0,12)
 
 --================ CONTENT =================--
 local content = Instance.new("Frame", main)
-content.Position = UDim2.new(0,200,0,48)
-content.Size = UDim2.new(1,-200,1,-48)
+content.Position = UDim2.new(0,220,0,48)
+content.Size = UDim2.new(1,-220,1,-48)
 content.BackgroundTransparency = 1
 
 --================ PAGE SYSTEM =================--
 local pages = {}
-
 local function createPage(name)
 	local p = Instance.new("Frame", content)
 	p.Size = UDim2.new(1,0,1,0)
@@ -135,24 +134,25 @@ local function createPage(name)
 	return p
 end
 
-local pageNames = {
-	"Information",
-	"Auto Option",
-	"Teleport",
-	"Quest",
-	"Shop & Trade",
-	"Misc"
+-- PAGE LIST (EMOJI + NAME)
+local pageList = {
+	{key="Information",  label="ℹ️  Information"},
+	{key="Auto Option",  label="🎣  Auto Option"},
+	{key="Teleport",    label="🧭  Teleport"},
+	{key="Quest",       label="📜  Quest"},
+	{key="Shop & Trade",label="🛒  Shop & Trade"},
+	{key="Misc",        label="⚙️  Misc"},
 }
 
-for _,n in ipairs(pageNames) do
-	createPage(n)
+for _,p in ipairs(pageList) do
+	createPage(p.key)
 end
 
---================ SIDEBAR BUTTON =================--
-local function sideBtn(name)
+--================ SIDEBAR BUTTON (EMOJI) =================--
+local function sideBtn(key, label)
 	local b = Instance.new("TextButton", side)
 	b.Size = UDim2.new(1,-20,0,38)
-	b.Text = name
+	b.Text = label
 	b.Font = Enum.Font.Gotham
 	b.TextSize = 14
 	b.TextColor3 = TEXT
@@ -161,19 +161,18 @@ local function sideBtn(name)
 	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
 
 	b.MouseButton1Click:Connect(function()
-		for _,p in pairs(pages) do p.Visible=false end
-		pages[name].Visible=true
-		title.Text = "Threeblox V3 | "..name
+		for _,pg in pairs(pages) do pg.Visible=false end
+		pages[key].Visible=true
+		title.Text = "Threeblox V3 | "..key
 	end)
 end
 
-for _,n in ipairs(pageNames) do
-	sideBtn(n)
+for _,p in ipairs(pageList) do
+	sideBtn(p.key, p.label)
 end
 
---================ AUTO OPTION CONTENT =================--
+--================ AUTO OPTION (EMOJI ITEM) =================--
 local auto = pages["Auto Option"]
-
 local list = Instance.new("UIListLayout", auto)
 list.Padding = UDim.new(0,10)
 Instance.new("UIPadding", auto).PaddingTop = UDim.new(0,16)
@@ -223,6 +222,7 @@ autoItem("💰","Auto Sell")
 autoItem("🗿","Auto Totem")
 autoItem("🧪","Auto Potion")
 
+-- DEFAULT PAGE
 pages["Auto Option"].Visible = true
 
 --================ ACTIONS =================--
