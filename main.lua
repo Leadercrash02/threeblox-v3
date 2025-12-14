@@ -1,11 +1,14 @@
 --// THREEBLOX HUB - FISH IT
---// FINAL GUI (DRAG + MINIMIZE + CLOSE + ICON TAB)
+--// FULL GUI (DRAG + MINIMIZE + CLOSE + ICON TAB)
+
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 
+
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
+
 
 --========== ROOT GUI ==========--
 local gui = Instance.new("ScreenGui")
@@ -14,6 +17,7 @@ gui.ResetOnSpawn = false
 gui.IgnoreGuiInset = true
 gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 gui.Parent = pg
+
 
 --========== MAIN WINDOW ==========--
 local main = Instance.new("Frame")
@@ -25,15 +29,16 @@ main.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
 main.BorderSizePixel = 0
 main.Parent = gui
 
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 10)
-mainCorner.Parent = main
 
-local mainStroke = Instance.new("UIStroke")
+local mainCorner = Instance.new("UICorner", main)
+mainCorner.CornerRadius = UDim.new(0, 10)
+
+
+local mainStroke = Instance.new("UIStroke", main)
 mainStroke.Color = Color3.fromRGB(0, 0, 0)
 mainStroke.Thickness = 1
 mainStroke.Transparency = 0.4
-mainStroke.Parent = main
+
 
 --========== HEADER (DRAG HANDLE) ==========--
 local header = Instance.new("Frame")
@@ -43,9 +48,10 @@ header.BackgroundColor3 = Color3.fromRGB(255, 191, 0)
 header.BorderSizePixel = 0
 header.Parent = main
 
-local headerCorner = Instance.new("UICorner")
+
+local headerCorner = Instance.new("UICorner", header)
 headerCorner.CornerRadius = UDim.new(0, 10)
-headerCorner.Parent = header
+
 
 local title = Instance.new("TextLabel")
 title.BackgroundTransparency = 1
@@ -58,6 +64,7 @@ title.Position = UDim2.new(0, 16, 0, 4)
 title.Size = UDim2.new(0.5, 0, 0.5, 0)
 title.Parent = header
 
+
 local subtitle = Instance.new("TextLabel")
 subtitle.BackgroundTransparency = 1
 subtitle.Font = Enum.Font.Gotham
@@ -68,6 +75,7 @@ subtitle.Text = "Fish It"
 subtitle.Position = UDim2.new(0, 16, 0, 20)
 subtitle.Size = UDim2.new(0.5, 0, 0.5, 0)
 subtitle.Parent = header
+
 
 local rightText = Instance.new("TextLabel")
 rightText.BackgroundTransparency = 1
@@ -80,6 +88,7 @@ rightText.AnchorPoint = Vector2.new(1, 0)
 rightText.Position = UDim2.new(1, -70, 0, 12)
 rightText.Size = UDim2.new(0.4, 0, 1, 0)
 rightText.Parent = header
+
 
 -- Close button [X]
 local closeBtn = Instance.new("TextButton")
@@ -94,6 +103,7 @@ closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 closeBtn.Parent = header
 
+
 -- Minimize button [-]
 local miniBtn = Instance.new("TextButton")
 miniBtn.Name = "Minimize"
@@ -106,6 +116,7 @@ miniBtn.TextSize = 18
 miniBtn.Text = "-"
 miniBtn.TextColor3 = Color3.fromRGB(0, 0, 0)
 miniBtn.Parent = header
+
 
 --========== MINIMIZED ICON ==========--
 local miniIcon = Instance.new("TextButton")
@@ -122,65 +133,75 @@ miniIcon.TextSize = 14
 miniIcon.TextColor3 = Color3.fromRGB(255, 255, 255)
 miniIcon.Parent = gui
 
-local miniCorner = Instance.new("UICorner")
+
+local miniCorner = Instance.new("UICorner", miniIcon)
 miniCorner.CornerRadius = UDim.new(0, 6)
-miniCorner.Parent = miniIcon
+
 
 miniBtn.MouseButton1Click:Connect(function()
-    main.Visible = false
-    miniIcon.Visible = true
+    main.Visible = false
+    miniIcon.Visible = true
 end)
+
 
 miniIcon.MouseButton1Click:Connect(function()
-    main.Visible = true
-    miniIcon.Visible = false
+    main.Visible = true
+    miniIcon.Visible = false
 end)
 
+
 closeBtn.MouseButton1Click:Connect(function()
-    gui:Destroy()
+    gui:Destroy()
 end)
+
 
 --========== DRAG LOGIC ==========--
 local dragging = false
 local dragInput, dragStart, startPos
 
+
 local function updateDrag(input)
-    local delta = input.Position - dragStart
-    main.Position = UDim2.new(
-        startPos.X.Scale,
-        startPos.X.Offset + delta.X,
-        startPos.Y.Scale,
-        startPos.Y.Offset + delta.Y
-    )
+    local delta = input.Position - dragStart
+    main.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
 end
 
-header.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = main.Position
 
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
+header.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = main.Position
+
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
 end)
+
 
 header.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement
-    or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
 end)
 
+
 UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        updateDrag(input)
-    end
+    if input == dragInput and dragging then
+        updateDrag(input)
+    end
 end)
+
 
 --========== SIDEBAR ==========--
 local sidebar = Instance.new("Frame")
@@ -191,17 +212,22 @@ sidebar.BackgroundColor3 = Color3.fromRGB(10, 15, 22)
 sidebar.BorderSizePixel = 0
 sidebar.Parent = main
 
+
 local sideLayout = Instance.new("UIListLayout")
 sideLayout.Padding = UDim.new(0, 4)
 sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 sideLayout.VerticalAlignment = Enum.VerticalAlignment.Top
 sideLayout.Parent = sidebar
 
+
 local paddingSide = Instance.new("UIPadding")
-paddingSide.PaddingTop   = UDim.new(0, 8)
-paddingSide.PaddingLeft  = UDim.new(0, 8)
+paddingSide.PaddingTop   = UDim.new(0, 8)
+paddingSide.PaddingLeft  = UDim.new(0, 8)
 paddingSide.PaddingRight = UDim.new(0, 8)
 paddingSide.Parent = sidebar
+
+
+
 
 --========== CONTENT AREA ==========--
 local content = Instance.new("Frame")
@@ -212,97 +238,108 @@ content.BackgroundColor3 = Color3.fromRGB(12, 18, 28)
 content.BorderSizePixel = 0
 content.Parent = main
 
-local paddingContent = Instance.new("UIPadding")
-paddingContent.PaddingTop    = UDim.new(0, 8)
-paddingContent.PaddingLeft   = UDim.new(0, 12)
-paddingContent.PaddingRight  = UDim.new(0, 12)
+
+local paddingContent = Instance.new("UIPadding", content)
+paddingContent.PaddingTop = UDim.new(0, 8)
+paddingContent.PaddingLeft = UDim.new(0, 12)
+paddingContent.PaddingRight = UDim.new(0, 12)
 paddingContent.PaddingBottom = UDim.new(0, 8)
-paddingContent.Parent = content
+
 
 --========== TAB BUTTON CREATOR (ICON) ==========--
 local function createTabButton(text, imageId)
-    local btn = Instance.new("TextButton")
-    btn.Size = UDim2.new(1, 0, 0, 32)
-    btn.BackgroundColor3 = Color3.fromRGB(18, 26, 38)
-    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    btn.BorderSizePixel = 0
-    btn.AutoButtonColor = false
-    btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
-    btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.Text = "   " .. text
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(1, 0, 0, 32)
+    btn.BackgroundColor3 = Color3.fromRGB(18, 26, 38)
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.BorderSizePixel = 0
+    btn.AutoButtonColor = false
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Text = "   " .. text
 
-    local c = Instance.new("UICorner")
-    c.CornerRadius = UDim.new(0, 6)
-    c.Parent = btn
 
-    local stroke = Instance.new("UIStroke")
-    stroke.Color = Color3.fromRGB(0, 0, 0)
-    stroke.Thickness = 1
-    stroke.Transparency = 0.6
-    stroke.Parent = btn
+    local c = Instance.new("UICorner", btn)
+    c.CornerRadius = UDim.new(0, 6)
 
-    local icon = Instance.new("ImageLabel")
-    icon.BackgroundTransparency = 1
-    icon.Size = UDim2.new(0, 18, 0, 18)
-    icon.Position = UDim2.new(0, 8, 0.5, 0)
-    icon.AnchorPoint = Vector2.new(0, 0.5)
-    if imageId and imageId ~= 0 then
-        icon.Image = "rbxassetid://" .. tostring(imageId)
-    end
-    icon.Parent = btn
 
-    btn.Parent = sidebar
-    return btn
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Color = Color3.fromRGB(0, 0, 0)
+    stroke.Thickness = 1
+    stroke.Transparency = 0.6
+
+
+    local icon = Instance.new("ImageLabel")
+    icon.BackgroundTransparency = 1
+    icon.Size = UDim2.new(0, 18, 0, 18)
+    icon.Position = UDim2.new(0, 8, 0.5, 0)
+    icon.AnchorPoint = Vector2.new(0, 0.5)
+    if imageId and imageId ~= 0 then
+        icon.Image = "rbxassetid://" .. tostring(imageId)
+    end
+    icon.Parent = btn
+
+
+    btn.Parent = sidebar
+    return btn
 end
+
 
 --========== TABS & PAGES ==========--
 local tabInfo = {
-    ["Main"]         = 0,
-    ["Auto Fish"]    = 0,
-    ["Backpack"]     = 0,
-    ["Teleport"]     = 0,
-    ["Quest"]        = 0,
-    ["Shop & Trade"] = 0,
-    ["Misc"]         = 0,
-    ["Info"]         = 0,
+    ["Main"]         = 0,
+    ["Auto Fish"]    = 0,
+    ["Backpack"]     = 0,
+    ["Teleport"]     = 0,
+    ["Quest"]        = 0,
+    ["Shop & Trade"] = 0,
+    ["Misc"]         = 0,
+    ["Info"]         = 0,
 }
+
 
 local pages = {}
 local buttons = {}
 
-for name, imgId in pairs(tabInfo) do
-    local page = Instance.new("Frame")
-    page.Name = name .. "Page"
-    page.Size = UDim2.new(1, 0, 1, 0)
-    page.BackgroundTransparency = 1
-    page.Visible = false
-    page.Parent = content
-    pages[name] = page
 
-    local btn = createTabButton(name, imgId)
-    buttons[name] = btn
+for name, imgId in pairs(tabInfo) do
+    local page = Instance.new("Frame")
+    page.Name = name .. "Page"
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    page.Visible = false
+    page.Parent = content
+    pages[name] = page
+
+
+    local btn = createTabButton(name, imgId)
+    buttons[name] = btn
 end
+
 
 local function setActiveTab(name)
-    for n, pg in pairs(pages) do
-        pg.Visible = (n == name)
-    end
-    for n, btn in pairs(buttons) do
-        btn.BackgroundColor3 = (n == name)
-            and Color3.fromRGB(35, 49, 70)
-            or  Color3.fromRGB(18, 26, 38)
-    end
+    for n, pg in pairs(pages) do
+        pg.Visible = (n == name)
+    end
+    for n, btn in pairs(buttons) do
+        btn.BackgroundColor3 = (n == name)
+            and Color3.fromRGB(35, 49, 70)
+            or  Color3.fromRGB(18, 26, 38)
+    end
 end
 
+
 for name, btn in pairs(buttons) do
-    btn.MouseButton1Click:Connect(function()
-        setActiveTab(name)
-    end)
+    btn.MouseButton1Click:Connect(function()
+        setActiveTab(name)
+    end)
 end
+
 
 --========== INFO PAGE ==========--
 local infoPage = pages["Info"]
+
 
 local infoTitle = Instance.new("TextLabel")
 infoTitle.BackgroundTransparency = 1
@@ -315,6 +352,7 @@ infoTitle.Position = UDim2.new(0, 4, 0, 2)
 infoTitle.Size = UDim2.new(1, -8, 0, 24)
 infoTitle.Parent = infoPage
 
+
 local updateTitle = Instance.new("TextLabel")
 updateTitle.BackgroundTransparency = 1
 updateTitle.Font = Enum.Font.GothamBold
@@ -326,22 +364,25 @@ updateTitle.Position = UDim2.new(0, 4, 0, 30)
 updateTitle.Size = UDim2.new(1, -8, 0, 22)
 updateTitle.Parent = infoPage
 
+
 local function createInfoLine(text, order)
-    local lbl = Instance.new("TextLabel")
-    lbl.BackgroundTransparency = 1
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 14
-    lbl.TextColor3 = Color3.fromRGB(210, 210, 210)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left
-    lbl.Text = text
-    lbl.Position = UDim2.new(0, 10, 0, 30 + 24 + (order * 20))
-    lbl.Size = UDim2.new(1, -20, 0, 20)
-    lbl.Parent = infoPage
+    local lbl = Instance.new("TextLabel")
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 14
+    lbl.TextColor3 = Color3.fromRGB(210, 210, 210)
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.Text = text
+    lbl.Position = UDim2.new(0, 10, 0, 30 + 24 + (order * 20))
+    lbl.Size = UDim2.new(1, -20, 0, 20)
+    lbl.Parent = infoPage
 end
+
 
 createInfoLine("- Added Auto Fish (edit sendiri)", 0)
 createInfoLine("- Added Teleport Menu", 1)
 createInfoLine("- Added Custom Settings", 2)
+
 
 --========== MAIN PAGE ==========--
 local mainPage = pages["Main"]
@@ -356,6 +397,7 @@ mainLabel.Position = UDim2.new(0, 4, 0, 2)
 mainLabel.Size = UDim2.new(1, -8, 0, 24)
 mainLabel.Parent = mainPage
 
+
 --========== AUTO FISH PAGE ==========--
 local autoPage = pages["Auto Fish"]
 local autoTitle = Instance.new("TextLabel")
@@ -369,6 +411,7 @@ autoTitle.Position = UDim2.new(0, 4, 0, 2)
 autoTitle.Size = UDim2.new(1, -8, 0, 24)
 autoTitle.Parent = autoPage
 
+
 local autoBtn = Instance.new("TextButton")
 autoBtn.BackgroundColor3 = Color3.fromRGB(20, 30, 45)
 autoBtn.BorderSizePixel = 0
@@ -380,16 +423,18 @@ autoBtn.Position = UDim2.new(0, 4, 0, 34)
 autoBtn.Size = UDim2.new(0, 160, 0, 28)
 autoBtn.Parent = autoPage
 
-local autoBtnCorner = Instance.new("UICorner")
+
+local autoBtnCorner = Instance.new("UICorner", autoBtn)
 autoBtnCorner.CornerRadius = UDim.new(0, 6)
-autoBtnCorner.Parent = autoBtn
+
 
 local autoState = false
 autoBtn.MouseButton1Click:Connect(function()
-    autoState = not autoState
-    autoBtn.Text = "Auto Fish [" .. (autoState and "ON" or "OFF") .. "]"
-    -- TARUH LOGIC AUTO FISH DI SINI
+    autoState = not autoState
+    autoBtn.Text = "Auto Fish [" .. (autoState and "ON" or "OFF") .. "]"
+    -- TARUH LOGIC AUTO FISH DI SINI
 end)
+
 
 --========== BACKPACK PAGE ==========--
 local backpackPage = pages["Backpack"]
@@ -404,6 +449,7 @@ backpackLabel.Position = UDim2.new(0, 4, 0, 2)
 backpackLabel.Size = UDim2.new(1, -8, 0, 24)
 backpackLabel.Parent = backpackPage
 
+
 --========== TELEPORT PAGE ==========--
 local tpPage = pages["Teleport"]
 local tpTitle = Instance.new("TextLabel")
@@ -416,6 +462,7 @@ tpTitle.Text = "Teleport"
 tpTitle.Position = UDim2.new(0, 4, 0, 2)
 tpTitle.Size = UDim2.new(1, -8, 0, 24)
 tpTitle.Parent = tpPage
+
 
 --========== QUEST PAGE ==========--
 local questPage = pages["Quest"]
@@ -430,6 +477,7 @@ questTitle.Position = UDim2.new(0, 4, 0, 2)
 questTitle.Size = UDim2.new(1, -8, 0, 24)
 questTitle.Parent = questPage
 
+
 --========== SHOP & TRADE PAGE ==========--
 local shopPage = pages["Shop & Trade"]
 local shopTitle = Instance.new("TextLabel")
@@ -443,6 +491,7 @@ shopTitle.Position = UDim2.new(0, 4, 0, 2)
 shopTitle.Size = UDim2.new(1, -8, 0, 24)
 shopTitle.Parent = shopPage
 
+
 --========== MISC PAGE ==========--
 local miscPage = pages["Misc"]
 local miscTitle = Instance.new("TextLabel")
@@ -455,6 +504,7 @@ miscTitle.Text = "Misc"
 miscTitle.Position = UDim2.new(0, 4, 0, 2)
 miscTitle.Size = UDim2.new(1, -8, 0, 24)
 miscTitle.Parent = miscPage
+
 
 --========== DEFAULT TAB ==========--
 setActiveTab("Main")
