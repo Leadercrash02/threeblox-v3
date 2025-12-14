@@ -178,24 +178,16 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
---========== SIDEBAR ==========--
-local sidebar = Instance.new("Frame")
-sidebar.Name = "Sidebar"
-sidebar.Position = UDim2.new(0, 0, 0, 40)
-sidebar.Size = UDim2.new(0, 150, 1, -40)
-sidebar.BackgroundColor3 = Color3.fromRGB(10, 15, 22)
-sidebar.BorderSizePixel = 0
-sidebar.Parent = main
+-- YANG BENAR (pakai UDim.new)
+paddingSide.PaddingTop    = UDim.new(0, 8)
+paddingSide.PaddingLeft   = UDim.new(0, 8)
+paddingSide.PaddingRight  = UDim.new(0, 8)
 
-local sideLayout = Instance.new("UIListLayout", sidebar)
-sideLayout.Padding = UDim.new(0, 4)
-sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-sideLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+paddingContent.PaddingTop    = UDim.new(0, 8)
+paddingContent.PaddingLeft   = UDim.new(0, 12)
+paddingContent.PaddingRight  = UDim.new(0, 12)
+paddingContent.PaddingBottom = UDim.new(0, 8)
 
-local paddingSide = Instance.new("UIPadding", sidebar)
-paddingSide.PaddingTop = UDim.new(0, 8)
-paddingSide.PaddingLeft = UDim.new(0, 8)
-paddingSide.PaddingRight = UDim.new(0, 8)
 
 --========== CONTENT AREA ==========--
 local content = Instance.new("Frame")
