@@ -207,7 +207,7 @@ content.BorderSizePixel = 0
 content.Parent = main
 
 local paddingContent = Instance.new("UIPadding", content)
-paddingContent.PaddingTop = UDim2.new(0, 8)
+paddingContent.PaddingTop = UDim.new(0, 8)
 paddingContent.PaddingLeft = UDim.new(0, 12)
 paddingContent.PaddingRight = UDim.new(0, 12)
 paddingContent.PaddingBottom = UDim.new(0, 8)
@@ -249,14 +249,14 @@ end
 
 --========== TABS & PAGES ==========--
 local tabInfo = {
-    ["Main"]        = 0,
-    ["Auto Fish"]   = 0,
-    ["Backpack"]    = 0,
-    ["Teleport"]    = 0,
-    ["Quest"]       = 0,
-    ["Shop & Trade"]= 0,
-    ["Misc"]        = 0,
-    ["Info"]        = 0,
+    ["Main"]         = 0,
+    ["Auto Fish"]    = 0,
+    ["Backpack"]     = 0,
+    ["Teleport"]     = 0,
+    ["Quest"]        = 0,
+    ["Shop & Trade"] = 0,
+    ["Misc"]         = 0,
+    ["Info"]         = 0,
 }
 
 local pages = {}
