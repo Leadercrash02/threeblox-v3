@@ -1,171 +1,193 @@
 --// THREEBLOX HUB - FISH IT
---// UPDATE 2 FULL GUI (READY USE | ANDROID + PC)
+--// UPDATE 2 FULL GUI
+--// READY FOR REMOTE (NO DUMMY CONTENT)
+--// ANDROID + PC SAFE
 
 --================ SERVICES ================--
 local Players = game:GetService("Players")
-local UIS = game:GetService("UserInputService")
-
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
 --================ CLEAN OLD GUI ================--
 pcall(function()
-    for _,v in ipairs(pg:GetChildren()) do
-        if v:IsA("ScreenGui") and v.Name:find("Threeblox") then
-            v:Destroy()
-        end
-    end
+	for _,v in ipairs(pg:GetChildren()) do
+		if v:IsA("ScreenGui") and v.Name:find("Threeblox") then
+			v:Destroy()
+		end
+	end
 end)
 
+--================ CONFIG ================--
+local LOGO_ID = "rbxassetid://121625492591707"
+local ACCENT  = Color3.fromRGB(170, 90, 255)
+local BG      = Color3.fromRGB(18,20,30)
+local SIDE    = Color3.fromRGB(14,16,24)
+local CARD    = Color3.fromRGB(30,32,44)
+local TEXT    = Color3.fromRGB(235,235,235)
+
 --================ ROOT GUI ================--
-local gui = Instance.new("ScreenGui", pg)
-gui.Name = "ThreebloxHubV2"
+local gui = Instance.new("ScreenGui")
+gui.Name = "ThreebloxHub"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
+gui.Parent = pg
 
---================ COLORS ================--
-local BG      = Color3.fromRGB(20,22,32)
-local SIDE    = Color3.fromRGB(16,18,26)
-local CARD    = Color3.fromRGB(30,32,44)
-local ACCENT  = Color3.fromRGB(160,90,255)
-local TEXT    = Color3.fromRGB(235,235,235)
+--================ MINI LOGO (MINIMIZE MODE) ================--
+local miniLogo = Instance.new("ImageButton", gui)
+miniLogo.Size = UDim2.new(0, 56, 0, 56)
+miniLogo.Position = UDim2.new(0, 20, 0.5, -28)
+miniLogo.BackgroundColor3 = BG
+miniLogo.Image = LOGO_ID
+miniLogo.Visible = false
+miniLogo.BorderSizePixel = 0
+miniLogo.ZIndex = 999
+miniLogo.Active = true
+miniLogo.AutoButtonColor = false
+miniLogo.Draggable = true
+Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
 
 --================ MAIN WINDOW ================--
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 760, 0, 420)
-main.Position = UDim2.new(0.5,0,0.5,0)
-main.AnchorPoint = Vector2.new(0.5,0.5)
+main.Size = UDim2.new(0, 760, 0, 440)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.AnchorPoint = Vector2.new(0.5, 0.5)
 main.BackgroundColor3 = BG
 main.BorderSizePixel = 0
+main.Active = true
+main.Draggable = true
 Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
 --================ HEADER ================--
 local header = Instance.new("Frame", main)
-header.Size = UDim2.new(1,0,0,46)
+header.Size = UDim2.new(1, 0, 0, 44)
 header.BackgroundTransparency = 1
 
 local title = Instance.new("TextLabel", header)
-title.Size = UDim2.new(1,-140,1,0)
-title.Position = UDim2.new(0,16,0,0)
+title.Size = UDim2.new(1, -140, 1, 0)
+title.Position = UDim2.new(0, 16, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "Threeblox V3 – Fish It"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 20
+title.TextXAlignment = Enum.TextXAlignment.Left
 title.TextColor3 = TEXT
-title.TextXAlignment = Left
+title.Text = "Threeblox V3 | Information"
+
+-- MINIMIZE
+local minBtn = Instance.new("TextButton", header)
+minBtn.Size = UDim2.new(0, 28, 0, 28)
+minBtn.Position = UDim2.new(1, -70, 0.5, -14)
+minBtn.Text = "-"
+minBtn.Font = Enum.Font.GothamBold
+minBtn.TextSize = 20
+minBtn.TextColor3 = Color3.fromRGB(0,0,0)
+minBtn.BackgroundColor3 = ACCENT
+minBtn.BorderSizePixel = 0
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
 
 -- CLOSE
 local closeBtn = Instance.new("TextButton", header)
-closeBtn.Size = UDim2.new(0,30,0,30)
-closeBtn.Position = UDim2.new(1,-36,0.5,-15)
+closeBtn.Size = UDim2.new(0, 28, 0, 28)
+closeBtn.Position = UDim2.new(1, -36, 0.5, -14)
 closeBtn.Text = "X"
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.TextSize = 14
-closeBtn.TextColor3 = Color3.new(1,1,1)
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
 closeBtn.BackgroundColor3 = Color3.fromRGB(200,60,60)
 closeBtn.BorderSizePixel = 0
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
 
--- MINIMIZE
-local minBtn = Instance.new("TextButton", header)
-minBtn.Size = UDim2.new(0,30,0,30)
-minBtn.Position = UDim2.new(1,-72,0.5,-15)
-minBtn.Text = "-"
-minBtn.Font = Enum.Font.GothamBold
-minBtn.TextSize = 20
-minBtn.TextColor3 = Color3.new(0,0,0)
-minBtn.BackgroundColor3 = Color3.fromRGB(255,191,0)
-minBtn.BorderSizePixel = 0
-Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
-
---================ SIDEBAR LEFT ================--
+--================ SIDEBAR ================--
 local sidebar = Instance.new("Frame", main)
-sidebar.Position = UDim2.new(0,0,0,46)
-sidebar.Size = UDim2.new(0,170,1,-46)
+sidebar.Position = UDim2.new(0, 0, 0, 44)
+sidebar.Size = UDim2.new(0, 180, 1, -44)
 sidebar.BackgroundColor3 = SIDE
 sidebar.BorderSizePixel = 0
 
 local sideLayout = Instance.new("UIListLayout", sidebar)
-sideLayout.Padding = UDim.new(0,6)
-Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,10)
+sideLayout.Padding = UDim.new(0, 6)
+sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 
---================ CONTENT RIGHT ================--
+local sidePad = Instance.new("UIPadding", sidebar)
+sidePad.PaddingTop = UDim.new(0, 10)
+
+--================ CONTENT ================--
 local content = Instance.new("Frame", main)
-content.Position = UDim2.new(0,170,0,46)
-content.Size = UDim2.new(1,-170,1,-46)
+content.Position = UDim2.new(0, 180, 0, 44)
+content.Size = UDim2.new(1, -180, 1, -44)
 content.BackgroundTransparency = 1
-Instance.new("UIPadding", content).PaddingTop = UDim.new(0,14)
-Instance.new("UIPadding", content).PaddingLeft = UDim.new(0,14)
 
 --================ PAGE SYSTEM ================--
 local pages = {}
 
 local function createPage(name)
-    local p = Instance.new("Frame", content)
-    p.Size = UDim2.new(1,0,1,0)
-    p.Visible = false
-    p.BackgroundTransparency = 1
-    pages[name] = p
-    return p
+	local p = Instance.new("Frame", content)
+	p.Size = UDim2.new(1,0,1,0)
+	p.Visible = false
+	p.BackgroundTransparency = 1
+	pages[name] = p
+	return p
 end
 
---================ AUTO OPTION PAGE ================--
-local autoPage = createPage("Auto Option")
+-- PAGES (READY FOR REMOTE)
+createPage("Information")
+local autoPage     = createPage("Auto Option")
+createPage("Teleport")
+createPage("Quest")
+createPage("Shop & Trade")
+createPage("Misc")
 
+--================ AUTO OPTION CONTENT =================
 local ICONS = {
-    AutoFishing = "rbxassetid://6034509993",
-    Legit       = "rbxassetid://6031068433",
-    Blatant     = "rbxassetid://6034287525",
-    Farm        = "rbxassetid://6034328955",
-    Favorite    = "rbxassetid://6031265976",
-    Sell        = "rbxassetid://6034509983",
-    Totem       = "rbxassetid://6035047377",
-    Potion      = "rbxassetid://6034328940",
+	AutoFishing = "rbxassetid://6034509993",
+	Legit       = "rbxassetid://6031068433",
+	Blatant     = "rbxassetid://6034287525",
+	Farm        = "rbxassetid://6034328955",
+	Favorite    = "rbxassetid://6031265976",
+	Sell        = "rbxassetid://6034509983",
+	Totem       = "rbxassetid://6035047377",
+	Potion      = "rbxassetid://6034328940",
 }
 
 local function createAutoItem(text, iconId, y)
-    local item = Instance.new("TextButton", autoPage)
-    item.Size = UDim2.new(1,-40,0,44)
-    item.Position = UDim2.new(0,20,0,y)
-    item.BackgroundColor3 = CARD
-    item.BorderSizePixel = 0
-    item.Text = ""
-    item.AutoButtonColor = false
-    Instance.new("UICorner", item).CornerRadius = UDim.new(0,10)
+	local item = Instance.new("TextButton", autoPage)
+	item.Size = UDim2.new(1, -40, 0, 44)
+	item.Position = UDim2.new(0, 20, 0, y)
+	item.BackgroundColor3 = CARD
+	item.BorderSizePixel = 0
+	item.Text = ""
+	item.AutoButtonColor = false
+	Instance.new("UICorner", item).CornerRadius = UDim.new(0, 10)
 
-    local icon = Instance.new("ImageLabel", item)
-    icon.Size = UDim2.new(0,22,0,22)
-    icon.Position = UDim2.new(0,14,0.5,-11)
-    icon.BackgroundTransparency = 1
-    icon.Image = iconId
-    icon.ImageColor3 = TEXT
+	local icon = Instance.new("ImageLabel", item)
+	icon.Size = UDim2.new(0, 22, 0, 22)
+	icon.Position = UDim2.new(0, 14, 0.5, -11)
+	icon.BackgroundTransparency = 1
+	icon.Image = iconId
+	icon.ImageColor3 = TEXT
 
-    local label = Instance.new("TextLabel", item)
-    label.Size = UDim2.new(1,-90,1,0)
-    label.Position = UDim2.new(0,44,0,0)
-    label.BackgroundTransparency = 1
-    label.Text = text
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 15
-    label.TextXAlignment = Left
-    label.TextColor3 = TEXT
+	local label = Instance.new("TextLabel", item)
+	label.Size = UDim2.new(1, -90, 1, 0)
+	label.Position = UDim2.new(0, 44, 0, 0)
+	label.BackgroundTransparency = 1
+	label.Font = Enum.Font.Gotham
+	label.TextSize = 15
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextColor3 = TEXT
+	label.Text = text
 
-    local arrow = Instance.new("TextLabel", item)
-    arrow.Size = UDim2.new(0,40,1,0)
-    arrow.Position = UDim2.new(1,-40,0,0)
-    arrow.BackgroundTransparency = 1
-    arrow.Text = ">"
-    arrow.Font = Enum.Font.GothamBold
-    arrow.TextSize = 20
-    arrow.TextColor3 = TEXT
+	local arrow = Instance.new("TextLabel", item)
+	arrow.Size = UDim2.new(0, 40, 1, 0)
+	arrow.Position = UDim2.new(1, -40, 0, 0)
+	arrow.BackgroundTransparency = 1
+	arrow.Font = Enum.Font.GothamBold
+	arrow.TextSize = 20
+	arrow.TextColor3 = TEXT
+	arrow.Text = ">"
 
-    local on = false
-    item.MouseButton1Click:Connect(function()
-        on = not on
-        item.BackgroundColor3 = on and ACCENT or CARD
-        label.TextColor3 = on and Color3.new(0,0,0) or TEXT
-        icon.ImageColor3 = on and Color3.new(0,0,0) or TEXT
-    end)
+	-- LOGIC LU MASUK SINI NANTI
+	item.MouseButton1Click:Connect(function()
+		-- taruh remote / function lu di sini
+	end)
 end
 
 createAutoItem("Auto Fishing", ICONS.AutoFishing, 10)
@@ -177,93 +199,47 @@ createAutoItem("Auto Sell", ICONS.Sell, 260)
 createAutoItem("Auto Totem", ICONS.Totem, 310)
 createAutoItem("Auto Potion", ICONS.Potion, 360)
 
---================ SIDEBAR BUTTON ================--
+--================ SIDEBAR BUTTONS =================
 local function sideButton(name)
-    local b = Instance.new("TextButton", sidebar)
-    b.Size = UDim2.new(1,-20,0,36)
-    b.Text = "  "..name
-    b.Font = Enum.Font.Gotham
-    b.TextSize = 14
-    b.TextColor3 = TEXT
-    b.BackgroundColor3 = CARD
-    b.BorderSizePixel = 0
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+	local b = Instance.new("TextButton", sidebar)
+	b.Size = UDim2.new(1, -20, 0, 38)
+	b.Text = "  "..name
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 14
+	b.TextXAlignment = Enum.TextXAlignment.Left
+	b.TextColor3 = TEXT
+	b.BackgroundColor3 = CARD
+	b.BorderSizePixel = 0
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0, 10)
 
-    b.MouseButton1Click:Connect(function()
-        for n,p in pairs(pages) do p.Visible = (n == name) end
-        title.Text = name
-    end)
+	b.MouseButton1Click:Connect(function()
+		for n,p in pairs(pages) do
+			p.Visible = (n == name)
+		end
+		title.Text = "Threeblox V3 | "..name
+	end)
 end
 
+sideButton("Information")
 sideButton("Auto Option")
+sideButton("Teleport")
+sideButton("Quest")
+sideButton("Shop & Trade")
+sideButton("Misc")
 
-pages["Auto Option"].Visible = true
+pages["Information"].Visible = true
 
---================ DRAG MAIN ================--
-do
-    local dragging, start, startPos
-    header.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            start = i.Position
-            startPos = main.Position
-            i.Changed:Connect(function()
-                if i.UserInputState == Enum.UserInputState.End then dragging = false end
-            end)
-        end
-    end)
-
-    UIS.InputChanged:Connect(function(i)
-        if dragging then
-            local delta = i.Position - start
-            main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                      startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-end
-
---================ MINI LOGO (MINIMIZE) ================--
-local mini = Instance.new("ImageButton", gui)
-mini.Size = UDim2.new(0,54,0,54)
-mini.Position = UDim2.new(0,20,1,-80)
-mini.Image = "rbxassetid://135718830702780" -- LOGO LU
-mini.BackgroundColor3 = CARD
-mini.Visible = false
-mini.BorderSizePixel = 0
-Instance.new("UICorner", mini).CornerRadius = UDim.new(1,0)
-
--- DRAG LOGO
-do
-    local d, s, sp
-    mini.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-            d = true
-            s = i.Position
-            sp = mini.Position
-            i.Changed:Connect(function()
-                if i.UserInputState == Enum.UserInputState.End then d = false end
-            end)
-        end
-    end)
-    UIS.InputChanged:Connect(function(i)
-        if d then
-            local delta = i.Position - s
-            mini.Position = UDim2.new(sp.X.Scale, sp.X.Offset + delta.X,
-                                      sp.Y.Scale, sp.Y.Offset + delta.Y)
-        end
-    end)
-end
-
+--================ BUTTON ACTIONS =================
 minBtn.MouseButton1Click:Connect(function()
-    main.Visible = false
-    mini.Visible = true
+	main.Visible = false
+	miniLogo.Visible = true
 end)
 
-mini.MouseButton1Click:Connect(function()
-    main.Visible = true
-    mini.Visible = false
+miniLogo.MouseButton1Click:Connect(function()
+	main.Visible = true
+	miniLogo.Visible = false
 end)
 
 closeBtn.MouseButton1Click:Connect(function()
-    gui:Destroy()
+	gui:Destroy()
 end)
