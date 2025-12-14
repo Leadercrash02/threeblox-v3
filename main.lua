@@ -1,5 +1,5 @@
 --// THREEBLOX HUB - FISH IT
---// FULL GUI (DRAG + MINIMIZE + ICON TAB + CLOSE)
+--// FULL GUI (DRAG + MINIMIZE + CLOSE + ICON TAB)
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -207,7 +207,7 @@ content.BorderSizePixel = 0
 content.Parent = main
 
 local paddingContent = Instance.new("UIPadding", content)
-paddingContent.PaddingTop = UDim.new(0, 8)
+paddingContent.PaddingTop = UDim2.new(0, 8)
 paddingContent.PaddingLeft = UDim.new(0, 12)
 paddingContent.PaddingRight = UDim.new(0, 12)
 paddingContent.PaddingBottom = UDim.new(0, 8)
@@ -360,7 +360,6 @@ autoTitle.Position = UDim2.new(0, 4, 0, 2)
 autoTitle.Size = UDim2.new(1, -8, 0, 24)
 autoTitle.Parent = autoPage
 
--- dummy toggle
 local autoBtn = Instance.new("TextButton")
 autoBtn.BackgroundColor3 = Color3.fromRGB(20, 30, 45)
 autoBtn.BorderSizePixel = 0
@@ -379,7 +378,7 @@ local autoState = false
 autoBtn.MouseButton1Click:Connect(function()
     autoState = not autoState
     autoBtn.Text = "Auto Fish [" .. (autoState and "ON" or "OFF") .. "]"
-    -- logic auto fish lu taruh di sini
+    -- TARUH LOGIC AUTO FISH DI SINI
 end)
 
 --========== BACKPACK PAGE ==========--
