@@ -1,5 +1,6 @@
---// THREEBLOX V3 | FULL UI ALL PAGES
---// UI ONLY | SAFE FOR REMOTE INJECTION
+--// THREEBLOX V3 | FISH IT
+--// FULL UI FINAL | ALL PAGE + ICON FIX
+--// UI ONLY | SAFE TO MERGE FEATURE LOGIC
 --// PC + ANDROID (XENO / DELTA)
 
 --================ SERVICES =================--
@@ -28,13 +29,25 @@ local TEXT   = Color3.fromRGB(235,235,235)
 local MUTED  = Color3.fromRGB(180,180,180)
 local ACCENT = Color3.fromRGB(170,80,255)
 
---================ ROOT =================--
+-- ICON ASSET (PUBLIC ROBLOX)
+local ICONS = {
+	AutoFishing = "rbxassetid://6034509993",
+	Legit       = "rbxassetid://6031068433",
+	Blatant     = "rbxassetid://6034287525",
+	Farm        = "rbxassetid://6034328955",
+	Favorite    = "rbxassetid://6031265976",
+	Sell        = "rbxassetid://6034509983",
+	Totem       = "rbxassetid://6035047377",
+	Potion      = "rbxassetid://6034328940",
+}
+
+--================ ROOT GUI =================--
 local gui = Instance.new("ScreenGui", pg)
 gui.Name = "ThreebloxV3"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
 
---================ MINI LOGO =================--
+--================ MINI LOGO (MINIMIZE) =================--
 local mini = Instance.new("ImageButton", gui)
 mini.Size = UDim2.new(0,56,0,56)
 mini.Position = UDim2.new(0,20,1,-80)
@@ -46,22 +59,22 @@ mini.AutoButtonColor = false
 Instance.new("UICorner", mini).CornerRadius = UDim.new(1,0)
 
 do
-	local d,s,p
+	local drag,start,pos
 	mini.InputBegan:Connect(function(i)
 		if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
-			d=true s=i.Position p=mini.Position
+			drag=true start=i.Position pos=mini.Position
 		end
 	end)
 	UIS.InputChanged:Connect(function(i)
-		if d then
-			local dx=i.Position-s
-			mini.Position=UDim2.new(p.X.Scale,p.X.Offset+dx.X,p.Y.Scale,p.Y.Offset+dx.Y)
+		if drag then
+			local d=i.Position-start
+			mini.Position=UDim2.new(pos.X.Scale,pos.X.Offset+d.X,pos.Y.Scale,pos.Y.Offset+d.Y)
 		end
 	end)
-	UIS.InputEnded:Connect(function() d=false end)
+	UIS.InputEnded:Connect(function() drag=false end)
 end
 
---================ MAIN =================--
+--================ MAIN WINDOW =================--
 local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0,900,0,520)
 main.Position = UDim2.new(0.5,0,0.5,0)
@@ -117,6 +130,7 @@ sideLayout.Padding = UDim.new(0,8)
 sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 Instance.new("UIPadding", side).PaddingTop = UDim.new(0,12)
 
+--================ CONTENT =================--
 local content = Instance.new("Frame", main)
 content.Position = UDim2.new(0,200,0,48)
 content.Size = UDim2.new(1,-200,1,-48)
@@ -134,7 +148,6 @@ local function createPage(name)
 	return p
 end
 
--- CREATE ALL PAGES
 local pageNames = {
 	"Information",
 	"Auto Option",
@@ -179,11 +192,19 @@ list.Padding = UDim.new(0,10)
 Instance.new("UIPadding", auto).PaddingTop = UDim.new(0,16)
 Instance.new("UIPadding", auto).PaddingLeft = UDim.new(0,16)
 
-local function autoItem(text)
+local function autoItem(text, iconId)
 	local f = Instance.new("Frame", auto)
 	f.Size = UDim2.new(1,-32,0,42)
 	f.BackgroundColor3 = CARD
+	f.BorderSizePixel = 0
 	Instance.new("UICorner", f).CornerRadius = UDim.new(0,10)
+
+	local icon = Instance.new("ImageLabel", f)
+	icon.Size = UDim2.new(0,20,0,20)
+	icon.Position = UDim2.new(0,14,0.5,-10)
+	icon.BackgroundTransparency = 1
+	icon.Image = iconId
+	icon.ImageColor3 = MUTED
 
 	local t = Instance.new("TextLabel", f)
 	t.Text = text
@@ -191,21 +212,30 @@ local function autoItem(text)
 	t.TextSize = 15
 	t.TextColor3 = TEXT
 	t.BackgroundTransparency = 1
-	t.Size = UDim2.new(1,-20,1,0)
-	t.Position = UDim2.new(0,10,0,0)
+	t.Position = UDim2.new(0,48,0,0)
+	t.Size = UDim2.new(1,-80,1,0)
 	t.TextXAlignment = Enum.TextXAlignment.Left
+
+	local arrow = Instance.new("TextLabel", f)
+	arrow.Text = ">"
+	arrow.Font = Enum.Font.GothamBold
+	arrow.TextSize = 18
+	arrow.TextColor3 = MUTED
+	arrow.BackgroundTransparency = 1
+	arrow.Size = UDim2.new(0,24,1,0)
+	arrow.Position = UDim2.new(1,-28,0,0)
 end
 
-autoItem("Auto Fishing")
-autoItem("Legit Perfect")
-autoItem("Blatant Fishing")
-autoItem("Auto Farm Island")
-autoItem("Auto Favorite")
-autoItem("Auto Sell")
-autoItem("Auto Totem")
-autoItem("Auto Potion")
+autoItem("Auto Fishing", ICONS.AutoFishing)
+autoItem("Legit Perfect", ICONS.Legit)
+autoItem("Blatant Fishing", ICONS.Blatant)
+autoItem("Auto Farm Island", ICONS.Farm)
+autoItem("Auto Favorite", ICONS.Favorite)
+autoItem("Auto Sell", ICONS.Sell)
+autoItem("Auto Totem", ICONS.Totem)
+autoItem("Auto Potion", ICONS.Potion)
 
-pages["Information"].Visible = true
+pages["Auto Option"].Visible = true
 
 --================ ACTIONS =================--
 minBtn.MouseButton1Click:Connect(function()
