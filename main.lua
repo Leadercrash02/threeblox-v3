@@ -1,213 +1,171 @@
--- =========================================================
--- THREEBLOX V2 (DEV MODE)
--- HWID + KEY DISABLED FOR GUI TESTING
--- ENGINE & REMOTE TETAP AKTIF
--- =========================================================
+-- =====================================
+-- THREEBLOX GUI TEST FIX (CLICK SAFE)
+-- =====================================
 
--- ================= SERVICES =================
-local Players      = game:GetService("Players")
-local HttpService  = game:GetService("HttpService")
-local StarterGui   = game:GetService("StarterGui")
-local Lighting     = game:GetService("Lighting")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UIS          = game:GetService("UserInputService")
-local RunService   = game:GetService("RunService")
-local VirtualUser  = game:GetService("VirtualUser")
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local lp = Players.LocalPlayer
+local pg = lp:WaitForChild("PlayerGui")
 
-local LP = Players.LocalPlayer
-
-print("[DEV MODE] HWID & KEY CHECK DISABLED")
-
--- ================= NOTIFY =================
-local function Notify(msg)
-	pcall(function()
-		StarterGui:SetCore("SendNotification", {
-			Title = "Threeblox V2",
-			Text = msg,
-			Duration = 3
-		})
-	end)
-end
-
--- ================= ANTI AFK =================
-LP.Idled:Connect(function()
-	VirtualUser:CaptureController()
-	VirtualUser:ClickButton2(Vector2.new())
-end)
-
--- ================= CLEAN GUI =================
+-- HAPUS GUI LAMA
 pcall(function()
-	local old = LP.PlayerGui:FindFirstChild("RAYMOD_FISHIT_GUI")
-	if old then old:Destroy() end
+	for _,v in ipairs(pg:GetChildren()) do
+		if v:IsA("ScreenGui") and v.Name == "Threeblox_Test" then
+			v:Destroy()
+		end
+	end
 end)
 
--- ================= GUI ROOT =================
+-- ================= SCREEN GUI =================
 local gui = Instance.new("ScreenGui")
-gui.Name = "RAYMOD_FISHIT_GUI"
+gui.Name = "Threeblox_Test"
 gui.ResetOnSpawn = false
-gui.Parent = LP:WaitForChild("PlayerGui")
-
--- ================= BLUR =================
-local blur = Instance.new("BlurEffect")
-blur.Parent = Lighting
-blur.Size = 18
+gui.IgnoreGuiInset = true
+gui.Parent = pg
 
 -- ================= MAIN =================
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 460, 0, 300)
-main.Position = UDim2.new(0.5, -230, 0.5, -150)
+main.Size = UDim2.new(0,700,0,420)
+main.Position = UDim2.new(0.5,0,0.5,0)
+main.AnchorPoint = Vector2.new(0.5,0.5)
 main.BackgroundColor3 = Color3.fromRGB(18,20,28)
-main.BackgroundTransparency = 0.15
 main.BorderSizePixel = 0
 main.Active = true
 main.Draggable = true
-Instance.new("UICorner", main).CornerRadius = UDim.new(0,14)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
 -- ================= HEADER =================
-local top = Instance.new("Frame", main)
-top.Size = UDim2.new(1,0,0,36)
-top.BackgroundColor3 = Color3.fromRGB(22,24,34)
-top.BackgroundTransparency = 0.1
-top.BorderSizePixel = 0
-Instance.new("UICorner", top).CornerRadius = UDim.new(0,14)
+local header = Instance.new("Frame", main)
+header.Size = UDim2.new(1,0,0,42)
+header.BackgroundTransparency = 1
+header.Active = true
 
-local title = Instance.new("TextLabel", top)
-title.Size = UDim2.new(1,-100,1,0)
-title.Position = UDim2.new(0,40,0,0)
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.new(1,-120,1,0)
+title.Position = UDim2.new(0,16,0,0)
 title.BackgroundTransparency = 1
-title.Text = "Threeblox V2"
+title.Text = "Threeblox GUI (CLICK FIX)"
 title.Font = Enum.Font.GothamBold
-title.TextSize = 16
+title.TextSize = 18
 title.TextXAlignment = Enum.TextXAlignment.Left
 title.TextColor3 = Color3.fromRGB(235,235,235)
 
-local logo = Instance.new("ImageLabel", top)
-logo.Size = UDim2.new(0,22,0,22)
-logo.Position = UDim2.new(0,10,0.5,-11)
-logo.Image = "rbxassetid://121625492591707"
-logo.BackgroundTransparency = 1
+-- CLOSE
+local close = Instance.new("TextButton", header)
+close.Size = UDim2.new(0,30,0,30)
+close.Position = UDim2.new(1,-36,0.5,-15)
+close.Text = "X"
+close.Font = Enum.Font.GothamBold
+close.TextSize = 14
+close.TextColor3 = Color3.new(1,1,1)
+close.BackgroundColor3 = Color3.fromRGB(200,60,60)
+close.Active = true
+close.ZIndex = 10
+Instance.new("UICorner", close).CornerRadius = UDim.new(1,0)
 
--- ================= BUTTONS =================
-local function TopBtn(txt, pos, color)
-	local b = Instance.new("TextButton", top)
-	b.Size = UDim2.new(0,26,0,22)
-	b.Position = pos
-	b.Text = txt
-	b.Font = Enum.Font.GothamBold
-	b.TextSize = 14
-	b.TextColor3 = Color3.new(1,1,1)
-	b.BackgroundColor3 = color
-	Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
-	return b
-end
-
-local btnMin  = TopBtn("-", UDim2.new(1,-64,0.5,-11), Color3.fromRGB(120,120,180))
-local btnClose= TopBtn("X", UDim2.new(1,-32,0.5,-11), Color3.fromRGB(200,70,80))
-
--- ================= CONTENT =================
-local content = Instance.new("Frame", main)
-content.Position = UDim2.new(0,0,0,36)
-content.Size = UDim2.new(1,0,1,-36)
-content.BackgroundTransparency = 1
+close.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
 
 -- ================= SIDEBAR =================
-local sidebar = Instance.new("Frame", content)
-sidebar.Size = UDim2.new(0,150,1,0)
-sidebar.Position = UDim2.new(0,0,0,0)
+local sidebar = Instance.new("Frame", main)
+sidebar.Position = UDim2.new(0,0,0,42)
+sidebar.Size = UDim2.new(0,200,1,-42)
 sidebar.BackgroundColor3 = Color3.fromRGB(22,24,34)
-sidebar.BackgroundTransparency = 0.15
-Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0,10)
+sidebar.BorderSizePixel = 0
+sidebar.Active = false -- PENTING
+Instance.new("UICorner", sidebar).CornerRadius = UDim.new(0,16)
 
 local sideLayout = Instance.new("UIListLayout", sidebar)
 sideLayout.Padding = UDim.new(0,6)
 sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,10)
 
-local function SideBtn(text)
-	local b = Instance.new("TextButton", sidebar)
-	b.Size = UDim2.new(1,-16,0,28)
-	b.Text = text
-	b.Font = Enum.Font.Gotham
-	b.TextSize = 13
-	b.TextXAlignment = Enum.TextXAlignment.Left
-	b.TextColor3 = Color3.fromRGB(220,220,255)
-	b.BackgroundColor3 = Color3.fromRGB(28,30,42)
-	b.BackgroundTransparency = 0.2
-	Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
-	return b
-end
-
-local btnAuto  = SideBtn("⚙ Auto Option")
-local btnTP    = SideBtn("➜ Teleport")
-local btnQuest = SideBtn("★ Quest")
-local btnMisc  = SideBtn("⚡ Misc")
+-- ================= CONTENT =================
+local content = Instance.new("Frame", main)
+content.Position = UDim2.new(0,200,0,42)
+content.Size = UDim2.new(1,-200,1,-42)
+content.BackgroundTransparency = 1
+content.Active = false
 
 -- ================= PAGE =================
 local page = Instance.new("Frame", content)
-page.Position = UDim2.new(0,150,0,0)
-page.Size = UDim2.new(1,-150,1,0)
+page.Size = UDim2.new(1,0,1,0)
 page.BackgroundTransparency = 1
+page.Active = false
 
+-- CLEAR PAGE
 local function ClearPage()
 	for _,v in ipairs(page:GetChildren()) do
-		if v:IsA("GuiObject") then v:Destroy() end
+		if v:IsA("GuiObject") then
+			v:Destroy()
+		end
 	end
 end
 
--- ================= AUTO OPTION =================
-local function AutoOptionPage()
+-- ================= TELEPORT BUTTON =================
+local function CreateTeleportButton(text, y, cf)
+	local btn = Instance.new("TextButton", page)
+	btn.Size = UDim2.new(1,-40,0,36)
+	btn.Position = UDim2.new(0,20,0,y)
+	btn.Text = text
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 14
+	btn.TextColor3 = Color3.fromRGB(235,235,235)
+	btn.BackgroundColor3 = Color3.fromRGB(28,30,42)
+	btn.BackgroundTransparency = 0.15
+	btn.AutoButtonColor = true
+	btn.Active = true
+	btn.ZIndex = 5
+	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+	btn.MouseButton1Click:Connect(function()
+		local char = lp.Character
+		local hrp = char and char:FindFirstChild("HumanoidRootPart")
+		if hrp then
+			hrp.CFrame = cf
+		end
+	end)
+end
+
+-- ================= PAGE TELEPORT =================
+local function ShowTeleport()
 	ClearPage()
 
-	local lbl = Instance.new("TextLabel", page)
-	lbl.Size = UDim2.new(1,-20,0,30)
-	lbl.Position = UDim2.new(0,10,0,10)
-	lbl.BackgroundTransparency = 1
-	lbl.Text = "⚙ Auto Fishing Options"
-	lbl.Font = Enum.Font.GothamBold
-	lbl.TextSize = 16
-	lbl.TextXAlignment = Enum.TextXAlignment.Left
-	lbl.TextColor3 = Color3.fromRGB(235,235,235)
+	local label = Instance.new("TextLabel", page)
+	label.Size = UDim2.new(1,-40,0,30)
+	label.Position = UDim2.new(0,20,0,10)
+	label.Text = "➜ Teleport"
+	label.Font = Enum.Font.GothamBold
+	label.TextSize = 16
+	label.TextColor3 = Color3.fromRGB(235,235,235)
+	label.BackgroundTransparency = 1
+	label.ZIndex = 3
 
-	local function Item(text,y)
-		local f = Instance.new("Frame", page)
-		f.Size = UDim2.new(1,-20,0,36)
-		f.Position = UDim2.new(0,10,0,y)
-		f.BackgroundColor3 = Color3.fromRGB(28,30,42)
-		f.BackgroundTransparency = 0.2
-		Instance.new("UICorner", f).CornerRadius = UDim.new(0,8)
-
-		local t = Instance.new("TextLabel", f)
-		t.Size = UDim2.new(1,-20,1,0)
-		t.Position = UDim2.new(0,10,0,0)
-		t.BackgroundTransparency = 1
-		t.Text = text
-		t.Font = Enum.Font.Gotham
-		t.TextSize = 13
-		t.TextXAlignment = Enum.TextXAlignment.Left
-		t.TextColor3 = Color3.fromRGB(220,220,255)
-	end
-
-	Item("🎣 Auto Fishing", 50)
-	Item("🔥 Blatant Fishing", 92)
-	Item("💰 Auto Sell", 134)
-	Item("🧪 Auto Potion", 176)
+	CreateTeleportButton("Spawn", 50, CFrame.new(0,10,0))
+	CreateTeleportButton("Test Island", 92, CFrame.new(120,10,120))
 end
 
--- ================= BUTTON LOGIC =================
-btnAuto.MouseButton1Click:Connect(AutoOptionPage)
+-- ================= SIDEBAR BUTTON =================
+local function SideButton(text, callback)
+	local b = Instance.new("TextButton", sidebar)
+	b.Size = UDim2.new(1,-20,0,36)
+	b.Text = text
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 14
+	b.TextColor3 = Color3.fromRGB(235,235,235)
+	b.BackgroundColor3 = Color3.fromRGB(30,32,44)
+	b.BackgroundTransparency = 0.1
+	b.Active = true
+	b.ZIndex = 5
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
 
-btnClose.MouseButton1Click:Connect(function()
-	blur:Destroy()
-	gui:Destroy()
-end)
+	b.MouseButton1Click:Connect(callback)
+end
 
-local minimized = false
-btnMin.MouseButton1Click:Connect(function()
-	minimized = not minimized
-	main.Visible = not minimized
-end)
+SideButton("➜ Teleport", ShowTeleport)
 
--- ================= DEFAULT =================
-AutoOptionPage()
-Notify("Threeblox V2 GUI loaded (DEV MODE)")
+-- DEFAULT
+ShowTeleport()
 
-print("[Threeblox V2] GUI TEST READY")
+print("Threeblox GUI loaded | CLICK FIX OK")
