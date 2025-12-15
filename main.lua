@@ -1,26 +1,21 @@
---// THREEBLOX V3 | FIX FULL FINAL
---// UI V3 + Auto Fishing Engine (REMOTE V2)
---// FIX: Auto Option visible, Minimize OK, Close OK, Logo OK
---// ANDROID + PC SAFE
+-- ===== THREEBLOX V2 | GUI PATCH (V3 STYLE) =====
+-- GUI ONLY | ENGINE & REMOTE TIDAK DISENTUH
 
---================ SERVICES =================--
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
---================ CLEAN =================--
+-- CLEAN OLD
 pcall(function()
 	for _,v in ipairs(pg:GetChildren()) do
-		if v:IsA("ScreenGui") and v.Name == "ThreebloxV3" then
+		if v.Name == "ThreebloxV2_GUI" then
 			v:Destroy()
 		end
 	end
 end)
 
---================ CONFIG =================--
+-- CONFIG
 local LOGO_ID = "rbxassetid://121625492591707"
 
 local C = {
@@ -28,63 +23,34 @@ local C = {
 	SIDE   = Color3.fromRGB(22,24,34),
 	CARD   = Color3.fromRGB(28,30,42),
 	TEXT   = Color3.fromRGB(235,235,235),
-	MUTED  = Color3.fromRGB(160,160,160),
 	ACCENT = Color3.fromRGB(170,80,255),
 	RED    = Color3.fromRGB(200,60,60),
 }
 
-local A = 0.08
-
---================ ROOT GUI =================--
-local gui = Instance.new("ScreenGui")
-gui.Name = "ThreebloxV3"
-gui.IgnoreGuiInset = true
+-- ROOT
+local gui = Instance.new("ScreenGui", pg)
+gui.Name = "ThreebloxV2_GUI"
 gui.ResetOnSpawn = false
-gui.Parent = pg
 
---================ MINI LOGO (MINIMIZE MODE) =================--
-local mini = Instance.new("ImageButton")
-mini.Parent = gui
+-- MINI LOGO
+local mini = Instance.new("ImageButton", gui)
 mini.Size = UDim2.new(0,56,0,56)
 mini.Position = UDim2.new(0,20,1,-80)
 mini.Image = LOGO_ID
-mini.BackgroundColor3 = C.BG
-mini.BackgroundTransparency = A
-mini.BorderSizePixel = 0
 mini.Visible = false
-mini.AutoButtonColor = false
+mini.BackgroundColor3 = C.BG
 Instance.new("UICorner", mini).CornerRadius = UDim.new(1,0)
 
--- drag mini
-do
-	local d,s,p
-	mini.InputBegan:Connect(function(i)
-		if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-			d=true s=i.Position p=mini.Position
-		end
-	end)
-	UIS.InputChanged:Connect(function(i)
-		if d then
-			local dx=i.Position-s
-			mini.Position=UDim2.new(p.X.Scale,p.X.Offset+dx.X,p.Y.Scale,p.Y.Offset+dx.Y)
-		end
-	end)
-	UIS.InputEnded:Connect(function() d=false end)
-end
-
---================ MAIN WINDOW =================--
-local main = Instance.new("Frame")
-main.Parent = gui
+-- MAIN
+local main = Instance.new("Frame", gui)
 main.Size = UDim2.new(0,900,0,520)
 main.Position = UDim2.new(0.5,0,0.5,0)
 main.AnchorPoint = Vector2.new(0.5,0.5)
 main.BackgroundColor3 = C.BG
-main.BackgroundTransparency = A
 main.BorderSizePixel = 0
-main.ClipsDescendants = true
 Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
---================ HEADER =================--
+-- HEADER
 local header = Instance.new("Frame", main)
 header.Size = UDim2.new(1,0,0,50)
 header.BackgroundTransparency = 1
@@ -94,13 +60,13 @@ local title = Instance.new("TextLabel", header)
 title.Size = UDim2.new(1,-120,1,0)
 title.Position = UDim2.new(0,16,0,0)
 title.BackgroundTransparency = 1
+title.Text = "Threeblox V2"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 20
-title.TextXAlignment = Enum.TextXAlignment.Left
 title.TextColor3 = C.TEXT
-title.Text = "Threeblox V3 | Auto Option"
+title.TextXAlignment = Left
 
--- drag main
+-- DRAG
 do
 	local d,s,p
 	header.InputBegan:Connect(function(i)
@@ -124,7 +90,6 @@ minBtn.Position = UDim2.new(1,-72,0.5,-15)
 minBtn.Text = "-"
 minBtn.Font = Enum.Font.GothamBold
 minBtn.TextSize = 20
-minBtn.TextColor3 = Color3.new(0,0,0)
 minBtn.BackgroundColor3 = C.ACCENT
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
 
@@ -135,173 +100,66 @@ closeBtn.Position = UDim2.new(1,-36,0.5,-15)
 closeBtn.Text = "X"
 closeBtn.Font = Enum.Font.GothamBold
 closeBtn.TextSize = 14
-closeBtn.TextColor3 = C.TEXT
+closeBtn.TextColor3 = Color3.new(1,1,1)
 closeBtn.BackgroundColor3 = C.RED
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
 
---================ SIDEBAR =================--
+-- SIDEBAR
 local sidebar = Instance.new("Frame", main)
 sidebar.Position = UDim2.new(0,0,0,50)
 sidebar.Size = UDim2.new(0,220,1,-50)
 sidebar.BackgroundColor3 = C.SIDE
-sidebar.BackgroundTransparency = A
 
 local sideLayout = Instance.new("UIListLayout", sidebar)
 sideLayout.Padding = UDim.new(0,8)
-sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+sideLayout.HorizontalAlignment = Center
 Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,12)
 
---================ CONTENT =================--
+local function tab(txt, page)
+	local b = Instance.new("TextButton", sidebar)
+	b.Size = UDim2.new(1,-20,0,38)
+	b.Text = txt
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 14
+	b.TextColor3 = C.TEXT
+	b.BackgroundColor3 = C.CARD
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
+	b.MouseButton1Click:Connect(function()
+		for _,p in pairs(page.Parent:GetChildren()) do
+			if p:IsA("ScrollingFrame") then p.Visible=false end
+		end
+		page.Visible=true
+	end)
+end
+
+-- CONTENT HOLDER (PAKAI PAGE V2 YANG SUDAH ADA)
 local content = Instance.new("Frame", main)
 content.Position = UDim2.new(0,220,0,50)
 content.Size = UDim2.new(1,-220,1,-50)
 content.BackgroundTransparency = 1
 
---================ PAGE SYSTEM =================--
-local pages = {}
-local function newPage(name)
-	local p = Instance.new("Frame", content)
-	p.Size = UDim2.new(1,0,1,0)
-	p.BackgroundTransparency = 1
-	p.Visible = false
-	pages[name] = p
-	return p
-end
+-- CATATAN:
+-- pageFishing, pageBackpack, pageTeleport, pageQuest, pageBoat, pageMisc
+-- SUDAH ADA DARI V2 LU → TINGGAL PARENT-IN KE content
 
-local function showPage(name)
-	for _,p in pairs(pages) do p.Visible = false end
-	pages[name].Visible = true
-	title.Text = "Threeblox V3 | "..name
-end
+pageFishing.Parent  = content
+pageBackpack.Parent = content
+pageTeleport.Parent = content
+pageQuest.Parent    = content
+pageBoat.Parent     = content
+pageMisc.Parent     = content
 
-local autoPage = newPage("Auto Option")
-newPage("Information")
-newPage("Teleport")
-newPage("Quest")
-newPage("Shop & Trade")
-newPage("Misc")
+-- TAB
+tab("ℹ Information", pageFishing)
+tab("⚙ Auto Option", pageFishing)
+tab("➜ Teleport", pageTeleport)
+tab("★ Quest", pageQuest)
+tab("🛒 Shop & Trade", pageBackpack)
+tab("⚡ Misc", pageMisc)
 
-local function sideBtn(name,icon)
-	local b = Instance.new("TextButton", sidebar)
-	b.Size = UDim2.new(1,-20,0,38)
-	b.Text = icon.."  "..name
-	b.Font = Enum.Font.Gotham
-	b.TextSize = 14
-	b.TextColor3 = C.TEXT
-	b.BackgroundColor3 = C.CARD
-	b.BackgroundTransparency = A
-	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
-	b.MouseButton1Click:Connect(function()
-		showPage(name)
-	end)
-end
+pageFishing.Visible = true
 
-sideBtn("Information","ℹ")
-sideBtn("Auto Option","⚙")
-sideBtn("Teleport","➜")
-sideBtn("Quest","★")
-sideBtn("Shop & Trade","🛒")
-sideBtn("Misc","⚡")
-
---================ AUTO OPTION CONTENT =================--
-local holder = Instance.new("Frame", autoPage)
-holder.Size = UDim2.new(1,0,1,0)
-holder.BackgroundTransparency = 1
-
-local list = Instance.new("UIListLayout", holder)
-list.Padding = UDim.new(0,10)
-Instance.new("UIPadding", holder).PaddingTop = UDim.new(0,16)
-Instance.new("UIPadding", holder).PaddingLeft = UDim.new(0,16)
-Instance.new("UIPadding", holder).PaddingRight = UDim.new(0,16)
-
---================ AUTO FISHING ENGINE (REMOTE V2) =================--
-local Net = ReplicatedStorage.Packages.Index["sleitnick_net-0.2.0"].net
-local Events = {
-	fishing  = Net.RF.FishingCompleted,
-	charge   = Net.RF.ChargeFishingRod,
-	minigame = Net.RF.RequestFishingMinigameStarted,
-	equip    = Net.RE.EquipToolFromHotbar,
-}
-
-_G.THREEBLOX_AutoFishing = false
-local isFishing = false
-
-local function AutoFishingEngine()
-	if isFishing then return end
-	isFishing = true
-	pcall(function()
-		Events.equip:FireServer(1)
-		task.wait(0.02)
-		Events.charge:InvokeServer(1755848498.4834)
-		task.wait(0.01)
-		Events.minigame:InvokeServer(1.2854545116425,1)
-		task.wait(0.12)
-		Events.fishing:FireServer()
-	end)
-	task.wait(0.25)
-	isFishing = false
-end
-
-task.spawn(function()
-	while task.wait(0.05) do
-		if _G.THREEBLOX_AutoFishing then
-			AutoFishingEngine()
-		end
-	end
-end)
-
---================ AUTO ITEM =================--
-local function autoItem(name,emoji,desc)
-	local open=false
-	local box = Instance.new("Frame", holder)
-	box.Size = UDim2.new(1,0,0,42)
-	box.BackgroundColor3 = C.CARD
-	box.BackgroundTransparency = A
-	Instance.new("UICorner", box).CornerRadius = UDim.new(0,10)
-
-	local btn = Instance.new("TextButton", box)
-	btn.Size = UDim2.new(1,0,1,0)
-	btn.Text = emoji.."  "..name
-	btn.Font = Enum.Font.Gotham
-	btn.TextSize = 15
-	btn.TextColor3 = C.TEXT
-	btn.BackgroundTransparency = 1
-	btn.TextXAlignment = Enum.TextXAlignment.Left
-
-	btn.MouseButton1Click:Connect(function()
-		open = not open
-		if name=="Auto Fishing" then
-			_G.THREEBLOX_AutoFishing = open
-		end
-		box.Size = open and UDim2.new(1,0,0,100) or UDim2.new(1,0,0,42)
-	end)
-
-	local lbl = Instance.new("TextLabel", box)
-	lbl.Position = UDim2.new(0,16,0,48)
-	lbl.Size = UDim2.new(1,-32,0,40)
-	lbl.BackgroundTransparency = 1
-	lbl.TextWrapped = true
-	lbl.Text = desc
-	lbl.Font = Enum.Font.Gotham
-	lbl.TextSize = 14
-	lbl.TextColor3 = C.MUTED
-	lbl.TextXAlignment = Enum.TextXAlignment.Left
-	lbl.TextYAlignment = Enum.TextYAlignment.Top
-end
-
-autoItem("Auto Fishing","⚙","Auto fishing menggunakan remote stabil.")
-autoItem("Legit Perfect","⭕","Kontrol legit fishing.")
-autoItem("Blatant Fishing","🔥","Fishing agresif.")
-autoItem("Auto Farm Island","✏","Farm island otomatis.")
-autoItem("Auto Favorite","⭐","Favorite ikan otomatis.")
-autoItem("Auto Sell","💰","Auto jual ikan.")
-autoItem("Auto Totem","➕","Auto totem.")
-autoItem("Auto Potion","🧪","Auto potion.")
-
---================ DEFAULT =================--
-showPage("Auto Option")
-
---================ BUTTON ACTION =================--
+-- ACTION
 minBtn.MouseButton1Click:Connect(function()
 	main.Visible=false
 	mini.Visible=true
