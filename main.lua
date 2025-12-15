@@ -1,8 +1,9 @@
---// THREEBLOX V3 | FULL SCRIPT
---// UI V3 + AUTO FISHING (REMOTE CUSTOM)
+--// THREEBLOX V3 | FIX FULL FINAL
+--// UI V3 + Auto Fishing Engine (REMOTE V2)
+--// FIX: Auto Option visible, Minimize OK, Close OK, Logo OK
 --// ANDROID + PC SAFE
 
---================ SERVICES ================--
+--================ SERVICES =================--
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -10,7 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
---================ CLEAN OLD GUI ================--
+--================ CLEAN =================--
 pcall(function()
 	for _,v in ipairs(pg:GetChildren()) do
 		if v:IsA("ScreenGui") and v.Name == "ThreebloxV3" then
@@ -19,7 +20,7 @@ pcall(function()
 	end
 end)
 
---================ CONFIG ================--
+--================ CONFIG =================--
 local LOGO_ID = "rbxassetid://121625492591707"
 
 local C = {
@@ -32,23 +33,23 @@ local C = {
 	RED    = Color3.fromRGB(200,60,60),
 }
 
-local A_MAIN = 0.08
-local A_SIDE = 0.05
-local A_CARD = 0.06
+local A = 0.08
 
---================ ROOT GUI ================--
-local gui = Instance.new("ScreenGui", pg)
+--================ ROOT GUI =================--
+local gui = Instance.new("ScreenGui")
 gui.Name = "ThreebloxV3"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
+gui.Parent = pg
 
---================ MINI LOGO ================--
-local mini = Instance.new("ImageButton", gui)
+--================ MINI LOGO (MINIMIZE MODE) =================--
+local mini = Instance.new("ImageButton")
+mini.Parent = gui
 mini.Size = UDim2.new(0,56,0,56)
 mini.Position = UDim2.new(0,20,1,-80)
 mini.Image = LOGO_ID
 mini.BackgroundColor3 = C.BG
-mini.BackgroundTransparency = A_MAIN
+mini.BackgroundTransparency = A
 mini.BorderSizePixel = 0
 mini.Visible = false
 mini.AutoButtonColor = false
@@ -71,18 +72,19 @@ do
 	UIS.InputEnded:Connect(function() d=false end)
 end
 
---================ MAIN WINDOW ================--
-local main = Instance.new("Frame", gui)
+--================ MAIN WINDOW =================--
+local main = Instance.new("Frame")
+main.Parent = gui
 main.Size = UDim2.new(0,900,0,520)
 main.Position = UDim2.new(0.5,0,0.5,0)
 main.AnchorPoint = Vector2.new(0.5,0.5)
 main.BackgroundColor3 = C.BG
-main.BackgroundTransparency = A_MAIN
+main.BackgroundTransparency = A
 main.BorderSizePixel = 0
 main.ClipsDescendants = true
 Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
---================ HEADER ================--
+--================ HEADER =================--
 local header = Instance.new("Frame", main)
 header.Size = UDim2.new(1,0,0,50)
 header.BackgroundTransparency = 1
@@ -115,7 +117,7 @@ do
 	UIS.InputEnded:Connect(function() d=false end)
 end
 
--- minimize
+-- MINIMIZE
 local minBtn = Instance.new("TextButton", header)
 minBtn.Size = UDim2.new(0,30,0,30)
 minBtn.Position = UDim2.new(1,-72,0.5,-15)
@@ -126,7 +128,7 @@ minBtn.TextColor3 = Color3.new(0,0,0)
 minBtn.BackgroundColor3 = C.ACCENT
 Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
 
--- close
+-- CLOSE
 local closeBtn = Instance.new("TextButton", header)
 closeBtn.Size = UDim2.new(0,30,0,30)
 closeBtn.Position = UDim2.new(1,-36,0.5,-15)
@@ -137,39 +139,39 @@ closeBtn.TextColor3 = C.TEXT
 closeBtn.BackgroundColor3 = C.RED
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
 
---================ SIDEBAR ================--
+--================ SIDEBAR =================--
 local sidebar = Instance.new("Frame", main)
 sidebar.Position = UDim2.new(0,0,0,50)
 sidebar.Size = UDim2.new(0,220,1,-50)
 sidebar.BackgroundColor3 = C.SIDE
-sidebar.BackgroundTransparency = A_SIDE
+sidebar.BackgroundTransparency = A
 
 local sideLayout = Instance.new("UIListLayout", sidebar)
 sideLayout.Padding = UDim.new(0,8)
 sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
 Instance.new("UIPadding", sidebar).PaddingTop = UDim.new(0,12)
 
---================ CONTENT ================--
+--================ CONTENT =================--
 local content = Instance.new("Frame", main)
 content.Position = UDim2.new(0,220,0,50)
 content.Size = UDim2.new(1,-220,1,-50)
 content.BackgroundTransparency = 1
 
---================ PAGE SYSTEM ================--
+--================ PAGE SYSTEM =================--
 local pages = {}
 local function newPage(name)
 	local p = Instance.new("Frame", content)
 	p.Size = UDim2.new(1,0,1,0)
-	p.Visible = false
 	p.BackgroundTransparency = 1
-	pages[name]=p
+	p.Visible = false
+	pages[name] = p
 	return p
 end
 
 local function showPage(name)
-	for _,p in pairs(pages) do p.Visible=false end
-	pages[name].Visible=true
-	title.Text="Threeblox V3 | "..name
+	for _,p in pairs(pages) do p.Visible = false end
+	pages[name].Visible = true
+	title.Text = "Threeblox V3 | "..name
 end
 
 local autoPage = newPage("Auto Option")
@@ -187,7 +189,7 @@ local function sideBtn(name,icon)
 	b.TextSize = 14
 	b.TextColor3 = C.TEXT
 	b.BackgroundColor3 = C.CARD
-	b.BackgroundTransparency = A_CARD
+	b.BackgroundTransparency = A
 	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
 	b.MouseButton1Click:Connect(function()
 		showPage(name)
@@ -201,23 +203,18 @@ sideBtn("Quest","★")
 sideBtn("Shop & Trade","🛒")
 sideBtn("Misc","⚡")
 
---================ AUTO OPTION =================--
-local scroll = Instance.new("ScrollingFrame", autoPage)
-scroll.Size = UDim2.new(1,0,1,0)
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-scroll.ScrollBarImageTransparency = 1
-scroll.BackgroundTransparency = 1
+--================ AUTO OPTION CONTENT =================--
+local holder = Instance.new("Frame", autoPage)
+holder.Size = UDim2.new(1,0,1,0)
+holder.BackgroundTransparency = 1
 
-local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0,10)
-Instance.new("UIPadding", scroll).PaddingTop = UDim.new(0,16)
-Instance.new("UIPadding", scroll).PaddingLeft = UDim.new(0,16)
-Instance.new("UIPadding", scroll).PaddingRight = UDim.new(0,16)
+local list = Instance.new("UIListLayout", holder)
+list.Padding = UDim.new(0,10)
+Instance.new("UIPadding", holder).PaddingTop = UDim.new(0,16)
+Instance.new("UIPadding", holder).PaddingLeft = UDim.new(0,16)
+Instance.new("UIPadding", holder).PaddingRight = UDim.new(0,16)
 
---================ AUTO FISHING FLAG =================--
-_G.THREEBLOX_AutoFishing = false
-
---================ REMOTE (CUSTOM) =================--
+--================ AUTO FISHING ENGINE (REMOTE V2) =================--
 local Net = ReplicatedStorage.Packages.Index["sleitnick_net-0.2.0"].net
 local Events = {
 	fishing  = Net.RF.FishingCompleted,
@@ -226,8 +223,9 @@ local Events = {
 	equip    = Net.RE.EquipToolFromHotbar,
 }
 
---================ AUTO FISHING ENGINE =================--
+_G.THREEBLOX_AutoFishing = false
 local isFishing = false
+
 local function AutoFishingEngine()
 	if isFishing then return end
 	isFishing = true
@@ -236,7 +234,7 @@ local function AutoFishingEngine()
 		task.wait(0.02)
 		Events.charge:InvokeServer(1755848498.4834)
 		task.wait(0.01)
-		Events.minigame:InvokeServer(1.2854545116425, 1)
+		Events.minigame:InvokeServer(1.2854545116425,1)
 		task.wait(0.12)
 		Events.fishing:FireServer()
 	end)
@@ -252,75 +250,53 @@ task.spawn(function()
 	end
 end)
 
---================ EXPANDABLE ITEM =================--
-local function autoItem(titleText,emoji,desc,isAutoFishing)
-	local opened=false
-	local box = Instance.new("Frame", scroll)
+--================ AUTO ITEM =================--
+local function autoItem(name,emoji,desc)
+	local open=false
+	local box = Instance.new("Frame", holder)
 	box.Size = UDim2.new(1,0,0,42)
 	box.BackgroundColor3 = C.CARD
-	box.BackgroundTransparency = A_CARD
-	box.ClipsDescendants = true
+	box.BackgroundTransparency = A
 	Instance.new("UICorner", box).CornerRadius = UDim.new(0,10)
 
-	local head = Instance.new("TextButton", box)
-	head.Size = UDim2.new(1,0,0,42)
-	head.Text = ""
-	head.BackgroundTransparency = 1
+	local btn = Instance.new("TextButton", box)
+	btn.Size = UDim2.new(1,0,1,0)
+	btn.Text = emoji.."  "..name
+	btn.Font = Enum.Font.Gotham
+	btn.TextSize = 15
+	btn.TextColor3 = C.TEXT
+	btn.BackgroundTransparency = 1
+	btn.TextXAlignment = Enum.TextXAlignment.Left
 
-	local lbl = Instance.new("TextLabel", head)
-	lbl.Position = UDim2.new(0,12,0,0)
-	lbl.Size = UDim2.new(1,-40,1,0)
-	lbl.BackgroundTransparency = 1
-	lbl.Font = Enum.Font.Gotham
-	lbl.TextSize = 15
-	lbl.TextXAlignment = Enum.TextXAlignment.Left
-	lbl.TextColor3 = C.TEXT
-	lbl.Text = emoji.."  "..titleText
-
-	local arrow = Instance.new("TextLabel", head)
-	arrow.Size = UDim2.new(0,30,1,0)
-	arrow.Position = UDim2.new(1,-30,0,0)
-	arrow.BackgroundTransparency = 1
-	arrow.Font = Enum.Font.GothamBold
-	arrow.TextSize = 16
-	arrow.TextColor3 = C.MUTED
-	arrow.Text = ">"
-
-	local inner = Instance.new("TextLabel", box)
-	inner.Position = UDim2.new(0,20,0,48)
-	inner.Size = UDim2.new(1,-40,0,60)
-	inner.BackgroundTransparency = 1
-	inner.Font = Enum.Font.Gotham
-	inner.TextSize = 14
-	inner.TextColor3 = C.MUTED
-	inner.TextWrapped = true
-	inner.TextXAlignment = Enum.TextXAlignment.Left
-	inner.Text = desc
-
-	head.MouseButton1Click:Connect(function()
-		opened = not opened
-		if isAutoFishing then
-			_G.THREEBLOX_AutoFishing = opened
+	btn.MouseButton1Click:Connect(function()
+		open = not open
+		if name=="Auto Fishing" then
+			_G.THREEBLOX_AutoFishing = open
 		end
-		if opened then
-			box.Size = UDim2.new(1,0,0,110)
-			arrow.Text = "v"
-		else
-			box.Size = UDim2.new(1,0,0,42)
-			arrow.Text = ">"
-		end
+		box.Size = open and UDim2.new(1,0,0,100) or UDim2.new(1,0,0,42)
 	end)
+
+	local lbl = Instance.new("TextLabel", box)
+	lbl.Position = UDim2.new(0,16,0,48)
+	lbl.Size = UDim2.new(1,-32,0,40)
+	lbl.BackgroundTransparency = 1
+	lbl.TextWrapped = true
+	lbl.Text = desc
+	lbl.Font = Enum.Font.Gotham
+	lbl.TextSize = 14
+	lbl.TextColor3 = C.MUTED
+	lbl.TextXAlignment = Enum.TextXAlignment.Left
+	lbl.TextYAlignment = Enum.TextYAlignment.Top
 end
 
---================ ITEMS =================--
-autoItem("Auto Fishing","⚙","Auto fishing menggunakan remote custom (no miss).",true)
-autoItem("Legit Perfect","⭕","Perfect threshold legit.",false)
-autoItem("Blatant Fishing","🔥","Mode agresif.",false)
-autoItem("Auto Farm Island","✏","Auto farm island.",false)
-autoItem("Auto Favorite","⭐","Favorite ikan.",false)
-autoItem("Auto Sell","💰","Auto sell ikan.",false)
-autoItem("Auto Totem","➕","Auto use totem.",false)
-autoItem("Auto Potion","🧪","Auto use potion.",false)
+autoItem("Auto Fishing","⚙","Auto fishing menggunakan remote stabil.")
+autoItem("Legit Perfect","⭕","Kontrol legit fishing.")
+autoItem("Blatant Fishing","🔥","Fishing agresif.")
+autoItem("Auto Farm Island","✏","Farm island otomatis.")
+autoItem("Auto Favorite","⭐","Favorite ikan otomatis.")
+autoItem("Auto Sell","💰","Auto jual ikan.")
+autoItem("Auto Totem","➕","Auto totem.")
+autoItem("Auto Potion","🧪","Auto potion.")
 
 --================ DEFAULT =================--
 showPage("Auto Option")
