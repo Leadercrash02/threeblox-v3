@@ -1,5 +1,5 @@
---// THREEBLOX V3 | FULL FINAL FIX A
---// INVISIBLE SCROLL (ITEM TIDAK ILANG)
+--// THREEBLOX V3 | FINAL FULL EXPAND
+--// FIX A (Invisible Scroll) + Expandable Items
 --// ANDROID + PC SAFE | UI ONLY
 
 --================ SERVICES ================--
@@ -170,7 +170,6 @@ local function showPage(name)
 	title.Text="Threeblox V3 | "..name
 end
 
--- pages
 local autoPage = newPage("Auto Option")
 newPage("Information")
 newPage("Teleport")
@@ -178,7 +177,6 @@ newPage("Quest")
 newPage("Shop & Trade")
 newPage("Misc")
 
--- sidebar buttons
 local function sideBtn(name,icon)
 	local b = Instance.new("TextButton", sidebar)
 	b.Size = UDim2.new(1,-20,0,38)
@@ -201,57 +199,96 @@ sideBtn("Quest","★")
 sideBtn("Shop & Trade","🛒")
 sideBtn("Misc","⚡")
 
---================ AUTO OPTION (INVISIBLE SCROLL) ================--
+--================ AUTO OPTION (EXPANDABLE) ================--
 local scroll = Instance.new("ScrollingFrame", autoPage)
 scroll.Size = UDim2.new(1,0,1,0)
-scroll.CanvasSize = UDim2.new(0,0,0,0)
 scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 scroll.ScrollBarImageTransparency = 1
-scroll.ScrollBarThickness = 6
 scroll.BackgroundTransparency = 1
 
-local list = Instance.new("UIListLayout", scroll)
-list.Padding = UDim.new(0,10)
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0,10)
 Instance.new("UIPadding", scroll).PaddingTop = UDim.new(0,16)
 Instance.new("UIPadding", scroll).PaddingLeft = UDim.new(0,16)
 Instance.new("UIPadding", scroll).PaddingRight = UDim.new(0,16)
 
-local function autoItem(text,emoji)
-	local f = Instance.new("Frame", scroll)
-	f.Size = UDim2.new(1,0,0,42)
-	f.BackgroundColor3 = C.CARD
-	f.BackgroundTransparency = A_CARD
-	Instance.new("UICorner", f).CornerRadius = UDim.new(0,10)
+-- EXPANDABLE ITEM
+local function autoItem(titleText,emoji,innerText)
+	local opened=false
 
-	local bar = Instance.new("Frame", f)
+	local box = Instance.new("Frame", scroll)
+	box.Size = UDim2.new(1,0,0,42)
+	box.BackgroundColor3 = C.CARD
+	box.BackgroundTransparency = A_CARD
+	box.ClipsDescendants = true
+	Instance.new("UICorner", box).CornerRadius = UDim.new(0,10)
+
+	local head = Instance.new("TextButton", box)
+	head.Size = UDim2.new(1,0,0,42)
+	head.Text = ""
+	head.BackgroundTransparency = 1
+
+	local bar = Instance.new("Frame", box)
 	bar.Size = UDim2.new(0,4,1,0)
 	bar.BackgroundColor3 = C.ACCENT
 
-	local lbl = Instance.new("TextLabel", f)
+	local lbl = Instance.new("TextLabel", head)
 	lbl.Position = UDim2.new(0,12,0,0)
-	lbl.Size = UDim2.new(1,-20,1,0)
+	lbl.Size = UDim2.new(1,-40,1,0)
 	lbl.BackgroundTransparency = 1
 	lbl.Font = Enum.Font.Gotham
 	lbl.TextSize = 15
 	lbl.TextXAlignment = Enum.TextXAlignment.Left
 	lbl.TextColor3 = C.TEXT
-	lbl.Text = emoji.."  "..text
+	lbl.Text = emoji.."  "..titleText
+
+	local arrow = Instance.new("TextLabel", head)
+	arrow.Size = UDim2.new(0,30,1,0)
+	arrow.Position = UDim2.new(1,-30,0,0)
+	arrow.BackgroundTransparency = 1
+	arrow.Font = Enum.Font.GothamBold
+	arrow.TextSize = 16
+	arrow.TextColor3 = C.MUTED
+	arrow.Text = ">"
+
+	local inner = Instance.new("TextLabel", box)
+	inner.Position = UDim2.new(0,20,0,48)
+	inner.Size = UDim2.new(1,-40,0,60)
+	inner.BackgroundTransparency = 1
+	inner.Font = Enum.Font.Gotham
+	inner.TextSize = 14
+	inner.TextColor3 = C.MUTED
+	inner.TextWrapped = true
+	inner.TextXAlignment = Enum.TextXAlignment.Left
+	inner.TextYAlignment = Enum.TextYAlignment.Top
+	inner.Text = innerText
+
+	head.MouseButton1Click:Connect(function()
+		opened = not opened
+		if opened then
+			box.Size = UDim2.new(1,0,0,110)
+			arrow.Text = "v"
+		else
+			box.Size = UDim2.new(1,0,0,42)
+			arrow.Text = ">"
+		end
+	end)
 end
 
--- auto option items (SEMUA ADA)
-autoItem("Auto Fishing","⚙")
-autoItem("Legit Perfect","⭕")
-autoItem("Blatant Fishing","🔥")
-autoItem("Auto Farm Island","✏")
-autoItem("Auto Favorite","⭐")
-autoItem("Auto Sell","💰")
-autoItem("Auto Totem","➕")
-autoItem("Auto Potion","🧪")
+-- ITEMS (SEMUA ADA & BISA DIBUKA)
+autoItem("Auto Fishing","⚙","Toggle, Delay, dan logic auto fishing.")
+autoItem("Legit Perfect","⭕","Perfect threshold dan kontrol legit.")
+autoItem("Blatant Fishing","🔥","Delay reel dan complete (blatant).")
+autoItem("Auto Farm Island","✏","Pilih island dan threshold.")
+autoItem("Auto Favorite","⭐","Favorite by tier, variant, fish.")
+autoItem("Auto Sell","💰","Auto sell hasil fishing.")
+autoItem("Auto Totem","➕","Auto use totem.")
+autoItem("Auto Potion","🧪","Auto use potion.")
 
---================ DEFAULT PAGE ================--
+--================ DEFAULT =================--
 showPage("Auto Option")
 
---================ BUTTON ACTION ================--
+--================ BUTTON ACTION =================--
 minBtn.MouseButton1Click:Connect(function()
 	main.Visible=false
 	mini.Visible=true
