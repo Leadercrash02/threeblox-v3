@@ -1,171 +1,249 @@
---================ SERVICES =================--
+--// THREEBLOX HUB | FISH IT
+--// FINAL FIX (TOP-RIGHT BUTTONS, STABLE)
+
+-- SERVICES
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UIS = game:GetService("UserInputService")
+
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
---================ CLEAN =================--
-pcall(function()
-    if pg:FindFirstChild("ThreebloxV3") then
-        pg.ThreebloxV3:Destroy()
-    end
-end)
-
---================ FLAGS =================--
-_G.TB_AutoFish_Legit   = false
-_G.TB_AutoFish_Blatant = false
-
---================ REMOTE (V2) =================--
-local Net = ReplicatedStorage
-    :WaitForChild("Packages")
-    :WaitForChild("_Index")
-    :WaitForChild("sleitnick_net@0.2.0")
-    :WaitForChild("net")
-
-local Events = {
-    fishing  = Net:WaitForChild("RE/FishingCompleted"),
-    charge   = Net:WaitForChild("RF/ChargeFishingRod"),
-    minigame = Net:WaitForChild("RF/RequestFishingMinigameStarted"),
-    equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
-}
-
---================ ENGINE =================--
-local busy = false
-
-local function cast()
-    Events.equip:FireServer(1)
-    task.wait(0.05)
-    Events.charge:InvokeServer(1755848498.4834)
-    task.wait(0.02)
-    Events.minigame:InvokeServer(1.28,1)
-end
-
-local function reel()
-    Events.fishing:FireServer()
-end
-
-task.spawn(function()
-    while task.wait(0.05) do
-        if _G.TB_AutoFish_Legit and not busy then
-            busy = true
-            cast()
-            task.wait(0.8)
-            reel()
-            task.wait(0.2)
-            busy = false
-        end
-    end
-end)
-
-task.spawn(function()
-    while task.wait(0.05) do
-        if _G.TB_AutoFish_Blatant and not busy then
-            busy = true
-            Events.equip:FireServer(1)
-            for i=1,3 do
-                task.spawn(function()
-                    Events.charge:InvokeServer(1755848498.4834)
-                    task.wait(0.01)
-                    Events.minigame:InvokeServer(1.28,1)
-                end)
-                task.wait(0.03)
-            end
-            task.wait(0.6)
-            for i=1,5 do
-                reel()
-                task.wait(0.01)
-            end
-            busy = false
-        end
-    end
-end)
-
---================ GUI =================--
-local gui = Instance.new("ScreenGui", pg)
-gui.Name = "ThreebloxV3"
+-- ROOT GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "ThreebloxHub_FinalFix"
+gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
+gui.Parent = pg
 
+-- ================= MINI LOGO (DRAGGABLE) =================
+local miniLogo = Instance.new("TextButton", gui)
+miniLogo.Size = UDim2.new(0, 48, 0, 48)
+miniLogo.Position = UDim2.new(0, 20, 0.5, -24)
+miniLogo.BackgroundColor3 = Color3.fromRGB(255,200,0)
+miniLogo.Text = "TB"
+miniLogo.Font = Enum.Font.GothamBold
+miniLogo.TextSize = 18
+miniLogo.TextColor3 = Color3.fromRGB(30,30,30)
+miniLogo.BorderSizePixel = 0
+miniLogo.Visible = false
+miniLogo.ZIndex = 100
+miniLogo.Active = true
+Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
+
+-- ================= MAIN WINDOW =================
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0,520,0,340)
-main.Position = UDim2.new(0.5,-260,0.5,-170)
-main.BackgroundColor3 = Color3.fromRGB(18,20,28)
-Instance.new("UICorner", main).CornerRadius = UDim.new(0,14)
+main.Size = UDim2.new(0, 720, 0, 420)
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.BackgroundColor3 = Color3.fromRGB(20,25,35)
+main.BorderSizePixel = 0
+main.ZIndex = 10
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
--- drag
-do
-    local d,s,p
-    main.InputBegan:Connect(function(i)
-        if i.UserInputType==Enum.UserInputType.MouseButton1 then
-            d=true s=i.Position p=main.Position
-        end
-    end)
-    UIS.InputChanged:Connect(function(i)
-        if d then
-            local dx=i.Position-s
-            main.Position=UDim2.new(p.X.Scale,p.X.Offset+dx.X,p.Y.Scale,p.Y.Offset+dx.Y)
-        end
-    end)
-    UIS.InputEnded:Connect(function() d=false end)
-end
+-- ================= HEADER =================
+local header = Instance.new("Frame", main)
+header.Size = UDim2.new(1, 0, 0, 42)
+header.Position = UDim2.new(0, 0, 0, 0)
+header.BackgroundColor3 = Color3.fromRGB(26,30,44)
+header.BorderSizePixel = 0
+header.Active = true
+header.ZIndex = 20
+header.ClipsDescendants = false
+Instance.new("UICorner", header).CornerRadius = UDim.new(0,16)
 
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1,0,0,40)
+-- TITLE
+local title = Instance.new("TextLabel", header)
+title.Position = UDim2.new(0, 14, 0, 0)
+title.Size = UDim2.new(1, -120, 1, 0)
 title.BackgroundTransparency = 1
-title.Text = "Threeblox V3 | Auto Option"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 18
-title.TextColor3 = Color3.fromRGB(235,235,235)
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.TextColor3 = Color3.fromRGB(255,255,255)
+title.Text = "Threeblox | Fish It"
+title.ZIndex = 25
 
+-- MINIMIZE (TOP RIGHT - FIXED)
+local minBtn = Instance.new("TextButton", header)
+minBtn.Size = UDim2.new(0, 26, 0, 26)
+minBtn.Position = UDim2.new(1, -66, 0, 8) -- ✅ FIX
+minBtn.BackgroundColor3 = Color3.fromRGB(255,200,0)
+minBtn.Text = "-"
+minBtn.Font = Enum.Font.GothamBold
+minBtn.TextSize = 18
+minBtn.TextColor3 = Color3.fromRGB(30,30,30)
+minBtn.BorderSizePixel = 0
+minBtn.ZIndex = 30
+Instance.new("UICorner", minBtn).CornerRadius = UDim.new(1,0)
+
+-- CLOSE (TOP RIGHT - FIXED)
+local closeBtn = Instance.new("TextButton", header)
+closeBtn.Size = UDim2.new(0, 26, 0, 26)
+closeBtn.Position = UDim2.new(1, -34, 0, 8) -- ✅ FIX
+closeBtn.BackgroundColor3 = Color3.fromRGB(200,70,70)
+closeBtn.Text = "X"
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 14
+closeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+closeBtn.BorderSizePixel = 0
+closeBtn.ZIndex = 30
+Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
+
+-- ================= SIDEBAR =================
+local sidebar = Instance.new("Frame", main)
+sidebar.Position = UDim2.new(0, 0, 0, 42)
+sidebar.Size = UDim2.new(0, 170, 1, -42)
+sidebar.BackgroundColor3 = Color3.fromRGB(18,22,32)
+sidebar.BorderSizePixel = 0
+sidebar.ZIndex = 15
+
+local sidePad = Instance.new("UIPadding", sidebar)
+sidePad.PaddingTop = UDim.new(0, 10)
+
+local sideLayout = Instance.new("UIListLayout", sidebar)
+sideLayout.Padding = UDim.new(0, 6)
+sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
+-- ================= CONTENT =================
 local content = Instance.new("Frame", main)
-content.Position = UDim2.new(0,16,0,50)
-content.Size = UDim2.new(1,-32,1,-66)
-content.BackgroundTransparency = 1
+content.Position = UDim2.new(0, 170, 0, 42)
+content.Size = UDim2.new(1, -170, 1, -42)
+content.BackgroundColor3 = Color3.fromRGB(24,28,40)
+content.BorderSizePixel = 0
+content.ZIndex = 15
 
-local layout = Instance.new("UIListLayout", content)
-layout.Padding = UDim.new(0,10)
+local pageTitle = Instance.new("TextLabel", content)
+pageTitle.Position = UDim2.new(0, 16, 0, 10)
+pageTitle.Size = UDim2.new(1, -32, 0, 26)
+pageTitle.BackgroundTransparency = 1
+pageTitle.Font = Enum.Font.GothamBold
+pageTitle.TextSize = 22
+pageTitle.TextXAlignment = Enum.TextXAlignment.Left
+pageTitle.TextColor3 = Color3.fromRGB(255,255,255)
+pageTitle.Text = "Information"
 
---================ TOGGLE =================--
-local function ToggleRow(text, cb)
-    local row = Instance.new("Frame", content)
-    row.Size = UDim2.new(1,0,0,40)
-    row.BackgroundColor3 = Color3.fromRGB(28,30,42)
-    Instance.new("UICorner", row).CornerRadius = UDim.new(0,8)
+local box = Instance.new("Frame", content)
+box.Position = UDim2.new(0, 16, 0, 44)
+box.Size = UDim2.new(1, -32, 1, -60)
+box.BackgroundColor3 = Color3.fromRGB(30,36,52)
+box.BorderSizePixel = 0
+Instance.new("UICorner", box).CornerRadius = UDim.new(0,14)
 
-    local lbl = Instance.new("TextLabel", row)
-    lbl.Size = UDim2.new(1,-80,1,0)
-    lbl.Position = UDim2.new(0,12,0,0)
-    lbl.BackgroundTransparency = 1
-    lbl.Text = text
-    lbl.Font = Enum.Font.Gotham
-    lbl.TextSize = 14
-    lbl.TextColor3 = Color3.fromRGB(235,235,235)
-    lbl.TextXAlignment = Enum.TextXAlignment.Left  -- ✅ FIX PENTING
+local boxText = Instance.new("TextLabel", box)
+boxText.Position = UDim2.new(0, 14, 0, 14)
+boxText.Size = UDim2.new(1, -28, 1, -28)
+boxText.BackgroundTransparency = 1
+boxText.Font = Enum.Font.Gotham
+boxText.TextSize = 15
+boxText.TextWrapped = true
+boxText.TextXAlignment = Enum.TextXAlignment.Left
+boxText.TextYAlignment = Enum.TextYAlignment.Top
+boxText.TextColor3 = Color3.fromRGB(220,220,220)
+boxText.Text = "Information page content."
 
-    local btn = Instance.new("TextButton", row)
-    btn.Size = UDim2.new(0,36,0,18)
-    btn.Position = UDim2.new(1,-48,0.5,-9)
-    btn.Text = ""
-    btn.BackgroundColor3 = Color3.fromRGB(90,90,120)
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(1,0)
+-- ================= MENU =================
+local menus = {
+    "Information",
+    "Auto Option",
+    "Teleport",
+    "Misc",
+    "Event",
+    "Quest",
+    "Shop & Trade"
+}
 
-    local on=false
+local activeBtn
+for _,name in ipairs(menus) do
+    local btn = Instance.new("TextButton", sidebar)
+    btn.Size = UDim2.new(1, -20, 0, 36)
+    btn.BackgroundColor3 = Color3.fromRGB(28,34,48)
+    btn.Text = "  "..name
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 15
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.BorderSizePixel = 0
+    btn.ZIndex = 20
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,10)
+
     btn.MouseButton1Click:Connect(function()
-        on=not on
-        btn.BackgroundColor3 = on and Color3.fromRGB(170,80,255) or Color3.fromRGB(90,90,120)
-        cb(on)
+        if activeBtn then
+            activeBtn.BackgroundColor3 = Color3.fromRGB(28,34,48)
+            activeBtn.TextColor3 = Color3.fromRGB(255,255,255)
+        end
+        btn.BackgroundColor3 = Color3.fromRGB(255,200,0)
+        btn.TextColor3 = Color3.fromRGB(30,30,30)
+        activeBtn = btn
+        pageTitle.Text = name
+        boxText.Text = name.." page content."
     end)
+
+    if name == "Information" then
+        btn.BackgroundColor3 = Color3.fromRGB(255,200,0)
+        btn.TextColor3 = Color3.fromRGB(30,30,30)
+        activeBtn = btn
+    end
 end
 
---================ ITEMS =================--
-ToggleRow("⚙ Auto Fishing (Legit)", function(v)
-    _G.TB_AutoFish_Legit = v
-    if v then _G.TB_AutoFish_Blatant = false end
+-- ================= DRAG MAIN =================
+local dragging, dragStart, startPos
+header.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = i.Position
+        startPos = main.Position
+    end
+end)
+header.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+header.InputChanged:Connect(function(i)
+    if dragging and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = i.Position - dragStart
+        main.Position = UDim2.new(
+            startPos.X.Scale, startPos.X.Offset + delta.X,
+            startPos.Y.Scale, startPos.Y.Offset + delta.Y
+        )
+    end
 end)
 
-ToggleRow("🔥 Blatant Fishing", function(v)
-    _G.TB_AutoFish_Blatant = v
-    if v then _G.TB_AutoFish_Legit = false end
+-- ================= DRAG MINI LOGO =================
+local logoDrag, logoStart, logoPos
+miniLogo.InputBegan:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        logoDrag = true
+        logoStart = i.Position
+        logoPos = miniLogo.Position
+    end
+end)
+miniLogo.InputEnded:Connect(function(i)
+    if i.UserInputType == Enum.UserInputType.MouseButton1 then
+        logoDrag = false
+    end
+end)
+miniLogo.InputChanged:Connect(function(i)
+    if logoDrag and i.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = i.Position - logoStart
+        miniLogo.Position = UDim2.new(
+            logoPos.X.Scale, logoPos.X.Offset + delta.X,
+            logoPos.Y.Scale, logoPos.Y.Offset + delta.Y
+        )
+    end
 end)
 
-print("[Threeblox V3] GUI + Engine OK")
+-- ================= MINIMIZE / CLOSE =================
+minBtn.MouseButton1Click:Connect(function()
+    main.Visible = false
+    miniLogo.Visible = true
+end)
+
+miniLogo.MouseButton1Click:Connect(function()
+    main.Visible = true
+    miniLogo.Visible = false
+end)
+
+closeBtn.MouseButton1Click:Connect(function()
+    gui:Destroy()
+end)
