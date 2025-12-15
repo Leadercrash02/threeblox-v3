@@ -1,203 +1,174 @@
---========================================
--- THREEBLOX V2 | AUTO FISH FULL WORKING
--- GUI SIMPLE + ENGINE V2
---========================================
+--==================================================
+-- THREEBLOX V3 | RAW GUI (MATCH REFERENCE)
+-- UI ONLY | NO ENGINE | NO REMOTE
+--==================================================
 
--- SERVICES
 local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UIS = game:GetService("UserInputService")
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
--- CLEAN OLD GUI
 pcall(function()
-	for _,v in ipairs(pg:GetChildren()) do
-		if v:IsA("ScreenGui") and v.Name:find("Threeblox") then
-			v:Destroy()
-		end
+	if pg:FindFirstChild("ThreebloxV3") then
+		pg.ThreebloxV3:Destroy()
 	end
 end)
 
---========================================
--- REMOTE (PUNYA LU)
---========================================
-local Net = ReplicatedStorage
-	:WaitForChild("Packages")
-	:WaitForChild("_Index")
-	:WaitForChild("sleitnick_net@0.2.0")
-	:WaitForChild("net")
+--================ CONFIG =================
+local LOGO_ID = "rbxassetid://121625492591707"
 
-local Events = {
-	fishing  = Net:WaitForChild("RE/FishingCompleted"),
-	charge   = Net:WaitForChild("RF/ChargeFishingRod"),
-	minigame = Net:WaitForChild("RF/RequestFishingMinigameStarted"),
-	equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
+local C = {
+	BG = Color3.fromRGB(18,20,28),
+	SIDE = Color3.fromRGB(22,24,34),
+	CARD = Color3.fromRGB(28,30,42),
+	TEXT = Color3.fromRGB(235,235,235),
+	MUTED = Color3.fromRGB(160,160,160),
+	ACCENT = Color3.fromRGB(170,80,255),
+	RED = Color3.fromRGB(220,70,70),
 }
 
---========================================
--- GLOBAL FLAG + DELAY (SAMA KAYAK V2 LU)
---========================================
-_G.TB_AutoFish = false
-_G.TB_BlatantFish = false
-
-_G.TB_DelayCast = 0.9
-_G.TB_DelayFinish = 0.2
-
---========================================
--- AUTO FISH ENGINE
---========================================
-local isFishing = false
-
-local function LegitCycle()
-	if isFishing then return end
-	isFishing = true
-
-	pcall(function()
-		Events.equip:FireServer(1)
-		task.wait(0.05)
-		Events.charge:InvokeServer(1755848498.4834)
-		task.wait(0.02)
-		Events.minigame:InvokeServer(1.2854545116425, 1)
-	end)
-
-	task.wait(_G.TB_DelayCast)
-
-	pcall(function()
-		Events.fishing:FireServer()
-	end)
-
-	task.wait(_G.TB_DelayFinish)
-	isFishing = false
-end
-
-local function BlatantCycle()
-	if isFishing then return end
-	isFishing = true
-
-	pcall(function()
-		Events.equip:FireServer(1)
-		task.wait(0.01)
-
-		for _ = 1,3 do
-			task.spawn(function()
-				Events.charge:InvokeServer(1755848498.4834)
-				task.wait(0.01)
-				Events.minigame:InvokeServer(1.2854545116425, 1)
-			end)
-			task.wait(0.03)
-		end
-	end)
-
-	task.wait(_G.TB_DelayCast)
-
-	for _ = 1,5 do
-		pcall(function()
-			Events.fishing:FireServer()
-		end)
-		task.wait(0.01)
-	end
-
-	task.wait(_G.TB_DelayFinish)
-	isFishing = false
-end
-
-task.spawn(function()
-	while task.wait(0.05) do
-		if _G.TB_BlatantFish then
-			BlatantCycle()
-		elseif _G.TB_AutoFish then
-			LegitCycle()
-		end
-	end
-end)
-
---========================================
--- GUI
---========================================
+--================ ROOT ===================
 local gui = Instance.new("ScreenGui", pg)
-gui.Name = "ThreebloxV2"
+gui.Name = "ThreebloxV3"
 gui.ResetOnSpawn = false
 
+--================ MAIN ===================
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0,360,0,260)
-main.Position = UDim2.new(0.5,-180,0.5,-130)
-main.BackgroundColor3 = Color3.fromRGB(18,20,28)
+main.Size = UDim2.new(0,720,0,420)
+main.Position = UDim2.new(0.5,0,0.5,0)
+main.AnchorPoint = Vector2.new(0.5,0.5)
+main.BackgroundColor3 = C.BG
 main.BorderSizePixel = 0
-main.Active = true
-main.Draggable = true
+main.ClipsDescendants = true
 Instance.new("UICorner", main).CornerRadius = UDim.new(0,14)
 
--- HEADER
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1,0,0,36)
-title.BackgroundTransparency = 1
-title.Text = "Threeblox V2 | Auto Option"
-title.TextColor3 = Color3.fromRGB(235,235,235)
+-- drag
+do
+	local d,s,p
+	main.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			d=true s=i.Position p=main.Position
+		end
+	end)
+	UIS.InputChanged:Connect(function(i)
+		if d then
+			local dx=i.Position-s
+			main.Position=UDim2.new(p.X.Scale,p.X.Offset+dx.X,p.Y.Scale,p.Y.Offset+dx.Y)
+		end
+	end)
+	UIS.InputEnded:Connect(function() d=false end)
+end
+
+--================ HEADER =================
+local header = Instance.new("Frame", main)
+header.Size = UDim2.new(1,0,0,44)
+header.BackgroundTransparency = 1
+
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.new(1,-120,1,0)
+title.Position = UDim2.new(0,16,0,0)
+title.Text = "Threeblox V3 | Auto Option"
 title.Font = Enum.Font.GothamBold
-title.TextSize = 16
+title.TextSize = 18
+title.TextColor3 = C.TEXT
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.BackgroundTransparency = 1
 
--- CONTENT
-local function makeToggle(text, y, callback)
-	local btn = Instance.new("TextButton", main)
-	btn.Size = UDim2.new(1,-40,0,32)
-	btn.Position = UDim2.new(0,20,0,y)
-	btn.BackgroundColor3 = Color3.fromRGB(28,30,42)
-	btn.TextColor3 = Color3.fromRGB(235,235,235)
-	btn.Font = Enum.Font.Gotham
-	btn.TextSize = 14
-	btn.Text = text .. " : OFF"
-	Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+local close = Instance.new("TextButton", header)
+close.Size = UDim2.new(0,28,0,24)
+close.Position = UDim2.new(1,-36,0.5,-12)
+close.Text = "X"
+close.Font = Enum.Font.GothamBold
+close.TextSize = 14
+close.TextColor3 = Color3.new(1,1,1)
+close.BackgroundColor3 = C.RED
+Instance.new("UICorner", close).CornerRadius = UDim.new(0,6)
+close.MouseButton1Click:Connect(function()
+	gui:Destroy()
+end)
 
-	local state = false
-	btn.MouseButton1Click:Connect(function()
-		state = not state
-		btn.Text = text .. (state and " : ON" or " : OFF")
-		callback(state)
-	end)
+--================ SIDEBAR ================
+local side = Instance.new("Frame", main)
+side.Position = UDim2.new(0,0,0,44)
+side.Size = UDim2.new(0,190,1,-44)
+side.BackgroundColor3 = C.SIDE
+
+local sl = Instance.new("UIListLayout", side)
+sl.Padding = UDim.new(0,6)
+Instance.new("UIPadding", side).PaddingTop = UDim.new(0,12)
+
+local function SideBtn(txt)
+	local b = Instance.new("TextButton", side)
+	b.Size = UDim2.new(1,-20,0,36)
+	b.Position = UDim2.new(0,10,0,0)
+	b.Text = txt
+	b.Font = Enum.Font.Gotham
+	b.TextSize = 14
+	b.TextColor3 = C.TEXT
+	b.BackgroundColor3 = C.CARD
+	b.BackgroundTransparency = 0.05
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+	return b
 end
 
-makeToggle("⚙ Auto Fishing", 50, function(v)
-	_G.TB_AutoFish = v
-end)
+SideBtn("ℹ  Information")
+SideBtn("⚙  Auto Option")
+SideBtn("➜  Teleport")
+SideBtn("★  Quest")
+SideBtn("🛒  Shop & Trade")
+SideBtn("⚡  Misc")
 
-makeToggle("🔥 Blatant Fishing", 90, function(v)
-	_G.TB_BlatantFish = v
-end)
+--================ CONTENT =================
+local content = Instance.new("ScrollingFrame", main)
+content.Position = UDim2.new(0,190,0,44)
+content.Size = UDim2.new(1,-190,1,-44)
+content.ScrollBarImageTransparency = 1
+content.AutomaticCanvasSize = Enum.AutomaticSize.Y
+content.CanvasSize = UDim2.new(0,0,0,0)
+content.BackgroundTransparency = 1
 
--- DELAY BOX
-local function makeBox(label, y, default, cb)
-	local txt = Instance.new("TextLabel", main)
-	txt.Position = UDim2.new(0,20,0,y)
-	txt.Size = UDim2.new(0.5,-10,0,28)
-	txt.BackgroundTransparency = 1
-	txt.Text = label
-	txt.TextColor3 = Color3.fromRGB(200,200,200)
-	txt.Font = Enum.Font.Gotham
-	txt.TextSize = 13
+local cl = Instance.new("UIListLayout", content)
+cl.Padding = UDim.new(0,8)
+Instance.new("UIPadding", content).PaddingTop = UDim.new(0,16)
+Instance.new("UIPadding", content).PaddingLeft = UDim.new(0,16)
+Instance.new("UIPadding", content).PaddingRight = UDim.new(0,16)
 
-	local box = Instance.new("TextBox", main)
-	box.Position = UDim2.new(0.5,10,0,y)
-	box.Size = UDim2.new(0.5,-30,0,28)
-	box.BackgroundColor3 = Color3.fromRGB(12,14,24)
-	box.TextColor3 = Color3.fromRGB(235,235,235)
-	box.Font = Enum.Font.Gotham
-	box.TextSize = 13
-	box.Text = tostring(default)
-	Instance.new("UICorner", box).CornerRadius = UDim.new(0,6)
+local function AutoItem(text)
+	local f = Instance.new("Frame", content)
+	f.Size = UDim2.new(1,0,0,44)
+	f.BackgroundColor3 = C.CARD
+	f.BackgroundTransparency = 0.05
+	f.ClipsDescendants = true
+	Instance.new("UICorner", f).CornerRadius = UDim.new(0,8)
 
-	box.FocusLost:Connect(function()
-		local n = tonumber(box.Text)
-		if n then cb(n) end
-	end)
+	local lbl = Instance.new("TextLabel", f)
+	lbl.Size = UDim2.new(1,-40,1,0)
+	lbl.Position = UDim2.new(0,14,0,0)
+	lbl.Text = text
+	lbl.Font = Enum.Font.Gotham
+	lbl.TextSize = 15
+	lbl.TextColor3 = C.TEXT
+	lbl.TextXAlignment = Enum.TextXAlignment.Left
+	lbl.BackgroundTransparency = 1
+
+	local arrow = Instance.new("TextLabel", f)
+	arrow.Size = UDim2.new(0,30,1,0)
+	arrow.Position = UDim2.new(1,-30,0,0)
+	arrow.Text = ">"
+	arrow.Font = Enum.Font.GothamBold
+	arrow.TextSize = 16
+	arrow.TextColor3 = C.MUTED
+	arrow.BackgroundTransparency = 1
 end
 
-makeBox("Cast Delay", 140, _G.TB_DelayCast, function(v)
-	_G.TB_DelayCast = v
-end)
+-- AUTO OPTION ITEMS (MATCH FOTO)
+AutoItem("⚙  Auto Fishing")
+AutoItem("⭕  Legit Perfect")
+AutoItem("🔥  Blatant Fishing")
+AutoItem("✏  Auto Farm Island")
+AutoItem("⭐  Auto Favorite")
+AutoItem("💰  Auto Sell")
+AutoItem("➕  Auto Totem")
+AutoItem("🧪  Auto Potion")
 
-makeBox("Finish Delay", 175, _G.TB_DelayFinish, function(v)
-	_G.TB_DelayFinish = v
-end)
-
-print("[Threeblox V2] Loaded OK")
+print("[Threeblox V3] GUI raw loaded (match reference)")
