@@ -1,10 +1,12 @@
---// THREEBLOX V3 | FINAL FULL EXPAND
---// FIX A (Invisible Scroll) + Expandable Items
---// ANDROID + PC SAFE | UI ONLY
+--// THREEBLOX V3 | FULL SCRIPT
+--// UI V3 + AUTO FISHING (REMOTE CUSTOM)
+--// ANDROID + PC SAFE
 
 --================ SERVICES ================--
 local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local lp = Players.LocalPlayer
 local pg = lp:WaitForChild("PlayerGui")
 
@@ -40,7 +42,7 @@ gui.Name = "ThreebloxV3"
 gui.IgnoreGuiInset = true
 gui.ResetOnSpawn = false
 
---================ MINI LOGO (MINIMIZE) ================--
+--================ MINI LOGO ================--
 local mini = Instance.new("ImageButton", gui)
 mini.Size = UDim2.new(0,56,0,56)
 mini.Position = UDim2.new(0,20,1,-80)
@@ -199,7 +201,7 @@ sideBtn("Quest","★")
 sideBtn("Shop & Trade","🛒")
 sideBtn("Misc","⚡")
 
---================ AUTO OPTION (EXPANDABLE) ================--
+--================ AUTO OPTION =================--
 local scroll = Instance.new("ScrollingFrame", autoPage)
 scroll.Size = UDim2.new(1,0,1,0)
 scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -212,10 +214,47 @@ Instance.new("UIPadding", scroll).PaddingTop = UDim.new(0,16)
 Instance.new("UIPadding", scroll).PaddingLeft = UDim.new(0,16)
 Instance.new("UIPadding", scroll).PaddingRight = UDim.new(0,16)
 
--- EXPANDABLE ITEM
-local function autoItem(titleText,emoji,innerText)
-	local opened=false
+--================ AUTO FISHING FLAG =================--
+_G.THREEBLOX_AutoFishing = false
 
+--================ REMOTE (CUSTOM) =================--
+local Net = ReplicatedStorage.Packages.Index["sleitnick_net-0.2.0"].net
+local Events = {
+	fishing  = Net.RF.FishingCompleted,
+	charge   = Net.RF.ChargeFishingRod,
+	minigame = Net.RF.RequestFishingMinigameStarted,
+	equip    = Net.RE.EquipToolFromHotbar,
+}
+
+--================ AUTO FISHING ENGINE =================--
+local isFishing = false
+local function AutoFishingEngine()
+	if isFishing then return end
+	isFishing = true
+	pcall(function()
+		Events.equip:FireServer(1)
+		task.wait(0.02)
+		Events.charge:InvokeServer(1755848498.4834)
+		task.wait(0.01)
+		Events.minigame:InvokeServer(1.2854545116425, 1)
+		task.wait(0.12)
+		Events.fishing:FireServer()
+	end)
+	task.wait(0.25)
+	isFishing = false
+end
+
+task.spawn(function()
+	while task.wait(0.05) do
+		if _G.THREEBLOX_AutoFishing then
+			AutoFishingEngine()
+		end
+	end
+end)
+
+--================ EXPANDABLE ITEM =================--
+local function autoItem(titleText,emoji,desc,isAutoFishing)
+	local opened=false
 	local box = Instance.new("Frame", scroll)
 	box.Size = UDim2.new(1,0,0,42)
 	box.BackgroundColor3 = C.CARD
@@ -227,10 +266,6 @@ local function autoItem(titleText,emoji,innerText)
 	head.Size = UDim2.new(1,0,0,42)
 	head.Text = ""
 	head.BackgroundTransparency = 1
-
-	local bar = Instance.new("Frame", box)
-	bar.Size = UDim2.new(0,4,1,0)
-	bar.BackgroundColor3 = C.ACCENT
 
 	local lbl = Instance.new("TextLabel", head)
 	lbl.Position = UDim2.new(0,12,0,0)
@@ -260,11 +295,13 @@ local function autoItem(titleText,emoji,innerText)
 	inner.TextColor3 = C.MUTED
 	inner.TextWrapped = true
 	inner.TextXAlignment = Enum.TextXAlignment.Left
-	inner.TextYAlignment = Enum.TextYAlignment.Top
-	inner.Text = innerText
+	inner.Text = desc
 
 	head.MouseButton1Click:Connect(function()
 		opened = not opened
+		if isAutoFishing then
+			_G.THREEBLOX_AutoFishing = opened
+		end
 		if opened then
 			box.Size = UDim2.new(1,0,0,110)
 			arrow.Text = "v"
@@ -275,15 +312,15 @@ local function autoItem(titleText,emoji,innerText)
 	end)
 end
 
--- ITEMS (SEMUA ADA & BISA DIBUKA)
-autoItem("Auto Fishing","⚙","Toggle, Delay, dan logic auto fishing.")
-autoItem("Legit Perfect","⭕","Perfect threshold dan kontrol legit.")
-autoItem("Blatant Fishing","🔥","Delay reel dan complete (blatant).")
-autoItem("Auto Farm Island","✏","Pilih island dan threshold.")
-autoItem("Auto Favorite","⭐","Favorite by tier, variant, fish.")
-autoItem("Auto Sell","💰","Auto sell hasil fishing.")
-autoItem("Auto Totem","➕","Auto use totem.")
-autoItem("Auto Potion","🧪","Auto use potion.")
+--================ ITEMS =================--
+autoItem("Auto Fishing","⚙","Auto fishing menggunakan remote custom (no miss).",true)
+autoItem("Legit Perfect","⭕","Perfect threshold legit.",false)
+autoItem("Blatant Fishing","🔥","Mode agresif.",false)
+autoItem("Auto Farm Island","✏","Auto farm island.",false)
+autoItem("Auto Favorite","⭐","Favorite ikan.",false)
+autoItem("Auto Sell","💰","Auto sell ikan.",false)
+autoItem("Auto Totem","➕","Auto use totem.",false)
+autoItem("Auto Potion","🧪","Auto use potion.",false)
 
 --================ DEFAULT =================--
 showPage("Auto Option")
