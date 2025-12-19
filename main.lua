@@ -297,24 +297,45 @@ local Events = {
     cancel   = Net:WaitForChild("RF/CancelFishingInputs"),
     equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
     unequip  = Net:WaitForChild("RE/UnequipToolFromHotbar"),
+}  -- TUTUP TABEL DI SINI
+
+-- ====== TOTEM REMOTE TEST (sementara) ======
+local TryNames = {
+    "RF/UseTotem",
+    "RE/UseTotem",
+    "RF/ActivateTotem",
+    "RE/ActivateTotem",
+    "RF/PlaceTotem",
+    "RE/PlaceTotem",
 }
+
+for _,n in ipairs(TryNames) do
+    local ok, obj = pcall(function()
+        return Net:WaitForChild(n, 1)
+    end)
+    if ok and obj then
+        warn("[TOTEM TEST] Found candidate:", n, obj.ClassName)
+    end
+end
+-- ===========================================
+
 
 -- ENGINE STATE
 local AutoFishAFK = false
 local isFishing   = false
-local Rand        = Random.new()
 
-local DelayReel  = 3   
-local DelayCatch = 2   
+-- delay Auto Fishing (feel V2)
+local DelayReel   = 3   -- sama kayak _G.RAY_DelayCast
+local DelayCatch  = 2   -- sama kayak _G.RAY_DelayFinish
 
+-- Blatant state
 local BlatantOn     = false
-local BlatantReel   = 0.8
-local BlatantCatch  = 1.5
+local BlatantReel   = 0.8   -- Reel Delay
+local BlatantCatch  = 0.75  -- = 1.5 * 0.5 default
 
 _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
 
-
-
+-- FUNGSI DASAR
 local function Reel_V3()
     pcall(function()
         Events.fishing:FireServer()
@@ -331,27 +352,20 @@ local function Cast_V3()
     end)
 end
 
+-- AUTO FISH FEEL V2 (1 cast -> tunggu -> 1 reel -> tunggu)
 local function Engine_V3_Delayed()
     if isFishing then return end
     isFishing = true
 
     Cast_V3()
-
-    local waitTime = Rand:NextNumber(DelayReel, DelayCatch)
-    task.wait(waitTime)
-
+    task.wait(DelayReel)
     Reel_V3()
-
-    local pause = Rand:NextNumber(0.4, 0.8)
-    task.wait(pause)
+    task.wait(DelayCatch)
 
     isFishing = false
 end
 
-local BlatantOn = false
-_G.BlatantCastDelay  = _G.BlatantCastDelay  or 1.2  -- set dari GUI
-_G.BlatantFinishDelay = _G.BlatantFinishDelay or 0.5
-
+-- BLATANT FEEL V2 (3x cast -> tunggu -> 5x reel)
 local function BlatantCycle_V2()
     if isFishing or not BlatantOn then return end
     isFishing = true
@@ -380,7 +394,7 @@ local function BlatantCycle_V2()
     isFishing = false
 end
 
--- EXTRA CATCH BLATANT LOOP (tanpa Safety)
+-- EXTRA CATCH (pakai BlatantCatch sebagai delay)
 task.spawn(function()
     while true do
         if BlatantOn and _G.RAY_ExtraCatchBlatant and not isFishing then
@@ -401,6 +415,7 @@ task.spawn(function()
         vu:ClickButton2(Vector2.new())
     end)
 end)
+
 
 
 -- ====================== AUTO OPTION CONTENT ======================
@@ -668,11 +683,19 @@ local function autoDropdown(text)
             knob.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
         end
 
-        pill.MouseButton1Click:Connect(function()
-            on = not on
-            AutoFishAFK = on
-            refresh()
-        end)
+pill.MouseButton1Click:Connect(function()
+    on = not on
+
+    if on then
+        AutoFishAFK = true
+        BlatantOn = false   -- matiin blatant kalau auto fishing dinyalain
+    else
+        AutoFishAFK = false
+    end
+
+    refresh()
+end)
+
 
         refresh()
 
@@ -1193,15 +1216,16 @@ task.wait(0.1)
 
 task.spawn(function()
     while true do
-        if AutoFishAFK then
-            Engine_V3_Delayed()
-        end
         if BlatantOn then
             BlatantCycle_V2()
+        elseif AutoFishAFK then
+            Engine_V3_Delayed()
         end
         task.wait(0.05)
     end
 end)
+
+
 
 -- AUTO SELL ENGINE SIMPLE
 task.spawn(function()
@@ -1238,46 +1262,5 @@ task.spawn(function()
         end
 
         task.wait(0.5)
-    end
-end)
-
--- AUTO FARM ISLANDS ENGINE
-task.spawn(function()
-    local Players = game:GetService("Players")
-    local lp = Players.LocalPlayer
-    local lastSwitch = 0
-    local idx = 1
-
-    while true do
-        if _G.RAY_AutoFarmIslandOn then
-            local cd = _G.RAY_IslandSwitchDelay or 120
-            if tick() - lastSwitch >= cd then
-                local selected = {}
-                for _,name in ipairs(DEFAULT_SPOT_ORDER) do
-                    if _G.RAY_SelectedIslands and _G.RAY_SelectedIslands[name] then
-                        table.insert(selected, name)
-                    end
-                end
-
-                if #selected > 0 then
-                    if idx > #selected then idx = 1 end
-                    local name = selected[idx]
-                    local cf = ISLAND_SPOTS[name]
-
-                    local char = lp.Character or lp.CharacterAdded:Wait()
-                    local hrp = char:FindFirstChild("HumanoidRootPart")
-                    if hrp and cf then
-                        hrp.CFrame = cf + Vector3.new(0,3,0)
-                    end
-
-                    idx = idx + 1
-                    lastSwitch = tick()
-                end
-            end
-        else
-            idx = 1
-        end
-
-        task.wait(1)
     end
 end)
