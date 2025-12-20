@@ -242,6 +242,7 @@ newPage("Quest")
 newPage("Shop & Trade")
 newPage("Misc")
 
+-- BUTTON SIDEBAR
 local function sideBtn(name, emoji, order)
     local b = Instance.new("TextButton", sidebar)
     b.Size = UDim2.new(1,0,0,38)
@@ -256,17 +257,287 @@ local function sideBtn(name, emoji, order)
     Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
     b.AutoButtonColor = false
     b.MouseButton1Click:Connect(function()
-        for _,p in pairs(pages) do p.Visible=false end
-        pages[name].Visible=true
-        title.Text="Threeblox V3 | "..name
+        for _,p in pairs(pages) do p.Visible = false end
+        pages[name].Visible = true
+        title.Text = "Threeblox V3 | "..name
     end)
 end
 
-for i,v in ipairs(PAGE_ICONS) do
-    sideBtn(v[1], v[2], i)
+-- BUAT TOMBOL SIDEBAR
+for i, info in ipairs(PAGE_ICONS) do
+    local name, emoji = info[1], info[2]
+    sideBtn(name, emoji, i)
 end
 
+-- DEFAULT PAGE
+for _, p in pairs(pages) do
+    p.Visible = false
+end
+pages["Auto Option"].Visible = true
+
+----------------------------------------------------------------
+-- TELEPORT PAGE (ROW + DROPDOWN TELEPORT TO PLAYER, COMPACT)
+----------------------------------------------------------------
+local teleportPage = pages["Teleport"]
+
+-- TITLE ATAS TELEPORT
+local tpTitleMain = Instance.new("TextLabel", teleportPage)
+tpTitleMain.Size = UDim2.new(1,-32,0,32)
+tpTitleMain.Position = UDim2.new(0,16,0,16)
+tpTitleMain.BackgroundTransparency = 1
+tpTitleMain.Font = Enum.Font.GothamBold
+tpTitleMain.TextSize = 18
+tpTitleMain.TextColor3 = TEXT
+tpTitleMain.TextXAlignment = Enum.TextXAlignment.Left
+tpTitleMain.Text = "Teleport"  -- [file:3]
+
+-- ROW: TELEPORT TO PLAYER
+local rowPlayer = Instance.new("TextButton", teleportPage)
+rowPlayer.Size = UDim2.new(1,-32,0,34)
+rowPlayer.Position = UDim2.new(0,16,0,52)
+rowPlayer.BackgroundColor3 = CARD
+rowPlayer.BackgroundTransparency = ALPHA_CARD
+rowPlayer.AutoButtonColor = false
+rowPlayer.Font = Enum.Font.Gotham
+rowPlayer.TextSize = 13
+rowPlayer.TextXAlignment = Enum.TextXAlignment.Left
+rowPlayer.TextColor3 = TEXT
+rowPlayer.Text = "  Teleport to Player  >"
+Instance.new("UICorner", rowPlayer).CornerRadius = UDim.new(0,8)
+
+-- FRAME ISI (KELUAR PAS ROW DIKLIK)
+local tpPlayerFrame = Instance.new("Frame", teleportPage)
+tpPlayerFrame.Size = UDim2.new(1,-40,0,120)      -- lebih pendek & sedikit masuk
+tpPlayerFrame.Position = UDim2.new(0,20,0,92)
+tpPlayerFrame.BackgroundTransparency = 1
+tpPlayerFrame.Visible = false
+
+local tpCard = Instance.new("Frame", tpPlayerFrame)
+tpCard.Size = UDim2.new(1,0,1,0)
+tpCard.BackgroundColor3 = CARD
+tpCard.BackgroundTransparency = 0.12             -- agak transparan
+Instance.new("UICorner", tpCard).CornerRadius = UDim.new(0,10)
+
+local tpPad = Instance.new("UIPadding", tpCard)
+tpPad.PaddingTop = UDim.new(0,10)
+tpPad.PaddingLeft = UDim.new(0,14)
+tpPad.PaddingRight = UDim.new(0,14)
+tpPad.PaddingBottom = UDim.new(0,10)
+
+local tpTitle = Instance.new("TextLabel", tpCard)
+tpTitle.Size = UDim2.new(1,0,0,22)
+tpTitle.BackgroundTransparency = 1
+tpTitle.Font = Enum.Font.GothamBold
+tpTitle.TextSize = 15
+tpTitle.TextColor3 = TEXT
+tpTitle.TextXAlignment = Enum.TextXAlignment.Left
+tpTitle.Text = "Teleport to Player"
+
+-- SELECT PLAYER BUTTON (lebih tipis)
+local selectBtn = Instance.new("TextButton", tpCard)
+selectBtn.Size = UDim2.new(1,0,0,26)
+selectBtn.Position = UDim2.new(0,0,0,26)
+selectBtn.BackgroundColor3 = CARD
+selectBtn.BackgroundTransparency = 0.16
+selectBtn.AutoButtonColor = false
+selectBtn.Font = Enum.Font.Gotham
+selectBtn.TextSize = 12
+selectBtn.TextColor3 = MUTED
+selectBtn.TextXAlignment = Enum.TextXAlignment.Left
+selectBtn.Text = "  Select Player"
+Instance.new("UICorner", selectBtn).CornerRadius = UDim.new(0,8)
+
+-- TELEPORT BUTTON (lebih tipis)
+local tpBtn = Instance.new("TextButton", tpCard)
+tpBtn.Size = UDim2.new(1,0,0,28)
+tpBtn.Position = UDim2.new(0,0,0,56)
+tpBtn.BackgroundColor3 = ACCENT
+tpBtn.BackgroundTransparency = 0.08
+tpBtn.AutoButtonColor = false
+tpBtn.Font = Enum.Font.Gotham
+tpBtn.TextSize = 12
+tpBtn.TextColor3 = TEXT
+tpBtn.Text = "Teleport To Player"
+Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0,8)
+
+-- REFRESH BUTTON (lebih kecil)
+local refreshBtn = Instance.new("TextButton", tpCard)
+refreshBtn.Size = UDim2.new(1,0,0,24)
+refreshBtn.Position = UDim2.new(0,0,0,88)
+refreshBtn.BackgroundColor3 = CARD
+refreshBtn.BackgroundTransparency = 0.18
+refreshBtn.AutoButtonColor = false
+refreshBtn.Font = Enum.Font.Gotham
+refreshBtn.TextSize = 12
+refreshBtn.TextColor3 = TEXT
+refreshBtn.TextXAlignment = Enum.TextXAlignment.Center
+refreshBtn.Text = "Refresh Player"
+Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0,8)
+
+-- PANEL DROPDOWN SAMPING (SEARCH + LIST PLAYER)
+local dropFrame = Instance.new("Frame", teleportPage)
+dropFrame.Size = UDim2.new(0,240,0,200)
+dropFrame.Position = UDim2.new(0,20+260,0,52)
+dropFrame.BackgroundColor3 = CARD
+dropFrame.BackgroundTransparency = 0.06
+dropFrame.Visible = false
+Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0,10)
+
+local dropPad = Instance.new("UIPadding", dropFrame)
+dropPad.PaddingTop = UDim.new(0,8)
+dropPad.PaddingLeft = UDim.new(0,8)
+dropPad.PaddingRight = UDim.new(0,8)
+dropPad.PaddingBottom = UDim.new(0,8)
+
+local searchBox = Instance.new("TextBox", dropFrame)
+searchBox.Size = UDim2.new(1,0,0,24)
+searchBox.PlaceholderText = "Search"
+searchBox.Font = Enum.Font.Gotham
+searchBox.TextSize = 12
+searchBox.TextXAlignment = Enum.TextXAlignment.Left
+searchBox.TextColor3 = TEXT
+searchBox.ClearTextOnFocus = false
+searchBox.BackgroundColor3 = Color3.fromRGB(18,20,28)
+searchBox.BackgroundTransparency = 0.1
+searchBox.Text = ""
+Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0,8)
+
+local listFrame = Instance.new("ScrollingFrame", dropFrame)
+listFrame.Position = UDim2.new(0,0,0,30)
+listFrame.Size = UDim2.new(1,0,1,-30)
+listFrame.ScrollBarThickness = 4
+listFrame.BackgroundTransparency = 1
+listFrame.CanvasSize = UDim2.new(0,0,0,0)
+listFrame.ClipsDescendants = true
+
+local listLayout = Instance.new("UIListLayout", listFrame)
+listLayout.Padding = UDim.new(0,3)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    listFrame.CanvasSize = UDim2.new(0,0,0,listLayout.AbsoluteContentSize.Y + 6)
+end)
+
+-- LOGIC TELEPORT PLAYER
+local selectedPlayerName = nil
+
+local function passFilter(name, q)
+    if q == "" then return true end
+    name = string.lower(name)
+    q = string.lower(q)
+    return string.find(name, q, 1, true) ~= nil
+end
+
+local function rebuildDropdown()
+    local q = searchBox.Text or ""
+
+    for _,c in ipairs(listFrame:GetChildren()) do
+        if c:IsA("TextButton") then c:Destroy() end
+    end
+
+    for _,plr in ipairs(Players:GetPlayers()) do
+        if plr ~= Players.LocalPlayer and passFilter(plr.Name, q) then
+            local b = Instance.new("TextButton", listFrame)
+            b.Size = UDim2.new(1,0,0,22)
+            b.BackgroundColor3 = CARD
+            b.BackgroundTransparency = 0.2
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 12
+            b.TextXAlignment = Enum.TextXAlignment.Left
+            b.TextColor3 = TEXT
+            b.Text = "  "..plr.Name
+            b.AutoButtonColor = false
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+            b.MouseButton1Click:Connect(function()
+                selectedPlayerName = plr.Name
+                selectBtn.Text = "  "..plr.Name
+                selectBtn.TextColor3 = TEXT
+                dropFrame.Visible = false
+            end)
+        end
+    end
+
+    if not selectedPlayerName then
+        selectBtn.Text = "  Select Player"
+        selectBtn.TextColor3 = MUTED
+    end
+end
+
+searchBox:GetPropertyChangedSignal("Text"):Connect(rebuildDropdown)
+
+-- TOGGLE ISI (ROW > / v)
+local playerOpen = false
+rowPlayer.MouseButton1Click:Connect(function()
+    playerOpen = not playerOpen
+    tpPlayerFrame.Visible = playerOpen
+    rowPlayer.Text = playerOpen and "  Teleport to Player  v"
+        or "  Teleport to Player  >"
+end)
+
+-- TOGGLE DROPDOWN PANEL
+local dropdownOpen = false
+selectBtn.MouseButton1Click:Connect(function()
+    dropdownOpen = not dropdownOpen
+    dropFrame.Visible = dropdownOpen
+    if dropdownOpen then
+        searchBox.Text = ""
+        rebuildDropdown()
+    end
+end)
+
+-- ACTION TELEPORT
+tpBtn.MouseButton1Click:Connect(function()
+    if not selectedPlayerName then return end
+
+    local target = Players:FindFirstChild(selectedPlayerName)
+    if not target or not target.Character then return end
+    local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local lp = Players.LocalPlayer
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    local myHrp = char:WaitForChild("HumanoidRootPart")
+
+    myHrp.Velocity = Vector3.new(0,0,0)
+    myHrp.CFrame   = hrp.CFrame + Vector3.new(0,0,3)
+end)
+
+-- REFRESH LIST
+refreshBtn.MouseButton1Click:Connect(function()
+    selectedPlayerName = nil
+    searchBox.Text = ""
+    rebuildDropdown()
+end)
+
+rebuildDropdown()
+
+-- AUTO CLOSE DROPDOWN KALAU KLIK DI LUAR
+UIS.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if not dropFrame.Visible then return end
+
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        local pos = UIS:GetMouseLocation()
+        local guiPos = dropFrame.AbsolutePosition
+        local guiSize = dropFrame.AbsoluteSize
+
+        local inside =
+            pos.X >= guiPos.X and pos.X <= guiPos.X + guiSize.X and
+            pos.Y >= guiPos.Y and pos.Y <= guiPos.Y + guiSize.Y
+
+        if not inside then
+            dropFrame.Visible = false
+            dropdownOpen = false
+        end
+    end
+end)
+
+
 -- AUTO OPTION PAGE
+
 local scroll = Instance.new("ScrollingFrame", autoPage)
 local scrollPad = Instance.new("UIPadding", scroll)
 scrollPad.PaddingBottom = UDim.new(0,24)
