@@ -758,11 +758,31 @@ end)
 
 -- ====================== AUTO OPTION CONTENT ======================
 
+-- SCROLL CONTAINER AUTO OPTION
+local scroll = Instance.new("ScrollingFrame", autoPage)
+local scrollPad = Instance.new("UIPadding", scroll)
+scrollPad.PaddingBottom = UDim.new(0,24)
+scroll.Position = UDim2.new(0,16,0,16)
+scroll.Size = UDim2.new(1,-32,1,-32)
+scroll.ScrollBarThickness = 6
+scroll.BackgroundTransparency = 1
+scroll.ScrollingEnabled = true
+scroll.ClipsDescendants = true
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0,10)
+layout.SortOrder = Enum.SortOrder.LayoutOrder
+
+layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    -- ekstra margin bawah biar mentok scroll-nya halus
+    scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 60)
+end)
+
 -- PANEL ISLAND (KANAN, AMAN HP)
 local islandPanel = Instance.new("Frame", autoPage)
-islandPanel.Size = UDim2.new(0,220,0,260)                 -- panel lebih kecil
-islandPanel.AnchorPoint = Vector2.new(1,0)                -- patokan pojok kanan atas panel
-islandPanel.Position = UDim2.new(1, -24, 0.22, 0)         -- 24px dari kanan frame autoPage
+islandPanel.Size = UDim2.new(0,220,0,260)
+islandPanel.AnchorPoint = Vector2.new(1,0)
+islandPanel.Position = UDim2.new(1, -24, 0.18, 0)  -- kanan, agak di tengah atas
 islandPanel.BackgroundColor3 = CARD
 islandPanel.BackgroundTransparency = 0.04
 islandPanel.Visible = false
