@@ -759,9 +759,9 @@ end)
 -- ====================== AUTO OPTION CONTENT ======================
 
 -- PANEL ISLAND (SAMPING AUTO OPTION)
-local islandPanel = Instance.new("Frame", autoPage)
+local islandPanel = Instance.new("Frame", scroll)
 islandPanel.Size = UDim2.new(0,260,0,320)
-islandPanel.Position = UDim2.new(1, -270, 0, 60)
+islandPanel.Position = UDim2.new(1, -270, 0, 60)  -- ini boleh tetap, tapi sekarang relatif ke scroll
 islandPanel.BackgroundColor3 = CARD
 islandPanel.BackgroundTransparency = 0.04
 islandPanel.Visible = false
