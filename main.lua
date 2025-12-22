@@ -758,11 +758,11 @@ end)
 
 -- ====================== AUTO OPTION CONTENT ======================
 
--- PANEL ISLAND (SAMPING AUTO OPTION, FIX MOBILE)
+-- PANEL ISLAND (KANAN, AMAN HP)
 local islandPanel = Instance.new("Frame", autoPage)
-islandPanel.Size = UDim2.new(0,260,0,320)
-islandPanel.Position = UDim2.new(0.98, -260, 0.18, 0)  -- nempel kanan, sedikit turun
-islandPanel.AnchorPoint = Vector2.new(1,0)
+islandPanel.Size = UDim2.new(0,220,0,260)                 -- panel lebih kecil
+islandPanel.AnchorPoint = Vector2.new(1,0)                -- patokan pojok kanan atas panel
+islandPanel.Position = UDim2.new(1, -24, 0.22, 0)         -- 24px dari kanan frame autoPage
 islandPanel.BackgroundColor3 = CARD
 islandPanel.BackgroundTransparency = 0.04
 islandPanel.Visible = false
@@ -808,14 +808,6 @@ islandListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(functio
 end)
 
 local islandButtons = {}
-
-local function refreshIslandButton(name)
-    local b = islandButtons[name]
-    if not b then return end
-    local on = _G.RAY_SelectedIslands and _G.RAY_SelectedIslands[name]
-    b.BackgroundTransparency = on and 0.02 or 0.18
-    b.TextColor3 = on and TEXT or MUTED
-end
 
 local function islandPassFilter(name, query)
     if query == "" then return true end
@@ -865,6 +857,7 @@ end
 
 searchBoxIsland:GetPropertyChangedSignal("Text"):Connect(rebuildIslandPanel)
 rebuildIslandPanel()
+
 
 
 
