@@ -99,7 +99,7 @@ gui.IgnoreGuiInset = true
 local main = Instance.new("Frame", gui)
 local mainPad = Instance.new("UIPadding", main)
 mainPad.PaddingBottom = UDim.new(0, 12)
-main.Size = UDim2.new(0.75, 0, 0.7, 0) 
+main.Size = UDim2.new(0.6, 0, 0.7, 0)   -- 60% lebar layar
 main.Position = UDim2.new(0.5, 0, 0.5, 0)
 main.AnchorPoint = Vector2.new(0.5, 0.5)
 main.BackgroundColor3 = BG
@@ -258,7 +258,7 @@ end
 -- SIDEBAR (AMAN DI HP)
 local sidebar = Instance.new("Frame", main)
 sidebar.Position = UDim2.new(0,0,0,48)
-sidebar.Size     = UDim2.new(0.24, 0, 1, -48)
+sidebar.Size     = UDim2.new(0.28, 0, 1, -48)
 sidebar.BackgroundColor3 = SIDE
 sidebar.BackgroundTransparency = ALPHA_SIDE
 
@@ -278,8 +278,8 @@ local content = Instance.new("ScrollingFrame", main)
 content.ScrollingEnabled = false
 content.ScrollBarThickness = 0
 content.AutomaticCanvasSize = Enum.AutomaticSize.Y
-content.Position = UDim2.new(0.24, 0, 0, 48)
-content.Size     = UDim2.new(0.76, 0, 1, -48)
+content.Position = UDim2.new(0.28, 0, 0, 48)
+content.Size     = UDim2.new(0.72, 0, 1, -48)
 content.CanvasSize = UDim2.new(0,0,0,0)
 content.BackgroundTransparency = 1
 
