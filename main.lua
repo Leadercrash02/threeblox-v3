@@ -42,7 +42,7 @@ local PAGE_ICONS = {
 local AUTO_OPTIONS = {
     {"Auto Fishing",""},
     {"Blatant Fishing",""},
-    {"Auto Farm Island",""},
+    {"Auto Spot Island",""},
     {"Auto Favorite",""},
     {"Auto Sell",""},
     {"Auto Totem",""},
@@ -176,19 +176,59 @@ miniLogo.BackgroundColor3 = CARD
 miniLogo.BackgroundTransparency = ALPHA_CARD
 Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
 
+-- tombol minimize: sembunyikan main, munculkan logo
 btnMin.MouseButton1Click:Connect(function()
     main.Visible = false
     miniLogo.Visible = true
 end)
 
-miniLogo.MouseButton1Click:Connect(function()
-    main.Visible = true
-    miniLogo.Visible = false
-end)
+-- DRAG + CLICK MINI LOGO
+do
+    local dragging = false
+    local moved = false
+    local startPos, startLogo
 
-btnClose.MouseButton1Click:Connect(function()
-    gui:Destroy()
-end)
+    miniLogo.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 
+        or i.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            moved = false
+            startPos = i.Position
+            startLogo = miniLogo.Position
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(i)
+        if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement 
+            or i.UserInputType == Enum.UserInputType.Touch) then
+            local delta = i.Position - startPos
+            if math.abs(delta.X) > 2 or math.abs(delta.Y) > 2 then
+                moved = true
+            end
+            miniLogo.Position = UDim2.new(
+                startLogo.X.Scale,
+                startLogo.X.Offset + delta.X,
+                startLogo.Y.Scale,
+                startLogo.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1 
+        or i.UserInputType == Enum.UserInputType.Touch then
+            if dragging and not moved then
+                -- dianggap klik: buka lagi menu
+                main.Visible = true
+                miniLogo.Visible = false
+            end
+            dragging = false
+        end
+    end)
+end
+
+
+
 
 -- SIDEBAR
 local sidebar = Instance.new("Frame", main)
@@ -817,7 +857,7 @@ local function autoDropdown(text)
         icon.Text = "🎣"
     elseif text == "Blatant Fishing" then
         icon.Text = "⚡"
-    elseif text == "Auto Farm Island" then
+    elseif text == "Auto Spot Island" then
         icon.Text = "🌴"
     elseif text == "Auto Favorite" then
         icon.Text = "⭐"
@@ -1213,7 +1253,7 @@ end)
 
         refreshExtra()
 
-elseif text == "Auto Farm Island" then
+elseif text == "Auto Spot Island" then
     local info = Instance.new("TextLabel", sub)
     info.Size = UDim2.new(1,0,0,32)
     info.BackgroundTransparency = 1
