@@ -758,13 +758,15 @@ end)
 
 -- ====================== AUTO OPTION CONTENT ======================
 
--- PANEL ISLAND (SAMPING AUTO OPTION)
-local islandPanel = Instance.new("Frame", scroll)
+-- PANEL ISLAND (SAMPING AUTO OPTION, FIX MOBILE)
+local islandPanel = Instance.new("Frame", autoPage)
 islandPanel.Size = UDim2.new(0,260,0,320)
-islandPanel.Position = UDim2.new(1, -270, 0, 60)  -- ini boleh tetap, tapi sekarang relatif ke scroll
+islandPanel.Position = UDim2.new(0.98, -260, 0.18, 0)  -- nempel kanan, sedikit turun
+islandPanel.AnchorPoint = Vector2.new(1,0)
 islandPanel.BackgroundColor3 = CARD
 islandPanel.BackgroundTransparency = 0.04
 islandPanel.Visible = false
+islandPanel.ZIndex = 5
 Instance.new("UICorner", islandPanel).CornerRadius = UDim.new(0,12)
 
 local panelPad = Instance.new("UIPadding", islandPanel)
@@ -784,6 +786,7 @@ searchBoxIsland.ClearTextOnFocus = false
 searchBoxIsland.BackgroundColor3 = Color3.fromRGB(18,20,28)
 searchBoxIsland.BackgroundTransparency = 0.1
 searchBoxIsland.Text = ""
+searchBoxIsland.ZIndex = 6
 Instance.new("UICorner", searchBoxIsland).CornerRadius = UDim.new(0,8)
 
 local islandList = Instance.new("ScrollingFrame", islandPanel)
@@ -794,6 +797,7 @@ islandList.ScrollingDirection = Enum.ScrollingDirection.Y
 islandList.CanvasSize = UDim2.new(0,0,0,0)
 islandList.BackgroundTransparency = 1
 islandList.ClipsDescendants = true
+islandList.ZIndex = 6
 
 local islandListLayout = Instance.new("UIListLayout", islandList)
 islandListLayout.Padding = UDim.new(0,4)
@@ -841,6 +845,7 @@ local function rebuildIslandPanel()
             b.TextColor3 = TEXT
             b.Text = "  "..name
             b.AutoButtonColor = false
+            b.ZIndex = 6
             Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
 
             b.MouseButton1Click:Connect(function()
@@ -858,11 +863,10 @@ local function rebuildIslandPanel()
     end
 end
 
-
-
-
 searchBoxIsland:GetPropertyChangedSignal("Text"):Connect(rebuildIslandPanel)
 rebuildIslandPanel()
+
+
 
 local function autoDropdown(text)
     local holder = Instance.new("Frame", scroll)
