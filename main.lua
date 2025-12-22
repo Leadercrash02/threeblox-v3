@@ -602,24 +602,6 @@ UIS.InputBegan:Connect(function(input, gp)
     end
 end)
 
-
--- AUTO OPTION PAGE
-
-local scroll = Instance.new("ScrollingFrame", autoPage)
-local scrollPad = Instance.new("UIPadding", scroll)
-scrollPad.PaddingBottom = UDim.new(0,24)
-scroll.Position = UDim2.new(0,16,0,16)
-scroll.Size = UDim2.new(1,-32,1,-32)
-scroll.ScrollBarThickness = 6
-scroll.BackgroundTransparency = 1
-
-local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0,10)
-
-layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 20)
-end)
-
 -- REMOTES
 local Net = ReplicatedStorage
     :WaitForChild("Packages")
