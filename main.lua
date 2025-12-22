@@ -99,7 +99,7 @@ gui.IgnoreGuiInset = true
 local main = Instance.new("Frame", gui)
 local mainPad = Instance.new("UIPadding", main)
 mainPad.PaddingBottom = UDim.new(0, 12)
-main.Size = UDim2.new(0.9, 0, 0.7, 0)
+main.Size = UDim2.new(0.75, 0, 0.7, 0) 
 main.Position = UDim2.new(0.5, 0, 0.5, 0)
 main.AnchorPoint = Vector2.new(0.5, 0.5)
 main.BackgroundColor3 = BG
@@ -145,28 +145,56 @@ btnClose.BackgroundColor3 = CARD
 btnClose.BackgroundTransparency = ALPHA_CARD
 Instance.new("UICorner", btnClose).CornerRadius = UDim.new(1,0)
 
--- DRAG
+-- FIX CLOSE: matiin semua auto + destroy GUI
+btnClose.MouseButton1Click:Connect(function()
+    if typeof(AutoFishAFK) == "boolean" then
+        AutoFishAFK = false
+    end
+    if typeof(BlatantOn) == "boolean" then
+        BlatantOn = false
+    end
+    if _G then
+        _G.RAY_AutoSellOn = false
+    end
+
+    if gui and gui.Parent then
+        gui:Destroy()
+    end
+end)
+
+-- DRAG MAIN WINDOW
 do
     local dragging, startPos, startMain
     header.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then
+        if i.UserInputType == Enum.UserInputType.MouseButton1
+        or i.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             startPos = i.Position
             startMain = main.Position
         end
     end)
+
     UIS.InputChanged:Connect(function(i)
         if dragging then
             local delta = i.Position - startPos
-            main.Position = UDim2.new(startMain.X.Scale,startMain.X.Offset + delta.X,startMain.Y.Scale,startMain.Y.Offset + delta.Y)
+            main.Position = UDim2.new(
+                startMain.X.Scale,
+                startMain.X.Offset + delta.X,
+                startMain.Y.Scale,
+                startMain.Y.Offset + delta.Y
+            )
         end
     end)
-    UIS.InputEnded:Connect(function()
-        dragging = false
+
+    UIS.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1
+        or i.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
     end)
 end
 
--- LOGO FLOAT
+-- LOGO FLOAT (MINIMIZE ICON)
 local miniLogo = Instance.new("ImageButton", gui)
 miniLogo.Size = UDim2.new(0,56,0,56)
 miniLogo.Position = UDim2.new(0,20,0.5,-28)
@@ -176,7 +204,7 @@ miniLogo.BackgroundColor3 = CARD
 miniLogo.BackgroundTransparency = ALPHA_CARD
 Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
 
--- tombol minimize: sembunyikan main, munculkan logo
+-- minimize: sembunyikan main, munculkan logo
 btnMin.MouseButton1Click:Connect(function()
     main.Visible = false
     miniLogo.Visible = true
@@ -189,7 +217,7 @@ do
     local startPos, startLogo
 
     miniLogo.InputBegan:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 
+        if i.UserInputType == Enum.UserInputType.MouseButton1
         or i.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             moved = false
@@ -199,7 +227,7 @@ do
     end)
 
     UIS.InputChanged:Connect(function(i)
-        if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement 
+        if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
             or i.UserInputType == Enum.UserInputType.Touch) then
             local delta = i.Position - startPos
             if math.abs(delta.X) > 2 or math.abs(delta.Y) > 2 then
@@ -215,10 +243,10 @@ do
     end)
 
     UIS.InputEnded:Connect(function(i)
-        if i.UserInputType == Enum.UserInputType.MouseButton1 
+        if i.UserInputType == Enum.UserInputType.MouseButton1
         or i.UserInputType == Enum.UserInputType.Touch then
             if dragging and not moved then
-                -- dianggap klik: buka lagi menu
+                -- tap = buka lagi menu
                 main.Visible = true
                 miniLogo.Visible = false
             end
@@ -227,13 +255,10 @@ do
     end)
 end
 
-
-
-
--- SIDEBAR
+-- SIDEBAR (AMAN DI HP)
 local sidebar = Instance.new("Frame", main)
 sidebar.Position = UDim2.new(0,0,0,48)
-sidebar.Size = UDim2.new(0,200,1,-48)
+sidebar.Size     = UDim2.new(0.24, 0, 1, -48)
 sidebar.BackgroundColor3 = SIDE
 sidebar.BackgroundTransparency = ALPHA_SIDE
 
@@ -248,18 +273,20 @@ sideLayout.FillDirection = Enum.FillDirection.Vertical
 sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
 sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- CONTENT
+-- CONTENT (KANAN)
 local content = Instance.new("ScrollingFrame", main)
 content.ScrollingEnabled = false
 content.ScrollBarThickness = 0
 content.AutomaticCanvasSize = Enum.AutomaticSize.Y
-content.Position = UDim2.new(0,200,0,48)
-content.Size = UDim2.new(1,-200,1,-48)
+content.Position = UDim2.new(0.24, 0, 0, 48)
+content.Size     = UDim2.new(0.76, 0, 1, -48)
 content.CanvasSize = UDim2.new(0,0,0,0)
 content.BackgroundTransparency = 1
 
 local contentLayout = Instance.new("UIListLayout", content)
 contentLayout.Padding = UDim.new(0,0)
+
+
 
 -- PAGE SYSTEM
 local pages = {}
