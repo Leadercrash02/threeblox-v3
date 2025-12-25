@@ -30,6 +30,72 @@ local ALPHA_MAIN = 0.08
 local ALPHA_SIDE = 0.05
 local ALPHA_CARD = 0.06
 
+local lp = Players.LocalPlayer
+local HIDE_DEFAULT_OVERHEAD = true
+local COSTUME_NAME  = "ray"
+local COSTUME_LEVEL = 772
+
+----------------------------------------------------------------
+-- STREAMER CUSTOM NAME (GLOBAL)
+----------------------------------------------------------------
+_G.RAY_StreamerOn  = _G.RAY_StreamerOn  or false
+_G.RAY_CustomName  = _G.RAY_CustomName  or "discord.gg/Threeblox"
+
+local originalHeaderText
+
+local function getHeader()
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local overhead = hrp:FindFirstChild("Overhead")
+    if not overhead then return end
+
+    local content = overhead:FindFirstChild("Content")
+    if not content then return end
+
+    local header = content:FindFirstChild("Header")
+    return header
+end
+
+function applyStreamerState()
+    local header = getHeader()
+    if not header then return end
+
+    if _G.RAY_StreamerOn then
+        -- simpan nama asli sekali
+        if not originalHeaderText then
+            originalHeaderText = header.Text
+        end
+
+        header.RichText = true
+        header.Text = '<font color="#3b82f6">'.._G.RAY_CustomName..' ✓</font>'
+    else
+        -- balikin ke nama asli
+        if originalHeaderText then
+            header.RichText = false
+            header.Text = originalHeaderText
+        end
+    end
+end
+
+lp.CharacterAdded:Connect(function()
+    task.wait(0.2)
+    originalHeaderText = nil
+    applyStreamerState()
+end)
+
+if lp.Character then
+    task.spawn(function()
+        task.wait(0.2)
+        applyStreamerState()
+    end)
+end
+
+
+
+
+
 local PAGE_ICONS = {
     {"Information","📘"},
     {"Auto Option","⚙️"},
@@ -308,6 +374,1179 @@ newPage("Teleport")
 newPage("Quest")
 newPage("Shop & Trade")
 newPage("Misc")
+
+
+----------------------------------------------------------------
+-- MISC PAGE : BUILD FUNCTION
+----------------------------------------------------------------
+local function BuildMisc()
+    local miscPage = pages["Misc"]
+
+    local Players = game:GetService("Players")
+    local lp = Players.LocalPlayer
+    local Lighting = game:GetService("Lighting")
+    local Terrain = workspace.Terrain
+    local RenderSettings = settings().Rendering
+
+    -- CONTAINER + LAYOUT MISC
+    local miscContainer = Instance.new("Frame", miscPage)
+    miscContainer.Size = UDim2.new(1,0,1,0)
+    miscContainer.BackgroundTransparency = 1
+
+    local miscLayout = Instance.new("UIListLayout", miscContainer)
+    miscLayout.Padding = UDim.new(0,8)
+    miscLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+----------------------------------------------------------------
+-- DROPDOWN : 🎥 STREAMER HIDE NAME
+----------------------------------------------------------------
+local holderSHN = Instance.new("Frame", miscContainer)
+holderSHN.Size = UDim2.new(1,0,0,42)
+holderSHN.BackgroundTransparency = 1
+holderSHN.LayoutOrder = 1
+
+local mainBtnSHN = Instance.new("TextButton", holderSHN)
+mainBtnSHN.Size = UDim2.new(1,0,0,42)
+mainBtnSHN.Text = "🎥 Streamer Hide Name ▼"
+mainBtnSHN.Font = Enum.Font.Gotham
+mainBtnSHN.TextSize = 15
+mainBtnSHN.TextXAlignment = Enum.TextXAlignment.Left
+mainBtnSHN.TextColor3 = TEXT
+mainBtnSHN.BackgroundColor3 = CARD
+mainBtnSHN.BackgroundTransparency = ALPHA_CARD
+mainBtnSHN.AutoButtonColor = false
+Instance.new("UICorner", mainBtnSHN).CornerRadius = UDim.new(0,10)
+
+local subSHN = Instance.new("Frame", holderSHN)
+subSHN.Position = UDim2.new(0,0,0,42)
+subSHN.Size = UDim2.new(1,0,0,0)
+subSHN.ClipsDescendants = true
+subSHN.BackgroundTransparency = 1
+
+local layoutSHN = Instance.new("UIListLayout", subSHN)
+layoutSHN.Padding = UDim.new(0,6)
+
+local openSHN = false
+local function recalcSHN()
+    task.wait()
+    local h = layoutSHN.AbsoluteContentSize.Y
+    if openSHN then
+        subSHN.Size = UDim2.new(1,0,0,h)
+        holderSHN.Size = UDim2.new(1,0,0,42 + h)
+        mainBtnSHN.Text = "🎥 Streamer Hide Name ▲"
+    else
+        subSHN.Size = UDim2.new(1,0,0,0)
+        holderSHN.Size = UDim2.new(1,0,0,42)
+        mainBtnSHN.Text = "🎥 Streamer Hide Name ▼"
+    end
+end
+
+mainBtnSHN.MouseButton1Click:Connect(function()
+    openSHN = not openSHN
+    recalcSHN()
+end)
+
+----------------------------------------------------------------
+-- PREDECLARE TEXTBOX (buat dipakai di toggle)
+----------------------------------------------------------------
+local nameBox
+
+----------------------------------------------------------------
+-- ROW 1: TOGGLE ON/OFF
+----------------------------------------------------------------
+do
+    local rowToggle = Instance.new("Frame", subSHN)
+    rowToggle.Size = UDim2.new(1,0,0,36)
+    rowToggle.BackgroundTransparency = 1
+
+    local labelT = Instance.new("TextLabel", rowToggle)
+    labelT.Size = UDim2.new(1,-100,1,0)
+    labelT.Position = UDim2.new(0,16,0,0)
+    labelT.BackgroundTransparency = 1
+    labelT.Font = Enum.Font.Gotham
+    labelT.TextSize = 13
+    labelT.TextXAlignment = Enum.TextXAlignment.Left
+    labelT.TextColor3 = TEXT
+    labelT.Text = "Enable Custom Name"
+
+    local pill = Instance.new("TextButton", rowToggle)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    local function refreshToggle()
+        local on = _G.RAY_StreamerOn
+        pill.BackgroundColor3 = on and ACCENT or MUTED
+        knob.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        _G.RAY_StreamerOn = not _G.RAY_StreamerOn
+
+        -- kalau di-ON-kan, sinkron sama isi textbox
+        if _G.RAY_StreamerOn and nameBox then
+            _G.RAY_CustomName = nameBox.Text ~= "" and nameBox.Text or "discord.gg/Threeblox"
+            nameBox.Text = _G.RAY_CustomName
+        end
+
+        applyStreamerState()
+        refreshToggle()
+    end)
+
+    refreshToggle()
+end
+
+----------------------------------------------------------------
+-- ROW 2: CUSTOM NAME
+----------------------------------------------------------------
+do
+    local rowName = Instance.new("Frame", subSHN)
+    rowName.Size = UDim2.new(1,0,0,36)
+    rowName.BackgroundTransparency = 1
+
+    local labelName = Instance.new("TextLabel", rowName)
+    labelName.Size = UDim2.new(1,-140,1,0)
+    labelName.Position = UDim2.new(0,16,0,0)
+    labelName.BackgroundTransparency = 1
+    labelName.Font = Enum.Font.Gotham
+    labelName.TextSize = 13
+    labelName.TextXAlignment = Enum.TextXAlignment.Left
+    labelName.TextColor3 = TEXT
+    labelName.Text = "Custom Name"
+
+    nameBox = Instance.new("TextBox", rowName)
+    nameBox.Size = UDim2.new(0,220,0,28)
+    nameBox.Position = UDim2.new(1,-236,0.5,-14)
+    nameBox.Text = _G.RAY_CustomName
+    nameBox.Font = Enum.Font.Gotham
+    nameBox.TextSize = 13
+    nameBox.TextXAlignment = Enum.TextXAlignment.Center
+    nameBox.TextColor3 = TEXT
+    nameBox.ClearTextOnFocus = false
+    nameBox.BackgroundColor3 = CARD
+    nameBox.BackgroundTransparency = 0.12
+    Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0,8)
+
+    nameBox.FocusLost:Connect(function(enter)
+        if not enter then return end
+        if nameBox.Text == "" then
+            _G.RAY_CustomName = "discord.gg/Threeblox"
+            nameBox.Text = _G.RAY_CustomName
+        else
+            _G.RAY_CustomName = nameBox.Text
+        end
+        if _G.RAY_StreamerOn then
+            applyStreamerState()
+        end
+    end)
+end
+
+recalcSHN()
+
+
+
+
+
+    ----------------------------------------------------------------
+    -- DROPDOWN : 👤 PLAYER UTILITY
+    ----------------------------------------------------------------
+    local holderPU = Instance.new("Frame", miscContainer)
+    holderPU.Size = UDim2.new(1,0,0,42)
+    holderPU.BackgroundTransparency = 1
+    holderPU.LayoutOrder = 1
+
+    local mainBtnPU = Instance.new("TextButton", holderPU)
+    mainBtnPU.Size = UDim2.new(1,0,0,42)
+    mainBtnPU.Text = "👤 Player Utility ▼"
+    mainBtnPU.Font = Enum.Font.Gotham
+    mainBtnPU.TextSize = 15
+    mainBtnPU.TextXAlignment = Enum.TextXAlignment.Left
+    mainBtnPU.TextColor3 = TEXT
+    mainBtnPU.BackgroundColor3 = CARD
+    mainBtnPU.BackgroundTransparency = ALPHA_CARD
+    mainBtnPU.AutoButtonColor = false
+    Instance.new("UICorner", mainBtnPU).CornerRadius = UDim.new(0,10)
+
+    local subPU = Instance.new("Frame", holderPU)
+    subPU.Position = UDim2.new(0,0,0,42)
+    subPU.Size = UDim2.new(1,0,0,0)
+    subPU.ClipsDescendants = true
+    subPU.BackgroundTransparency = 1
+
+    local layoutPU = Instance.new("UIListLayout", subPU)
+    layoutPU.Padding = UDim.new(0,6)
+
+    local openPU = false
+    local function recalcPU()
+        task.wait()
+        local h = layoutPU.AbsoluteContentSize.Y
+        if openPU then
+            subPU.Size = UDim2.new(1,0,0,h)
+            holderPU.Size = UDim2.new(1,0,0,42 + h)
+            mainBtnPU.Text = "👤 Player Utility ▲"
+        else
+            subPU.Size = UDim2.new(1,0,0,0)
+            holderPU.Size = UDim2.new(1,0,0,42)
+            mainBtnPU.Text = "👤 Player Utility ▼"
+        end
+    end
+
+    mainBtnPU.MouseButton1Click:Connect(function()
+        openPU = not openPU
+        recalcPU()
+    end)
+
+    ----------------------------------------------------------------
+    -- 🔍 MAX ZOOM (150)
+    ----------------------------------------------------------------
+    do
+        local rowZoom = Instance.new("Frame", subPU)
+        rowZoom.Size = UDim2.new(1,0,0,36)
+        rowZoom.BackgroundTransparency = 1
+
+        local labelZoom = Instance.new("TextLabel", rowZoom)
+        labelZoom.Size = UDim2.new(1,-100,1,0)
+        labelZoom.Position = UDim2.new(0,16,0,0)
+        labelZoom.BackgroundTransparency = 1
+        labelZoom.Font = Enum.Font.Gotham
+        labelZoom.TextSize = 13
+        labelZoom.TextXAlignment = Enum.TextXAlignment.Left
+        labelZoom.TextColor3 = TEXT
+        labelZoom.Text = "🔍 Max Zoom (150)"
+
+        local pillZoom = Instance.new("TextButton", rowZoom)
+        pillZoom.Size = UDim2.new(0,50,0,24)
+        pillZoom.Position = UDim2.new(1,-80,0.5,-12)
+        pillZoom.BackgroundColor3 = MUTED
+        pillZoom.BackgroundTransparency = 0.1
+        pillZoom.Text = ""
+        pillZoom.AutoButtonColor = false
+        Instance.new("UICorner", pillZoom).CornerRadius = UDim.new(0,999)
+
+        local knobZoom = Instance.new("Frame", pillZoom)
+        knobZoom.Size = UDim2.new(0,18,0,18)
+        knobZoom.Position = UDim2.new(0,3,0.5,-9)
+        knobZoom.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knobZoom).CornerRadius = UDim.new(0,999)
+
+        local zoomEnabled = false
+        local DEFAULT_MAX = lp.CameraMaxZoomDistance
+        local DEFAULT_MIN = lp.CameraMinZoomDistance
+        local MAX_ZOOM = 150
+        local MIN_ZOOM = 0.8
+
+        local function refreshZoom()
+            pillZoom.BackgroundColor3 = zoomEnabled and ACCENT or MUTED
+            knobZoom.Position = zoomEnabled
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        local function applyZoom()
+            pcall(function()
+                lp.CameraMaxZoomDistance = MAX_ZOOM
+                lp.CameraMinZoomDistance = MIN_ZOOM
+            end)
+        end
+
+        local function resetZoom()
+            pcall(function()
+                lp.CameraMaxZoomDistance = DEFAULT_MAX
+                lp.CameraMinZoomDistance = DEFAULT_MIN
+            end)
+        end
+
+        pillZoom.MouseButton1Click:Connect(function()
+            zoomEnabled = not zoomEnabled
+            if zoomEnabled then
+                applyZoom()
+            else
+                resetZoom()
+            end
+            refreshZoom()
+        end)
+
+        lp:GetPropertyChangedSignal("CameraMaxZoomDistance"):Connect(function()
+            if zoomEnabled then
+                applyZoom()
+            end
+        end)
+
+        lp.CharacterAdded:Connect(function()
+            task.wait(0.2)
+            if zoomEnabled then
+                applyZoom()
+            end
+        end)
+
+        refreshZoom()
+    end
+
+    ----------------------------------------------------------------
+    -- 🏃 WALK SPEED
+    ----------------------------------------------------------------
+    do
+        local rowWS = Instance.new("Frame", subPU)
+        rowWS.Size = UDim2.new(1,0,0,36)
+        rowWS.BackgroundTransparency = 1
+
+        local labelWS = Instance.new("TextLabel", rowWS)
+        labelWS.Size = UDim2.new(1,-160,1,0)
+        labelWS.Position = UDim2.new(0,16,0,0)
+        labelWS.BackgroundTransparency = 1
+        labelWS.Font = Enum.Font.Gotham
+        labelWS.TextSize = 13
+        labelWS.TextXAlignment = Enum.TextXAlignment.Left
+        labelWS.TextColor3 = TEXT
+        labelWS.Text = "🏃 WalkSpeed"
+
+        local inputWS = Instance.new("TextBox", rowWS)
+        inputWS.Size = UDim2.new(0,60,0,24)
+        inputWS.Position = UDim2.new(1,-140,0.5,-12)
+        inputWS.BackgroundColor3 = CARD
+        inputWS.BackgroundTransparency = 0.1
+        inputWS.Font = Enum.Font.Gotham
+        inputWS.TextSize = 12
+        inputWS.TextColor3 = TEXT
+        inputWS.TextXAlignment = Enum.TextXAlignment.Center
+        inputWS.ClearTextOnFocus = false
+        inputWS.Text = "32"
+        Instance.new("UICorner", inputWS).CornerRadius = UDim.new(0,6)
+
+        local pillWS = Instance.new("TextButton", rowWS)
+        pillWS.Size = UDim2.new(0,50,0,24)
+        pillWS.Position = UDim2.new(1,-80,0.5,-12)
+        pillWS.BackgroundColor3 = MUTED
+        pillWS.BackgroundTransparency = 0.1
+        pillWS.Text = ""
+        pillWS.AutoButtonColor = false
+        Instance.new("UICorner", pillWS).CornerRadius = UDim.new(0,999)
+
+        local knobWS = Instance.new("Frame", pillWS)
+        knobWS.Size = UDim2.new(0,18,0,18)
+        knobWS.Position = UDim2.new(0,3,0.5,-9)
+        knobWS.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knobWS).CornerRadius = UDim.new(0,999)
+
+        local wsEnabled = false
+        local defaultWS = 16
+
+        local function refreshWS()
+            pillWS.BackgroundColor3 = wsEnabled and ACCENT or MUTED
+            knobWS.Position = wsEnabled
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        local function applyWS()
+            local hum = lp.Character and lp.Character:FindFirstChildOfClass("Humanoid")
+            if not hum then return end
+
+            local n = tonumber(inputWS.Text)
+            if not n or n <= 0 then
+                n = 32
+                inputWS.Text = "32"
+            end
+
+            hum.WalkSpeed = n
+        end
+
+        local function resetWS()
+            local hum = lp.Character and lp.Character:FindFirstChildOfClass("Humanoid")
+            if not hum then return end
+            hum.WalkSpeed = defaultWS
+        end
+
+        pillWS.MouseButton1Click:Connect(function()
+            wsEnabled = not wsEnabled
+
+            local hum = lp.Character and lp.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                defaultWS = hum.WalkSpeed
+            end
+
+            if wsEnabled then
+                applyWS()
+            else
+                resetWS()
+            end
+
+            refreshWS()
+        end)
+
+        inputWS.FocusLost:Connect(function(enter)
+            if wsEnabled and enter then
+                applyWS()
+            end
+        end)
+
+        lp.CharacterAdded:Connect(function(char)
+            local hum = char:WaitForChild("Humanoid", 5)
+            if hum then
+                defaultWS = hum.WalkSpeed
+                if wsEnabled then
+                    applyWS()
+                end
+            end
+        end)
+
+        refreshWS()
+    end
+
+    ----------------------------------------------------------------
+    -- ✈ FLY
+    ----------------------------------------------------------------
+    do
+        local rowFly = Instance.new("Frame", subPU)
+        rowFly.Size = UDim2.new(1,0,0,36)
+        rowFly.BackgroundTransparency = 1
+
+        local labelFly = Instance.new("TextLabel", rowFly)
+        labelFly.Size = UDim2.new(1,-160,1,0)
+        labelFly.Position = UDim2.new(0,16,0,0)
+        labelFly.BackgroundTransparency = 1
+        labelFly.Font = Enum.Font.Gotham
+        labelFly.TextSize = 13
+        labelFly.TextXAlignment = Enum.TextXAlignment.Left
+        labelFly.TextColor3 = TEXT
+        labelFly.Text = "✈ Fly"
+
+        local inputFly = Instance.new("TextBox", rowFly)
+        inputFly.Size = UDim2.new(0,60,0,24)
+        inputFly.Position = UDim2.new(1,-140,0.5,-12)
+        inputFly.BackgroundColor3 = CARD
+        inputFly.BackgroundTransparency = 0.1
+        inputFly.Font = Enum.Font.Gotham
+        inputFly.TextSize = 12
+        inputFly.TextColor3 = TEXT
+        inputFly.TextXAlignment = Enum.TextXAlignment.Center
+        inputFly.ClearTextOnFocus = false
+        inputFly.Text = "60"
+        Instance.new("UICorner", inputFly).CornerRadius = UDim.new(0,6)
+
+        local pillFly = Instance.new("TextButton", rowFly)
+        pillFly.Size = UDim2.new(0,50,0,24)
+        pillFly.Position = UDim2.new(1,-80,0.5,-12)
+        pillFly.BackgroundColor3 = MUTED
+        pillFly.BackgroundTransparency = 0.1
+        pillFly.Text = ""
+        pillFly.AutoButtonColor = false
+        Instance.new("UICorner", pillFly).CornerRadius = UDim.new(0,999)
+
+        local knobFly = Instance.new("Frame", pillFly)
+        knobFly.Size = UDim2.new(0,18,0,18)
+        knobFly.Position = UDim2.new(0,3,0.5,-9)
+        knobFly.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knobFly).CornerRadius = UDim.new(0,999)
+
+        local flyEnabled = false
+        local flyConn
+        local flyBV
+
+        local function refreshFly()
+            pillFly.BackgroundColor3 = flyEnabled and ACCENT or MUTED
+            knobFly.Position = flyEnabled
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        local function stopFly()
+            flyEnabled = false
+            if flyConn then
+                flyConn:Disconnect()
+                flyConn = nil
+            end
+            if flyBV then
+                flyBV:Destroy()
+                flyBV = nil
+            end
+
+            local hum = lp.Character and lp.Character:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.PlatformStand = false
+            end
+            refreshFly()
+        end
+
+        local function startFly()
+            local char = lp.Character or lp.CharacterAdded:Wait()
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hrp or not hum then return end
+
+            flyEnabled = true
+            hum.PlatformStand = true
+
+            flyBV = Instance.new("BodyVelocity")
+            flyBV.MaxForce = Vector3.new(1e5,1e5,1e5)
+            flyBV.Velocity = Vector3.new(0,0,0)
+            flyBV.Parent = hrp
+
+            local UIS = game:GetService("UserInputService")
+            local RS = game:GetService("RunService")
+
+            flyConn = RS.RenderStepped:Connect(function()
+                if not flyEnabled then return end
+                if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
+                    stopFly()
+                    return
+                end
+
+                local cam = workspace.CurrentCamera
+                if not cam then return end
+
+                local speed = tonumber(inputFly.Text) or 60
+
+                local forward = cam.CFrame.LookVector
+                local right = cam.CFrame.RightVector
+
+                local dir = Vector3.new()
+
+                if UIS:IsKeyDown(Enum.KeyCode.W) then
+                    dir += forward
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.S) then
+                    dir -= forward
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.A) then
+                    dir -= right
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.D) then
+                    dir += right
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.Space) then
+                    dir += Vector3.new(0,1,0)
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then
+                    dir -= Vector3.new(0,1,0)
+                end
+
+                if dir.Magnitude > 0 then
+                    dir = dir.Unit
+                end
+
+                flyBV.Velocity = dir * speed
+            end)
+
+            refreshFly()
+        end
+
+        pillFly.MouseButton1Click:Connect(function()
+            if flyEnabled then
+                stopFly()
+            else
+                startFly()
+            end
+        end)
+
+        lp.CharacterAdded:Connect(function()
+            if flyEnabled then
+                stopFly()
+            end
+        end)
+
+        refreshFly()
+    end
+
+    ----------------------------------------------------------------
+    -- 🧊 FREEZE POSITION
+    ----------------------------------------------------------------
+    do
+        local rowFreeze = Instance.new("Frame", subPU)
+        rowFreeze.Size = UDim2.new(1,0,0,36)
+        rowFreeze.BackgroundTransparency = 1
+
+        local labelFreeze = Instance.new("TextLabel", rowFreeze)
+        labelFreeze.Size = UDim2.new(1,-100,1,0)
+        labelFreeze.Position = UDim2.new(0,16,0,0)
+        labelFreeze.BackgroundTransparency = 1
+        labelFreeze.Font = Enum.Font.Gotham
+        labelFreeze.TextSize = 13
+        labelFreeze.TextXAlignment = Enum.TextXAlignment.Left
+        labelFreeze.TextColor3 = TEXT
+        labelFreeze.Text = "🧊 Freeze Position"
+
+        local pillFreeze = Instance.new("TextButton", rowFreeze)
+        pillFreeze.Size = UDim2.new(0,50,0,24)
+        pillFreeze.Position = UDim2.new(1,-80,0.5,-12)
+        pillFreeze.BackgroundColor3 = MUTED
+        pillFreeze.BackgroundTransparency = 0.1
+        pillFreeze.Text = ""
+        pillFreeze.AutoButtonColor = false
+        Instance.new("UICorner", pillFreeze).CornerRadius = UDim.new(0,999)
+
+        local knobFreeze = Instance.new("Frame", pillFreeze)
+        knobFreeze.Size = UDim2.new(0,18,0,18)
+        knobFreeze.Position = UDim2.new(0,3,0.5,-9)
+        knobFreeze.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knobFreeze).CornerRadius = UDim.new(0,999)
+
+        local freezeOn = false
+        local freezeConn
+        local savedCF
+
+        local function refreshFreeze()
+            pillFreeze.BackgroundColor3 = freezeOn and ACCENT or MUTED
+            knobFreeze.Position = freezeOn
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        local function startFreeze()
+            local char = lp.Character or lp.CharacterAdded:Wait()
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            if not hrp or not hum then return end
+
+            savedCF = hrp.CFrame
+            hum.PlatformStand = true
+            hum.WalkSpeed = 0
+            hum.JumpPower = 0
+
+            freezeConn = game:GetService("RunService").Heartbeat:Connect(function()
+                if not freezeOn then return end
+                if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then return end
+                hrp.CFrame = savedCF
+                hrp.AssemblyLinearVelocity = Vector3.new()
+            end)
+        end
+
+        local function stopFreeze()
+            freezeOn = false
+            if freezeConn then
+                freezeConn:Disconnect()
+                freezeConn = nil
+            end
+            local char = lp.Character
+            local hum = char and char:FindFirstChildOfClass("Humanoid")
+            if hum then
+                hum.PlatformStand = false
+                hum.WalkSpeed = 16
+                hum.JumpPower = 50
+            end
+            refreshFreeze()
+        end
+
+        pillFreeze.MouseButton1Click:Connect(function()
+            if freezeOn then
+                stopFreeze()
+            else
+                freezeOn = true
+                startFreeze()
+                refreshFreeze()
+            end
+        end)
+
+        lp.CharacterAdded:Connect(function()
+            if freezeOn then
+                stopFreeze()
+            end
+        end)
+
+        refreshFreeze()
+    end
+
+    ----------------------------------------------------------------
+    -- 🧱 FPS BOOST
+    ----------------------------------------------------------------
+    do
+        local rowLow = Instance.new("Frame", subPU)
+        rowLow.Size = UDim2.new(1,0,0,36)
+        rowLow.BackgroundTransparency = 1
+
+        local labelLow = Instance.new("TextLabel", rowLow)
+        labelLow.Size = UDim2.new(1,-100,1,0)
+        labelLow.Position = UDim2.new(0,16,0,0)
+        labelLow.BackgroundTransparency = 1
+        labelLow.Font = Enum.Font.Gotham
+        labelLow.TextSize = 13
+        labelLow.TextXAlignment = Enum.TextXAlignment.Left
+        labelLow.TextColor3 = TEXT
+        labelLow.Text = "🧱 FPS Boost"
+
+        local pillLow = Instance.new("TextButton", rowLow)
+        pillLow.Size = UDim2.new(0,50,0,24)
+        pillLow.Position = UDim2.new(1,-80,0.5,-12)
+        pillLow.BackgroundColor3 = MUTED
+        pillLow.BackgroundTransparency = 0.1
+        pillLow.Text = ""
+        pillLow.AutoButtonColor = false
+        Instance.new("UICorner", pillLow).CornerRadius = UDim.new(0,999)
+
+        local knobLow = Instance.new("Frame", pillLow)
+        knobLow.Size = UDim2.new(0,18,0,18)
+        knobLow.Position = UDim2.new(0,3,0.5,-9)
+        knobLow.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knobLow).CornerRadius = UDim.new(0,999)
+
+        local lowOn = false
+
+        local oldQuality = RenderSettings.QualityLevel
+        local oldBrightness = Lighting.Brightness
+        local oldFogEnd = Lighting.FogEnd
+        local oldGlobalShadows = Lighting.GlobalShadows
+        local oldAmbient = Lighting.Ambient
+        local oldOutdoorAmbient = Lighting.OutdoorAmbient
+        local oldWaterWaveSize = Terrain.WaterWaveSize
+        local oldWaterWaveSpeed = Terrain.WaterWaveSpeed
+        local oldWaterTransparency = Terrain.WaterTransparency
+        local oldWaterReflectance = Terrain.WaterReflectance
+
+        local function refreshLow()
+            pillLow.BackgroundColor3 = lowOn and ACCENT or MUTED
+            knobLow.Position = lowOn
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        local function applyFPSBoost()
+            oldQuality = RenderSettings.QualityLevel
+            pcall(function()
+                RenderSettings.QualityLevel = Enum.QualityLevel.Level01
+            end)
+
+            oldBrightness = Lighting.Brightness
+            oldFogEnd = Lighting.FogEnd
+            oldGlobalShadows = Lighting.GlobalShadows
+            oldAmbient = Lighting.Ambient
+            oldOutdoorAmbient = Lighting.OutdoorAmbient
+
+            Lighting.Brightness = 1
+            Lighting.FogEnd = 100
+            Lighting.GlobalShadows = false
+            Lighting.Ambient = Color3.fromRGB(128,128,128)
+            Lighting.OutdoorAmbient = Color3.fromRGB(128,128,128)
+
+            oldWaterWaveSize = Terrain.WaterWaveSize
+            oldWaterWaveSpeed = Terrain.WaterWaveSpeed
+            oldWaterTransparency = Terrain.WaterTransparency
+            oldWaterReflectance = Terrain.WaterReflectance
+
+            Terrain.WaterWaveSize = 0
+            Terrain.WaterWaveSpeed = 0
+            Terrain.WaterTransparency = 1
+            Terrain.WaterReflectance = 0
+        end
+
+        local function resetFPSBoost()
+            pcall(function()
+                RenderSettings.QualityLevel = oldQuality
+            end)
+
+            Lighting.Brightness = oldBrightness
+            Lighting.FogEnd = oldFogEnd
+            Lighting.GlobalShadows = oldGlobalShadows
+            Lighting.Ambient = oldAmbient
+            Lighting.OutdoorAmbient = oldOutdoorAmbient
+
+            Terrain.WaterWaveSize = oldWaterWaveSize
+            Terrain.WaterWaveSpeed = oldWaterWaveSpeed
+            Terrain.WaterTransparency = oldWaterTransparency
+            Terrain.WaterReflectance = oldWaterReflectance
+        end
+
+        pillLow.MouseButton1Click:Connect(function()
+            lowOn = not lowOn
+            if lowOn then
+                applyFPSBoost()
+            else
+                resetFPSBoost()
+            end
+            refreshLow()
+        end)
+
+        refreshLow()
+    end
+
+    ----------------------------------------------------------------
+    -- 🌑 DARK SCREEN (COLORCORRECTION)
+    ----------------------------------------------------------------
+    do
+        local rowDark = Instance.new("Frame", subPU)
+        rowDark.Size = UDim2.new(1,0,0,36)
+        rowDark.BackgroundTransparency = 1
+
+        local labelDark = Instance.new("TextLabel", rowDark)
+        labelDark.Size = UDim2.new(1,-100,1,0)
+        labelDark.Position = UDim2.new(0,16,0,0)
+        labelDark.BackgroundTransparency = 1
+        labelDark.Font = Enum.Font.Gotham
+        labelDark.TextSize = 13
+        labelDark.TextXAlignment = Enum.TextXAlignment.Left
+        labelDark.TextColor3 = TEXT
+        labelDark.Text = "🌑 Dark Screen"
+
+        local pillDark = Instance.new("TextButton", rowDark)
+        pillDark.Size = UDim2.new(0,50,0,24)
+        pillDark.Position = UDim2.new(1,-80,0.5,-12)
+        pillDark.BackgroundColor3 = MUTED
+        pillDark.BackgroundTransparency = 0.1
+        pillDark.Text = ""
+        pillDark.AutoButtonColor = false
+        Instance.new("UICorner", pillDark).CornerRadius = UDim.new(0,999)
+
+        local knobDark = Instance.new("Frame", pillDark)
+        knobDark.Size = UDim2.new(0,18,0,18)
+        knobDark.Position = UDim2.new(0,3,0.5,-9)
+        knobDark.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knobDark).CornerRadius = UDim.new(0,999)
+
+        local darkOn = false
+        local DarkEffect = Lighting:FindFirstChild("ThreebloxDark")
+
+        local oldBrightness = 0
+        local oldContrast = 0
+        local oldSaturation = 0
+
+        local function refreshDark()
+            pillDark.BackgroundColor3 = darkOn and ACCENT or MUTED
+            knobDark.Position = darkOn
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        local function ensureDarkEffect()
+            DarkEffect = Lighting:FindFirstChild("ThreebloxDark")
+            if not DarkEffect then
+                DarkEffect = Instance.new("ColorCorrectionEffect")
+                DarkEffect.Name = "ThreebloxDark"
+                DarkEffect.Parent = Lighting
+            end
+        end
+
+        local function applyDark()
+            ensureDarkEffect()
+            oldBrightness = DarkEffect.Brightness
+            oldContrast   = DarkEffect.Contrast
+            oldSaturation = DarkEffect.Saturation
+
+            DarkEffect.Brightness = -0.4
+            DarkEffect.Contrast   = 0.2
+            DarkEffect.Saturation = -0.5
+            DarkEffect.Enabled    = true
+        end
+
+        local function resetDark()
+            if not DarkEffect then return end
+            DarkEffect.Brightness = oldBrightness
+            DarkEffect.Contrast   = oldContrast
+            DarkEffect.Saturation = oldSaturation
+            DarkEffect.Enabled    = false
+        end
+
+        pillDark.MouseButton1Click:Connect(function()
+            darkOn = not darkOn
+            if darkOn then
+                applyDark()
+            else
+                resetDark()
+            end
+            refreshDark()
+        end)
+
+        refreshDark()
+    end
+
+    ----------------------------------------------------------------
+    -- DROPDOWN : 🔔 NOTIFICATION & VISUAL
+    ----------------------------------------------------------------
+    local holder = Instance.new("Frame", miscContainer)
+    holder.Size = UDim2.new(1,0,0,42)
+    holder.BackgroundTransparency = 1
+    holder.LayoutOrder = 2
+
+    local mainBtn = Instance.new("TextButton", holder)
+    mainBtn.Size = UDim2.new(1,0,0,42)
+    mainBtn.Text = "🔔 Notification & Visual ▼"
+    mainBtn.Font = Enum.Font.Gotham
+    mainBtn.TextSize = 15
+    mainBtn.TextXAlignment = Enum.TextXAlignment.Left
+    mainBtn.TextColor3 = TEXT
+    mainBtn.BackgroundColor3 = CARD
+    mainBtn.BackgroundTransparency = ALPHA_CARD
+    mainBtn.AutoButtonColor = false
+    Instance.new("UICorner", mainBtn).CornerRadius = UDim.new(0,10)
+
+    local sub = Instance.new("Frame", holder)
+    sub.Position = UDim2.new(0,0,0,42)
+    sub.Size = UDim2.new(1,0,0,0)
+    sub.ClipsDescendants = true
+    sub.BackgroundTransparency = 1
+
+    local subLayout = Instance.new("UIListLayout", sub)
+    subLayout.Padding = UDim.new(0,6)
+
+    local open = false
+    local function recalc()
+        task.wait()
+        local h = subLayout.AbsoluteContentSize.Y
+        if open then
+            sub.Size = UDim2.new(1,0,0,h)
+            holder.Size = UDim2.new(1,0,0,42 + h)
+            mainBtn.Text = "🔔 Notification & Visual ▲"
+        else
+            sub.Size = UDim2.new(1,0,0,0)
+            holder.Size = UDim2.new(1,0,0,42)
+            mainBtn.Text = "🔔 Notification & Visual ▼"
+        end
+    end
+
+    mainBtn.MouseButton1Click:Connect(function()
+        open = not open
+        recalc()
+    end)
+
+    ----------------------------------------------------------------
+    -- TOGGLE : 🐟 DISABLE FISH IMAGE
+    ----------------------------------------------------------------
+    local row = Instance.new("Frame", sub)
+    row.Size = UDim2.new(1,0,0,36)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(1,-100,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT
+    label.Text = "🐟 Disable Fish Image"
+
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    local enabled = false
+    local conn
+
+    local function refresh()
+        pill.BackgroundColor3 = enabled and ACCENT or MUTED
+        knob.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        enabled = not enabled
+
+        local gui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+        if enabled then
+            for _,v in ipairs(gui:GetDescendants()) do
+                if v.Name == "Small Notification" then
+                    v:Destroy()
+                end
+            end
+
+            conn = gui.DescendantAdded:Connect(function(v)
+                if v.Name == "Small Notification" then
+                    v:Destroy()
+                end
+            end)
+        else
+            if conn then
+                conn:Disconnect()
+                conn = nil
+            end
+        end
+
+        refresh()
+    end)
+
+    refresh()
+
+    ----------------------------------------------------------------
+    -- TOGGLE : 📝 DISABLE FISH TEXT
+    ----------------------------------------------------------------
+    local rowText = Instance.new("Frame", sub)
+    rowText.Size = UDim2.new(1,0,0,36)
+    rowText.BackgroundTransparency = 1
+
+    local labelText = Instance.new("TextLabel", rowText)
+    labelText.Size = UDim2.new(1,-100,1,0)
+    labelText.Position = UDim2.new(0,16,0,0)
+    labelText.BackgroundTransparency = 1
+    labelText.Font = Enum.Font.Gotham
+    labelText.TextSize = 13
+    labelText.TextXAlignment = Enum.TextXAlignment.Left
+    labelText.TextColor3 = TEXT
+    labelText.Text = "📝 Disable Fish Text"
+
+    local pillText = Instance.new("TextButton", rowText)
+    pillText.Size = UDim2.new(0,50,0,24)
+    pillText.Position = UDim2.new(1,-80,0.5,-12)
+    pillText.BackgroundColor3 = MUTED
+    pillText.BackgroundTransparency = 0.1
+    pillText.Text = ""
+    pillText.AutoButtonColor = false
+    Instance.new("UICorner", pillText).CornerRadius = UDim.new(0,999)
+
+    local knobText = Instance.new("Frame", pillText)
+    knobText.Size = UDim2.new(0,18,0,18)
+    knobText.Position = UDim2.new(0,3,0.5,-9)
+    knobText.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobText).CornerRadius = UDim.new(0,999)
+
+    local textOff = false
+    local textConn
+
+    local function refreshText()
+        pillText.BackgroundColor3 = textOff and ACCENT or MUTED
+        knobText.Position = textOff
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    local function setFishTextVisible(v, state)
+        for _, d in ipairs(v:GetDescendants()) do
+            if d:IsA("TextLabel") then
+                d.Visible = state
+            end
+        end
+    end
+
+    pillText.MouseButton1Click:Connect(function()
+        textOff = not textOff
+        local gui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+        if textOff then
+            for _,v in ipairs(gui:GetDescendants()) do
+                if v.Name == "Small Notification" then
+                    setFishTextVisible(v, false)
+                end
+            end
+
+            textConn = gui.DescendantAdded:Connect(function(v)
+                if v.Name == "Small Notification" then
+                    setFishTextVisible(v, false)
+                end
+            end)
+        else
+            if textConn then
+                textConn:Disconnect()
+                textConn = nil
+            end
+
+            for _,v in ipairs(gui:GetDescendants()) do
+                if v.Name == "Small Notification" then
+                    setFishTextVisible(v, true)
+                end
+            end
+        end
+
+        refreshText()
+    end)
+
+    refreshText()
+
+    ----------------------------------------------------------------
+    -- TOGGLE : 🔕 DISABLE ALL NOTIFICATIONS
+    ----------------------------------------------------------------
+    local rowAll = Instance.new("Frame", sub)
+    rowAll.Size = UDim2.new(1,0,0,36)
+    rowAll.BackgroundTransparency = 1
+
+    local labelAll = Instance.new("TextLabel", rowAll)
+    labelAll.Size = UDim2.new(1,-100,1,0)
+    labelAll.Position = UDim2.new(0,16,0,0)
+    labelAll.BackgroundTransparency = 1
+    labelAll.Font = Enum.Font.Gotham
+    labelAll.TextSize = 13
+    labelAll.TextXAlignment = Enum.TextXAlignment.Left
+    labelAll.TextColor3 = TEXT
+    labelAll.Text = "🔕 Disable All Notifications"
+
+    local pillAll = Instance.new("TextButton", rowAll)
+    pillAll.Size = UDim2.new(0,50,0,24)
+    pillAll.Position = UDim2.new(1,-80,0.5,-12)
+    pillAll.BackgroundColor3 = MUTED
+    pillAll.BackgroundTransparency = 0.1
+    pillAll.Text = ""
+    pillAll.AutoButtonColor = false
+    Instance.new("UICorner", pillAll).CornerRadius = UDim.new(0,999)
+
+    local knobAll = Instance.new("Frame", pillAll)
+    knobAll.Size = UDim2.new(0,18,0,18)
+    knobAll.Position = UDim2.new(0,3,0.5,-9)
+    knobAll.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobAll).CornerRadius = UDim.new(0,999)
+
+    local allEnabled = false
+    local allConn
+
+    local function refreshAll()
+        pillAll.BackgroundColor3 = allEnabled and ACCENT or MUTED
+        knobAll.Position = allEnabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    local function killAllNotifs()
+        pcall(function()
+            local gui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+            local function kill(v)
+                if v:IsA("ScreenGui") then
+                    local n = v.Name:lower()
+                    if n:find("notif") or n:find("notification") then
+                        v:Destroy()
+                    end
+                end
+            end
+
+            for _,v in ipairs(gui:GetChildren()) do
+                kill(v)
+            end
+
+            allConn = gui.ChildAdded:Connect(kill)
+        end)
+    end
+
+    local function stopKillAll()
+        if allConn then
+            allConn:Disconnect()
+            allConn = nil
+        end
+    end
+
+    pillAll.MouseButton1Click:Connect(function()
+        allEnabled = not allEnabled
+
+        if allEnabled then
+            killAllNotifs()
+        else
+            stopKillAll()
+        end
+
+        refreshAll()
+    end)
+
+    refreshAll()
+end  -- <<< penutup BuildMisc()
+
+BuildMisc()
 
 -- BUTTON SIDEBAR
 local function sideBtn(name, emoji, order)
