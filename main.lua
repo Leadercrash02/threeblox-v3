@@ -341,18 +341,17 @@ sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 -- CONTENT (KANAN)
 local content = Instance.new("ScrollingFrame", main)
-content.ScrollingEnabled = false
-content.ScrollBarThickness = 0
+content.ScrollingEnabled = true
+content.ScrollBarThickness = 6
 content.AutomaticCanvasSize = Enum.AutomaticSize.Y
 content.Position = UDim2.new(0.28, 0, 0, 48)
-content.Size     = UDim2.new(0.72, 0, 1, -48)
+content.Size = UDim2.new(0.72, 0, 1, -48)
 content.CanvasSize = UDim2.new(0,0,0,0)
 content.BackgroundTransparency = 1
+content.ClipsDescendants = true
 
 local contentLayout = Instance.new("UIListLayout", content)
 contentLayout.Padding = UDim.new(0,0)
-
-
 
 -- PAGE SYSTEM
 local pages = {}
@@ -2145,8 +2144,6 @@ for _,n in ipairs(TryNames) do
         warn("[TOTEM TEST] Found candidate:", n, obj.ClassName)
     end
 end
--- ===========================================
-
 
 -- ENGINE STATE
 local AutoFishAFK = false
@@ -2366,9 +2363,6 @@ end
 
 searchBoxIsland:GetPropertyChangedSignal("Text"):Connect(rebuildIslandPanel)
 rebuildIslandPanel()
-
-
-
 
 local function autoDropdown(text)
     local holder = Instance.new("Frame", scroll)
