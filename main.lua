@@ -555,7 +555,70 @@ recalcSHN()
 
 
 
+----------------------------------------------------------------
+-- CORE UNTUK PLAYER UTILITY
+----------------------------------------------------------------
+local VirtualUser = game:GetService("VirtualUser")
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
+_G.RAY_AntiAFK_On        = false
+_G.RAY_DisableRodSkin    = _G.RAY_DisableRodSkin    or false
+_G.RAY_DisableRodEffect  = _G.RAY_DisableRodEffect  or false
+
+local AntiAFKConn
+
+-- Anti AFK (VirtualUser + Idled). [web:449]
+function StartAntiAFK()
+    if AntiAFKConn then
+        AntiAFKConn:Disconnect()
+    end
+    AntiAFKConn = lp.Idled:Connect(function()
+        pcall(function()
+            VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            task.wait(1)
+            VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        end)
+    end)
+end
+
+function StopAntiAFK()
+    if AntiAFKConn then
+        AntiAFKConn:Disconnect()
+        AntiAFKConn = nil
+    end
+end
+
+local ROD_VFX_NAMES = {
+    "1x1x1x1 Ban Hammer Dive",
+    "Abyssal Chroma Dive",
+    "Abyssfire Dive",
+    "Amber Dive",
+    "Amethyst Dive",
+    "BanHammerThrow",
+    "Xmas Tree Rod Dive",
+    "The Vanquisher Dive",
+    "Ornament Axe Dive",
+    "Frozen Krampus Scythe Dive",
+    "Electric Guitar Dive",
+    "Eclipse Katana Dive",
+    "Divine Blade Dive",
+}
+
+function KillAllRodSkins()
+    local vfxRoot = ReplicatedStorage:FindFirstChild("VFX")
+    if not vfxRoot then return end
+
+    for _, name in ipairs(ROD_VFX_NAMES) do
+        local obj = vfxRoot:FindFirstChild(name, true)
+        if obj then
+            pcall(function()
+                obj:Destroy()
+            end)
+        end
+    end
+end
 
     ----------------------------------------------------------------
     -- DROPDOWN : 👤 PLAYER UTILITY
@@ -606,95 +669,298 @@ recalcSHN()
         recalcPU()
     end)
 
-    ----------------------------------------------------------------
-    -- 🔍 MAX ZOOM (150)
-    ----------------------------------------------------------------
-    do
-        local rowZoom = Instance.new("Frame", subPU)
-        rowZoom.Size = UDim2.new(1,0,0,36)
-        rowZoom.BackgroundTransparency = 1
+----------------------------------------------------------------
+-- 🔍 MAX ZOOM (150)
+----------------------------------------------------------------
+do
+    local rowZoom = Instance.new("Frame", subPU)
+    rowZoom.Size = UDim2.new(1,0,0,36)
+    rowZoom.BackgroundTransparency = 1
 
-        local labelZoom = Instance.new("TextLabel", rowZoom)
-        labelZoom.Size = UDim2.new(1,-100,1,0)
-        labelZoom.Position = UDim2.new(0,16,0,0)
-        labelZoom.BackgroundTransparency = 1
-        labelZoom.Font = Enum.Font.Gotham
-        labelZoom.TextSize = 13
-        labelZoom.TextXAlignment = Enum.TextXAlignment.Left
-        labelZoom.TextColor3 = TEXT
-        labelZoom.Text = "🔍 Max Zoom (150)"
+    local labelZoom = Instance.new("TextLabel", rowZoom)
+    labelZoom.Size = UDim2.new(1,-100,1,0)
+    labelZoom.Position = UDim2.new(0,16,0,0)
+    labelZoom.BackgroundTransparency = 1
+    labelZoom.Font = Enum.Font.Gotham
+    labelZoom.TextSize = 13
+    labelZoom.TextXAlignment = Enum.TextXAlignment.Left
+    labelZoom.TextColor3 = TEXT
+    labelZoom.Text = "🔍 Max Zoom (150)"
 
-        local pillZoom = Instance.new("TextButton", rowZoom)
-        pillZoom.Size = UDim2.new(0,50,0,24)
-        pillZoom.Position = UDim2.new(1,-80,0.5,-12)
-        pillZoom.BackgroundColor3 = MUTED
-        pillZoom.BackgroundTransparency = 0.1
-        pillZoom.Text = ""
-        pillZoom.AutoButtonColor = false
-        Instance.new("UICorner", pillZoom).CornerRadius = UDim.new(0,999)
+    local pillZoom = Instance.new("TextButton", rowZoom)
+    pillZoom.Size = UDim2.new(0,50,0,24)
+    pillZoom.Position = UDim2.new(1,-80,0.5,-12)
+    pillZoom.BackgroundColor3 = MUTED
+    pillZoom.BackgroundTransparency = 0.1
+    pillZoom.Text = ""
+    pillZoom.AutoButtonColor = false
+    Instance.new("UICorner", pillZoom).CornerRadius = UDim.new(0,999)
 
-        local knobZoom = Instance.new("Frame", pillZoom)
-        knobZoom.Size = UDim2.new(0,18,0,18)
-        knobZoom.Position = UDim2.new(0,3,0.5,-9)
-        knobZoom.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        Instance.new("UICorner", knobZoom).CornerRadius = UDim.new(0,999)
+    local knobZoom = Instance.new("Frame", pillZoom)
+    knobZoom.Size = UDim2.new(0,18,0,18)
+    knobZoom.Position = UDim2.new(0,3,0.5,-9)
+    knobZoom.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobZoom).CornerRadius = UDim.new(0,999)
 
-        local zoomEnabled = false
-        local DEFAULT_MAX = lp.CameraMaxZoomDistance
-        local DEFAULT_MIN = lp.CameraMinZoomDistance
-        local MAX_ZOOM = 150
-        local MIN_ZOOM = 0.8
+    local zoomEnabled = false
+    local DEFAULT_MAX = lp.CameraMaxZoomDistance
+    local DEFAULT_MIN = lp.CameraMinZoomDistance
+    local MAX_ZOOM = 150
+    local MIN_ZOOM = 0.8
 
-        local function refreshZoom()
-            pillZoom.BackgroundColor3 = zoomEnabled and ACCENT or MUTED
-            knobZoom.Position = zoomEnabled
-                and UDim2.new(1,-21,0.5,-9)
-                or  UDim2.new(0,3,0.5,-9)
-        end
-
-        local function applyZoom()
-            pcall(function()
-                lp.CameraMaxZoomDistance = MAX_ZOOM
-                lp.CameraMinZoomDistance = MIN_ZOOM
-            end)
-        end
-
-        local function resetZoom()
-            pcall(function()
-                lp.CameraMaxZoomDistance = DEFAULT_MAX
-                lp.CameraMinZoomDistance = DEFAULT_MIN
-            end)
-        end
-
-        pillZoom.MouseButton1Click:Connect(function()
-            zoomEnabled = not zoomEnabled
-            if zoomEnabled then
-                applyZoom()
-            else
-                resetZoom()
-            end
-            refreshZoom()
-        end)
-
-        lp:GetPropertyChangedSignal("CameraMaxZoomDistance"):Connect(function()
-            if zoomEnabled then
-                applyZoom()
-            end
-        end)
-
-        lp.CharacterAdded:Connect(function()
-            task.wait(0.2)
-            if zoomEnabled then
-                applyZoom()
-            end
-        end)
-
-        refreshZoom()
+    local function refreshZoom()
+        pillZoom.BackgroundColor3 = zoomEnabled and ACCENT or MUTED
+        knobZoom.Position = zoomEnabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
     end
 
-    ----------------------------------------------------------------
-    -- 🏃 WALK SPEED
-    ----------------------------------------------------------------
+    local function applyZoom()
+        pcall(function()
+            lp.CameraMaxZoomDistance = MAX_ZOOM
+            lp.CameraMinZoomDistance = MIN_ZOOM
+        end)
+    end
+
+    local function resetZoom()
+        pcall(function()
+            lp.CameraMaxZoomDistance = DEFAULT_MAX
+            lp.CameraMinZoomDistance = DEFAULT_MIN
+        end)
+    end
+
+    pillZoom.MouseButton1Click:Connect(function()
+        zoomEnabled = not zoomEnabled
+        if zoomEnabled then
+            applyZoom()
+        else
+            resetZoom()
+        end
+        refreshZoom()
+    end)
+
+    lp:GetPropertyChangedSignal("CameraMaxZoomDistance"):Connect(function()
+        if zoomEnabled then
+            applyZoom()
+        end
+    end)
+
+    lp.CharacterAdded:Connect(function()
+        task.wait(0.2)
+        if zoomEnabled then
+            applyZoom()
+        end
+    end)
+
+    refreshZoom()
+end
+
+----------------------------------------------------------------
+-- ⏱️ ANTI AFK (NO AUTO ON)
+----------------------------------------------------------------
+do
+    local rowAFK = Instance.new("Frame", subPU)
+    rowAFK.Size = UDim2.new(1,0,0,36)
+    rowAFK.BackgroundTransparency = 1
+
+    local labelAFK = Instance.new("TextLabel", rowAFK)
+    labelAFK.Size = UDim2.new(1,-100,1,0)
+    labelAFK.Position = UDim2.new(0,16,0,0)
+    labelAFK.BackgroundTransparency = 1
+    labelAFK.Font = Enum.Font.Gotham
+    labelAFK.TextSize = 13
+    labelAFK.TextXAlignment = Enum.TextXAlignment.Left
+    labelAFK.TextColor3 = TEXT
+    labelAFK.Text = "⏱️ Anti AFK"
+
+    local pillAFK = Instance.new("TextButton", rowAFK)
+    pillAFK.Size = UDim2.new(0,50,0,24)
+    pillAFK.Position = UDim2.new(1,-80,0.5,-12)
+    pillAFK.BackgroundColor3 = MUTED
+    pillAFK.BackgroundTransparency = 0.1
+    pillAFK.Text = ""
+    pillAFK.AutoButtonColor = false
+    Instance.new("UICorner", pillAFK).CornerRadius = UDim.new(0,999)
+
+    local knobAFK = Instance.new("Frame", pillAFK)
+    knobAFK.Size = UDim2.new(0,18,0,18)
+    knobAFK.Position = UDim2.new(0,3,0.5,-9)
+    knobAFK.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobAFK).CornerRadius = UDim.new(0,999)
+
+    local function refreshAFK()
+        pillAFK.BackgroundColor3 = _G.RAY_AntiAFK_On and ACCENT or MUTED
+        knobAFK.Position = _G.RAY_AntiAFK_On
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    pillAFK.MouseButton1Click:Connect(function()
+        _G.RAY_AntiAFK_On = not _G.RAY_AntiAFK_On
+        if _G.RAY_AntiAFK_On then
+            StartAntiAFK()
+        else
+            StopAntiAFK()
+        end
+        refreshAFK()
+    end)
+
+    lp.CharacterAdded:Connect(function()
+        if _G.RAY_AntiAFK_On then
+            StartAntiAFK()
+        end
+    end)
+
+    refreshAFK()
+end
+
+----------------------------------------------------------------
+-- 🎣 DISABLE ROD EFFECT
+----------------------------------------------------------------
+do
+    local rowDisable = Instance.new("Frame", subPU)
+    rowDisable.Size = UDim2.new(1,0,0,36)
+    rowDisable.BackgroundTransparency = 1
+
+    local labelDisable = Instance.new("TextLabel", rowDisable)
+    labelDisable.Size = UDim2.new(1,-100,1,0)
+    labelDisable.Position = UDim2.new(0,16,0,0)
+    labelDisable.BackgroundTransparency = 1
+    labelDisable.Font = Enum.Font.Gotham
+    labelDisable.TextSize = 13
+    labelDisable.TextXAlignment = Enum.TextXAlignment.Left
+    labelDisable.TextColor3 = TEXT
+    labelDisable.Text = "🎣 Disable Rod Effect"
+
+    local pillDisable = Instance.new("TextButton", rowDisable)
+    pillDisable.Size = UDim2.new(0,50,0,24)
+    pillDisable.Position = UDim2.new(1,-80,0.5,-12)
+    pillDisable.BackgroundColor3 = MUTED
+    pillDisable.BackgroundTransparency = 0.1
+    pillDisable.Text = ""
+    pillDisable.AutoButtonColor = false
+    Instance.new("UICorner", pillDisable).CornerRadius = UDim.new(0,999)
+
+    local knobDisable = Instance.new("Frame", pillDisable)
+    knobDisable.Size = UDim2.new(0,18,0,18)
+    knobDisable.Position = UDim2.new(0,3,0.5,-9)
+    knobDisable.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobDisable).CornerRadius = UDim.new(0,999)
+
+    local function refreshDisable()
+        pillDisable.BackgroundColor3 = _G.RAY_DisableRodEffect and ACCENT or MUTED
+        knobDisable.Position = _G.RAY_DisableRodEffect
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    local function HardKillAnims()
+        local char = lp.Character or lp.CharacterAdded:Wait()
+        local hum  = char:WaitForChild("Humanoid")
+        local animator = hum:WaitForChild("Animator")
+
+        task.spawn(function()
+            while _G.RAY_DisableRodEffect do
+                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                    track:Stop(0)
+                end
+                task.wait(0.05)
+            end
+        end)
+    end
+    -- GetPlayingAnimationTracks + Stop dipakai untuk matikan semua anim. [web:473]
+
+    pillDisable.MouseButton1Click:Connect(function()
+        _G.RAY_DisableRodEffect = not _G.RAY_DisableRodEffect
+        if _G.RAY_DisableRodEffect then
+            HardKillAnims()
+        end
+        refreshDisable()
+    end)
+
+    lp.CharacterAdded:Connect(function()
+        if _G.RAY_DisableRodEffect then
+            task.delay(0.3, HardKillAnims)
+        end
+    end)
+
+    refreshDisable()
+end
+
+----------------------------------------------------------------
+-- 🧪 DISABLE ROD SKIN
+----------------------------------------------------------------
+do
+    local rowSkin = Instance.new("Frame", subPU)
+    rowSkin.Size = UDim2.new(1,0,0,48)
+    rowSkin.BackgroundTransparency = 1
+
+    local labelSkin = Instance.new("TextLabel", rowSkin)
+    labelSkin.Size = UDim2.new(1,-100,0.5,0)
+    labelSkin.Position = UDim2.new(0,16,0,0)
+    labelSkin.BackgroundTransparency = 1
+    labelSkin.Font = Enum.Font.Gotham
+    labelSkin.TextSize = 13
+    labelSkin.TextXAlignment = Enum.TextXAlignment.Left
+    labelSkin.TextColor3 = TEXT
+    labelSkin.Text = "🧪 Disable Rod Skin"
+
+    local infoSkin = Instance.new("TextLabel", rowSkin)
+    infoSkin.Size = UDim2.new(1,-16,0.5,0)
+    infoSkin.Position = UDim2.new(0,16,0.5,0)
+    infoSkin.BackgroundTransparency = 1
+    infoSkin.Font = Enum.Font.Gotham
+    infoSkin.TextSize = 11
+    infoSkin.TextXAlignment = Enum.TextXAlignment.Left
+    infoSkin.TextColor3 = MUTED
+    infoSkin.TextWrapped = true
+    infoSkin.Text = "Kill skin: 1x1x1x1 Ban Hammer, Abyssal Chroma, Abyssfire, Amber, Amethyst, BanHammerThrow, Xmas Tree, Vanquisher, Ornament Axe, Frozen Krampus Scythe, Electric Guitar, Eclipse Katana, Divine Blade."
+
+    local pillSkin = Instance.new("TextButton", rowSkin)
+    pillSkin.Size = UDim2.new(0,50,0,24)
+    pillSkin.Position = UDim2.new(1,-80,0.25,-12)
+    pillSkin.BackgroundColor3 = MUTED
+    pillSkin.BackgroundTransparency = 0.1
+    pillSkin.Text = ""
+    pillSkin.AutoButtonColor = false
+    Instance.new("UICorner", pillSkin).CornerRadius = UDim.new(0,999)
+
+    local knobSkin = Instance.new("Frame", pillSkin)
+    knobSkin.Size = UDim2.new(0,18,0,18)
+    knobSkin.Position = UDim2.new(0,3,0.5,-9)
+    knobSkin.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobSkin).CornerRadius = UDim.new(0,999)
+
+    local function refreshSkin()
+        pillSkin.BackgroundColor3 = _G.RAY_DisableRodSkin and ACCENT or MUTED
+        knobSkin.Position = _G.RAY_DisableRodSkin
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    pillSkin.MouseButton1Click:Connect(function()
+        _G.RAY_DisableRodSkin = not _G.RAY_DisableRodSkin
+        if _G.RAY_DisableRodSkin then
+            KillAllRodSkins()
+        end
+        refreshSkin()
+    end)
+
+    lp.CharacterAdded:Connect(function()
+        if _G.RAY_DisableRodSkin then
+            task.delay(0.5, KillAllRodSkins)
+        end
+    end)
+
+    refreshSkin()
+end
+
+-- DI BAWAH SINI LANJUT: WALKSPEED, DLL
+
+
+----------------------------------------------------------------
+-- 🏃 WALK SPEED
+----------------------------------------------------------------
     do
         local rowWS = Instance.new("Frame", subPU)
         rowWS.Size = UDim2.new(1,0,0,36)
@@ -1856,7 +2122,10 @@ local Events = {
     cancel   = Net:WaitForChild("RF/CancelFishingInputs"),
     equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
     unequip  = Net:WaitForChild("RE/UnequipToolFromHotbar"),
-}  -- TUTUP TABEL DI SINI
+
+    -- WEATHER
+    purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
+}
 
 -- ====== TOTEM REMOTE TEST (sementara) ======
 local TryNames = {
@@ -1924,29 +2193,40 @@ local function Engine_V3_Delayed()
     isFishing = false
 end
 
--- BLATANT FEEL V2 (3x cast -> tunggu -> 5x reel)
+-- CONFIG (UI)
+local BlatantReel   = 1.17   -- biarin
+local BlatantCatch  = 0.25   -- 0.2–0.3
+
+local CastCount        = 3
+local DelayBetweenCast = 0.03
+
 local function BlatantCycle_V2()
     if isFishing or not BlatantOn then return end
     isFishing = true
 
+    -- 3x CAST CEPAT
     pcall(function()
         Events.equip:FireServer(1)
         task.wait(0.01)
-        for _ = 1,3 do
+        for _ = 1, CastCount do
             task.spawn(function()
                 Events.charge:InvokeServer(workspace:GetServerTimeNow())
                 task.wait(0.01)
                 Events.minigame:InvokeServer(1.2854545116425, 1)
             end)
-            task.wait(0.03)
+            task.wait(DelayBetweenCast)
         end
     end)
 
-    task.wait(BlatantReel)
+    -- DELAY REAL (SEDIKIT LEBIH CEPAT)
+    local RealReelDelay  = 0.52     -- dari 0.55 → 0.52
+    local RealInnerDelay = 0.0009   -- sedikit lebih longgar dari 0.0007
+
+    task.wait(RealReelDelay)
 
     for _ = 1,5 do
         Reel_V3()
-        task.wait(0.01)
+        task.wait(RealInnerDelay)
     end
 
     task.wait(BlatantCatch)
@@ -1963,18 +2243,6 @@ task.spawn(function()
         task.wait(0.05)
     end
 end)
-
--- ANTI AFK
-task.spawn(function()
-    local vu = game:GetService("VirtualUser")
-    local lp = game:GetService("Players").LocalPlayer
-
-    lp.Idled:Connect(function()
-        vu:CaptureController()
-        vu:ClickButton2(Vector2.new())
-    end)
-end)
-
 
 
 -- ====================== AUTO OPTION CONTENT ======================
@@ -2793,14 +3061,13 @@ task.wait(0.1)
 task.spawn(function()
     while true do
         if BlatantOn then
-            BlatantCycle_V2()
+            BlatantCycle_V2()      -- ini otomatis pakai versi improve yang baru
         elseif AutoFishAFK then
             Engine_V3_Delayed()
         end
         task.wait(0.05)
     end
 end)
-
 
 
 -- AUTO SELL ENGINE SIMPLE
@@ -2838,5 +3105,20 @@ task.spawn(function()
         end
 
         task.wait(0.5)
+    end
+end)
+
+----------------------------------------------------------------
+-- TEST AUTO BUY STORM (SIMPLE)
+----------------------------------------------------------------
+task.spawn(function()
+    task.wait(5)  -- tunggu 5 detik setelah inject
+
+    while true do
+        pcall(function()
+            Events.purchaseWeather:InvokeServer("Storm")
+        end)
+
+        task.wait(2)  -- jeda 2 detik antar beli, bisa lu ubah
     end
 end)
