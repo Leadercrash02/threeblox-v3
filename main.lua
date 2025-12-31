@@ -111,7 +111,7 @@ local AUTO_OPTIONS = {
     {"Auto Spot Island",""},
     {"Auto Favorite",""},
     {"Auto Sell",""},
-    {"Auto Totem",""},
+    {"Auto Megalodon",""},
     {"Auto Potion",""},
 }
 
@@ -2479,7 +2479,9 @@ UIS.InputBegan:Connect(function(input, gp)
     end
 end)
 
+----------------------------------------------------------------
 -- REMOTES
+----------------------------------------------------------------
 local Net = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
@@ -2499,24 +2501,41 @@ local Events = {
     purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
 }
 
--- ====== TOTEM REMOTE TEST (sementara) ======
-local TryNames = {
-    "RF/UseTotem",
-    "RE/UseTotem",
-    "RF/ActivateTotem",
-    "RE/ActivateTotem",
-    "RF/PlaceTotem",
-    "RE/PlaceTotem",
-}
-
-for _,n in ipairs(TryNames) do
-    local ok, obj = pcall(function()
-        return Net:WaitForChild(n, 1)
-    end)
-    if ok and obj then
-        warn("[TOTEM TEST] Found candidate:", n, obj.ClassName)
+----------------------------------------------------------------
+-- MEGALODON HUNT TELEPORT (ANCHOR PART)
+----------------------------------------------------------------
+function TeleportToMegalodon()
+    -- cari part anchor bernama "Megalodon Hunt" di seluruh workspace
+    local anchor
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Name == "Megalodon Hunt" then
+            anchor = obj
+            break
+        end
     end
+    if not anchor then
+        return
+    end
+
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    local root = char:WaitForChild("HumanoidRootPart")
+
+    -- nolkan gerakan biar nggak kelempar
+    root.AssemblyLinearVelocity  = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+    -- posisi sedikit di atas anchor
+    local basePos = anchor.Position + Vector3.new(0, 5, 0)
+    local lookDir = anchor.CFrame.LookVector
+
+    -- teleport character menghadap arah anchor
+    local cf = CFrame.new(basePos, basePos + lookDir)
+    char:PivotTo(cf)
 end
+
+
+
+
 
 -- ENGINE STATE
 local AutoFishAFK = false
@@ -2763,8 +2782,8 @@ local function autoDropdown(text)
         icon.Text = "⭐"
     elseif text == "Auto Sell" then
         icon.Text = "💰"
-    elseif text == "Auto Totem" then
-        icon.Text = "🌀"
+    elseif text == "Auto Megalodon" then
+        icon.Text = "🦈"
     elseif text == "Auto Potion" then
         icon.Text = "🧪"
     else
@@ -3405,9 +3424,52 @@ elseif text == "Auto Spot Island" then
 
         refreshSell()
 
-    elseif text == "Auto Totem" then
-        toggle("Auto Totem")
-        input("Cooldown","sec")
+----------------------------------------------------------------
+-- AUTO MEGALODON (MENU)
+----------------------------------------------------------------
+elseif text == "Auto Megalodon" then
+    list.Padding = UDim.new(0,4)
+
+    -- Info
+    local info = Instance.new("TextLabel", sub)
+    info.Size = UDim2.new(1,0,0,28)
+    info.BackgroundTransparency = 1
+    info.Font = Enum.Font.Gotham
+    info.TextSize = 13
+    info.TextColor3 = MUTED
+    info.TextXAlignment = Enum.TextXAlignment.Left
+    info.Text = "🦈 Klik tombol di bawah untuk teleport ke spot Megalodon."
+
+    -- Row tombol (stylenya sama kayak toggle lain, tapi di sini single click)
+    local row = Instance.new("Frame", sub)
+    row.Size = UDim2.new(1,0,0,32)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(1,-120,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT
+    label.Text = "Teleport Megalodon (once)"
+
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(0,90,0,24)
+    btn.Position = UDim2.new(1,-110,0.5,-12)
+    btn.BackgroundColor3 = ACCENT
+    btn.BackgroundTransparency = 0.08
+    btn.Text = "TELEPORT"
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 12
+    btn.TextColor3 = TEXT
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,999)
+
+    btn.MouseButton1Click:Connect(function()
+        TeleportToMegalodon()  -- TELEPORT SEKALI, TIDAK AUTO FARM
+    end)
 
     elseif text == "Auto Potion" then
         toggle("Auto Potion")
