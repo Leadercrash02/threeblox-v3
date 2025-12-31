@@ -116,44 +116,46 @@ local AUTO_OPTIONS = {
 }
 
 local ISLAND_SPOTS = {
-    ["Iron Cafe"]       = CFrame.new(-8794.9541, -585.00018, 225.19032),
-    ["Cafe Besi"]       = CFrame.new(-8642.2588, -547.50031, 161.28636),
-    ["Christmas Spot"]  = CFrame.new(1138.9039, 23.43064, 1560.8541),
-    ["Kedalaman Excortic"] = CFrame.new(3232.9036, -1302.8549, 1401.0824),
-    ["Pulau Kawah"]     = CFrame.new(1000.1009, 18.02404, 5093.1221),
-    ["Hutan Kuno"]      = CFrame.new(1470.9269, 4.5879965, -323.6044),
-    ["Temple Guardian"] = CFrame.new(1486.0616, 127.62498, -590.1211),
-    ["Kuil Suci"]       = CFrame.new(1496.1331, -22.125002, -639.2121),
-    ["Ancient Ruin"]    = CFrame.new(6081.9009, -585.92419, 4634.6240),
-    ["Kohana"]          = CFrame.new(-603.82385, 17.250059, 514.24432),
-    ["Kohana Volcano"]  = CFrame.new(-617.46448, 48.560577, 189.16815),
-    ["Fisherman Spawn"] = CFrame.new(90.31225, 17.033522, 2839.8655),
-    ["Sysphus State"]   = CFrame.new(-3698.2456, -135.07391, -1007.7955),
-    ["Harta Karun"]     = CFrame.new(-3595.2686, -275.74152, -1639.2794),
-    ["Weater Machine"]  = CFrame.new(-1489.2069, 3.5, 1917.9594),
-    ["Coral Reefs"]     = CFrame.new(-2755.0881, 4.0107765, 2163.7251),
-    ["Hutan Tropis"]    = CFrame.new(-2016.4812, 9.037539, 3752.3533),
+    ["Christmas Cave"]      = CFrame.new(538.810181, -580.58136, 8900.9873),
+    ["Cafe Besi"]           = CFrame.new(-8642.2588, -547.50031, 161.28636),
+    ["Christmas Spot"]      = CFrame.new(1138.9039, 23.43064, 1560.8541),
+    ["Esoteric Depths"]  = CFrame.new(3232.9036, -1302.8549, 1401.0824),
+    ["Creater Island"]         = CFrame.new(1000.1009, 18.02404, 5093.1221),
+    ["Hutan Kuno"]          = CFrame.new(1470.9269, 4.5879965, -323.6044),
+    ["Temple Guardian"]     = CFrame.new(1486.0616, 127.62498, -590.1211),
+    ["Secred Temple"]       = CFrame.new(1496.1331, -22.125002, -639.2121),
+    ["Ancient Ruin"]        = CFrame.new(6081.9009, -585.92419, 4634.6240),
+    ["Kohana"]              = CFrame.new(-603.82385, 17.250059, 514.24432),
+    ["Kohana Volcano"]      = CFrame.new(-617.46448, 48.560577, 189.16815),
+    ["Fisherman Spawn"]     = CFrame.new(90.31225, 17.033522, 2839.8655),
+    ["Sysphus State"]       = CFrame.new(-3698.2456, -135.07391, -1007.7955),
+    ["Treasure Room"]         = CFrame.new(-3595.2686, -275.74152, -1639.2794),
+    ["Weater Machine"]      = CFrame.new(-1489.2069, 3.5, 1917.9594),
+    ["Coral Reefs"]         = CFrame.new(-2755.0881, 4.0107765, 2163.7251),
+    ["Hutan Tropis"]        = CFrame.new(-2016.4812, 9.037539, 3752.3533),
 }
+
 
 local DEFAULT_SPOT_ORDER = {
     "Fisherman Spawn",
     "Kohana",
     "Kohana Volcano",
-    "Pulau Kawah",
+    "Creater Island",
     "Ancient Ruin",
     "Hutan Kuno",
-    "Kuil Suci",
+    "Secred Temple",
     "Temple Guardian",
-    "Iron Cafe",
+    "Christmas Cave",
     "Cafe Besi",
     "Sysphus State",
-    "Harta Karun",
+    "Treasure Room",
     "Weater Machine",
     "Coral Reefs",
     "Hutan Tropis",
     "Christmas Spot",
-    "Kedalaman Excortic",
+    "Esoteric Depths",
 }
+
 
 
 -- ROOT
