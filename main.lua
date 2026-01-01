@@ -108,7 +108,7 @@ local PAGE_ICONS = {
 local AUTO_OPTIONS = {
     {"Auto Fishing",""},
     {"Blatant Fishing",""},
-    {"Blatant Improve",""},
+    {"Auto Spot Island",""},
     {"Auto Favorite",""},
     {"Auto Sell",""},
     {"Auto Megalodon",""},
@@ -1076,15 +1076,15 @@ do
     knobZoom.BackgroundColor3 = Color3.fromRGB(255,255,255)
     Instance.new("UICorner", knobZoom).CornerRadius = UDim.new(0,999)
 
-    local enabled = false
+    local zoomEnabled = false
     local DEFAULT_MAX = lp.CameraMaxZoomDistance
     local DEFAULT_MIN = lp.CameraMinZoomDistance
     local MAX_ZOOM = 150
     local MIN_ZOOM = 0.8
 
-    local function refresh()
-        pillZoom.BackgroundColor3 = enabled and ACCENT or MUTED
-        knobZoom.Position = enabled
+    local function refreshZoom()
+        pillZoom.BackgroundColor3 = zoomEnabled and ACCENT or MUTED
+        knobZoom.Position = zoomEnabled
             and UDim2.new(1,-21,0.5,-9)
             or  UDim2.new(0,3,0.5,-9)
     end
@@ -1104,33 +1104,33 @@ do
     end
 
     pillZoom.MouseButton1Click:Connect(function()
-        enabled = not enabled
-        if enabled then
+        zoomEnabled = not zoomEnabled
+        if zoomEnabled then
             applyZoom()
         else
             resetZoom()
         end
-        refresh()
+        refreshZoom()
     end)
 
     lp:GetPropertyChangedSignal("CameraMaxZoomDistance"):Connect(function()
-        if enabled then
+        if zoomEnabled then
             applyZoom()
         end
     end)
 
     lp.CharacterAdded:Connect(function()
         task.wait(0.2)
-        if enabled then
+        if zoomEnabled then
             applyZoom()
         end
     end)
 
-    refresh()
+    refreshZoom()
 end
 
 ----------------------------------------------------------------
--- ⏱️ ANTI AFK
+-- ⏱️ ANTI AFK (NO AUTO ON)
 ----------------------------------------------------------------
 do
     local rowAFK = Instance.new("Frame", subPU)
@@ -1162,9 +1162,7 @@ do
     knobAFK.BackgroundColor3 = Color3.fromRGB(255,255,255)
     Instance.new("UICorner", knobAFK).CornerRadius = UDim.new(0,999)
 
-    _G.RAY_AntiAFK_On = _G.RAY_AntiAFK_On or false
-
-    local function refresh()
+    local function refreshAFK()
         pillAFK.BackgroundColor3 = _G.RAY_AntiAFK_On and ACCENT or MUTED
         knobAFK.Position = _G.RAY_AntiAFK_On
             and UDim2.new(1,-21,0.5,-9)
@@ -1178,7 +1176,7 @@ do
         else
             StopAntiAFK()
         end
-        refresh()
+        refreshAFK()
     end)
 
     lp.CharacterAdded:Connect(function()
@@ -1187,102 +1185,151 @@ do
         end
     end)
 
-    refresh()
+    refreshAFK()
 end
 
 ----------------------------------------------------------------
--- 🎯 FISHING RADAR
+-- 🎣 DISABLE ROD EFFECT
 ----------------------------------------------------------------
 do
-    local rowRadar = Instance.new("Frame", subPU)
-    rowRadar.Size = UDim2.new(1,0,0,36)
-    rowRadar.BackgroundTransparency = 1
+    local rowDisable = Instance.new("Frame", subPU)
+    rowDisable.Size = UDim2.new(1,0,0,36)
+    rowDisable.BackgroundTransparency = 1
 
-    local labelRadar = Instance.new("TextLabel", rowRadar)
-    labelRadar.Size = UDim2.new(1,-100,1,0)
-    labelRadar.Position = UDim2.new(0,16,0,0)
-    labelRadar.BackgroundTransparency = 1
-    labelRadar.Font = Enum.Font.Gotham
-    labelRadar.TextSize = 13
-    labelRadar.TextXAlignment = Enum.TextXAlignment.Left
-    labelRadar.TextColor3 = TEXT
-    labelRadar.Text = "🎯 Fishing Radar"
+    local labelDisable = Instance.new("TextLabel", rowDisable)
+    labelDisable.Size = UDim2.new(1,-100,1,0)
+    labelDisable.Position = UDim2.new(0,16,0,0)
+    labelDisable.BackgroundTransparency = 1
+    labelDisable.Font = Enum.Font.Gotham
+    labelDisable.TextSize = 13
+    labelDisable.TextXAlignment = Enum.TextXAlignment.Left
+    labelDisable.TextColor3 = TEXT
+    labelDisable.Text = "🎣 Disable Rod Effect"
 
-    local pillRadar = Instance.new("TextButton", rowRadar)
-    pillRadar.Size = UDim2.new(0,50,0,24)
-    pillRadar.Position = UDim2.new(1,-80,0.5,-12)
-    pillRadar.BackgroundColor3 = MUTED
-    pillRadar.BackgroundTransparency = 0.1
-    pillRadar.Text = ""
-    pillRadar.AutoButtonColor = false
-    Instance.new("UICorner", pillRadar).CornerRadius = UDim.new(0,999)
+    local pillDisable = Instance.new("TextButton", rowDisable)
+    pillDisable.Size = UDim2.new(0,50,0,24)
+    pillDisable.Position = UDim2.new(1,-80,0.5,-12)
+    pillDisable.BackgroundColor3 = MUTED
+    pillDisable.BackgroundTransparency = 0.1
+    pillDisable.Text = ""
+    pillDisable.AutoButtonColor = false
+    Instance.new("UICorner", pillDisable).CornerRadius = UDim.new(0,999)
 
-    local knobRadar = Instance.new("Frame", pillRadar)
-    knobRadar.Size = UDim2.new(0,18,0,18)
-    knobRadar.Position = UDim2.new(0,3,0.5,-9)
-    knobRadar.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knobRadar).CornerRadius = UDim.new(0,999)
+    local knobDisable = Instance.new("Frame", pillDisable)
+    knobDisable.Size = UDim2.new(0,18,0,18)
+    knobDisable.Position = UDim2.new(0,3,0.5,-9)
+    knobDisable.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobDisable).CornerRadius = UDim.new(0,999)
 
-    _G.RAY_FishingRadarOn = _G.RAY_FishingRadarOn or false
-    local radarOn = _G.RAY_FishingRadarOn
-
-    local function refresh()
-        pillRadar.BackgroundColor3 = radarOn and ACCENT or MUTED
-        knobRadar.Position = radarOn
+    local function refreshDisable()
+        pillDisable.BackgroundColor3 = _G.RAY_DisableRodEffect and ACCENT or MUTED
+        knobDisable.Position = _G.RAY_DisableRodEffect
             and UDim2.new(1,-21,0.5,-9)
             or  UDim2.new(0,3,0.5,-9)
     end
 
-    local function GetRadarRF()
-        local ok, rf = pcall(function()
-            return ReplicatedStorage
-                :WaitForChild("Packages")
-                :WaitForChild("_Index")
-                :WaitForChild("sleitnick_net@0.2.0")
-                :WaitForChild("net")
-                :WaitForChild("RF/UpdateFishingRadar")
+    local function HardKillAnims()
+        local char = lp.Character or lp.CharacterAdded:Wait()
+        local hum  = char:WaitForChild("Humanoid")
+        local animator = hum:WaitForChild("Animator")
+
+        task.spawn(function()
+            while _G.RAY_DisableRodEffect do
+                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                    track:Stop(0)
+                end
+                task.wait(0.05)
+            end
         end)
-        return ok and rf or nil
     end
+    -- GetPlayingAnimationTracks + Stop dipakai untuk matikan semua anim. [web:473]
 
-    pillRadar.MouseButton1Click:Connect(function()
-        local rf = GetRadarRF()
-        if not rf then
-            warn("[Threeblox] UpdateFishingRadar RF not found")
-            return
+    pillDisable.MouseButton1Click:Connect(function()
+        _G.RAY_DisableRodEffect = not _G.RAY_DisableRodEffect
+        if _G.RAY_DisableRodEffect then
+            HardKillAnims()
         end
-
-        local newState = not radarOn
-
-        local ok, res = pcall(function()
-            return rf:InvokeServer(newState)
-        end)
-
-        if ok then
-            radarOn = newState
-            _G.RAY_FishingRadarOn = radarOn
-            refresh()
-        else
-            warn("[Threeblox] Radar toggle failed:", res)
-        end
+        refreshDisable()
     end)
 
     lp.CharacterAdded:Connect(function()
-        if _G.RAY_FishingRadarOn then
-            task.delay(1, function()
-                local rf = GetRadarRF()
-                if rf then
-                    pcall(function()
-                        rf:InvokeServer(true)
-                    end)
-                end
-            end)
+        if _G.RAY_DisableRodEffect then
+            task.delay(0.3, HardKillAnims)
         end
     end)
 
-    refresh()
+    refreshDisable()
 end
 
+----------------------------------------------------------------
+-- 🧪 DISABLE ROD SKIN
+----------------------------------------------------------------
+do
+    local rowSkin = Instance.new("Frame", subPU)
+    rowSkin.Size = UDim2.new(1,0,0,48)
+    rowSkin.BackgroundTransparency = 1
+
+    local labelSkin = Instance.new("TextLabel", rowSkin)
+    labelSkin.Size = UDim2.new(1,-100,0.5,0)
+    labelSkin.Position = UDim2.new(0,16,0,0)
+    labelSkin.BackgroundTransparency = 1
+    labelSkin.Font = Enum.Font.Gotham
+    labelSkin.TextSize = 13
+    labelSkin.TextXAlignment = Enum.TextXAlignment.Left
+    labelSkin.TextColor3 = TEXT
+    labelSkin.Text = "🧪 Disable Rod Skin"
+
+    local infoSkin = Instance.new("TextLabel", rowSkin)
+    infoSkin.Size = UDim2.new(1,-16,0.5,0)
+    infoSkin.Position = UDim2.new(0,16,0.5,0)
+    infoSkin.BackgroundTransparency = 1
+    infoSkin.Font = Enum.Font.Gotham
+    infoSkin.TextSize = 11
+    infoSkin.TextXAlignment = Enum.TextXAlignment.Left
+    infoSkin.TextColor3 = MUTED
+    infoSkin.TextWrapped = true
+    infoSkin.Text = "Kill skin: 1x1x1x1 Ban Hammer, Abyssal Chroma, Abyssfire, Amber, Amethyst, BanHammerThrow, Xmas Tree, Vanquisher, Ornament Axe, Frozen Krampus Scythe, Electric Guitar, Eclipse Katana, Divine Blade."
+
+    local pillSkin = Instance.new("TextButton", rowSkin)
+    pillSkin.Size = UDim2.new(0,50,0,24)
+    pillSkin.Position = UDim2.new(1,-80,0.25,-12)
+    pillSkin.BackgroundColor3 = MUTED
+    pillSkin.BackgroundTransparency = 0.1
+    pillSkin.Text = ""
+    pillSkin.AutoButtonColor = false
+    Instance.new("UICorner", pillSkin).CornerRadius = UDim.new(0,999)
+
+    local knobSkin = Instance.new("Frame", pillSkin)
+    knobSkin.Size = UDim2.new(0,18,0,18)
+    knobSkin.Position = UDim2.new(0,3,0.5,-9)
+    knobSkin.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobSkin).CornerRadius = UDim.new(0,999)
+
+    local function refreshSkin()
+        pillSkin.BackgroundColor3 = _G.RAY_DisableRodSkin and ACCENT or MUTED
+        knobSkin.Position = _G.RAY_DisableRodSkin
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    pillSkin.MouseButton1Click:Connect(function()
+        _G.RAY_DisableRodSkin = not _G.RAY_DisableRodSkin
+        if _G.RAY_DisableRodSkin then
+            KillAllRodSkins()
+        end
+        refreshSkin()
+    end)
+
+    lp.CharacterAdded:Connect(function()
+        if _G.RAY_DisableRodSkin then
+            task.delay(0.5, KillAllRodSkins)
+        end
+    end)
+
+    refreshSkin()
+end
+
+-- DI BAWAH SINI LANJUT: WALKSPEED, DLL
 
 
 ----------------------------------------------------------------
@@ -1971,162 +2018,6 @@ end
     refresh()
 
     ----------------------------------------------------------------
--- 🎣 DISABLE ROD EFFECT
-----------------------------------------------------------------
-do
-    local row = Instance.new("Frame", sub)
-    row.Size = UDim2.new(1,0,0,36)
-    row.BackgroundTransparency = 1
-
-    local label = Instance.new("TextLabel", row)
-    label.Size = UDim2.new(1,-100,1,0)
-    label.Position = UDim2.new(0,16,0,0)
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 13
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextColor3 = TEXT
-    label.Text = "🎣 Disable Rod Effect"
-
-    local pill = Instance.new("TextButton", row)
-    pill.Size = UDim2.new(0,50,0,24)
-    pill.Position = UDim2.new(1,-80,0.5,-12)
-    pill.BackgroundColor3 = MUTED
-    pill.BackgroundTransparency = 0.1
-    pill.Text = ""
-    pill.AutoButtonColor = false
-    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
-
-    local knob = Instance.new("Frame", pill)
-    knob.Size = UDim2.new(0,18,0,18)
-    knob.Position = UDim2.new(0,3,0.5,-9)
-    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
-
-    local enabled = _G.RAY_DisableRodEffect or false
-    local killing = false
-
-    local function HardKillAnims()
-        if killing then return end
-        killing = true
-
-        local char = lp.Character or lp.CharacterAdded:Wait()
-        local hum  = char:WaitForChild("Humanoid")
-        local animator = hum:WaitForChild("Animator")
-
-        task.spawn(function()
-            while enabled do
-                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-                    track:Stop(0)
-                end
-                task.wait(0.05)
-            end
-            killing = false
-        end)
-    end
-
-    local function refresh()
-        pill.BackgroundColor3 = enabled and ACCENT or MUTED
-        knob.Position = enabled
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
-    end
-
-    pill.MouseButton1Click:Connect(function()
-        enabled = not enabled
-        _G.RAY_DisableRodEffect = enabled
-
-        if enabled then
-            HardKillAnims()
-        end
-
-        refresh()
-    end)
-
-    lp.CharacterAdded:Connect(function()
-        if enabled then
-            task.delay(0.3, HardKillAnims)
-        end
-    end)
-
-    refresh()
-end
-
-----------------------------------------------------------------
--- 🧪 DISABLE ROD SKIN
-----------------------------------------------------------------
-do
-    local rowSkin = Instance.new("Frame", sub)
-    rowSkin.Size = UDim2.new(1,0,0,48)
-    rowSkin.BackgroundTransparency = 1
-
-    local labelSkin = Instance.new("TextLabel", rowSkin)
-    labelSkin.Size = UDim2.new(1,-100,0.5,0)
-    labelSkin.Position = UDim2.new(0,16,0,0)
-    labelSkin.BackgroundTransparency = 1
-    labelSkin.Font = Enum.Font.Gotham
-    labelSkin.TextSize = 13
-    labelSkin.TextXAlignment = Enum.TextXAlignment.Left
-    labelSkin.TextColor3 = TEXT
-    labelSkin.Text = "🧪 Disable Rod Skin"
-
-    local infoSkin = Instance.new("TextLabel", rowSkin)
-    infoSkin.Size = UDim2.new(1,-16,0.5,0)
-    infoSkin.Position = UDim2.new(0,16,0.5,0)
-    infoSkin.BackgroundTransparency = 1
-    infoSkin.Font = Enum.Font.Gotham
-    infoSkin.TextSize = 11
-    infoSkin.TextXAlignment = Enum.TextXAlignment.Left
-    infoSkin.TextColor3 = MUTED
-    infoSkin.TextWrapped = true
-    infoSkin.Text = "Kill skin: 1x1x1x1 Ban Hammer, Abyssal Chroma, Abyssfire, Amber, Amethyst, BanHammerThrow, Xmas Tree, Vanquisher, Ornament Axe, Frozen Krampus Scythe, Electric Guitar, Eclipse Katana, Divine Blade."
-
-    local pillSkin = Instance.new("TextButton", rowSkin)
-    pillSkin.Size = UDim2.new(0,50,0,24)
-    pillSkin.Position = UDim2.new(1,-80,0.25,-12)
-    pillSkin.BackgroundColor3 = MUTED
-    pillSkin.BackgroundTransparency = 0.1
-    pillSkin.Text = ""
-    pillSkin.AutoButtonColor = false
-    Instance.new("UICorner", pillSkin).CornerRadius = UDim.new(0,999)
-
-    local knobSkin = Instance.new("Frame", pillSkin)
-    knobSkin.Size = UDim2.new(0,18,0,18)
-    knobSkin.Position = UDim2.new(0,3,0.5,-9)
-    knobSkin.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knobSkin).CornerRadius = UDim.new(0,999)
-
-    local enabled = _G.RAY_DisableRodSkin or false
-
-    local function refreshSkin()
-        pillSkin.BackgroundColor3 = enabled and ACCENT or MUTED
-        knobSkin.Position = enabled
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
-    end
-
-    pillSkin.MouseButton1Click:Connect(function()
-        enabled = not enabled
-        _G.RAY_DisableRodSkin = enabled
-
-        if enabled then
-            KillAllRodSkins()
-        end
-
-        refreshSkin()
-    end)
-
-    lp.CharacterAdded:Connect(function()
-        if enabled then
-            task.delay(0.5, KillAllRodSkins)
-        end
-    end)
-
-    refreshSkin()
-end
-
-
-    ----------------------------------------------------------------
     -- TOGGLE : 📝 DISABLE FISH TEXT
     ----------------------------------------------------------------
     local rowText = Instance.new("Frame", sub)
@@ -2331,251 +2222,25 @@ end
 pages["Auto Option"].Visible = true
 
 ----------------------------------------------------------------
--- TELEPORT PAGE (RAPI: PLAYER + ISLAND)
+-- TELEPORT PAGE (ROW + DROPDOWN TELEPORT TO PLAYER, COMPACT)
 ----------------------------------------------------------------
 local teleportPage = pages["Teleport"]
 
--- LAYOUT VERTICAL
-local tpLayout = Instance.new("UIListLayout", teleportPage)
-tpLayout.Padding = UDim.new(0,8)
-tpLayout.FillDirection = Enum.FillDirection.Vertical
-tpLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
--- TITLE
+-- TITLE ATAS TELEPORT
 local tpTitleMain = Instance.new("TextLabel", teleportPage)
 tpTitleMain.Size = UDim2.new(1,-32,0,32)
+tpTitleMain.Position = UDim2.new(0,16,0,16)
 tpTitleMain.BackgroundTransparency = 1
 tpTitleMain.Font = Enum.Font.GothamBold
 tpTitleMain.TextSize = 18
 tpTitleMain.TextColor3 = TEXT
 tpTitleMain.TextXAlignment = Enum.TextXAlignment.Left
-tpTitleMain.Text = "Teleport"
-tpTitleMain.LayoutOrder = 1
+tpTitleMain.Text = "Teleport"  -- [file:3]
 
-----------------------------------------------------------------
--- 🏝️ TELEPORT TO ISLAND
-----------------------------------------------------------------
-local holderIsland = Instance.new("Frame", teleportPage)
-holderIsland.Size = UDim2.new(1,0,0,34)
-holderIsland.BackgroundTransparency = 1
-holderIsland.LayoutOrder = 3
-
-local rowIsland = Instance.new("TextButton", holderIsland)
-rowIsland.Size = UDim2.new(1,-32,0,34)
-rowIsland.Position = UDim2.new(0,16,0,0)
-rowIsland.BackgroundColor3 = CARD
-rowIsland.BackgroundTransparency = ALPHA_CARD
-rowIsland.AutoButtonColor = false
-rowIsland.Font = Enum.Font.Gotham
-rowIsland.TextSize = 13
-rowIsland.TextXAlignment = Enum.TextXAlignment.Left
-rowIsland.TextColor3 = TEXT
-rowIsland.Text = "  🏝️ Teleport to Island  >"
-Instance.new("UICorner", rowIsland).CornerRadius = UDim.new(0,8)
-
-local tpIslandFrame = Instance.new("Frame", holderIsland)
-tpIslandFrame.Position = UDim2.new(0,0,0,34)
-tpIslandFrame.Size = UDim2.new(1,0,0,0)
-tpIslandFrame.BackgroundTransparency = 1
-tpIslandFrame.Visible = false
-
-local islandCard = Instance.new("Frame", tpIslandFrame)
-islandCard.Size = UDim2.new(1,-32,0,160) -- sama tinggi
-islandCard.Position = UDim2.new(0,16,0,0)
-islandCard.BackgroundColor3 = CARD
-islandCard.BackgroundTransparency = 0.12
-Instance.new("UICorner", islandCard).CornerRadius = UDim.new(0,10)
-
-local islandPad = Instance.new("UIPadding", islandCard)
-islandPad.PaddingTop = UDim.new(0,10)
-islandPad.PaddingLeft = UDim.new(0,14)
-islandPad.PaddingRight = UDim.new(0,14)
-islandPad.PaddingBottom = UDim.new(0,10)
-
-local islandTitle = Instance.new("TextLabel", islandCard)
-islandTitle.Size = UDim2.new(1,0,0,22)
-islandTitle.BackgroundTransparency = 1
-islandTitle.Font = Enum.Font.GothamBold
-islandTitle.TextSize = 15
-islandTitle.TextColor3 = TEXT
-islandTitle.TextXAlignment = Enum.TextXAlignment.Left
-islandTitle.Text = "🏝️ Teleport to Island"
-
-local selectIslandBtn = Instance.new("TextButton", islandCard)
-selectIslandBtn.Size = UDim2.new(0.4,0,0,26)
-selectIslandBtn.Position = UDim2.new(0,0,0,26)
-selectIslandBtn.BackgroundColor3 = CARD
-selectIslandBtn.BackgroundTransparency = 0.16
-selectIslandBtn.AutoButtonColor = false
-selectIslandBtn.Font = Enum.Font.Gotham
-selectIslandBtn.TextSize = 12
-selectIslandBtn.TextColor3 = MUTED
-selectIslandBtn.TextXAlignment = Enum.TextXAlignment.Left
-selectIslandBtn.Text = "  Select Island"
-Instance.new("UICorner", selectIslandBtn).CornerRadius = UDim.new(0,8)
-
-local tpIslandBtn = Instance.new("TextButton", islandCard)
-tpIslandBtn.Size = UDim2.new(0.4,0,0,28)
-tpIslandBtn.Position = UDim2.new(0,0,0,56)
-tpIslandBtn.BackgroundColor3 = ACCENT
-tpIslandBtn.BackgroundTransparency = 0.08
-tpIslandBtn.AutoButtonColor = false
-tpIslandBtn.Font = Enum.Font.Gotham
-tpIslandBtn.TextSize = 12
-tpIslandBtn.TextColor3 = TEXT
-tpIslandBtn.Text = "🏝️ Teleport To Island"
-Instance.new("UICorner", tpIslandBtn).CornerRadius = UDim.new(0,8)
-
-local refreshIslandBtn = Instance.new("TextButton", islandCard)
-refreshIslandBtn.Size = UDim2.new(0.4,0,0,24)
-refreshIslandBtn.Position = UDim2.new(0,0,0,90)
-refreshIslandBtn.BackgroundColor3 = CARD
-refreshIslandBtn.BackgroundTransparency = 0.18
-refreshIslandBtn.AutoButtonColor = false
-refreshIslandBtn.Font = Enum.Font.Gotham
-refreshIslandBtn.TextSize = 12
-refreshIslandBtn.TextColor3 = TEXT
-refreshIslandBtn.TextXAlignment = Enum.TextXAlignment.Center
-refreshIslandBtn.Text = "Refresh Island"
-Instance.new("UICorner", refreshIslandBtn).CornerRadius = UDim.new(0,8)
-
--- PANEL KANAN ISLAND (SAMA PERSIS STYLE PLAYER)
-local islandDropFrame = Instance.new("Frame", islandCard)
-islandDropFrame.Size = UDim2.new(0.55,0,0,140)
-islandDropFrame.AnchorPoint = Vector2.new(1,0)
-islandDropFrame.Position = UDim2.new(1,-8,0,26)
-islandDropFrame.BackgroundColor3 = CARD
-islandDropFrame.BackgroundTransparency = 0.06
-islandDropFrame.Visible = false
-islandDropFrame.ZIndex = 5
-Instance.new("UICorner", islandDropFrame).CornerRadius = UDim.new(0,8)
-
-local islandDropPad = Instance.new("UIPadding", islandDropFrame)
-islandDropPad.PaddingTop = UDim.new(0,6)
-islandDropPad.PaddingLeft = UDim.new(0,6)
-islandDropPad.PaddingRight = UDim.new(0,6)
-islandDropPad.PaddingBottom = UDim.new(0,6)
-
-local islandListFrame = Instance.new("ScrollingFrame", islandDropFrame)
-islandListFrame.Position = UDim2.new(0,0,0,24)
-islandListFrame.Size = UDim2.new(1,0,1,-24)
-islandListFrame.ScrollBarThickness = 3
-islandListFrame.BackgroundTransparency = 1
-islandListFrame.CanvasSize = UDim2.new(0,0,0,0)
-islandListFrame.ClipsDescendants = true
-islandListFrame.ZIndex = 6
-
-local islandListLayout = Instance.new("UIListLayout", islandListFrame)
-islandListLayout.Padding = UDim.new(0,2)
-islandListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-islandListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    islandListFrame.CanvasSize = UDim2.new(0,0,0,islandListLayout.AbsoluteContentSize.Y + 4)
-end)
-
-local selectedIslandName
-
-local function rebuildIslandDropdown()
-    for _,c in ipairs(islandListFrame:GetChildren()) do
-        if c:IsA("TextButton") then c:Destroy() end
-    end
-
-    -- pakai DEFAULT_SPOT_ORDER biar urut
-    for _,name in ipairs(DEFAULT_SPOT_ORDER) do
-        local cf = ISLAND_SPOTS[name]
-        if cf then
-            local b = Instance.new("TextButton", islandListFrame)
-            b.Size = UDim2.new(1,0,0,20)
-            b.BackgroundColor3 = CARD
-            b.BackgroundTransparency = 0.2
-            b.Font = Enum.Font.Gotham
-            b.TextSize = 11
-            b.TextXAlignment = Enum.TextXAlignment.Left
-            b.TextColor3 = TEXT
-            b.Text = "  "..name
-            b.AutoButtonColor = false
-            b.ZIndex = 7
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0,4)
-
-            b.MouseButton1Click:Connect(function()
-                selectedIslandName = name
-                selectIslandBtn.Text = "  "..name
-                selectIslandBtn.TextColor3 = TEXT
-                tpIslandBtn.Text = "🏝️ Teleport To Island : "..name
-                islandDropFrame.Visible = false
-            end)
-        end
-    end
-
-    if not selectedIslandName then
-        selectIslandBtn.Text = "  Select Island"
-        selectIslandBtn.TextColor3 = MUTED
-        tpIslandBtn.Text = "🏝️ Teleport To Island"
-    end
-end
-
-local islandOpen = false
-local function recalcIsland()
-    if islandOpen then
-        tpIslandFrame.Visible = true
-        tpIslandFrame.Size = UDim2.new(1,0,0,168)
-        holderIsland.Size = UDim2.new(1,0,0,34 + 168)
-        rowIsland.Text = "  🏝️ Teleport to Island  v"
-    else
-        tpIslandFrame.Visible = false
-        tpIslandFrame.Size = UDim2.new(1,0,0,0)
-        holderIsland.Size = UDim2.new(1,0,0,34)
-        rowIsland.Text = "  🏝️ Teleport to Island  >"
-        islandDropFrame.Visible = false
-    end
-end
-
-rowIsland.MouseButton1Click:Connect(function()
-    islandOpen = not islandOpen
-    recalcIsland()
-end)
-
-local islandDropdownOpen = false
-selectIslandBtn.MouseButton1Click:Connect(function()
-    islandDropdownOpen = not islandDropdownOpen
-    islandDropFrame.Visible = islandDropdownOpen
-    if islandDropdownOpen then
-        rebuildIslandDropdown()
-    end
-end)
-
-tpIslandBtn.MouseButton1Click:Connect(function()
-    if not selectedIslandName then return end
-
-    local cf = ISLAND_SPOTS[selectedIslandName]
-    if not cf then return end
-
-    local char = lp.Character or lp.CharacterAdded:Wait()
-    local root = char:WaitForChild("HumanoidRootPart")
-    root.AssemblyLinearVelocity  = Vector3.new(0,0,0)
-    root.AssemblyAngularVelocity = Vector3.new(0,0,0)
-    root.CFrame = cf
-end)
-
-refreshIslandBtn.MouseButton1Click:Connect(function()
-    selectedIslandName = nil
-    rebuildIslandDropdown()
-end)
-
-rebuildIslandDropdown()
-
-
-----------------------------------------------------------------
--- 🧍‍♂️ TELEPORT TO PLAYER
-----------------------------------------------------------------
-local holderPlayer = Instance.new("Frame", teleportPage)
-holderPlayer.Size = UDim2.new(1,0,0,34)
-holderPlayer.BackgroundTransparency = 1
-holderPlayer.LayoutOrder = 2
-
-local rowPlayer = Instance.new("TextButton", holderPlayer)
+-- ROW: TELEPORT TO PLAYER
+local rowPlayer = Instance.new("TextButton", teleportPage)
 rowPlayer.Size = UDim2.new(1,-32,0,34)
-rowPlayer.Position = UDim2.new(0,16,0,0)
+rowPlayer.Position = UDim2.new(0,16,0,52)
 rowPlayer.BackgroundColor3 = CARD
 rowPlayer.BackgroundTransparency = ALPHA_CARD
 rowPlayer.AutoButtonColor = false
@@ -2583,39 +2248,40 @@ rowPlayer.Font = Enum.Font.Gotham
 rowPlayer.TextSize = 13
 rowPlayer.TextXAlignment = Enum.TextXAlignment.Left
 rowPlayer.TextColor3 = TEXT
-rowPlayer.Text = "  🧍‍♂️ Teleport to Player  >"
+rowPlayer.Text = "  Teleport to Player  >"
 Instance.new("UICorner", rowPlayer).CornerRadius = UDim.new(0,8)
 
-local tpPlayerFrame = Instance.new("Frame", holderPlayer)
-tpPlayerFrame.Position = UDim2.new(0,0,0,34)
-tpPlayerFrame.Size = UDim2.new(1,0,0,0)
+-- FRAME ISI (KELUAR PAS ROW DIKLIK)
+local tpPlayerFrame = Instance.new("Frame", teleportPage)
+tpPlayerFrame.Size = UDim2.new(1,-40,0,120)      -- lebih pendek & sedikit masuk
+tpPlayerFrame.Position = UDim2.new(0,20,0,92)
 tpPlayerFrame.BackgroundTransparency = 1
 tpPlayerFrame.Visible = false
 
-local playerCard = Instance.new("Frame", tpPlayerFrame)
-playerCard.Size = UDim2.new(1,-32,0,160) -- cukup tinggi untuk panel
-playerCard.Position = UDim2.new(0,16,0,0)
-playerCard.BackgroundColor3 = CARD
-playerCard.BackgroundTransparency = 0.12
-Instance.new("UICorner", playerCard).CornerRadius = UDim.new(0,10)
+local tpCard = Instance.new("Frame", tpPlayerFrame)
+tpCard.Size = UDim2.new(1,0,1,0)
+tpCard.BackgroundColor3 = CARD
+tpCard.BackgroundTransparency = 0.12             -- agak transparan
+Instance.new("UICorner", tpCard).CornerRadius = UDim.new(0,10)
 
-local playerPad = Instance.new("UIPadding", playerCard)
-playerPad.PaddingTop = UDim.new(0,10)
-playerPad.PaddingLeft = UDim.new(0,14)
-playerPad.PaddingRight = UDim.new(0,14)
-playerPad.PaddingBottom = UDim.new(0,10)
+local tpPad = Instance.new("UIPadding", tpCard)
+tpPad.PaddingTop = UDim.new(0,10)
+tpPad.PaddingLeft = UDim.new(0,14)
+tpPad.PaddingRight = UDim.new(0,14)
+tpPad.PaddingBottom = UDim.new(0,10)
 
-local playerTitle = Instance.new("TextLabel", playerCard)
-playerTitle.Size = UDim2.new(1,0,0,22)
-playerTitle.BackgroundTransparency = 1
-playerTitle.Font = Enum.Font.GothamBold
-playerTitle.TextSize = 15
-playerTitle.TextColor3 = TEXT
-playerTitle.TextXAlignment = Enum.TextXAlignment.Left
-playerTitle.Text = "🧍‍♂️ Teleport to Player"
+local tpTitle = Instance.new("TextLabel", tpCard)
+tpTitle.Size = UDim2.new(1,0,0,22)
+tpTitle.BackgroundTransparency = 1
+tpTitle.Font = Enum.Font.GothamBold
+tpTitle.TextSize = 15
+tpTitle.TextColor3 = TEXT
+tpTitle.TextXAlignment = Enum.TextXAlignment.Left
+tpTitle.Text = "Teleport to Player"
 
-local selectBtn = Instance.new("TextButton", playerCard)
-selectBtn.Size = UDim2.new(0.4,0,0,26)
+-- SELECT PLAYER BUTTON (lebih tipis)
+local selectBtn = Instance.new("TextButton", tpCard)
+selectBtn.Size = UDim2.new(1,0,0,26)
 selectBtn.Position = UDim2.new(0,0,0,26)
 selectBtn.BackgroundColor3 = CARD
 selectBtn.BackgroundTransparency = 0.16
@@ -2627,8 +2293,9 @@ selectBtn.TextXAlignment = Enum.TextXAlignment.Left
 selectBtn.Text = "  Select Player"
 Instance.new("UICorner", selectBtn).CornerRadius = UDim.new(0,8)
 
-local tpBtn = Instance.new("TextButton", playerCard)
-tpBtn.Size = UDim2.new(0.4,0,0,28)
+-- TELEPORT BUTTON (lebih tipis)
+local tpBtn = Instance.new("TextButton", tpCard)
+tpBtn.Size = UDim2.new(1,0,0,28)
 tpBtn.Position = UDim2.new(0,0,0,56)
 tpBtn.BackgroundColor3 = ACCENT
 tpBtn.BackgroundTransparency = 0.08
@@ -2636,12 +2303,13 @@ tpBtn.AutoButtonColor = false
 tpBtn.Font = Enum.Font.Gotham
 tpBtn.TextSize = 12
 tpBtn.TextColor3 = TEXT
-tpBtn.Text = "🧍‍♂️ Teleport to Player"
+tpBtn.Text = "Teleport To Player"
 Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0,8)
 
-local refreshBtn = Instance.new("TextButton", playerCard)
-refreshBtn.Size = UDim2.new(0.4,0,0,24)
-refreshBtn.Position = UDim2.new(0,0,0,90)
+-- REFRESH BUTTON (lebih kecil)
+local refreshBtn = Instance.new("TextButton", tpCard)
+refreshBtn.Size = UDim2.new(1,0,0,24)
+refreshBtn.Position = UDim2.new(0,0,0,88)
 refreshBtn.BackgroundColor3 = CARD
 refreshBtn.BackgroundTransparency = 0.18
 refreshBtn.AutoButtonColor = false
@@ -2652,26 +2320,24 @@ refreshBtn.TextXAlignment = Enum.TextXAlignment.Center
 refreshBtn.Text = "Refresh Player"
 Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0,8)
 
--- PANEL KANAN PLAYER (DALAM CARD, PANJANG)
-local dropFrame = Instance.new("Frame", playerCard)
-dropFrame.Size = UDim2.new(0.55,0,0,140)
-dropFrame.AnchorPoint = Vector2.new(1,0)
-dropFrame.Position = UDim2.new(1,-8,0,26)
+-- PANEL DROPDOWN SAMPING (SEARCH + LIST PLAYER)
+local dropFrame = Instance.new("Frame", teleportPage)
+dropFrame.Size = UDim2.new(0,240,0,200)
+dropFrame.Position = UDim2.new(0,20+260,0,52)
 dropFrame.BackgroundColor3 = CARD
 dropFrame.BackgroundTransparency = 0.06
 dropFrame.Visible = false
-dropFrame.ZIndex = 5
-Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0,8)
+Instance.new("UICorner", dropFrame).CornerRadius = UDim.new(0,10)
 
 local dropPad = Instance.new("UIPadding", dropFrame)
-dropPad.PaddingTop = UDim.new(0,6)
-dropPad.PaddingLeft = UDim.new(0,6)
-dropPad.PaddingRight = UDim.new(0,6)
-dropPad.PaddingBottom = UDim.new(0,6)
+dropPad.PaddingTop = UDim.new(0,8)
+dropPad.PaddingLeft = UDim.new(0,8)
+dropPad.PaddingRight = UDim.new(0,8)
+dropPad.PaddingBottom = UDim.new(0,8)
 
 local searchBox = Instance.new("TextBox", dropFrame)
-searchBox.Size = UDim2.new(1,0,0,20)
-searchBox.PlaceholderText = "Search Player"
+searchBox.Size = UDim2.new(1,0,0,24)
+searchBox.PlaceholderText = "Search"
 searchBox.Font = Enum.Font.Gotham
 searchBox.TextSize = 12
 searchBox.TextXAlignment = Enum.TextXAlignment.Left
@@ -2680,27 +2346,26 @@ searchBox.ClearTextOnFocus = false
 searchBox.BackgroundColor3 = Color3.fromRGB(18,20,28)
 searchBox.BackgroundTransparency = 0.1
 searchBox.Text = ""
-searchBox.ZIndex = 6
-Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0,6)
+Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0,8)
 
 local listFrame = Instance.new("ScrollingFrame", dropFrame)
-listFrame.Position = UDim2.new(0,0,0,24)
-listFrame.Size = UDim2.new(1,0,1,-24)
-listFrame.ScrollBarThickness = 3
+listFrame.Position = UDim2.new(0,0,0,30)
+listFrame.Size = UDim2.new(1,0,1,-30)
+listFrame.ScrollBarThickness = 4
 listFrame.BackgroundTransparency = 1
 listFrame.CanvasSize = UDim2.new(0,0,0,0)
 listFrame.ClipsDescendants = true
-listFrame.ZIndex = 6
 
 local listLayout = Instance.new("UIListLayout", listFrame)
-listLayout.Padding = UDim.new(0,2)
+listLayout.Padding = UDim.new(0,3)
 listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    listFrame.CanvasSize = UDim2.new(0,0,0,listLayout.AbsoluteContentSize.Y + 4)
+    listFrame.CanvasSize = UDim2.new(0,0,0,listLayout.AbsoluteContentSize.Y + 6)
 end)
 
-local selectedPlayerName
+-- LOGIC TELEPORT PLAYER
+local selectedPlayerName = nil
 
 local function passFilter(name, q)
     if q == "" then return true end
@@ -2719,17 +2384,16 @@ local function rebuildDropdown()
     for _,plr in ipairs(Players:GetPlayers()) do
         if plr ~= Players.LocalPlayer and passFilter(plr.Name, q) then
             local b = Instance.new("TextButton", listFrame)
-            b.Size = UDim2.new(1,0,0,20)
+            b.Size = UDim2.new(1,0,0,22)
             b.BackgroundColor3 = CARD
             b.BackgroundTransparency = 0.2
             b.Font = Enum.Font.Gotham
-            b.TextSize = 11
+            b.TextSize = 12
             b.TextXAlignment = Enum.TextXAlignment.Left
             b.TextColor3 = TEXT
             b.Text = "  "..plr.Name
             b.AutoButtonColor = false
-            b.ZIndex = 7
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0,4)
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
 
             b.MouseButton1Click:Connect(function()
                 selectedPlayerName = plr.Name
@@ -2748,27 +2412,16 @@ end
 
 searchBox:GetPropertyChangedSignal("Text"):Connect(rebuildDropdown)
 
+-- TOGGLE ISI (ROW > / v)
 local playerOpen = false
-local function recalcPlayer()
-    if playerOpen then
-        tpPlayerFrame.Visible = true
-        tpPlayerFrame.Size = UDim2.new(1,0,0,168)
-        holderPlayer.Size = UDim2.new(1,0,0,34 + 168)
-        rowPlayer.Text = "  🧍‍♂️ Teleport to Player  v"
-    else
-        tpPlayerFrame.Visible = false
-        tpPlayerFrame.Size = UDim2.new(1,0,0,0)
-        holderPlayer.Size = UDim2.new(1,0,0,34)
-        rowPlayer.Text = "  🧍‍♂️ Teleport to Player  >"
-        dropFrame.Visible = false
-    end
-end
-
 rowPlayer.MouseButton1Click:Connect(function()
     playerOpen = not playerOpen
-    recalcPlayer()
+    tpPlayerFrame.Visible = playerOpen
+    rowPlayer.Text = playerOpen and "  Teleport to Player  v"
+        or "  Teleport to Player  >"
 end)
 
+-- TOGGLE DROPDOWN PANEL
 local dropdownOpen = false
 selectBtn.MouseButton1Click:Connect(function()
     dropdownOpen = not dropdownOpen
@@ -2779,6 +2432,7 @@ selectBtn.MouseButton1Click:Connect(function()
     end
 end)
 
+-- ACTION TELEPORT
 tpBtn.MouseButton1Click:Connect(function()
     if not selectedPlayerName then return end
 
@@ -2787,14 +2441,15 @@ tpBtn.MouseButton1Click:Connect(function()
     local hrp = target.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
+    local lp = Players.LocalPlayer
     local char = lp.Character or lp.CharacterAdded:Wait()
     local myHrp = char:WaitForChild("HumanoidRootPart")
 
-    myHrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
-    myHrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+    myHrp.Velocity = Vector3.new(0,0,0)
     myHrp.CFrame   = hrp.CFrame + Vector3.new(0,0,3)
 end)
 
+-- REFRESH LIST
 refreshBtn.MouseButton1Click:Connect(function()
     selectedPlayerName = nil
     searchBox.Text = ""
@@ -2803,41 +2458,28 @@ end)
 
 rebuildDropdown()
 
-rebuildDropdown()
-
-----------------------------------------------------------------
--- AUTO CLOSE PANEL KANAN (PLAYER + ISLAND)
-----------------------------------------------------------------
+-- AUTO CLOSE DROPDOWN KALAU KLIK DI LUAR
 UIS.InputBegan:Connect(function(input, gp)
     if gp then return end
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1
-    and input.UserInputType ~= Enum.UserInputType.Touch then
-        return
-    end
+    if not dropFrame.Visible then return end
 
-    local mousePos = UIS:GetMouseLocation()
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
 
-    local function insideFrame(frame)
-        if not frame or not frame.Visible then return false end
-        local pos = frame.AbsolutePosition
-        local size = frame.AbsoluteSize
-        return mousePos.X >= pos.X and mousePos.X <= pos.X + size.X
-           and mousePos.Y >= pos.Y and mousePos.Y <= pos.Y + size.Y
-    end
+        local pos = UIS:GetMouseLocation()
+        local guiPos = dropFrame.AbsolutePosition
+        local guiSize = dropFrame.AbsoluteSize
 
-    -- panel dropdown player
-    if dropFrame and dropFrame.Visible and not insideFrame(dropFrame) then
-        dropFrame.Visible = false
-        dropdownOpen = false
-    end
+        local inside =
+            pos.X >= guiPos.X and pos.X <= guiPos.X + guiSize.X and
+            pos.Y >= guiPos.Y and pos.Y <= guiPos.Y + guiSize.Y
 
-    -- panel dropdown island
-    if islandDropFrame and islandDropFrame.Visible and not insideFrame(islandDropFrame) then
-        islandDropFrame.Visible = false
-        islandDropdownOpen = false
+        if not inside then
+            dropFrame.Visible = false
+            dropdownOpen = false
+        end
     end
 end)
-
 
 ----------------------------------------------------------------
 -- REMOTES
@@ -2892,9 +2534,12 @@ function TeleportToMegalodon()
     local cf = CFrame.new(basePos, basePos + lookDir)
     char:PivotTo(cf)
 end
-----------------------------------------------------------------
+
+
+
+
+
 -- ENGINE STATE
-----------------------------------------------------------------
 local AutoFishAFK = false
 local isFishing   = false
 
@@ -2902,22 +2547,14 @@ local isFishing   = false
 local DelayReel   = 3   -- sama kayak _G.RAY_DelayCast
 local DelayCatch  = 2   -- sama kayak _G.RAY_DelayFinish
 
--- BLATANT FISHING (ENGINE BARU)
+-- Blatant state
 local BlatantOn     = false
-local BlatantReel   = 1.17   -- Reel Delay (UI, untuk engine baru)
-local BlatantCatch  = 0.25   -- Catch Delay (UI)
-
--- BLATANT IMPROVE (ENGINE LAMA)
-local BlatantImproveOn     = false
-local BlatantImproveReel   = 0.8    -- delay reel improve
-local BlatantImproveCatch  = 0.75   -- delay catch improve
+local BlatantReel   = 0.8   -- Reel Delay
+local BlatantCatch  = 0.75  -- = 1.5 * 0.5 default
 
 _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
-_G.RAY_ExtraCatchImprove = _G.RAY_ExtraCatchImprove or false
 
-----------------------------------------------------------------
 -- FUNGSI DASAR
-----------------------------------------------------------------
 local function Reel_V3()
     pcall(function()
         Events.fishing:FireServer()
@@ -2934,12 +2571,9 @@ local function Cast_V3()
     end)
 end
 
-----------------------------------------------------------------
--- ENGINE 0: AUTO FISH FEEL V2
--- (1 cast -> tunggu -> 1 reel -> tunggu)
-----------------------------------------------------------------
+-- AUTO FISH FEEL V2 (1 cast -> tunggu -> 1 reel -> tunggu)
 local function Engine_V3_Delayed()
-    if isFishing or not AutoFishAFK then return end
+    if isFishing then return end
     isFishing = true
 
     Cast_V3()
@@ -2950,14 +2584,14 @@ local function Engine_V3_Delayed()
     isFishing = false
 end
 
-----------------------------------------------------------------
--- ENGINE 1: BLATANT FISHING (ENGINE BARU)
 -- CONFIG (UI)
-----------------------------------------------------------------
+local BlatantReel   = 1.17   -- biarin
+local BlatantCatch  = 0.25   -- 0.2–0.3
+
 local CastCount        = 3
 local DelayBetweenCast = 0.03
 
-local function BlatantFishing()
+local function BlatantCycle_V2()
     if isFishing or not BlatantOn then return end
     isFishing = true
 
@@ -2975,13 +2609,13 @@ local function BlatantFishing()
         end
     end)
 
-    -- DELAY REEL (SEDIKIT LEBIH CEPAT)
+    -- DELAY REAL (SEDIKIT LEBIH CEPAT)
     local RealReelDelay  = 0.52     -- dari 0.55 → 0.52
     local RealInnerDelay = 0.0009   -- sedikit lebih longgar dari 0.0007
 
     task.wait(RealReelDelay)
 
-    for _ = 1, 5 do
+    for _ = 1,5 do
         Reel_V3()
         task.wait(RealInnerDelay)
     end
@@ -2990,60 +2624,7 @@ local function BlatantFishing()
     isFishing = false
 end
 
-----------------------------------------------------------------
--- ENGINE 2: BLATANT IMPROVE (ENGINE LAMA)
--- 3x cast -> tunggu -> 5x reel
-----------------------------------------------------------------
-local function BlatantImprove()
-    if isFishing or not BlatantImproveOn then return end
-    isFishing = true
-
-    pcall(function()
-        Events.equip:FireServer(1)
-        task.wait(0.01)
-        for _ = 1, 3 do
-            task.spawn(function()
-                Events.charge:InvokeServer(workspace:GetServerTimeNow())
-                task.wait(0.01)
-                Events.minigame:InvokeServer(1.2854545116425, 1)
-            end)
-            task.wait(0.03)
-        end
-    end)
-
-    task.wait(BlatantImproveReel)
-
-    for _ = 1, 5 do
-        Reel_V3()
-        task.wait(0.01)
-    end
-
-    task.wait(BlatantImproveCatch)
-    isFishing = false
-end
-
-----------------------------------------------------------------
--- LOOP UTAMA (DISPATCHER)
-----------------------------------------------------------------
-task.spawn(function()
-    while true do
-        if BlatantOn then
-            BlatantFishing()
-
-        elseif BlatantImproveOn then
-            BlatantImprove()
-
-        elseif AutoFishAFK then
-            Engine_V3_Delayed()
-        end
-
-        task.wait(0.05)
-    end
-end)
-
-----------------------------------------------------------------
--- EXTRA CATCH BLATANT FISHING
-----------------------------------------------------------------
+-- EXTRA CATCH (pakai BlatantCatch sebagai delay)
 task.spawn(function()
     while true do
         if BlatantOn and _G.RAY_ExtraCatchBlatant and not isFishing then
@@ -3053,22 +2634,6 @@ task.spawn(function()
         task.wait(0.05)
     end
 end)
-
-----------------------------------------------------------------
--- EXTRA CATCH BLATANT IMPROVE
-----------------------------------------------------------------
-task.spawn(function()
-    while true do
-        if BlatantImproveOn and _G.RAY_ExtraCatchImprove and not isFishing then
-            Reel_V3()
-            task.wait(BlatantImproveCatch)
-        end
-        task.wait(0.05)
-    end
-end)
-
-
-
 
 
 -- ====================== AUTO OPTION CONTENT ======================
@@ -3213,8 +2778,8 @@ local function autoDropdown(text)
         icon.Text = "🎣"
     elseif text == "Blatant Fishing" then
         icon.Text = "⚡"
-    elseif text == "Blatant Improve" then
-        icon.Text = "🚀"
+    elseif text == "Auto Spot Island" then
+        icon.Text = "🌴"
     elseif text == "Auto Favorite" then
         icon.Text = "⭐"
     elseif text == "Auto Sell" then
@@ -3609,195 +3174,35 @@ end)
 
         refreshExtra()
 
-----------------------------------------------------------------
--- BLATANT IMPROVE
-----------------------------------------------------------------
-elseif text == "Blatant Improve" then
-    local row = Instance.new("Frame", sub)
-    row.Size = UDim2.new(1,0,0,56) -- tinggi sedikit dinaikkan
-    row.BackgroundTransparency = 1
+elseif text == "Auto Spot Island" then
+    local info = Instance.new("TextLabel", sub)
+    info.Size = UDim2.new(1,0,0,32)
+    info.BackgroundTransparency = 1
+    info.Font = Enum.Font.Gotham
+    info.TextSize = 13
+    info.TextColor3 = MUTED
+    info.TextXAlignment = Enum.TextXAlignment.Left
+    info.Text = "Click a spot to instantly teleport."
 
-    -- Judul utama
-    local label = Instance.new("TextLabel", row)
-    label.Size = UDim2.new(1,-100,0,20)
-    label.Position = UDim2.new(0,16,0,0)
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 13
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextColor3 = TEXT
-    label.Text = "Blatant Improve"
+    local openBtn = Instance.new("TextButton", sub)
+    openBtn.Size = UDim2.new(1,0,0,32)
+    openBtn.BackgroundColor3 = CARD
+    openBtn.BackgroundTransparency = 0.12
+    openBtn.Text = "Open Teleport Spot List  ▼"
+    openBtn.Font = Enum.Font.Gotham
+    openBtn.TextSize = 13
+    openBtn.TextColor3 = TEXT
+    openBtn.AutoButtonColor = false
+    Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0,8)
 
-    -- TEKS KECIL DESKRIPSI
-    local subLabel = Instance.new("TextLabel", row)
-    subLabel.Size = UDim2.new(1,-100,0,16)
-    subLabel.Position = UDim2.new(0,16,0,20)
-    subLabel.BackgroundTransparency = 1
-    subLabel.Font = Enum.Font.Gotham
-    subLabel.TextSize = 11
-    subLabel.TextXAlignment = Enum.TextXAlignment.Left
-    subLabel.TextColor3 = MUTED
-    subLabel.Text = "improve 3 notip · no skin · all island"
-
-    local pill = Instance.new("TextButton", row)
-    pill.Size = UDim2.new(0,50,0,24)
-    pill.Position = UDim2.new(1,-80,0.5,-6) -- agak turun dikit karena row lebih tinggi
-    pill.BackgroundColor3 = MUTED
-    pill.BackgroundTransparency = 0.1
-    pill.Text = ""
-    pill.AutoButtonColor = false
-    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
-
-    local knob = Instance.new("Frame", pill)
-    knob.Size = UDim2.new(0,18,0,18)
-    knob.Position = UDim2.new(0,3,0.5,-9)
-    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    knob.BackgroundTransparency = 0
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
-
-    local function refreshImprove()
-        pill.BackgroundColor3 = BlatantImproveOn and ACCENT or MUTED
-        knob.Position = BlatantImproveOn
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
-    end
-
-    pill.MouseButton1Click:Connect(function()
-        BlatantImproveOn = not BlatantImproveOn
-        if BlatantImproveOn then
-            BlatantOn = false
-            AutoFishAFK = false
-        end
-        refreshImprove()
+    openBtn.MouseButton1Click:Connect(function()
+        islandPanel.Visible = not islandPanel.Visible
     end)
 
-    refreshImprove()
 
-    -- Reel delay IMPROVE
-    local reelRow = Instance.new("Frame", sub)
-    reelRow.Size = UDim2.new(1,0,0,30)
-    reelRow.BackgroundTransparency = 1
-
-    local reelLabel = Instance.new("TextLabel", reelRow)
-    reelLabel.Size = UDim2.new(0.6,0,1,0)
-    reelLabel.Position = UDim2.new(0,16,0,0)
-    reelLabel.BackgroundTransparency = 1
-    reelLabel.Font = Enum.Font.Gotham
-    reelLabel.TextSize = 13
-    reelLabel.TextXAlignment = Enum.TextXAlignment.Left
-    reelLabel.TextColor3 = TEXT
-    reelLabel.Text = "Reel Delay (sec)"
-
-    local reelBox = Instance.new("TextBox", reelRow)
-    reelBox.Size = UDim2.new(0.35,0,1,0)
-    reelBox.Position = UDim2.new(0.6,8,0,0)
-    reelBox.Text = tostring(BlatantImproveReel)
-    reelBox.Font = Enum.Font.Gotham
-    reelBox.TextSize = 13
-    reelBox.TextXAlignment = Enum.TextXAlignment.Center
-    reelBox.TextColor3 = TEXT
-    reelBox.ClearTextOnFocus = false
-    reelBox.BackgroundColor3 = CARD
-    reelBox.BackgroundTransparency = 0.12
-    Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0,8)
-
-    reelBox.FocusLost:Connect(function()
-        local n = tonumber(reelBox.Text:match("[%d%.]+"))
-        if n and n > 0 then
-            BlatantImproveReel = n
-            reelBox.Text = tostring(n)
-        else
-            reelBox.Text = tostring(BlatantImproveReel)
-        end
-    end)
-
-    -- Catch delay IMPROVE
-    local catchRow = Instance.new("Frame", sub)
-    catchRow.Size = UDim2.new(1,0,0,30)
-    catchRow.BackgroundTransparency = 1
-
-    local catchLabel = Instance.new("TextLabel", catchRow)
-    catchLabel.Size = UDim2.new(0.6,0,1,0)
-    catchLabel.Position = UDim2.new(0,16,0,0)
-    catchLabel.BackgroundTransparency = 1
-    catchLabel.Font = Enum.Font.Gotham
-    catchLabel.TextSize = 13
-    catchLabel.TextXAlignment = Enum.TextXAlignment.Left
-    catchLabel.TextColor3 = TEXT
-    catchLabel.Text = "Catch Delay (sec)"
-
-    local catchBox = Instance.new("TextBox", catchRow)
-    catchBox.Size = UDim2.new(0.35,0,1,0)
-    catchBox.Position = UDim2.new(0.6,8,0,0)
-    catchBox.Text = tostring(BlatantImproveCatch)
-    catchBox.Font = Enum.Font.Gotham
-    catchBox.TextSize = 13
-    catchBox.TextXAlignment = Enum.TextXAlignment.Center
-    catchBox.TextColor3 = TEXT
-    catchBox.ClearTextOnFocus = false
-    catchBox.BackgroundColor3 = CARD
-    catchBox.BackgroundTransparency = 0.12
-    Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0,8)
-
-    catchBox.FocusLost:Connect(function()
-        local n = tonumber(catchBox.Text:match("[%d%.]+"))
-        if n and n > 0 then
-            BlatantImproveCatch = n
-            catchBox.Text = tostring(n)
-        else
-            catchBox.Text = tostring(BlatantImproveCatch)
-        end
-    end)
-
-    -- Extra catch IMPROVE
-    local extraRow = Instance.new("Frame", sub)
-    extraRow.Size = UDim2.new(1,0,0,32)
-    extraRow.BackgroundTransparency = 1
-
-    local extraLabel = Instance.new("TextLabel", extraRow)
-    extraLabel.Size = UDim2.new(1,-100,1,0)
-    extraLabel.Position = UDim2.new(0,16,0,0)
-    extraLabel.BackgroundTransparency = 1
-    extraLabel.Font = Enum.Font.Gotham
-    extraLabel.TextSize = 13
-    extraLabel.TextXAlignment = Enum.TextXAlignment.Left
-    extraLabel.TextColor3 = TEXT
-    extraLabel.Text = "Extra Catch Improve"
-
-    local extraPill = Instance.new("TextButton", extraRow)
-    extraPill.Size = UDim2.new(0,50,0,24)
-    extraPill.Position = UDim2.new(1,-80,0.5,-12)
-    extraPill.BackgroundColor3 = MUTED
-    extraPill.BackgroundTransparency = 0.1
-    extraPill.Text = ""
-    extraPill.AutoButtonColor = false
-    Instance.new("UICorner", extraPill).CornerRadius = UDim.new(0,999)
-
-    local extraKnob = Instance.new("Frame", extraPill)
-    extraKnob.Size = UDim2.new(0,18,0,18)
-    extraKnob.Position = UDim2.new(0,3,0.5,-9)
-    extraKnob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    extraKnob.BackgroundTransparency = 0
-    Instance.new("UICorner", extraKnob).CornerRadius = UDim.new(0,999)
-
-    local function refreshExtraImprove()
-        extraPill.BackgroundColor3 = _G.RAY_ExtraCatchImprove and Color3.fromRGB(80,200,120) or MUTED
-        extraKnob.Position = _G.RAY_ExtraCatchImprove
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
-    end
-
-    extraPill.MouseButton1Click:Connect(function()
-        _G.RAY_ExtraCatchImprove = not _G.RAY_ExtraCatchImprove
-        refreshExtraImprove()
-    end)
-
-    refreshExtraImprove()
-
-
-
-    elseif text == "coming soon" then
-
+    elseif text == "Auto Favorite" then
+        toggle("Favorite Rare")
+        toggle("Favorite Epic")
 
     ----------------------------------------------------------------
     -- AUTO SELL (RAPIH)
@@ -4087,15 +3492,14 @@ task.wait(0.1)
 task.spawn(function()
     while true do
         if BlatantOn then
-            BlatantFishing()
-        elseif BlatantImproveOn then
-            BlatantImprove()
+            BlatantCycle_V2()      -- ini otomatis pakai versi improve yang baru
         elseif AutoFishAFK then
             Engine_V3_Delayed()
         end
         task.wait(0.05)
     end
 end)
+
 
 -- AUTO SELL ENGINE SIMPLE
 task.spawn(function()
