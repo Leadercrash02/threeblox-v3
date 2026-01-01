@@ -1076,15 +1076,15 @@ do
     knobZoom.BackgroundColor3 = Color3.fromRGB(255,255,255)
     Instance.new("UICorner", knobZoom).CornerRadius = UDim.new(0,999)
 
-    local zoomEnabled = false
+    local enabled = false
     local DEFAULT_MAX = lp.CameraMaxZoomDistance
     local DEFAULT_MIN = lp.CameraMinZoomDistance
     local MAX_ZOOM = 150
     local MIN_ZOOM = 0.8
 
-    local function refreshZoom()
-        pillZoom.BackgroundColor3 = zoomEnabled and ACCENT or MUTED
-        knobZoom.Position = zoomEnabled
+    local function refresh()
+        pillZoom.BackgroundColor3 = enabled and ACCENT or MUTED
+        knobZoom.Position = enabled
             and UDim2.new(1,-21,0.5,-9)
             or  UDim2.new(0,3,0.5,-9)
     end
@@ -1104,33 +1104,33 @@ do
     end
 
     pillZoom.MouseButton1Click:Connect(function()
-        zoomEnabled = not zoomEnabled
-        if zoomEnabled then
+        enabled = not enabled
+        if enabled then
             applyZoom()
         else
             resetZoom()
         end
-        refreshZoom()
+        refresh()
     end)
 
     lp:GetPropertyChangedSignal("CameraMaxZoomDistance"):Connect(function()
-        if zoomEnabled then
+        if enabled then
             applyZoom()
         end
     end)
 
     lp.CharacterAdded:Connect(function()
         task.wait(0.2)
-        if zoomEnabled then
+        if enabled then
             applyZoom()
         end
     end)
 
-    refreshZoom()
+    refresh()
 end
 
 ----------------------------------------------------------------
--- ⏱️ ANTI AFK (NO AUTO ON)
+-- ⏱️ ANTI AFK
 ----------------------------------------------------------------
 do
     local rowAFK = Instance.new("Frame", subPU)
@@ -1162,7 +1162,9 @@ do
     knobAFK.BackgroundColor3 = Color3.fromRGB(255,255,255)
     Instance.new("UICorner", knobAFK).CornerRadius = UDim.new(0,999)
 
-    local function refreshAFK()
+    _G.RAY_AntiAFK_On = _G.RAY_AntiAFK_On or false
+
+    local function refresh()
         pillAFK.BackgroundColor3 = _G.RAY_AntiAFK_On and ACCENT or MUTED
         knobAFK.Position = _G.RAY_AntiAFK_On
             and UDim2.new(1,-21,0.5,-9)
@@ -1176,7 +1178,7 @@ do
         else
             StopAntiAFK()
         end
-        refreshAFK()
+        refresh()
     end)
 
     lp.CharacterAdded:Connect(function()
@@ -1185,151 +1187,102 @@ do
         end
     end)
 
-    refreshAFK()
+    refresh()
 end
 
 ----------------------------------------------------------------
--- 🎣 DISABLE ROD EFFECT
+-- 🎯 FISHING RADAR
 ----------------------------------------------------------------
 do
-    local rowDisable = Instance.new("Frame", subPU)
-    rowDisable.Size = UDim2.new(1,0,0,36)
-    rowDisable.BackgroundTransparency = 1
+    local rowRadar = Instance.new("Frame", subPU)
+    rowRadar.Size = UDim2.new(1,0,0,36)
+    rowRadar.BackgroundTransparency = 1
 
-    local labelDisable = Instance.new("TextLabel", rowDisable)
-    labelDisable.Size = UDim2.new(1,-100,1,0)
-    labelDisable.Position = UDim2.new(0,16,0,0)
-    labelDisable.BackgroundTransparency = 1
-    labelDisable.Font = Enum.Font.Gotham
-    labelDisable.TextSize = 13
-    labelDisable.TextXAlignment = Enum.TextXAlignment.Left
-    labelDisable.TextColor3 = TEXT
-    labelDisable.Text = "🎣 Disable Rod Effect"
+    local labelRadar = Instance.new("TextLabel", rowRadar)
+    labelRadar.Size = UDim2.new(1,-100,1,0)
+    labelRadar.Position = UDim2.new(0,16,0,0)
+    labelRadar.BackgroundTransparency = 1
+    labelRadar.Font = Enum.Font.Gotham
+    labelRadar.TextSize = 13
+    labelRadar.TextXAlignment = Enum.TextXAlignment.Left
+    labelRadar.TextColor3 = TEXT
+    labelRadar.Text = "🎯 Fishing Radar"
 
-    local pillDisable = Instance.new("TextButton", rowDisable)
-    pillDisable.Size = UDim2.new(0,50,0,24)
-    pillDisable.Position = UDim2.new(1,-80,0.5,-12)
-    pillDisable.BackgroundColor3 = MUTED
-    pillDisable.BackgroundTransparency = 0.1
-    pillDisable.Text = ""
-    pillDisable.AutoButtonColor = false
-    Instance.new("UICorner", pillDisable).CornerRadius = UDim.new(0,999)
+    local pillRadar = Instance.new("TextButton", rowRadar)
+    pillRadar.Size = UDim2.new(0,50,0,24)
+    pillRadar.Position = UDim2.new(1,-80,0.5,-12)
+    pillRadar.BackgroundColor3 = MUTED
+    pillRadar.BackgroundTransparency = 0.1
+    pillRadar.Text = ""
+    pillRadar.AutoButtonColor = false
+    Instance.new("UICorner", pillRadar).CornerRadius = UDim.new(0,999)
 
-    local knobDisable = Instance.new("Frame", pillDisable)
-    knobDisable.Size = UDim2.new(0,18,0,18)
-    knobDisable.Position = UDim2.new(0,3,0.5,-9)
-    knobDisable.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knobDisable).CornerRadius = UDim.new(0,999)
+    local knobRadar = Instance.new("Frame", pillRadar)
+    knobRadar.Size = UDim2.new(0,18,0,18)
+    knobRadar.Position = UDim2.new(0,3,0.5,-9)
+    knobRadar.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobRadar).CornerRadius = UDim.new(0,999)
 
-    local function refreshDisable()
-        pillDisable.BackgroundColor3 = _G.RAY_DisableRodEffect and ACCENT or MUTED
-        knobDisable.Position = _G.RAY_DisableRodEffect
+    _G.RAY_FishingRadarOn = _G.RAY_FishingRadarOn or false
+    local radarOn = _G.RAY_FishingRadarOn
+
+    local function refresh()
+        pillRadar.BackgroundColor3 = radarOn and ACCENT or MUTED
+        knobRadar.Position = radarOn
             and UDim2.new(1,-21,0.5,-9)
             or  UDim2.new(0,3,0.5,-9)
     end
 
-    local function HardKillAnims()
-        local char = lp.Character or lp.CharacterAdded:Wait()
-        local hum  = char:WaitForChild("Humanoid")
-        local animator = hum:WaitForChild("Animator")
-
-        task.spawn(function()
-            while _G.RAY_DisableRodEffect do
-                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-                    track:Stop(0)
-                end
-                task.wait(0.05)
-            end
+    local function GetRadarRF()
+        local ok, rf = pcall(function()
+            return ReplicatedStorage
+                :WaitForChild("Packages")
+                :WaitForChild("_Index")
+                :WaitForChild("sleitnick_net@0.2.0")
+                :WaitForChild("net")
+                :WaitForChild("RF/UpdateFishingRadar")
         end)
+        return ok and rf or nil
     end
-    -- GetPlayingAnimationTracks + Stop dipakai untuk matikan semua anim. [web:473]
 
-    pillDisable.MouseButton1Click:Connect(function()
-        _G.RAY_DisableRodEffect = not _G.RAY_DisableRodEffect
-        if _G.RAY_DisableRodEffect then
-            HardKillAnims()
+    pillRadar.MouseButton1Click:Connect(function()
+        local rf = GetRadarRF()
+        if not rf then
+            warn("[Threeblox] UpdateFishingRadar RF not found")
+            return
         end
-        refreshDisable()
+
+        local newState = not radarOn
+
+        local ok, res = pcall(function()
+            return rf:InvokeServer(newState)
+        end)
+
+        if ok then
+            radarOn = newState
+            _G.RAY_FishingRadarOn = radarOn
+            refresh()
+        else
+            warn("[Threeblox] Radar toggle failed:", res)
+        end
     end)
 
     lp.CharacterAdded:Connect(function()
-        if _G.RAY_DisableRodEffect then
-            task.delay(0.3, HardKillAnims)
+        if _G.RAY_FishingRadarOn then
+            task.delay(1, function()
+                local rf = GetRadarRF()
+                if rf then
+                    pcall(function()
+                        rf:InvokeServer(true)
+                    end)
+                end
+            end)
         end
     end)
 
-    refreshDisable()
+    refresh()
 end
 
-----------------------------------------------------------------
--- 🧪 DISABLE ROD SKIN
-----------------------------------------------------------------
-do
-    local rowSkin = Instance.new("Frame", subPU)
-    rowSkin.Size = UDim2.new(1,0,0,48)
-    rowSkin.BackgroundTransparency = 1
-
-    local labelSkin = Instance.new("TextLabel", rowSkin)
-    labelSkin.Size = UDim2.new(1,-100,0.5,0)
-    labelSkin.Position = UDim2.new(0,16,0,0)
-    labelSkin.BackgroundTransparency = 1
-    labelSkin.Font = Enum.Font.Gotham
-    labelSkin.TextSize = 13
-    labelSkin.TextXAlignment = Enum.TextXAlignment.Left
-    labelSkin.TextColor3 = TEXT
-    labelSkin.Text = "🧪 Disable Rod Skin"
-
-    local infoSkin = Instance.new("TextLabel", rowSkin)
-    infoSkin.Size = UDim2.new(1,-16,0.5,0)
-    infoSkin.Position = UDim2.new(0,16,0.5,0)
-    infoSkin.BackgroundTransparency = 1
-    infoSkin.Font = Enum.Font.Gotham
-    infoSkin.TextSize = 11
-    infoSkin.TextXAlignment = Enum.TextXAlignment.Left
-    infoSkin.TextColor3 = MUTED
-    infoSkin.TextWrapped = true
-    infoSkin.Text = "Kill skin: 1x1x1x1 Ban Hammer, Abyssal Chroma, Abyssfire, Amber, Amethyst, BanHammerThrow, Xmas Tree, Vanquisher, Ornament Axe, Frozen Krampus Scythe, Electric Guitar, Eclipse Katana, Divine Blade."
-
-    local pillSkin = Instance.new("TextButton", rowSkin)
-    pillSkin.Size = UDim2.new(0,50,0,24)
-    pillSkin.Position = UDim2.new(1,-80,0.25,-12)
-    pillSkin.BackgroundColor3 = MUTED
-    pillSkin.BackgroundTransparency = 0.1
-    pillSkin.Text = ""
-    pillSkin.AutoButtonColor = false
-    Instance.new("UICorner", pillSkin).CornerRadius = UDim.new(0,999)
-
-    local knobSkin = Instance.new("Frame", pillSkin)
-    knobSkin.Size = UDim2.new(0,18,0,18)
-    knobSkin.Position = UDim2.new(0,3,0.5,-9)
-    knobSkin.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knobSkin).CornerRadius = UDim.new(0,999)
-
-    local function refreshSkin()
-        pillSkin.BackgroundColor3 = _G.RAY_DisableRodSkin and ACCENT or MUTED
-        knobSkin.Position = _G.RAY_DisableRodSkin
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
-    end
-
-    pillSkin.MouseButton1Click:Connect(function()
-        _G.RAY_DisableRodSkin = not _G.RAY_DisableRodSkin
-        if _G.RAY_DisableRodSkin then
-            KillAllRodSkins()
-        end
-        refreshSkin()
-    end)
-
-    lp.CharacterAdded:Connect(function()
-        if _G.RAY_DisableRodSkin then
-            task.delay(0.5, KillAllRodSkins)
-        end
-    end)
-
-    refreshSkin()
-end
-
--- DI BAWAH SINI LANJUT: WALKSPEED, DLL
 
 
 ----------------------------------------------------------------
@@ -2016,6 +1969,162 @@ end
     end)
 
     refresh()
+
+    ----------------------------------------------------------------
+-- 🎣 DISABLE ROD EFFECT
+----------------------------------------------------------------
+do
+    local row = Instance.new("Frame", sub)
+    row.Size = UDim2.new(1,0,0,36)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(1,-100,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT
+    label.Text = "🎣 Disable Rod Effect"
+
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    local enabled = _G.RAY_DisableRodEffect or false
+    local killing = false
+
+    local function HardKillAnims()
+        if killing then return end
+        killing = true
+
+        local char = lp.Character or lp.CharacterAdded:Wait()
+        local hum  = char:WaitForChild("Humanoid")
+        local animator = hum:WaitForChild("Animator")
+
+        task.spawn(function()
+            while enabled do
+                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                    track:Stop(0)
+                end
+                task.wait(0.05)
+            end
+            killing = false
+        end)
+    end
+
+    local function refresh()
+        pill.BackgroundColor3 = enabled and ACCENT or MUTED
+        knob.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        _G.RAY_DisableRodEffect = enabled
+
+        if enabled then
+            HardKillAnims()
+        end
+
+        refresh()
+    end)
+
+    lp.CharacterAdded:Connect(function()
+        if enabled then
+            task.delay(0.3, HardKillAnims)
+        end
+    end)
+
+    refresh()
+end
+
+----------------------------------------------------------------
+-- 🧪 DISABLE ROD SKIN
+----------------------------------------------------------------
+do
+    local rowSkin = Instance.new("Frame", sub)
+    rowSkin.Size = UDim2.new(1,0,0,48)
+    rowSkin.BackgroundTransparency = 1
+
+    local labelSkin = Instance.new("TextLabel", rowSkin)
+    labelSkin.Size = UDim2.new(1,-100,0.5,0)
+    labelSkin.Position = UDim2.new(0,16,0,0)
+    labelSkin.BackgroundTransparency = 1
+    labelSkin.Font = Enum.Font.Gotham
+    labelSkin.TextSize = 13
+    labelSkin.TextXAlignment = Enum.TextXAlignment.Left
+    labelSkin.TextColor3 = TEXT
+    labelSkin.Text = "🧪 Disable Rod Skin"
+
+    local infoSkin = Instance.new("TextLabel", rowSkin)
+    infoSkin.Size = UDim2.new(1,-16,0.5,0)
+    infoSkin.Position = UDim2.new(0,16,0.5,0)
+    infoSkin.BackgroundTransparency = 1
+    infoSkin.Font = Enum.Font.Gotham
+    infoSkin.TextSize = 11
+    infoSkin.TextXAlignment = Enum.TextXAlignment.Left
+    infoSkin.TextColor3 = MUTED
+    infoSkin.TextWrapped = true
+    infoSkin.Text = "Kill skin: 1x1x1x1 Ban Hammer, Abyssal Chroma, Abyssfire, Amber, Amethyst, BanHammerThrow, Xmas Tree, Vanquisher, Ornament Axe, Frozen Krampus Scythe, Electric Guitar, Eclipse Katana, Divine Blade."
+
+    local pillSkin = Instance.new("TextButton", rowSkin)
+    pillSkin.Size = UDim2.new(0,50,0,24)
+    pillSkin.Position = UDim2.new(1,-80,0.25,-12)
+    pillSkin.BackgroundColor3 = MUTED
+    pillSkin.BackgroundTransparency = 0.1
+    pillSkin.Text = ""
+    pillSkin.AutoButtonColor = false
+    Instance.new("UICorner", pillSkin).CornerRadius = UDim.new(0,999)
+
+    local knobSkin = Instance.new("Frame", pillSkin)
+    knobSkin.Size = UDim2.new(0,18,0,18)
+    knobSkin.Position = UDim2.new(0,3,0.5,-9)
+    knobSkin.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobSkin).CornerRadius = UDim.new(0,999)
+
+    local enabled = _G.RAY_DisableRodSkin or false
+
+    local function refreshSkin()
+        pillSkin.BackgroundColor3 = enabled and ACCENT or MUTED
+        knobSkin.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    pillSkin.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        _G.RAY_DisableRodSkin = enabled
+
+        if enabled then
+            KillAllRodSkins()
+        end
+
+        refreshSkin()
+    end)
+
+    lp.CharacterAdded:Connect(function()
+        if enabled then
+            task.delay(0.5, KillAllRodSkins)
+        end
+    end)
+
+    refreshSkin()
+end
+
 
     ----------------------------------------------------------------
     -- TOGGLE : 📝 DISABLE FISH TEXT
