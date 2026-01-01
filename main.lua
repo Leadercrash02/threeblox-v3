@@ -108,7 +108,7 @@ local PAGE_ICONS = {
 local AUTO_OPTIONS = {
     {"Auto Fishing",""},
     {"Blatant Fishing",""},
-    {"Coming Soon",""},
+    {"Blatant Improve",""},
     {"Auto Favorite",""},
     {"Auto Sell",""},
     {"Auto Megalodon",""},
@@ -2892,12 +2892,9 @@ function TeleportToMegalodon()
     local cf = CFrame.new(basePos, basePos + lookDir)
     char:PivotTo(cf)
 end
-
-
-
-
-
+----------------------------------------------------------------
 -- ENGINE STATE
+----------------------------------------------------------------
 local AutoFishAFK = false
 local isFishing   = false
 
@@ -2905,14 +2902,22 @@ local isFishing   = false
 local DelayReel   = 3   -- sama kayak _G.RAY_DelayCast
 local DelayCatch  = 2   -- sama kayak _G.RAY_DelayFinish
 
--- Blatant state
+-- BLATANT FISHING (ENGINE BARU)
 local BlatantOn     = false
-local BlatantReel   = 0.8   -- Reel Delay
-local BlatantCatch  = 0.75  -- = 1.5 * 0.5 default
+local BlatantReel   = 1.17   -- Reel Delay (UI, untuk engine baru)
+local BlatantCatch  = 0.25   -- Catch Delay (UI)
+
+-- BLATANT IMPROVE (ENGINE LAMA)
+local BlatantImproveOn     = false
+local BlatantImproveReel   = 0.8    -- delay reel improve
+local BlatantImproveCatch  = 0.75   -- delay catch improve
 
 _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
+_G.RAY_ExtraCatchImprove = _G.RAY_ExtraCatchImprove or false
 
+----------------------------------------------------------------
 -- FUNGSI DASAR
+----------------------------------------------------------------
 local function Reel_V3()
     pcall(function()
         Events.fishing:FireServer()
@@ -2929,9 +2934,12 @@ local function Cast_V3()
     end)
 end
 
--- AUTO FISH FEEL V2 (1 cast -> tunggu -> 1 reel -> tunggu)
+----------------------------------------------------------------
+-- ENGINE 0: AUTO FISH FEEL V2
+-- (1 cast -> tunggu -> 1 reel -> tunggu)
+----------------------------------------------------------------
 local function Engine_V3_Delayed()
-    if isFishing then return end
+    if isFishing or not AutoFishAFK then return end
     isFishing = true
 
     Cast_V3()
@@ -2942,14 +2950,14 @@ local function Engine_V3_Delayed()
     isFishing = false
 end
 
+----------------------------------------------------------------
+-- ENGINE 1: BLATANT FISHING (ENGINE BARU)
 -- CONFIG (UI)
-local BlatantReel   = 1.17   -- biarin
-local BlatantCatch  = 0.25   -- 0.2–0.3
-
+----------------------------------------------------------------
 local CastCount        = 3
 local DelayBetweenCast = 0.03
 
-local function BlatantCycle_V2()
+local function BlatantFishing()
     if isFishing or not BlatantOn then return end
     isFishing = true
 
@@ -2967,13 +2975,13 @@ local function BlatantCycle_V2()
         end
     end)
 
-    -- DELAY REAL (SEDIKIT LEBIH CEPAT)
+    -- DELAY REEL (SEDIKIT LEBIH CEPAT)
     local RealReelDelay  = 0.52     -- dari 0.55 → 0.52
     local RealInnerDelay = 0.0009   -- sedikit lebih longgar dari 0.0007
 
     task.wait(RealReelDelay)
 
-    for _ = 1,5 do
+    for _ = 1, 5 do
         Reel_V3()
         task.wait(RealInnerDelay)
     end
@@ -2982,7 +2990,60 @@ local function BlatantCycle_V2()
     isFishing = false
 end
 
--- EXTRA CATCH (pakai BlatantCatch sebagai delay)
+----------------------------------------------------------------
+-- ENGINE 2: BLATANT IMPROVE (ENGINE LAMA)
+-- 3x cast -> tunggu -> 5x reel
+----------------------------------------------------------------
+local function BlatantImprove()
+    if isFishing or not BlatantImproveOn then return end
+    isFishing = true
+
+    pcall(function()
+        Events.equip:FireServer(1)
+        task.wait(0.01)
+        for _ = 1, 3 do
+            task.spawn(function()
+                Events.charge:InvokeServer(workspace:GetServerTimeNow())
+                task.wait(0.01)
+                Events.minigame:InvokeServer(1.2854545116425, 1)
+            end)
+            task.wait(0.03)
+        end
+    end)
+
+    task.wait(BlatantImproveReel)
+
+    for _ = 1, 5 do
+        Reel_V3()
+        task.wait(0.01)
+    end
+
+    task.wait(BlatantImproveCatch)
+    isFishing = false
+end
+
+----------------------------------------------------------------
+-- LOOP UTAMA (DISPATCHER)
+----------------------------------------------------------------
+task.spawn(function()
+    while true do
+        if BlatantOn then
+            BlatantFishing()
+
+        elseif BlatantImproveOn then
+            BlatantImprove()
+
+        elseif AutoFishAFK then
+            Engine_V3_Delayed()
+        end
+
+        task.wait(0.05)
+    end
+end)
+
+----------------------------------------------------------------
+-- EXTRA CATCH BLATANT FISHING
+----------------------------------------------------------------
 task.spawn(function()
     while true do
         if BlatantOn and _G.RAY_ExtraCatchBlatant and not isFishing then
@@ -2992,6 +3053,22 @@ task.spawn(function()
         task.wait(0.05)
     end
 end)
+
+----------------------------------------------------------------
+-- EXTRA CATCH BLATANT IMPROVE
+----------------------------------------------------------------
+task.spawn(function()
+    while true do
+        if BlatantImproveOn and _G.RAY_ExtraCatchImprove and not isFishing then
+            Reel_V3()
+            task.wait(BlatantImproveCatch)
+        end
+        task.wait(0.05)
+    end
+end)
+
+
+
 
 
 -- ====================== AUTO OPTION CONTENT ======================
@@ -3136,8 +3213,8 @@ local function autoDropdown(text)
         icon.Text = "🎣"
     elseif text == "Blatant Fishing" then
         icon.Text = "⚡"
-    elseif text == "Auto Spot Island" then
-        icon.Text = "🌴"
+    elseif text == "Blatant Improve" then
+        icon.Text = "⚙️"
     elseif text == "Auto Favorite" then
         icon.Text = "⭐"
     elseif text == "Auto Sell" then
@@ -3532,7 +3609,185 @@ end)
 
         refreshExtra()
 
-    elseif text == "Comming Soon" then
+    ----------------------------------------------------------------
+    -- BLATANT IMPROVE
+    ----------------------------------------------------------------
+    elseif text == "Blatant Improve" then
+        local row = Instance.new("Frame", sub)
+        row.Size = UDim2.new(1,0,0,36)
+        row.BackgroundTransparency = 1
+
+        local label = Instance.new("TextLabel", row)
+        label.Size = UDim2.new(1,-100,1,0)
+        label.Position = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.Gotham
+        label.TextSize = 13
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextColor3 = TEXT
+        label.Text = "Blatant Improve"
+
+        local pill = Instance.new("TextButton", row)
+        pill.Size = UDim2.new(0,50,0,24)
+        pill.Position = UDim2.new(1,-80,0.5,-12)
+        pill.BackgroundColor3 = MUTED
+        pill.BackgroundTransparency = 0.1
+        pill.Text = ""
+        pill.AutoButtonColor = false
+        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+        local knob = Instance.new("Frame", pill)
+        knob.Size = UDim2.new(0,18,0,18)
+        knob.Position = UDim2.new(0,3,0.5,-9)
+        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        knob.BackgroundTransparency = 0
+        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+        -- STATE GLOBAL IMPROVE (pastikan ada di atas script):
+        -- local BlatantImproveOn = false
+        -- local BlatantImproveReel  = 1.0
+        -- local BlatantImproveCatch = 0.25
+        -- _G.RAY_ExtraCatchImprove = _G.RAY_ExtraCatchImprove or false
+
+        local function refreshImprove()
+            pill.BackgroundColor3 = BlatantImproveOn and ACCENT or MUTED
+            knob.Position = BlatantImproveOn
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        pill.MouseButton1Click:Connect(function()
+            BlatantImproveOn = not BlatantImproveOn
+            -- opsional: matiin Blatant Fishing biar nggak tabrakan mode
+            if BlatantImproveOn then
+                BlatantOn = false
+            end
+            refreshImprove()
+        end)
+
+        refreshImprove()
+
+        -- Reel delay IMPROVE
+        local reelRow = Instance.new("Frame", sub)
+        reelRow.Size = UDim2.new(1,0,0,30)
+        reelRow.BackgroundTransparency = 1
+
+        local reelLabel = Instance.new("TextLabel", reelRow)
+        reelLabel.Size = UDim2.new(0.6,0,1,0)
+        reelLabel.Position = UDim2.new(0,16,0,0)
+        reelLabel.BackgroundTransparency = 1
+        reelLabel.Font = Enum.Font.Gotham
+        reelLabel.TextSize = 13
+        reelLabel.TextXAlignment = Enum.TextXAlignment.Left
+        reelLabel.TextColor3 = TEXT
+        reelLabel.Text = "Reel Delay (sec)"
+
+        local reelBox = Instance.new("TextBox", reelRow)
+        reelBox.Size = UDim2.new(0.35,0,1,0)
+        reelBox.Position = UDim2.new(0.6,8,0,0)
+        reelBox.Text = tostring(BlatantImproveReel)
+        reelBox.Font = Enum.Font.Gotham
+        reelBox.TextSize = 13
+        reelBox.TextXAlignment = Enum.TextXAlignment.Center
+        reelBox.TextColor3 = TEXT
+        reelBox.ClearTextOnFocus = false
+        reelBox.BackgroundColor3 = CARD
+        reelBox.BackgroundTransparency = 0.12
+        Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0,8)
+
+        reelBox.FocusLost:Connect(function()
+            local n = tonumber(reelBox.Text:match("[%d%.]+"))
+            if n and n > 0 then
+                BlatantImproveReel = n
+                reelBox.Text = tostring(n)
+            else
+                reelBox.Text = tostring(BlatantImproveReel)
+            end
+        end)
+
+        -- Catch delay IMPROVE
+        local catchRow = Instance.new("Frame", sub)
+        catchRow.Size = UDim2.new(1,0,0,30)
+        catchRow.BackgroundTransparency = 1
+
+        local catchLabel = Instance.new("TextLabel", catchRow)
+        catchLabel.Size = UDim2.new(0.6,0,1,0)
+        catchLabel.Position = UDim2.new(0,16,0,0)
+        catchLabel.BackgroundTransparency = 1
+        catchLabel.Font = Enum.Font.Gotham
+        catchLabel.TextSize = 13
+        catchLabel.TextXAlignment = Enum.TextXAlignment.Left
+        catchLabel.TextColor3 = TEXT
+        catchLabel.Text = "Catch Delay (sec)"
+
+        local catchBox = Instance.new("TextBox", catchRow)
+        catchBox.Size = UDim2.new(0.35,0,1,0)
+        catchBox.Position = UDim2.new(0.6,8,0,0)
+        catchBox.Text = tostring(BlatantImproveCatch)
+        catchBox.Font = Enum.Font.Gotham
+        catchBox.TextSize = 13
+        catchBox.TextXAlignment = Enum.TextXAlignment.Center
+        catchBox.TextColor3 = TEXT
+        catchBox.ClearTextOnFocus = false
+        catchBox.BackgroundColor3 = CARD
+        catchBox.BackgroundTransparency = 0.12
+        Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0,8)
+
+        catchBox.FocusLost:Connect(function()
+            local n = tonumber(catchBox.Text:match("[%d%.]+"))
+            if n and n > 0 then
+                BlatantImproveCatch = n
+                catchBox.Text = tostring(n)
+            else
+                catchBox.Text = tostring(BlatantImproveCatch)
+            end
+        end)
+
+        -- Extra catch IMPROVE
+        local extraRow = Instance.new("Frame", sub)
+        extraRow.Size = UDim2.new(1,0,0,32)
+        extraRow.BackgroundTransparency = 1
+
+        local extraLabel = Instance.new("TextLabel", extraRow)
+        extraLabel.Size = UDim2.new(1,-100,1,0)
+        extraLabel.Position = UDim2.new(0,16,0,0)
+        extraLabel.BackgroundTransparency = 1
+        extraLabel.Font = Enum.Font.Gotham
+        extraLabel.TextSize = 13
+        extraLabel.TextXAlignment = Enum.TextXAlignment.Left
+        extraLabel.TextColor3 = TEXT
+        extraLabel.Text = "Extra Catch Improve"
+
+        local extraPill = Instance.new("TextButton", extraRow)
+        extraPill.Size = UDim2.new(0,50,0,24)
+        extraPill.Position = UDim2.new(1,-80,0.5,-12)
+        extraPill.BackgroundColor3 = MUTED
+        extraPill.BackgroundTransparency = 0.1
+        extraPill.Text = ""
+        extraPill.AutoButtonColor = false
+        Instance.new("UICorner", extraPill).CornerRadius = UDim.new(0,999)
+
+        local extraKnob = Instance.new("Frame", extraPill)
+        extraKnob.Size = UDim2.new(0,18,0,18)
+        extraKnob.Position = UDim2.new(0,3,0.5,-9)
+        extraKnob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        extraKnob.BackgroundTransparency = 0
+        Instance.new("UICorner", extraKnob).CornerRadius = UDim.new(0,999)
+
+        local function refreshExtraImprove()
+            extraPill.BackgroundColor3 = _G.RAY_ExtraCatchImprove and Color3.fromRGB(80,200,120) or MUTED
+            extraKnob.Position = _G.RAY_ExtraCatchImprove
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        extraPill.MouseButton1Click:Connect(function()
+            _G.RAY_ExtraCatchImprove = not _G.RAY_ExtraCatchImprove
+            refreshExtraImprove()
+        end)
+
+        refreshExtraImprove()
+
 
     elseif text == "coming soon" then
 
@@ -3825,14 +4080,15 @@ task.wait(0.1)
 task.spawn(function()
     while true do
         if BlatantOn then
-            BlatantCycle_V2()      -- ini otomatis pakai versi improve yang baru
+            BlatantFishing()
+        elseif BlatantImproveOn then
+            BlatantImprove()
         elseif AutoFishAFK then
             Engine_V3_Delayed()
         end
         task.wait(0.05)
     end
 end)
-
 
 -- AUTO SELL ENGINE SIMPLE
 task.spawn(function()
