@@ -108,7 +108,7 @@ local PAGE_ICONS = {
 local AUTO_OPTIONS = {
     {"Auto Fishing",""},
     {"Blatant Fishing",""},
-    {"Auto Spot Island",""},
+    {"Coming soon",""},
     {"Auto Favorite",""},
     {"Auto Sell",""},
     {"Auto Megalodon",""},
@@ -3135,7 +3135,7 @@ local function autoDropdown(text)
         icon.Text = "🎣"
     elseif text == "Blatant Fishing" then
         icon.Text = "⚡"
-    elseif text == "Auto Spot Island" then
+    elseif text == "Comingsoon" then
         icon.Text = "🌴"
     elseif text == "Auto Favorite" then
         icon.Text = "⭐"
