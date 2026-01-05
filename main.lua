@@ -3985,26 +3985,22 @@ function TeleportToMegalodon()
     char:PivotTo(cf)
 end
 
-----------------------------------------------------------------
 -- ENGINE STATE
-----------------------------------------------------------------
 local AutoFishAFK = false
 local isFishing   = false
 
 -- delay Auto Fishing (feel V2)
-local DelayReel   = 3      -- sama kayak _G.RAY_DelayCast
-local DelayCatch  = 2      -- sama kayak _G.RAY_DelayFinish
+local DelayReel   = 3   -- sama kayak _G.RAY_DelayCast
+local DelayCatch  = 2   -- sama kayak _G.RAY_DelayFinish
 
 -- Blatant state
-local BlatantOn    = false
-local BlatantReel  = 0.8   -- Reel Delay (UI)
-local BlatantCatch = 0.75  -- = 1.5 * 0.5 default
+local BlatantOn     = false
+local BlatantReel   = 0.8   -- Reel Delay
+local BlatantCatch  = 0.75  -- = 1.5 * 0.5 default
 
 _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
 
-----------------------------------------------------------------
 -- FUNGSI DASAR
-----------------------------------------------------------------
 local function Reel_V3()
     pcall(function()
         Events.fishing:FireServer()
@@ -4017,18 +4013,11 @@ local function Cast_V3()
         task.wait(0.05)
         Events.charge:InvokeServer(workspace:GetServerTimeNow())
         task.wait(0.02)
-        -- ARGUMEN MINIGAME BARU (dari RemoteSpy)
-        Events.minigame:InvokeServer(
-           -1.2379837036132812,
-            0.9999998585903084
-        )
+        Events.minigame:InvokeServer(1.2854545116425, 1)
     end)
 end
 
-----------------------------------------------------------------
--- AUTO FISH FEEL V2
--- 1 cast -> tunggu -> 1 reel -> tunggu
-----------------------------------------------------------------
+-- AUTO FISH FEEL V2 (1 cast -> tunggu -> 1 reel -> tunggu)
 local function Engine_V3_Delayed()
     if isFishing then return end
     isFishing = true
@@ -4041,47 +4030,38 @@ local function Engine_V3_Delayed()
     isFishing = false
 end
 
-----------------------------------------------------------------
 -- CONFIG (UI)
-----------------------------------------------------------------
-local BlatantReel  = 1.17   -- biarin, dibaca UI
-local BlatantCatch = 0.25   -- 0.2–0.3 enak
+local BlatantReel   = 1.17   -- biarin
+local BlatantCatch  = 0.25   -- 0.2–0.3
 
-local CastCount        = 2      -- DULU 3, dikurangin biar miss kecil
+local CastCount        = 3
 local DelayBetweenCast = 0.03
 
-----------------------------------------------------------------
--- BLATANT CYCLE V2
-----------------------------------------------------------------
 local function BlatantCycle_V2()
     if isFishing or not BlatantOn then return end
     isFishing = true
 
-    -- 2x CAST CEPAT
+    -- 3x CAST CEPAT
     pcall(function()
         Events.equip:FireServer(1)
         task.wait(0.01)
-
         for _ = 1, CastCount do
             task.spawn(function()
                 Events.charge:InvokeServer(workspace:GetServerTimeNow())
                 task.wait(0.01)
-                Events.minigame:InvokeServer(
-                   -1.2379837036132812,
-                    0.9999998585903084
-                )
+                Events.minigame:InvokeServer(1.2854545116425, 1)
             end)
             task.wait(DelayBetweenCast)
         end
     end)
 
-    -- DELAY REAL
-    local RealReelDelay  = 0.6     -- sedikit dinaikkan biar ga miss
-    local RealInnerDelay = 0.0009  -- micro spam reel
+    -- DELAY REAL (SEDIKIT LEBIH CEPAT)
+    local RealReelDelay  = 0.52     -- dari 0.55 → 0.52
+    local RealInnerDelay = 0.0009   -- sedikit lebih longgar dari 0.0007
 
     task.wait(RealReelDelay)
 
-    for _ = 1, 5 do
+    for _ = 1,5 do
         Reel_V3()
         task.wait(RealInnerDelay)
     end
@@ -4090,9 +4070,7 @@ local function BlatantCycle_V2()
     isFishing = false
 end
 
-----------------------------------------------------------------
 -- EXTRA CATCH (pakai BlatantCatch sebagai delay)
-----------------------------------------------------------------
 task.spawn(function()
     while true do
         if BlatantOn and _G.RAY_ExtraCatchBlatant and not isFishing then
@@ -4102,11 +4080,6 @@ task.spawn(function()
         task.wait(0.05)
     end
 end)
-
-
-
-
-
 
 -- ====================== AUTO OPTION CONTENT ======================
 
@@ -4961,20 +4934,14 @@ end
 pages["Auto Option"].Visible = true
 task.wait(0.1)
 
-----------------------------------------------------------------
--- LOOP UTAMA AUTO / BLATANT
-----------------------------------------------------------------
 task.spawn(function()
     while true do
         if BlatantOn then
-            BlatantCycle_V2()
+            BlatantCycle_V2()      -- ini otomatis pakai versi improve yang baru
         elseif AutoFishAFK then
             Engine_V3_Delayed()
-        else
-            task.wait(0.15)
         end
-
-        task.wait(0.05) -- jeda antar siklus biar server sempet napas
+        task.wait(0.05)
     end
 end)
 
