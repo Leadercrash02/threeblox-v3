@@ -673,9 +673,274 @@ local function BuildQuestDeepsea()
     refreshDeep()
 end
 
-
-
 BuildQuestDeepsea()
+
+----------------------------------------------------------------
+-- QUEST : ELEMENT ROD
+----------------------------------------------------------------
+local function BuildQuestElement()
+    local questPage = pages["Quest"]
+    local ELEMENT_QUEST_NAME = "Element Quest" -- ganti ke nama aslinya di module
+
+    -- CARD UTAMA
+    local card = Instance.new("Frame")
+    card.Name = "QuestElementCard"
+    card.Parent = questPage
+    card.Size = UDim2.new(1,-32,0,48)
+    -- taruh di bawah Deepsea (offset Y dinaikkan sedikit)
+    card.Position = UDim2.new(0,16,0,16 + 60)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
+
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1,-40,0,22)
+    cardTitle.Position = UDim2.new(0,16,0,4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "⚡ Quest Element Rod"
+
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0,24,0,24)
+    arrow.Position = UDim2.new(1,-28,0,10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1,0,1,0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+
+    ----------------------------------------------------------------
+    -- ISI DROPDOWN (TEXT PROGRESS + TELEPORT)
+    ----------------------------------------------------------------
+    local subElem = Instance.new("Frame", card)
+    subElem.Name = "ElementContents"
+    subElem.Position = UDim2.new(0,0,0,48)
+    subElem.Size = UDim2.new(1,0,0,0)
+    subElem.BackgroundTransparency = 1
+    subElem.ClipsDescendants = true
+
+    local elemLayout = Instance.new("UIListLayout", subElem)
+    elemLayout.Padding = UDim.new(0,6)
+    elemLayout.FillDirection = Enum.FillDirection.Vertical
+    elemLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    elemLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    -- ROW 1: TEXT PROGRESS (DINAMIS / MODE SINGKAT)
+    local elemRow = Instance.new("Frame", subElem)
+    elemRow.Size = UDim2.new(1,0,0,0)
+    elemRow.BackgroundTransparency = 1
+
+    local elemText = Instance.new("TextLabel", elemRow)
+    elemText.Name = "ElementText"
+    elemText.Size = UDim2.new(1,-8,1,-8)
+    elemText.Position = UDim2.new(0,4,0,4)
+    elemText.BackgroundTransparency = 1
+    elemText.Font = Enum.Font.Code
+    elemText.TextSize = 13
+    elemText.TextXAlignment = Enum.TextXAlignment.Left
+    elemText.TextYAlignment = Enum.TextYAlignment.Top
+    elemText.TextWrapped = false
+    elemText.TextColor3 = TEXT
+    elemText.Text = "Loading Element quest..."
+
+    -- ROW 2: TELEPORT ANCIENT JUNGLE / SEcred TEMPLE
+    local tpRow = Instance.new("Frame", subElem)
+    tpRow.Size = UDim2.new(1,0,0,36)
+    tpRow.BackgroundTransparency = 1
+
+    local tpAncient = Instance.new("TextButton", tpRow)
+    tpAncient.Size = UDim2.new(0.5,-10,1,0)
+    tpAncient.Position = UDim2.new(0,0,0,0)
+    tpAncient.BackgroundColor3 = CARD
+    tpAncient.BackgroundTransparency = 0.4
+    tpAncient.BorderSizePixel = 0
+    tpAncient.Font = Enum.Font.Gotham
+    tpAncient.TextSize = 13
+    tpAncient.TextColor3 = TEXT
+    tpAncient.Text = "🌿 Ancient Ruin"
+    tpAncient.AutoButtonColor = false
+    Instance.new("UICorner", tpAncient).CornerRadius = UDim.new(0,8)
+
+    local tpSecred = Instance.new("TextButton", tpRow)
+    tpSecred.Size = UDim2.new(0.5,-10,1,0)
+    tpSecred.Position = UDim2.new(0.5,10,0,0)
+    tpSecred.BackgroundColor3 = CARD
+    tpSecred.BackgroundTransparency = 0.4
+    tpSecred.BorderSizePixel = 0
+    tpSecred.Font = Enum.Font.Gotham
+    tpSecred.TextSize = 13
+    tpSecred.TextColor3 = TEXT
+    tpSecred.Text = "🏛 Secred Temple"
+    tpSecred.AutoButtonColor = false
+    Instance.new("UICorner", tpSecred).CornerRadius = UDim.new(0,8)
+
+    ----------------------------------------------------------------
+    -- DROPDOWN BEHAVIOUR
+    ----------------------------------------------------------------
+    local elemOpen = false
+    local function recalcElem()
+        local h = elemLayout.AbsoluteContentSize.Y
+        if elemOpen then
+            subElem.Size = UDim2.new(1,0,0,h + 8)
+            card.Size   = UDim2.new(1,-32,0,48 + h + 8)
+            arrow.Text  = "▲"
+        else
+            subElem.Size = UDim2.new(1,0,0,0)
+            card.Size   = UDim2.new(1,-32,0,48)
+            arrow.Text  = "▼"
+        end
+    end
+
+    elemLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcElem)
+
+    cardBtn.MouseButton1Click:Connect(function()
+        elemOpen = not elemOpen
+        recalcElem()
+    end)
+
+    ----------------------------------------------------------------
+    -- TELEPORT HANDLER (ANCIENT RUIN + SEcred TEMPLE)
+    ----------------------------------------------------------------
+    local function tpTo(name)
+        local cf = ISLAND_SPOTS[name]
+        if not cf then return end
+        local char = lp.Character or lp.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        hrp.CFrame = cf
+    end
+
+    tpAncient.MouseButton1Click:Connect(function()
+        tpTo("Ancient Ruin")   -- pakai spot Ancient Ruin di table
+    end)
+
+    tpSecred.MouseButton1Click:Connect(function()
+        tpTo("Secred Temple")  -- pakai spot Secred Temple di table
+    end)
+
+    ----------------------------------------------------------------
+    -- LOGIC QUEST (SAMA DENGAN DEEPSEA, CUMA NAMA QUEST BEDA)
+    ----------------------------------------------------------------
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local Quests  = require(ReplicatedStorage.Modules.Quests)
+    local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
+
+    local DataReplion = Replion.Client:WaitReplion("Data")
+
+    local function getQuestType(name)
+        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, name)
+        return ok and qType or nil
+    end
+
+    local function calcTotalPercent(questDef, questState)
+        if not questDef or not questDef.Objectives then return 0 end
+        local acc = 0
+        for i,obj in ipairs(questDef.Objectives) do
+            local st = questState and questState.Objectives and questState.Objectives[i]
+            local cur = (st and st.Progress) or 0
+            local goal = obj.Goal or 1
+            if cur >= goal then
+                acc += 1
+            else
+                acc += math.clamp(cur/goal,0,1)
+            end
+        end
+        return acc/#questDef.Objectives*100
+    end
+
+    local function isCompleted(name)
+        local completed = DataReplion:GetExpect("CompletedQuests") or {}
+        for _,q in ipairs(completed) do
+            if q == name then return true end
+        end
+        return false
+    end
+
+    local function dumpElement()
+        local name = ELEMENT_QUEST_NAME
+
+        local completedFlag = isCompleted(name)
+        local qType = getQuestType(name)
+        local def = qType and Quests[qType] and Quests[qType][name] or nil
+
+        local all = DataReplion:GetExpect("Quests")
+        local state = qType and all[qType] and all[qType][name] or nil
+
+        if completedFlag and not state then
+            return string.format("%s (%s) – 100%% (COMPLETED)", name, qType or "Mainline"), true
+        end
+
+        if not qType or not def then
+            return name.." – data not found", false
+        end
+
+        if not state then
+            return name.." – not active", false
+        end
+
+        local total = calcTotalPercent(def,state)
+        local doneFlag = MainlineQuestController.DidCompleteAll(qType,name,state) or completedFlag
+        if doneFlag then total = 100 end
+        local totalRounded = math.floor(total+0.5)
+
+        local lines = {}
+        table.insert(lines, string.format("%s (%s) – %d%%%s",
+            name, qType, totalRounded, doneFlag and " (COMPLETED)" or ""))
+
+        for i,obj in ipairs(def.Objectives) do
+            local st = state.Objectives and state.Objectives[i]
+            local cur = (st and st.Progress) or 0
+            local goal = obj.Goal or 1
+            local pct = math.floor(math.clamp(cur/goal,0,1)*100+0.5)
+            table.insert(lines, string.format("  [%d] %s", i, obj.Name))
+            table.insert(lines, string.format("      %d/%d (%d%%)", cur, goal, pct))
+        end
+
+        return table.concat(lines,"\n"), doneFlag
+    end
+
+    local function refreshElem()
+        local text, done = dumpElement()
+        elemText.Text = text
+
+        if done then
+            elemRow.Size = UDim2.new(1,0,0,32)
+        else
+            local lines = 0
+            for _ in string.gmatch(text, "\n") do
+                lines += 1
+            end
+            lines = lines + 1
+
+            local lineHeight = 16
+            local basePadding = 12
+            local h = basePadding + lines * lineHeight
+            h = math.clamp(h, 48, 160)
+
+            elemRow.Size = UDim2.new(1,0,0,h)
+        end
+
+        recalcElem()
+    end
+
+    DataReplion:OnChange({"Quests","Mainline"}, refreshElem)
+    DataReplion:OnChange({"CompletedQuests"}, refreshElem)
+    refreshElem()
+end
+
+BuildQuestElement()
 
 ----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
@@ -1018,8 +1283,13 @@ local function ShowPage(name)
         if not questPage:FindFirstChild("QuestDeepseaCard") then
             BuildQuestDeepsea()
         end
+        if not questPage:FindFirstChild("QuestElementCard") then
+            BuildQuestElement()
+        end
     end
 end
+
+
 
 BuildShopWeather()
 
