@@ -464,7 +464,7 @@ local function BuildQuestDeepsea()
     deepLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     deepLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    -- ROW 1: TEXT PROGRESS (DINAMIS)
+    -- ROW 1: TEXT PROGRESS (TINGGI DINAMIS / MODE SINGKAT)
     local deepRow = Instance.new("Frame", subDeep)
     deepRow.Size = UDim2.new(1,0,0,0)
     deepRow.BackgroundTransparency = 1
@@ -560,9 +560,9 @@ local function BuildQuestDeepsea()
     end)
 
     ----------------------------------------------------------------
-    -- LOGIC QUEST (VERSI GUI TEST)
+    -- LOGIC QUEST (VERSI GUI TEST + FLAG COMPLETED)
     ----------------------------------------------------------------
-    -- PENTING: sesuaikan path require dengan game lu
+    -- PENTING: sesuaikan path require jika di game beda
     local Replion = require(ReplicatedStorage.Packages.Replion)
     local Quests  = require(ReplicatedStorage.Modules.Quests)
     local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
@@ -598,6 +598,7 @@ local function BuildQuestDeepsea()
         return false
     end
 
+    -- return: text, isDone
     local function dumpDeepsea()
         local name = "Deep Sea Quest"
 
@@ -609,15 +610,15 @@ local function BuildQuestDeepsea()
         local state = qType and all[qType] and all[qType][name] or nil
 
         if completedFlag and not state then
-            return string.format("%s (%s) – 100%% (COMPLETED)", name, qType or "Mainline")
+            return string.format("%s (%s) – 100%% (COMPLETED)", name, qType or "Mainline"), true
         end
 
         if not qType or not def then
-            return name.." – data not found"
+            return name.." – data not found", false
         end
 
         if not state then
-            return name.." – not active"
+            return name.." – not active", false
         end
 
         local total = calcTotalPercent(def,state)
@@ -638,26 +639,31 @@ local function BuildQuestDeepsea()
             table.insert(lines, string.format("      %d/%d (%d%%)", cur, goal, pct))
         end
 
-        return table.concat(lines,"\n")
+        return table.concat(lines,"\n"), doneFlag
     end
 
     local function refreshDeep()
-        local text = dumpDeepsea()
+        local text, done = dumpDeepsea()
         deepText.Text = text
 
-        -- hitung jumlah baris
-        local lines = 0
-        for _ in string.gmatch(text, "\n") do
-            lines += 1
+        if done then
+            -- MODE SINGKAT: quest selesai → teks pendek
+            deepRow.Size = UDim2.new(1,0,0,32)
+        else
+            -- MODE NORMAL: tinggi ikut jumlah baris
+            local lines = 0
+            for _ in string.gmatch(text, "\n") do
+                lines += 1
+            end
+            lines = lines + 1
+
+            local lineHeight = 16
+            local basePadding = 12
+            local h = basePadding + lines * lineHeight
+            h = math.clamp(h, 48, 160)
+
+            deepRow.Size = UDim2.new(1,0,0,h)
         end
-        lines = lines + 1
-
-        local lineHeight = 16
-        local basePadding = 12
-        local h = basePadding + lines * lineHeight
-        h = math.clamp(h, 32, 160)
-
-        deepRow.Size = UDim2.new(1,0,0,h)
 
         recalcDeep()
     end
@@ -666,6 +672,7 @@ local function BuildQuestDeepsea()
     DataReplion:OnChange({"CompletedQuests"}, refreshDeep)
     refreshDeep()
 end
+
 
 
 BuildQuestDeepsea()
