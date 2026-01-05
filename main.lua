@@ -448,7 +448,9 @@ local function BuildQuestDeepsea()
     cardBtn.Text = ""
     cardBtn.AutoButtonColor = false
 
-    -- ISI DROPDOWN
+    ----------------------------------------------------------------
+    -- ISI DROPDOWN (TEXT PROGRESS + TELEPORT)
+    ----------------------------------------------------------------
     local subDeep = Instance.new("Frame", card)
     subDeep.Name = "DeepseaContents"
     subDeep.Position = UDim2.new(0,0,0,48)
@@ -462,7 +464,7 @@ local function BuildQuestDeepsea()
     deepLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     deepLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    -- ROW 1: TEKS PROGRESS QUEST
+    -- ROW 1: TEXT PROGRESS
     local deepRow = Instance.new("Frame", subDeep)
     deepRow.Size = UDim2.new(1,0,0,140)
     deepRow.BackgroundTransparency = 1
@@ -509,7 +511,9 @@ local function BuildQuestDeepsea()
     tpTreasure.AutoButtonColor = false
     Instance.new("UICorner", tpTreasure).CornerRadius = UDim.new(0,8)
 
+    ----------------------------------------------------------------
     -- DROPDOWN BEHAVIOUR
+    ----------------------------------------------------------------
     local deepOpen = false
     local function recalcDeep()
         local h = deepLayout.AbsoluteContentSize.Y
@@ -531,7 +535,7 @@ local function BuildQuestDeepsea()
         recalcDeep()
     end)
 
-    recalcDeep()
+    recalcDeep() -- posisi awal tertutup
 
     ----------------------------------------------------------------
     -- TELEPORT HANDLER (PAKAI ISLAND_SPOTS)
@@ -558,8 +562,9 @@ local function BuildQuestDeepsea()
     ----------------------------------------------------------------
     -- LOGIC QUEST (VERSI GUI TEST)
     ----------------------------------------------------------------
-    local Replion = require(ReplicatedStorage.Packages.Replion)           -- sesuaikan path
-    local Quests  = require(ReplicatedStorage.Modules.Quests)            -- sesuaikan path
+    -- PENTING: PATH REQUIRE HARUS SAMA DENGAN SCRIPT TEST YANG DULU JALAN
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local Quests  = require(ReplicatedStorage.Modules.Quests)
     local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
 
     local DataReplion = Replion.Client:WaitReplion("Data")
@@ -644,7 +649,6 @@ local function BuildQuestDeepsea()
     DataReplion:OnChange({"CompletedQuests"}, refreshDeep)
     refreshDeep()
 end
-
 
 BuildQuestDeepsea()
 
@@ -991,6 +995,8 @@ local function ShowPage(name)
         end
     end
 end
+
+BuildShopWeather()
 
 
 
