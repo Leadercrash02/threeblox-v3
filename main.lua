@@ -814,7 +814,7 @@ local function BuildQuestElement()
     end)
 
     ----------------------------------------------------------------
-    -- TELEPORT HANDLER (ANCIENT JUNGLE + SEcred TEMPLE)
+    -- TELEPORT HANDLER
     ----------------------------------------------------------------
     local function tpTo(name)
         local cf = ISLAND_SPOTS[name]
@@ -828,12 +828,14 @@ local function BuildQuestElement()
     end
 
     tpAncient.MouseButton1Click:Connect(function()
-        tpTo("Ancient Ruin")   -- CFrame Ancient Jungle lu taruh di sini di ISLAND_SPOTS
+        -- Ancient Jungle -> Hutan Kuno (sama area)
+        tpTo("Hutan Kuno")
     end)
 
     tpSecred.MouseButton1Click:Connect(function()
         tpTo("Secred Temple")
     end)
+
 
     ----------------------------------------------------------------
     -- LOGIC QUEST (SAMA POLA DENGAN DEEPSEA)
@@ -947,6 +949,291 @@ end
 
 
 BuildQuestElement()
+
+----------------------------------------------------------------
+-- QUEST : DIAMOND ROD
+----------------------------------------------------------------
+local function BuildQuestDiamond()
+    local questPage = pages["Quest"]
+    local DIAMOND_QUEST_NAME = "Diamond Quest" -- ganti ke nama quest aslinya
+
+    -- CARD UTAMA
+    local card = Instance.new("Frame")
+    card.Name = "QuestDiamondCard"
+    card.Parent = questPage
+    card.Size = UDim2.new(1,-32,0,48)
+    card.Position = UDim2.new(0,16,0,0)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    card.LayoutOrder = 3          -- di bawah Element
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
+
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1,-40,0,22)
+    cardTitle.Position = UDim2.new(0,16,0,4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "💎 Quest Diamond Rod"
+
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0,24,0,24)
+    arrow.Position = UDim2.new(1,-28,0,10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1,0,1,0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+
+    ----------------------------------------------------------------
+    -- ISI DROPDOWN (TEXT PROGRESS + 3 TELEPORT)
+    ----------------------------------------------------------------
+    local subDia = Instance.new("Frame", card)
+    subDia.Name = "DiamondContents"
+    subDia.Position = UDim2.new(0,0,0,48)
+    subDia.Size = UDim2.new(1,0,0,0)
+    subDia.BackgroundTransparency = 1
+    subDia.ClipsDescendants = true
+
+    local diaLayout = Instance.new("UIListLayout", subDia)
+    diaLayout.Padding = UDim.new(0,6)
+    diaLayout.FillDirection = Enum.FillDirection.Vertical
+    diaLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    diaLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    -- ROW 1: TEXT PROGRESS
+    local diaRow = Instance.new("Frame", subDia)
+    diaRow.Size = UDim2.new(1,0,0,0)
+    diaRow.BackgroundTransparency = 1
+
+    local diaText = Instance.new("TextLabel", diaRow)
+    diaText.Name = "DiamondText"
+    diaText.Size = UDim2.new(1,-8,1,-8)
+    diaText.Position = UDim2.new(0,4,0,4)
+    diaText.BackgroundTransparency = 1
+    diaText.Font = Enum.Font.Code
+    diaText.TextSize = 13
+    diaText.TextXAlignment = Enum.TextXAlignment.Left
+    diaText.TextYAlignment = Enum.TextYAlignment.Top
+    diaText.TextWrapped = false
+    diaText.TextColor3 = TEXT
+    diaText.Text = "Loading Diamond quest..."
+
+    -- ROW 2: TELEPORT CORAL / TROPIS / ANCIENT
+    local tpRow = Instance.new("Frame", subDia)
+    tpRow.Size = UDim2.new(1,0,0,36)
+    tpRow.BackgroundTransparency = 1
+
+    local tpCoral = Instance.new("TextButton", tpRow)
+    tpCoral.Size = UDim2.new(1/3,-8,1,0)
+    tpCoral.Position = UDim2.new(0,0,0,0)
+    tpCoral.BackgroundColor3 = CARD
+    tpCoral.BackgroundTransparency = 0.4
+    tpCoral.BorderSizePixel = 0
+    tpCoral.Font = Enum.Font.Gotham
+    tpCoral.TextSize = 13
+    tpCoral.TextColor3 = TEXT
+    tpCoral.Text = "🐠 Coral Reefs"
+    tpCoral.AutoButtonColor = false
+    Instance.new("UICorner", tpCoral).CornerRadius = UDim.new(0,8)
+
+    local tpTropis = Instance.new("TextButton", tpRow)
+    tpTropis.Size = UDim2.new(1/3,-8,1,0)
+    tpTropis.Position = UDim2.new(1/3+0.012,4,0,0)
+    tpTropis.BackgroundColor3 = CARD
+    tpTropis.BackgroundTransparency = 0.4
+    tpTropis.BorderSizePixel = 0
+    tpTropis.Font = Enum.Font.Gotham
+    tpTropis.TextSize = 13
+    tpTropis.TextColor3 = TEXT
+    tpTropis.Text = "🌴 Hutan Tropis"
+    tpTropis.AutoButtonColor = false
+    Instance.new("UICorner", tpTropis).CornerRadius = UDim.new(0,8)
+
+    local tpAncient = Instance.new("TextButton", tpRow)
+    tpAncient.Size = UDim2.new(1/3,-8,1,0)
+    tpAncient.Position = UDim2.new(2/3+0.024,8,0,0)
+    tpAncient.BackgroundColor3 = CARD
+    tpAncient.BackgroundTransparency = 0.4
+    tpAncient.BorderSizePixel = 0
+    tpAncient.Font = Enum.Font.Gotham
+    tpAncient.TextSize = 13
+    tpAncient.TextColor3 = TEXT
+    tpAncient.Text = "🏛 Ancient Ruin"
+    tpAncient.AutoButtonColor = false
+    Instance.new("UICorner", tpAncient).CornerRadius = UDim.new(0,8)
+
+    ----------------------------------------------------------------
+    -- DROPDOWN BEHAVIOUR
+    ----------------------------------------------------------------
+    local diaOpen = false
+    local function recalcDia()
+        local h = diaLayout.AbsoluteContentSize.Y
+        if diaOpen then
+            subDia.Size = UDim2.new(1,0,0,h + 8)
+            card.Size   = UDim2.new(1,-32,0,48 + h + 8)
+            arrow.Text  = "▲"
+        else
+            subDia.Size = UDim2.new(1,0,0,0)
+            card.Size   = UDim2.new(1,-32,0,48)
+            arrow.Text  = "▼"
+        end
+    end
+
+    diaLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcDia)
+
+    cardBtn.MouseButton1Click:Connect(function()
+        diaOpen = not diaOpen
+        recalcDia()
+    end)
+
+    ----------------------------------------------------------------
+    -- TELEPORT HANDLER
+    ----------------------------------------------------------------
+    local function tpTo(name)
+        local cf = ISLAND_SPOTS[name]
+        if not cf then return end
+        local char = lp.Character or lp.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        hrp.CFrame = cf
+    end
+
+    tpCoral.MouseButton1Click:Connect(function()
+        tpTo("Coral Reefs")
+    end)
+
+    tpTropis.MouseButton1Click:Connect(function()
+        tpTo("Hutan Tropis")
+    end)
+
+    tpAncient.MouseButton1Click:Connect(function()
+        tpTo("Ancient Ruin")
+    end)
+
+    ----------------------------------------------------------------
+    -- LOGIC QUEST (COPAS POLA DEEPSEA/ELEMENT)
+    ----------------------------------------------------------------
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local Quests  = require(ReplicatedStorage.Modules.Quests)
+    local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
+
+    local DataReplion = Replion.Client:WaitReplion("Data")
+
+    local function getQuestType(name)
+        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, name)
+        return ok and qType or nil
+    end
+
+    local function calcTotalPercent(questDef, questState)
+        if not questDef or not questDef.Objectives then return 0 end
+        local acc = 0
+        for i,obj in ipairs(questDef.Objectives) do
+            local st = questState and questState.Objectives and questState.Objectives[i]
+            local cur = (st and st.Progress) or 0
+            local goal = obj.Goal or 1
+            if cur >= goal then
+                acc += 1
+            else
+                acc += math.clamp(cur/goal,0,1)
+            end
+        end
+        return acc/#questDef.Objectives*100
+    end
+
+    local function isCompleted(name)
+        local completed = DataReplion:GetExpect("CompletedQuests") or {}
+        for _,q in ipairs(completed) do
+            if q == name then return true end
+        end
+        return false
+    end
+
+    local function dumpDiamond()
+        local name = DIAMOND_QUEST_NAME
+
+        local completedFlag = isCompleted(name)
+        local qType = getQuestType(name)
+        local def = qType and Quests[qType] and Quests[qType][name] or nil
+
+        local all = DataReplion:GetExpect("Quests")
+        local state = qType and all[qType] and all[qType][name] or nil
+
+        if completedFlag and not state then
+            return string.format("%s (%s) – 100%% (COMPLETED)", name, qType or "Mainline"), true
+        end
+
+        if not qType or not def then
+            return name.." – data not found", false
+        end
+
+        if not state then
+            return name.." – not active", false
+        end
+
+        local total = calcTotalPercent(def,state)
+        local doneFlag = MainlineQuestController.DidCompleteAll(qType,name,state) or completedFlag
+        if doneFlag then total = 100 end
+        local totalRounded = math.floor(total+0.5)
+
+        local lines = {}
+        table.insert(lines, string.format("%s (%s) – %d%%%s",
+            name, qType, totalRounded, doneFlag and " (COMPLETED)" or ""))
+
+        for i,obj in ipairs(def.Objectives) do
+            local st = state.Objectives and state.Objectives[i]
+            local cur = (st and st.Progress) or 0
+            local goal = obj.Goal or 1
+            local pct = math.floor(math.clamp(cur/goal,0,1)*100+0.5)
+            table.insert(lines, string.format("  [%d] %s", i, obj.Name))
+            table.insert(lines, string.format("      %d/%d (%d%%)", cur, goal, pct))
+        end
+
+        return table.concat(lines,"\n"), doneFlag
+    end
+
+    local function refreshDia()
+        local text, done = dumpDiamond()
+        diaText.Text = text
+
+        if done then
+            diaRow.Size = UDim2.new(1,0,0,32)
+        else
+            local lines = 0
+            for _ in string.gmatch(text, "\n") do
+                lines += 1
+            end
+            lines = lines + 1
+
+            local lineHeight = 16
+            local basePadding = 12
+            local h = basePadding + lines * lineHeight
+            h = math.clamp(h, 48, 160)
+
+            diaRow.Size = UDim2.new(1,0,0,h)
+        end
+
+        recalcDia()
+    end
+
+    DataReplion:OnChange({"Quests","Mainline"}, refreshDia)
+    DataReplion:OnChange({"CompletedQuests"}, refreshDia)
+    refreshDia()
+end
+
+BuildQuestDiamond()
+
 
 ----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
@@ -1292,16 +1579,13 @@ local function ShowPage(name)
         if not questPage:FindFirstChild("QuestElementCard") then
             BuildQuestElement()
         end
+        if not questPage:FindFirstChild("QuestDiamondCard") then
+            BuildQuestDiamond()
+        end
     end
 end
 
-
-
 BuildShopWeather()
-
-
-
-
 ----------------------------------------------------------------
 -- MISC PAGE : BUILD FUNCTION
 ----------------------------------------------------------------
