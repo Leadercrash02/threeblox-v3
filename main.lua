@@ -412,6 +412,7 @@ newPage("Misc")
 local function BuildQuestDeepsea()
     local questPage = pages["Quest"]
 
+    -- CARD UTAMA
     local card = Instance.new("Frame")
     card.Name = "QuestDeepseaCard"
     card.Parent = questPage
@@ -447,6 +448,7 @@ local function BuildQuestDeepsea()
     cardBtn.Text = ""
     cardBtn.AutoButtonColor = false
 
+    -- ISI DROPDOWN
     local subDeep = Instance.new("Frame", card)
     subDeep.Name = "DeepseaContents"
     subDeep.Position = UDim2.new(0,0,0,48)
@@ -461,7 +463,7 @@ local function BuildQuestDeepsea()
     deepLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     local deepRow = Instance.new("Frame", subDeep)
-    deepRow.Size = UDim2.new(1,0,0,120)
+    deepRow.Size = UDim2.new(1,0,0,140) -- tinggi isi
     deepRow.BackgroundTransparency = 1
 
     local deepText = Instance.new("TextLabel", deepRow)
@@ -477,6 +479,7 @@ local function BuildQuestDeepsea()
     deepText.TextColor3 = TEXT
     deepText.Text = "Loading Deepsea quest..."
 
+    -- DROPDOWN BEHAVIOUR
     local deepOpen = false
     local function recalcDeep()
         local h = deepLayout.AbsoluteContentSize.Y
@@ -498,41 +501,88 @@ local function BuildQuestDeepsea()
         recalcDeep()
     end)
 
-    -- LOGIC QUEST
+    recalcDeep() -- posisi awal tertutup
+
+    ----------------------------------------------------------------
+    -- LOGIC QUEST (VERSI GUI TEST)
+    ----------------------------------------------------------------
+    -- PENTING: samakan path require dengan script test yang dulu jalan
     local Replion = require(ReplicatedStorage.Packages.Replion)
     local Quests  = require(ReplicatedStorage.Modules.Quests)
     local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
+
     local DataReplion = Replion.Client:WaitReplion("Data")
 
+    local function getQuestType(name)
+        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, name)
+        return ok and qType or nil
+    end
+
+    local function calcTotalPercent(questDef, questState)
+        if not questDef or not questDef.Objectives then return 0 end
+        local acc = 0
+        for i,obj in ipairs(questDef.Objectives) do
+            local st = questState and questState.Objectives and questState.Objectives[i]
+            local cur = (st and st.Progress) or 0
+            local goal = obj.Goal or 1
+            if cur >= goal then
+                acc += 1
+            else
+                acc += math.clamp(cur/goal,0,1)
+            end
+        end
+        return acc/#questDef.Objectives*100
+    end
+
+    local function isCompleted(name)
+        local completed = DataReplion:GetExpect("CompletedQuests") or {}
+        for _,q in ipairs(completed) do
+            if q == name then return true end
+        end
+        return false
+    end
+
     local function dumpDeepsea()
-        local questName = "Deep Sea Quest" -- ganti kalau nama beda
-        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, questName)
-        if not ok or not qType then
-            return "Quest data tidak ditemukan."
+        local name = "Deep Sea Quest"  -- nama quest Deepsea dari module
+
+        local completedFlag = isCompleted(name)
+        local qType = getQuestType(name)
+        local def = qType and Quests[qType] and Quests[qType][name] or nil
+
+        local all = DataReplion:GetExpect("Quests")
+        local state = qType and all[qType] and all[qType][name] or nil
+
+        if completedFlag and not state then
+            return string.format("%s (%s) – 100%% (COMPLETED)", name, qType or "Mainline")
         end
 
-        local def = Quests[qType] and Quests[qType][questName]
-        if not def or not def.Objectives then
-            return "Quest definition tidak ditemukan."
+        if not qType or not def then
+            return name.." – data not found"
         end
 
-        local all = DataReplion:GetExpect("Quests") or {}
-        local state = all[qType] and all[qType][questName]
         if not state then
-            return "Quest belum aktif."
+            return name.." – not active"
         end
+
+        local total = calcTotalPercent(def,state)
+        local doneFlag = MainlineQuestController.DidCompleteAll(qType,name,state) or completedFlag
+        if doneFlag then total = 100 end
+        local totalRounded = math.floor(total+0.5)
 
         local lines = {}
-        table.insert(lines, questName.." ("..qType..")")
+        table.insert(lines, string.format("%s (%s) – %d%%%s",
+            name, qType, totalRounded, doneFlag and " (COMPLETED)" or ""))
+
         for i,obj in ipairs(def.Objectives) do
-            local st   = state.Objectives and state.Objectives[i]
-            local cur  = (st and st.Progress) or 0
+            local st = state.Objectives and state.Objectives[i]
+            local cur = (st and st.Progress) or 0
             local goal = obj.Goal or 1
-            local pct  = math.floor(math.clamp(cur/goal,0,1)*100 + 0.5)
+            local pct = math.floor(math.clamp(cur/goal,0,1)*100+0.5)
             table.insert(lines, string.format("  [%d] %s", i, obj.Name))
             table.insert(lines, string.format("      %d/%d (%d%%)", cur, goal, pct))
         end
-        return table.concat(lines, "\n")
+
+        return table.concat(lines,"\n")
     end
 
     local function refreshDeep()
@@ -543,6 +593,7 @@ local function BuildQuestDeepsea()
     DataReplion:OnChange({"CompletedQuests"}, refreshDeep)
     refreshDeep()
 end
+
 
 BuildQuestDeepsea()
 
