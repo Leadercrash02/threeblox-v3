@@ -464,9 +464,9 @@ local function BuildQuestDeepsea()
     deepLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     deepLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    -- ROW 1: TEXT PROGRESS
+    -- ROW 1: TEXT PROGRESS (DINAMIS)
     local deepRow = Instance.new("Frame", subDeep)
-    deepRow.Size = UDim2.new(1,0,0,140)
+    deepRow.Size = UDim2.new(1,0,0,0)
     deepRow.BackgroundTransparency = 1
 
     local deepText = Instance.new("TextLabel", deepRow)
@@ -491,7 +491,8 @@ local function BuildQuestDeepsea()
     tpSys.Size = UDim2.new(0.5,-10,1,0)
     tpSys.Position = UDim2.new(0,0,0,0)
     tpSys.BackgroundColor3 = CARD
-    tpSys.BackgroundTransparency = 0.1
+    tpSys.BackgroundTransparency = 0.4
+    tpSys.BorderSizePixel = 0
     tpSys.Font = Enum.Font.Gotham
     tpSys.TextSize = 13
     tpSys.TextColor3 = TEXT
@@ -503,7 +504,8 @@ local function BuildQuestDeepsea()
     tpTreasure.Size = UDim2.new(0.5,-10,1,0)
     tpTreasure.Position = UDim2.new(0.5,10,0,0)
     tpTreasure.BackgroundColor3 = CARD
-    tpTreasure.BackgroundTransparency = 0.1
+    tpTreasure.BackgroundTransparency = 0.4
+    tpTreasure.BorderSizePixel = 0
     tpTreasure.Font = Enum.Font.Gotham
     tpTreasure.TextSize = 13
     tpTreasure.TextColor3 = TEXT
@@ -535,8 +537,6 @@ local function BuildQuestDeepsea()
         recalcDeep()
     end)
 
-    recalcDeep() -- posisi awal tertutup
-
     ----------------------------------------------------------------
     -- TELEPORT HANDLER (PAKAI ISLAND_SPOTS)
     ----------------------------------------------------------------
@@ -562,7 +562,7 @@ local function BuildQuestDeepsea()
     ----------------------------------------------------------------
     -- LOGIC QUEST (VERSI GUI TEST)
     ----------------------------------------------------------------
-    -- PENTING: PATH REQUIRE HARUS SAMA DENGAN SCRIPT TEST YANG DULU JALAN
+    -- PENTING: sesuaikan path require dengan game lu
     local Replion = require(ReplicatedStorage.Packages.Replion)
     local Quests  = require(ReplicatedStorage.Modules.Quests)
     local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
@@ -642,13 +642,31 @@ local function BuildQuestDeepsea()
     end
 
     local function refreshDeep()
-        deepText.Text = dumpDeepsea()
+        local text = dumpDeepsea()
+        deepText.Text = text
+
+        -- hitung jumlah baris
+        local lines = 0
+        for _ in string.gmatch(text, "\n") do
+            lines += 1
+        end
+        lines = lines + 1
+
+        local lineHeight = 16
+        local basePadding = 12
+        local h = basePadding + lines * lineHeight
+        h = math.clamp(h, 32, 160)
+
+        deepRow.Size = UDim2.new(1,0,0,h)
+
+        recalcDeep()
     end
 
     DataReplion:OnChange({"Quests","Mainline"}, refreshDeep)
     DataReplion:OnChange({"CompletedQuests"}, refreshDeep)
     refreshDeep()
 end
+
 
 BuildQuestDeepsea()
 
