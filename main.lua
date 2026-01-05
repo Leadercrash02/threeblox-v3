@@ -462,8 +462,9 @@ local function BuildQuestDeepsea()
     deepLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     deepLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+    -- ROW 1: TEKS PROGRESS QUEST
     local deepRow = Instance.new("Frame", subDeep)
-    deepRow.Size = UDim2.new(1,0,0,140) -- tinggi isi
+    deepRow.Size = UDim2.new(1,0,0,140)
     deepRow.BackgroundTransparency = 1
 
     local deepText = Instance.new("TextLabel", deepRow)
@@ -478,6 +479,35 @@ local function BuildQuestDeepsea()
     deepText.TextWrapped = false
     deepText.TextColor3 = TEXT
     deepText.Text = "Loading Deepsea quest..."
+
+    -- ROW 2: TELEPORT SYSphus / TREASURE ROOM
+    local tpRow = Instance.new("Frame", subDeep)
+    tpRow.Size = UDim2.new(1,0,0,36)
+    tpRow.BackgroundTransparency = 1
+
+    local tpSys = Instance.new("TextButton", tpRow)
+    tpSys.Size = UDim2.new(0.5,-10,1,0)
+    tpSys.Position = UDim2.new(0,0,0,0)
+    tpSys.BackgroundColor3 = CARD
+    tpSys.BackgroundTransparency = 0.1
+    tpSys.Font = Enum.Font.Gotham
+    tpSys.TextSize = 13
+    tpSys.TextColor3 = TEXT
+    tpSys.Text = "⛰ Sysphus State"
+    tpSys.AutoButtonColor = false
+    Instance.new("UICorner", tpSys).CornerRadius = UDim.new(0,8)
+
+    local tpTreasure = Instance.new("TextButton", tpRow)
+    tpTreasure.Size = UDim2.new(0.5,-10,1,0)
+    tpTreasure.Position = UDim2.new(0.5,10,0,0)
+    tpTreasure.BackgroundColor3 = CARD
+    tpTreasure.BackgroundTransparency = 0.1
+    tpTreasure.Font = Enum.Font.Gotham
+    tpTreasure.TextSize = 13
+    tpTreasure.TextColor3 = TEXT
+    tpTreasure.Text = "💎 Treasure Room"
+    tpTreasure.AutoButtonColor = false
+    Instance.new("UICorner", tpTreasure).CornerRadius = UDim.new(0,8)
 
     -- DROPDOWN BEHAVIOUR
     local deepOpen = false
@@ -501,14 +531,35 @@ local function BuildQuestDeepsea()
         recalcDeep()
     end)
 
-    recalcDeep() -- posisi awal tertutup
+    recalcDeep()
+
+    ----------------------------------------------------------------
+    -- TELEPORT HANDLER (PAKAI ISLAND_SPOTS)
+    ----------------------------------------------------------------
+    local function tpTo(name)
+        local cf = ISLAND_SPOTS[name]
+        if not cf then return end
+        local char = lp.Character or lp.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        hrp.CFrame = cf
+    end
+
+    tpSys.MouseButton1Click:Connect(function()
+        tpTo("Sysphus State")
+    end)
+
+    tpTreasure.MouseButton1Click:Connect(function()
+        tpTo("Treasure Room")
+    end)
 
     ----------------------------------------------------------------
     -- LOGIC QUEST (VERSI GUI TEST)
     ----------------------------------------------------------------
-    -- PENTING: samakan path require dengan script test yang dulu jalan
-    local Replion = require(ReplicatedStorage.Packages.Replion)
-    local Quests  = require(ReplicatedStorage.Modules.Quests)
+    local Replion = require(ReplicatedStorage.Packages.Replion)           -- sesuaikan path
+    local Quests  = require(ReplicatedStorage.Modules.Quests)            -- sesuaikan path
     local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
 
     local DataReplion = Replion.Client:WaitReplion("Data")
@@ -543,7 +594,7 @@ local function BuildQuestDeepsea()
     end
 
     local function dumpDeepsea()
-        local name = "Deep Sea Quest"  -- nama quest Deepsea dari module
+        local name = "Deep Sea Quest"
 
         local completedFlag = isCompleted(name)
         local qType = getQuestType(name)
