@@ -951,11 +951,11 @@ end
 BuildQuestElement()
 
 ----------------------------------------------------------------
--- QUEST : DIAMOND ROD
+-- QUEST : DIAMOND ROD (DIAMOND RESEARCHER)
 ----------------------------------------------------------------
 local function BuildQuestDiamond()
     local questPage = pages["Quest"]
-    local DIAMOND_QUEST_NAME = "Diamond Quest" -- ganti ke nama quest aslinya
+    local DIAMOND_QUEST_NAME = "Diamond Researcher" -- sama seperti GUI test
 
     -- CARD UTAMA
     local card = Instance.new("Frame")
@@ -966,7 +966,7 @@ local function BuildQuestDiamond()
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
-    card.LayoutOrder = 3          -- di bawah Element
+    card.LayoutOrder = 3 -- di bawah Element
     Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
 
     local cardTitle = Instance.new("TextLabel", card)
@@ -1010,7 +1010,7 @@ local function BuildQuestDiamond()
     diaLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     diaLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    -- ROW 1: TEXT PROGRESS
+    -- ROW 1: TEXT PROGRESS (DINAMIS / MODE SINGKAT)
     local diaRow = Instance.new("Frame", subDia)
     diaRow.Size = UDim2.new(1,0,0,0)
     diaRow.BackgroundTransparency = 1
@@ -1097,7 +1097,7 @@ local function BuildQuestDiamond()
     end)
 
     ----------------------------------------------------------------
-    -- TELEPORT HANDLER
+    -- TELEPORT HANDLER (CORAL / TROPIS / ANCIENT)
     ----------------------------------------------------------------
     local function tpTo(name)
         local cf = ISLAND_SPOTS[name]
@@ -1123,7 +1123,7 @@ local function BuildQuestDiamond()
     end)
 
     ----------------------------------------------------------------
-    -- LOGIC QUEST (COPAS POLA DEEPSEA/ELEMENT)
+    -- LOGIC QUEST (SAMA POLA GUI TEST)
     ----------------------------------------------------------------
     local Replion = require(ReplicatedStorage.Packages.Replion)
     local Quests  = require(ReplicatedStorage.Modules.Quests)
@@ -1231,6 +1231,7 @@ local function BuildQuestDiamond()
     DataReplion:OnChange({"CompletedQuests"}, refreshDia)
     refreshDia()
 end
+
 
 BuildQuestDiamond()
 
