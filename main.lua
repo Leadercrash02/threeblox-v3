@@ -1123,7 +1123,7 @@ local function BuildQuestDiamond()
     end)
 
     ----------------------------------------------------------------
-    -- LOGIC QUEST (SAMA POLA GUI TEST)
+    -- LOGIC QUEST (MIRROR SCRIPT TESTER)
     ----------------------------------------------------------------
     local Replion = require(ReplicatedStorage.Packages.Replion)
     local Quests  = require(ReplicatedStorage.Modules.Quests)
@@ -1133,74 +1133,103 @@ local function BuildQuestDiamond()
 
     local function getQuestType(name)
         local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, name)
-        return ok and qType or nil
+        if ok then
+            return qType
+        end
     end
 
     local function calcTotalPercent(questDef, questState)
-        if not questDef or not questDef.Objectives then return 0 end
+        if not questDef or not questDef.Objectives then
+            return 0
+        end
+
         local acc = 0
-        for i,obj in ipairs(questDef.Objectives) do
-            local st = questState and questState.Objectives and questState.Objectives[i]
-            local cur = (st and st.Progress) or 0
-            local goal = obj.Goal or 1
-            if cur >= goal then
+        for i, objDef in ipairs(questDef.Objectives) do
+            local objState = questState and questState.Objectives and questState.Objectives[i]
+            local progress = (objState and objState.Progress) or 0
+            local goal = objDef.Goal or 1
+
+            if progress >= goal then
                 acc += 1
             else
-                acc += math.clamp(cur/goal,0,1)
+                acc += math.clamp(progress / goal, 0, 1)
             end
         end
-        return acc/#questDef.Objectives*100
+
+        return acc / #questDef.Objectives * 100
     end
 
     local function isCompleted(name)
         local completed = DataReplion:GetExpect("CompletedQuests") or {}
-        for _,q in ipairs(completed) do
-            if q == name then return true end
+        for _, qName in ipairs(completed) do
+            if qName == name then
+                return true
+            end
         end
         return false
     end
 
+    -- return: text, doneFlag
     local function dumpDiamond()
         local name = DIAMOND_QUEST_NAME
 
         local completedFlag = isCompleted(name)
-        local qType = getQuestType(name)
-        local def = qType and Quests[qType] and Quests[qType][name] or nil
+        local questType = getQuestType(name)
+        local questDef = questType and Quests[questType] and Quests[questType][name] or nil
 
-        local all = DataReplion:GetExpect("Quests")
-        local state = qType and all[qType] and all[qType][name] or nil
+        local allQuests = DataReplion:GetExpect("Quests")
+        local questState = questType and allQuests[questType] and allQuests[questType][name] or nil
 
-        if completedFlag and not state then
-            return string.format("%s (%s) – 100%% (COMPLETED)", name, qType or "Mainline"), true
+        if completedFlag and not questState then
+            return string.format("%s (%s) – 100%% (COMPLETED)",
+                name,
+                questType or "Mainline"
+            ), true
         end
 
-        if not qType or not def then
+        if not questType or not questDef then
             return name.." – data not found", false
         end
 
-        if not state then
+        if not questState then
             return name.." – not active", false
         end
 
-        local total = calcTotalPercent(def,state)
-        local doneFlag = MainlineQuestController.DidCompleteAll(qType,name,state) or completedFlag
-        if doneFlag then total = 100 end
-        local totalRounded = math.floor(total+0.5)
+        local totalPct = calcTotalPercent(questDef, questState)
+        local doneFlag = MainlineQuestController.DidCompleteAll(questType, name, questState) or completedFlag
+        if doneFlag then
+            totalPct = 100
+        end
+        local totalRounded = math.floor(totalPct + 0.5)
 
         local lines = {}
-        table.insert(lines, string.format("%s (%s) – %d%%%s",
-            name, qType, totalRounded, doneFlag and " (COMPLETED)" or ""))
+        for i, objDef in ipairs(questDef.Objectives) do
+            local objState = questState.Objectives and questState.Objectives[i]
+            local cur = (objState and objState.Progress) or 0
+            local goal = objDef.Goal or 1
+            local pct = math.floor(math.clamp(cur / goal, 0, 1) * 100 + 0.5)
 
-        for i,obj in ipairs(def.Objectives) do
-            local st = state.Objectives and state.Objectives[i]
-            local cur = (st and st.Progress) or 0
-            local goal = obj.Goal or 1
-            local pct = math.floor(math.clamp(cur/goal,0,1)*100+0.5)
-            table.insert(lines, string.format("  [%d] %s", i, obj.Name))
-            table.insert(lines, string.format("      %d/%d (%d%%)", cur, goal, pct))
+            table.insert(lines, string.format(
+                "  [%d] %s",
+                i,
+                objDef.Name
+            ))
+            table.insert(lines, string.format(
+                "      %d/%d (%d%%)",
+                cur,
+                goal,
+                pct
+            ))
         end
 
-        return table.concat(lines,"\n"), doneFlag
+        local header = string.format("%s (%s) – %d%%%s",
+            name,
+            questType,
+            totalRounded,
+            doneFlag and " (COMPLETED)" or ""
+        )
+
+        return header.."\n"..table.concat(lines, "\n"), doneFlag
     end
 
     local function refreshDia()
@@ -1231,6 +1260,7 @@ local function BuildQuestDiamond()
     DataReplion:OnChange({"CompletedQuests"}, refreshDia)
     refreshDia()
 end
+
 
 
 BuildQuestDiamond()
