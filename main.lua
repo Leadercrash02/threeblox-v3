@@ -406,6 +406,11 @@ newPage("Quest")
 newPage("Shop & Trade")
 newPage("Misc")
 
+-- layout untuk halaman Quest (biar card tidak nabrak)
+local questLayout = Instance.new("UIListLayout", pages["Quest"])
+questLayout.Padding = UDim.new(0,8)
+questLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
 ----------------------------------------------------------------
 -- QUEST : DEEPSEA (GHOSTFINN)
 ----------------------------------------------------------------
@@ -680,18 +685,18 @@ BuildQuestDeepsea()
 ----------------------------------------------------------------
 local function BuildQuestElement()
     local questPage = pages["Quest"]
-    local ELEMENT_QUEST_NAME = "Element Quest" -- ganti ke nama aslinya di module
+    local ELEMENT_QUEST_NAME = "Element Quest" -- ganti ke nama quest aslinya
 
     -- CARD UTAMA
     local card = Instance.new("Frame")
     card.Name = "QuestElementCard"
     card.Parent = questPage
     card.Size = UDim2.new(1,-32,0,48)
-    -- taruh di bawah Deepsea (offset Y dinaikkan sedikit)
-    card.Position = UDim2.new(0,16,0,16 + 60)
+    card.Position = UDim2.new(0,16,0,0)      -- Y diatur UIListLayout
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
+    card.LayoutOrder = 2                     -- Element di bawah Deepsea
     Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
 
     local cardTitle = Instance.new("TextLabel", card)
@@ -767,7 +772,7 @@ local function BuildQuestElement()
     tpAncient.Font = Enum.Font.Gotham
     tpAncient.TextSize = 13
     tpAncient.TextColor3 = TEXT
-    tpAncient.Text = "🌿 Ancient Ruin"
+    tpAncient.Text = "🌿 Ancient Jungle"
     tpAncient.AutoButtonColor = false
     Instance.new("UICorner", tpAncient).CornerRadius = UDim.new(0,8)
 
@@ -809,7 +814,7 @@ local function BuildQuestElement()
     end)
 
     ----------------------------------------------------------------
-    -- TELEPORT HANDLER (ANCIENT RUIN + SEcred TEMPLE)
+    -- TELEPORT HANDLER (ANCIENT JUNGLE + SEcred TEMPLE)
     ----------------------------------------------------------------
     local function tpTo(name)
         local cf = ISLAND_SPOTS[name]
@@ -823,15 +828,15 @@ local function BuildQuestElement()
     end
 
     tpAncient.MouseButton1Click:Connect(function()
-        tpTo("Ancient Ruin")   -- pakai spot Ancient Ruin di table
+        tpTo("Ancient Ruin")   -- CFrame Ancient Jungle lu taruh di sini di ISLAND_SPOTS
     end)
 
     tpSecred.MouseButton1Click:Connect(function()
-        tpTo("Secred Temple")  -- pakai spot Secred Temple di table
+        tpTo("Secred Temple")
     end)
 
     ----------------------------------------------------------------
-    -- LOGIC QUEST (SAMA DENGAN DEEPSEA, CUMA NAMA QUEST BEDA)
+    -- LOGIC QUEST (SAMA POLA DENGAN DEEPSEA)
     ----------------------------------------------------------------
     local Replion = require(ReplicatedStorage.Packages.Replion)
     local Quests  = require(ReplicatedStorage.Modules.Quests)
@@ -939,6 +944,7 @@ local function BuildQuestElement()
     DataReplion:OnChange({"CompletedQuests"}, refreshElem)
     refreshElem()
 end
+
 
 BuildQuestElement()
 
