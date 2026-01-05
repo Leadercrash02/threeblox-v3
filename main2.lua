@@ -1970,6 +1970,92 @@ end
 
     refresh()
 
+        ----------------------------------------------------------------
+-- 🎬 DISABLE CUTSCENE (KILL REMOTE)
+----------------------------------------------------------------
+do
+    local row = Instance.new("Frame", sub)
+    row.Size = UDim2.new(1,0,0,36)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(1,-100,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT
+    label.Text = "🎬 Disable All Cutscenes"
+
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    local enabled = _G.RAY_DisableCutscene or false
+
+    local function refresh()
+        pill.BackgroundColor3 = enabled and ACCENT or MUTED
+        knob.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    local function KillCutsceneRemotes()
+        local RS = game:GetService("ReplicatedStorage")
+        local pkg = RS:FindFirstChild("Packages")
+        if not pkg then return end
+
+        local index = pkg:FindFirstChild("_Index")
+        if not index then return end
+
+        local netPkg = index:FindFirstChild("sleitnick_net@0.2.0")
+            or index:FindFirstChild("sleitnick_net")
+        if not netPkg then return end
+
+        local netScript = netPkg:FindFirstChild("net")
+        if not netScript then return end
+
+        for _, name in ipairs({"RE/ReplicateCutscene","RE/StopCutscene"}) do
+            local inst = netScript:FindFirstChild(name)
+            if inst then
+                inst:Destroy()
+            end
+        end
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        _G.RAY_DisableCutscene = enabled
+
+        if enabled then
+            KillCutsceneRemotes()
+        end
+
+        refresh()
+    end)
+
+    -- auto kill lagi kalau rejoin / script reload dan toggle masih ON
+    task.delay(1, function()
+        if enabled then
+            KillCutsceneRemotes()
+        end
+    end)
+
+    refresh()
+end
+
     ----------------------------------------------------------------
 -- 🎣 DISABLE ROD EFFECT
 ----------------------------------------------------------------
