@@ -407,6 +407,146 @@ newPage("Shop & Trade")
 newPage("Misc")
 
 ----------------------------------------------------------------
+-- QUEST : DEEPSEA (GHOSTFINN)
+----------------------------------------------------------------
+local function BuildQuestDeepsea()
+    local questPage = pages["Quest"]
+
+    local card = Instance.new("Frame")
+    card.Name = "QuestDeepseaCard"
+    card.Parent = questPage
+    card.Size = UDim2.new(1,-32,0,48)
+    card.Position = UDim2.new(0,16,0,16)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
+
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1,-40,0,22)
+    cardTitle.Position = UDim2.new(0,16,0,4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "🌊 Quest Deepsea (Ghostfinn)"
+
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0,24,0,24)
+    arrow.Position = UDim2.new(1,-28,0,10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1,0,1,0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+
+    local subDeep = Instance.new("Frame", card)
+    subDeep.Name = "DeepseaContents"
+    subDeep.Position = UDim2.new(0,0,0,48)
+    subDeep.Size = UDim2.new(1,0,0,0)
+    subDeep.BackgroundTransparency = 1
+    subDeep.ClipsDescendants = true
+
+    local deepLayout = Instance.new("UIListLayout", subDeep)
+    deepLayout.Padding = UDim.new(0,6)
+    deepLayout.FillDirection = Enum.FillDirection.Vertical
+    deepLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    deepLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local deepRow = Instance.new("Frame", subDeep)
+    deepRow.Size = UDim2.new(1,0,0,120)
+    deepRow.BackgroundTransparency = 1
+
+    local deepText = Instance.new("TextLabel", deepRow)
+    deepText.Name = "DeepseaText"
+    deepText.Size = UDim2.new(1,-8,1,-8)
+    deepText.Position = UDim2.new(0,4,0,4)
+    deepText.BackgroundTransparency = 1
+    deepText.Font = Enum.Font.Code
+    deepText.TextSize = 13
+    deepText.TextXAlignment = Enum.TextXAlignment.Left
+    deepText.TextYAlignment = Enum.TextYAlignment.Top
+    deepText.TextWrapped = false
+    deepText.TextColor3 = TEXT
+    deepText.Text = "Loading Deepsea quest..."
+
+    local deepOpen = false
+    local function recalcDeep()
+        local h = deepLayout.AbsoluteContentSize.Y
+        if deepOpen then
+            subDeep.Size = UDim2.new(1,0,0,h + 8)
+            card.Size   = UDim2.new(1,-32,0,48 + h + 8)
+            arrow.Text  = "▲"
+        else
+            subDeep.Size = UDim2.new(1,0,0,0)
+            card.Size   = UDim2.new(1,-32,0,48)
+            arrow.Text  = "▼"
+        end
+    end
+
+    deepLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcDeep)
+
+    cardBtn.MouseButton1Click:Connect(function()
+        deepOpen = not deepOpen
+        recalcDeep()
+    end)
+
+    -- LOGIC QUEST
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local Quests  = require(ReplicatedStorage.Modules.Quests)
+    local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
+    local DataReplion = Replion.Client:WaitReplion("Data")
+
+    local function dumpDeepsea()
+        local questName = "Deep Sea Quest" -- ganti kalau nama beda
+        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, questName)
+        if not ok or not qType then
+            return "Quest data tidak ditemukan."
+        end
+
+        local def = Quests[qType] and Quests[qType][questName]
+        if not def or not def.Objectives then
+            return "Quest definition tidak ditemukan."
+        end
+
+        local all = DataReplion:GetExpect("Quests") or {}
+        local state = all[qType] and all[qType][questName]
+        if not state then
+            return "Quest belum aktif."
+        end
+
+        local lines = {}
+        table.insert(lines, questName.." ("..qType..")")
+        for i,obj in ipairs(def.Objectives) do
+            local st   = state.Objectives and state.Objectives[i]
+            local cur  = (st and st.Progress) or 0
+            local goal = obj.Goal or 1
+            local pct  = math.floor(math.clamp(cur/goal,0,1)*100 + 0.5)
+            table.insert(lines, string.format("  [%d] %s", i, obj.Name))
+            table.insert(lines, string.format("      %d/%d (%d%%)", cur, goal, pct))
+        end
+        return table.concat(lines, "\n")
+    end
+
+    local function refreshDeep()
+        deepText.Text = dumpDeepsea()
+    end
+
+    DataReplion:OnChange({"Quests","Mainline"}, refreshDeep)
+    DataReplion:OnChange({"CompletedQuests"}, refreshDeep)
+    refreshDeep()
+end
+
+BuildQuestDeepsea()
+
+----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
 ----------------------------------------------------------------
 local function BuildShopWeather()
@@ -741,12 +881,15 @@ local function ShowPage(name)
         pages["Teleport"].Visible = true
 
     elseif name == "Quest" then
-        pages["Quest"].Visible = true
+        local questPage = pages["Quest"]
+        questPage.Visible = true
+
+        if not questPage:FindFirstChild("QuestDeepseaCard") then
+            BuildQuestDeepsea()
+        end
     end
 end
 
--- opsional kalau mau langsung build
-BuildShopWeather()
 
 
 
@@ -1971,6 +2114,93 @@ end
     refresh()
 
     ----------------------------------------------------------------
+-- 🎬 DISABLE CUTSCENE (KILL REMOTE)
+----------------------------------------------------------------
+do
+    local row = Instance.new("Frame", sub)
+    row.Size = UDim2.new(1,0,0,36)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(1,-100,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT
+    label.Text = "🎬 Disable All Cutscenes"
+
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    local enabled = _G.RAY_DisableCutscene or false
+
+    local function refresh()
+        pill.BackgroundColor3 = enabled and ACCENT or MUTED
+        knob.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    local function KillCutsceneRemotes()
+        local RS = game:GetService("ReplicatedStorage")
+        local pkg = RS:FindFirstChild("Packages")
+        if not pkg then return end
+
+        local index = pkg:FindFirstChild("_Index")
+        if not index then return end
+
+        local netPkg = index:FindFirstChild("sleitnick_net@0.2.0")
+            or index:FindFirstChild("sleitnick_net")
+        if not netPkg then return end
+
+        local netScript = netPkg:FindFirstChild("net")
+        if not netScript then return end
+
+        for _, name in ipairs({"RE/ReplicateCutscene","RE/StopCutscene"}) do
+            local inst = netScript:FindFirstChild(name)
+            if inst then
+                inst:Destroy()
+            end
+        end
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        _G.RAY_DisableCutscene = enabled
+
+        if enabled then
+            KillCutsceneRemotes()
+        end
+
+        refresh()
+    end)
+
+    -- auto kill lagi kalau rejoin / script reload dan toggle masih ON
+    task.delay(1, function()
+        if enabled then
+            KillCutsceneRemotes()
+        end
+    end)
+
+    refresh()
+end
+
+
+    ----------------------------------------------------------------
 -- 🎣 DISABLE ROD EFFECT
 ----------------------------------------------------------------
 do
@@ -2353,6 +2583,108 @@ tpTitleMain.Text = "Teleport"
 tpTitleMain.LayoutOrder = 1
 
 ----------------------------------------------------------------
+-- 🎄 CHRISTMAS CAVE SCHEDULE (WITH SECONDS)
+----------------------------------------------------------------
+local function GetChristmasCaveStatus()
+    -- Buka setiap 2 jam, 30 menit per sesi. [web:24][web:33]
+    local t = os.date("*t")
+    local h, m, s = t.hour, t.min, t.sec
+
+    local openHours = {1,3,5,7,9,11,13,15,17,19,21,23}
+    local isOpen = false
+
+    for _, oh in ipairs(openHours) do
+        if h == oh and m >= 0 and m < 30 then
+            isOpen = true
+            break
+        end
+    end
+
+    -- hitung next open (dalam detik dari sekarang)
+    local nowSeconds = h * 3600 + m * 60 + s
+    local nextDiff = math.huge
+    local nextHour
+
+    for _, oh in ipairs(openHours) do
+        local candidate = oh * 3600 -- jam:00:00
+        if candidate <= nowSeconds then
+            candidate = candidate + 24 * 3600 -- geser ke hari berikutnya
+        end
+        local diff = candidate - nowSeconds
+        if diff < nextDiff then
+            nextDiff = diff
+            nextHour = oh
+        end
+    end
+
+    local nextInSeconds = nextDiff
+    return isOpen, nextHour, nextInSeconds
+end
+
+----------------------------------------------------------------
+-- 🎄 CHRISTMAS CAVE SCHEDULE (WITH SECONDS + OFFSET)
+----------------------------------------------------------------
+local openHours = {1,3,5,7,9,11,13,15,17,19,21,23} -- tiap 2 jam. [web:24][web:33]
+
+-- offset detik (positif = mundurin waktu script dibanding device)
+local TIME_OFFSET = 60 -- 60 detik = 1 menit
+
+local function GetChristmasCaveState()
+    local t = os.date("*t")
+    local h, m, s = t.hour or 0, t.min or 0, t.sec or 0
+
+    -- terapkan offset
+    local nowSec = h*3600 + m*60 + s - TIME_OFFSET
+    if nowSec < 0 then
+        nowSec = nowSec + 24*3600
+    end
+
+    -- hitung ulang h,m,s setelah offset
+    h = math.floor(nowSec / 3600)
+    m = math.floor((nowSec % 3600) / 60)
+    s = nowSec % 60
+
+    -- cek lagi buka/tutup (00–29 menit)
+    local isOpen = false
+    local currentOpenHour = nil
+    for _, oh in ipairs(openHours) do
+        if h == oh and m >= 0 and m < 30 then
+            isOpen = true
+            currentOpenHour = oh
+            break
+        end
+    end
+
+    -- next open
+    local nextOpenDiff = 24*3600
+    local nextOpenHour = openHours[1]
+    for _, oh in ipairs(openHours) do
+        local candidate = oh*3600
+        if candidate <= nowSec then
+            candidate = candidate + 24*3600
+        end
+        local diff = candidate - nowSec
+        if diff < nextOpenDiff then
+            nextOpenDiff = diff
+            nextOpenHour = oh
+        end
+    end
+
+    -- next close (kalau lagi OPEN, durasi 30 menit)
+    local nextCloseDiff = nil
+    if isOpen and currentOpenHour then
+        local openStart = currentOpenHour*3600
+        local closeTime = openStart + 30*60
+        if closeTime <= nowSec then
+            closeTime = closeTime + 24*3600
+        end
+        nextCloseDiff = closeTime - nowSec
+    end
+
+    return isOpen, nextOpenHour, nextOpenDiff, nextCloseDiff
+end
+
+----------------------------------------------------------------
 -- 🏝️ TELEPORT TO ISLAND
 ----------------------------------------------------------------
 local holderIsland = Instance.new("Frame", teleportPage)
@@ -2380,7 +2712,7 @@ tpIslandFrame.BackgroundTransparency = 1
 tpIslandFrame.Visible = false
 
 local islandCard = Instance.new("Frame", tpIslandFrame)
-islandCard.Size = UDim2.new(1,-32,0,160) -- sama tinggi
+islandCard.Size = UDim2.new(1,-32,0,190) -- tinggi dinaikkan buat 2 baris status
 islandCard.Position = UDim2.new(0,16,0,0)
 islandCard.BackgroundColor3 = CARD
 islandCard.BackgroundTransparency = 0.12
@@ -2401,9 +2733,22 @@ islandTitle.TextColor3 = TEXT
 islandTitle.TextXAlignment = Enum.TextXAlignment.Left
 islandTitle.Text = "🏝️ Teleport to Island"
 
+-- STATUS TEXT CHRISTMAS CAVE (2 baris, kuning)
+local statusLabel = Instance.new("TextLabel", islandCard)
+statusLabel.Size = UDim2.new(1,0,0,32)
+statusLabel.Position = UDim2.new(0,0,0,22)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Font = Enum.Font.Gotham
+statusLabel.TextSize = 11
+statusLabel.TextColor3 = Color3.fromRGB(255, 220, 0)
+statusLabel.TextXAlignment = Enum.TextXAlignment.Left
+statusLabel.TextYAlignment = Enum.TextYAlignment.Top
+statusLabel.TextWrapped = true
+statusLabel.Text = "Checking Christmas Cave status..."
+
 local selectIslandBtn = Instance.new("TextButton", islandCard)
 selectIslandBtn.Size = UDim2.new(0.4,0,0,26)
-selectIslandBtn.Position = UDim2.new(0,0,0,26)
+selectIslandBtn.Position = UDim2.new(0,0,0,56)
 selectIslandBtn.BackgroundColor3 = CARD
 selectIslandBtn.BackgroundTransparency = 0.16
 selectIslandBtn.AutoButtonColor = false
@@ -2416,7 +2761,7 @@ Instance.new("UICorner", selectIslandBtn).CornerRadius = UDim.new(0,8)
 
 local tpIslandBtn = Instance.new("TextButton", islandCard)
 tpIslandBtn.Size = UDim2.new(0.4,0,0,28)
-tpIslandBtn.Position = UDim2.new(0,0,0,56)
+tpIslandBtn.Position = UDim2.new(0,0,0,86)
 tpIslandBtn.BackgroundColor3 = ACCENT
 tpIslandBtn.BackgroundTransparency = 0.08
 tpIslandBtn.AutoButtonColor = false
@@ -2428,7 +2773,7 @@ Instance.new("UICorner", tpIslandBtn).CornerRadius = UDim.new(0,8)
 
 local refreshIslandBtn = Instance.new("TextButton", islandCard)
 refreshIslandBtn.Size = UDim2.new(0.4,0,0,24)
-refreshIslandBtn.Position = UDim2.new(0,0,0,90)
+refreshIslandBtn.Position = UDim2.new(0,0,0,120)
 refreshIslandBtn.BackgroundColor3 = CARD
 refreshIslandBtn.BackgroundTransparency = 0.18
 refreshIslandBtn.AutoButtonColor = false
@@ -2439,11 +2784,11 @@ refreshIslandBtn.TextXAlignment = Enum.TextXAlignment.Center
 refreshIslandBtn.Text = "Refresh Island"
 Instance.new("UICorner", refreshIslandBtn).CornerRadius = UDim.new(0,8)
 
--- PANEL KANAN ISLAND (SAMA PERSIS STYLE PLAYER)
+-- PANEL KANAN ISLAND
 local islandDropFrame = Instance.new("Frame", islandCard)
 islandDropFrame.Size = UDim2.new(0.55,0,0,140)
 islandDropFrame.AnchorPoint = Vector2.new(1,0)
-islandDropFrame.Position = UDim2.new(1,-8,0,26)
+islandDropFrame.Position = UDim2.new(1,-8,0,56)
 islandDropFrame.BackgroundColor3 = CARD
 islandDropFrame.BackgroundTransparency = 0.06
 islandDropFrame.Visible = false
@@ -2518,8 +2863,8 @@ local islandOpen = false
 local function recalcIsland()
     if islandOpen then
         tpIslandFrame.Visible = true
-        tpIslandFrame.Size = UDim2.new(1,0,0,168)
-        holderIsland.Size = UDim2.new(1,0,0,34 + 168)
+        tpIslandFrame.Size = UDim2.new(1,0,0,198)
+        holderIsland.Size = UDim2.new(1,0,0,34 + 198)
         rowIsland.Text = "  🏝️ Teleport to Island  v"
     else
         tpIslandFrame.Visible = false
@@ -2564,6 +2909,30 @@ end)
 
 rebuildIslandDropdown()
 
+-- LOOP UPDATE STATUS CHRISTMAS CAVE (COUNTDOWN OPEN & CLOSE)
+task.spawn(function()
+    while true do
+        local isOpen, nextOpenHour, toOpenSec, toCloseSec = GetChristmasCaveState()
+
+        local hrsO  = math.floor(toOpenSec / 3600)
+        local minsO = math.floor((toOpenSec % 3600) / 60)
+        local secsO = toOpenSec % 60
+        local line2 = string.format("Next OPEN in %02d:%02d:%02d", hrsO, minsO, secsO)
+
+        local line1
+        if isOpen and toCloseSec then
+            local hrsC  = math.floor(toCloseSec / 3600)
+            local minsC = math.floor((toCloseSec % 3600) / 60)
+            local secsC = toCloseSec % 60
+            line1 = string.format("Christmas Cave: OPEN | Close in %02d:%02d:%02d", hrsC, minsC, secsC)
+        else
+            line1 = "Christmas Cave: CLOSED"
+        end
+
+        statusLabel.Text = line1 .. "\n" .. line2
+        task.wait(1)
+    end
+end)
 
 ----------------------------------------------------------------
 -- 🧍‍♂️ TELEPORT TO PLAYER
@@ -2892,26 +3261,26 @@ function TeleportToMegalodon()
     char:PivotTo(cf)
 end
 
-
-
-
-
+----------------------------------------------------------------
 -- ENGINE STATE
+----------------------------------------------------------------
 local AutoFishAFK = false
 local isFishing   = false
 
 -- delay Auto Fishing (feel V2)
-local DelayReel   = 3   -- sama kayak _G.RAY_DelayCast
-local DelayCatch  = 2   -- sama kayak _G.RAY_DelayFinish
+local DelayReel   = 3      -- sama kayak _G.RAY_DelayCast
+local DelayCatch  = 2      -- sama kayak _G.RAY_DelayFinish
 
 -- Blatant state
-local BlatantOn     = false
-local BlatantReel   = 0.8   -- Reel Delay
-local BlatantCatch  = 0.75  -- = 1.5 * 0.5 default
+local BlatantOn    = false
+local BlatantReel  = 0.8   -- Reel Delay (UI)
+local BlatantCatch = 0.75  -- = 1.5 * 0.5 default
 
 _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
 
+----------------------------------------------------------------
 -- FUNGSI DASAR
+----------------------------------------------------------------
 local function Reel_V3()
     pcall(function()
         Events.fishing:FireServer()
@@ -2924,11 +3293,18 @@ local function Cast_V3()
         task.wait(0.05)
         Events.charge:InvokeServer(workspace:GetServerTimeNow())
         task.wait(0.02)
-        Events.minigame:InvokeServer(1.2854545116425, 1)
+        -- ARGUMEN MINIGAME BARU (dari RemoteSpy)
+        Events.minigame:InvokeServer(
+           -1.2379837036132812,
+            0.9999998585903084
+        )
     end)
 end
 
--- AUTO FISH FEEL V2 (1 cast -> tunggu -> 1 reel -> tunggu)
+----------------------------------------------------------------
+-- AUTO FISH FEEL V2
+-- 1 cast -> tunggu -> 1 reel -> tunggu
+----------------------------------------------------------------
 local function Engine_V3_Delayed()
     if isFishing then return end
     isFishing = true
@@ -2941,38 +3317,47 @@ local function Engine_V3_Delayed()
     isFishing = false
 end
 
+----------------------------------------------------------------
 -- CONFIG (UI)
-local BlatantReel   = 1.17   -- biarin
-local BlatantCatch  = 0.25   -- 0.2–0.3
+----------------------------------------------------------------
+local BlatantReel  = 1.17   -- biarin, dibaca UI
+local BlatantCatch = 0.25   -- 0.2–0.3 enak
 
-local CastCount        = 3
+local CastCount        = 2      -- DULU 3, dikurangin biar miss kecil
 local DelayBetweenCast = 0.03
 
+----------------------------------------------------------------
+-- BLATANT CYCLE V2
+----------------------------------------------------------------
 local function BlatantCycle_V2()
     if isFishing or not BlatantOn then return end
     isFishing = true
 
-    -- 3x CAST CEPAT
+    -- 2x CAST CEPAT
     pcall(function()
         Events.equip:FireServer(1)
         task.wait(0.01)
+
         for _ = 1, CastCount do
             task.spawn(function()
                 Events.charge:InvokeServer(workspace:GetServerTimeNow())
                 task.wait(0.01)
-                Events.minigame:InvokeServer(1.2854545116425, 1)
+                Events.minigame:InvokeServer(
+                   -1.2379837036132812,
+                    0.9999998585903084
+                )
             end)
             task.wait(DelayBetweenCast)
         end
     end)
 
-    -- DELAY REAL (SEDIKIT LEBIH CEPAT)
-    local RealReelDelay  = 0.52     -- dari 0.55 → 0.52
-    local RealInnerDelay = 0.0009   -- sedikit lebih longgar dari 0.0007
+    -- DELAY REAL
+    local RealReelDelay  = 0.6     -- sedikit dinaikkan biar ga miss
+    local RealInnerDelay = 0.0009  -- micro spam reel
 
     task.wait(RealReelDelay)
 
-    for _ = 1,5 do
+    for _ = 1, 5 do
         Reel_V3()
         task.wait(RealInnerDelay)
     end
@@ -2981,7 +3366,9 @@ local function BlatantCycle_V2()
     isFishing = false
 end
 
+----------------------------------------------------------------
 -- EXTRA CATCH (pakai BlatantCatch sebagai delay)
+----------------------------------------------------------------
 task.spawn(function()
     while true do
         if BlatantOn and _G.RAY_ExtraCatchBlatant and not isFishing then
@@ -2991,6 +3378,10 @@ task.spawn(function()
         task.wait(0.05)
     end
 end)
+
+
+
+
 
 
 -- ====================== AUTO OPTION CONTENT ======================
@@ -3846,16 +4237,23 @@ end
 pages["Auto Option"].Visible = true
 task.wait(0.1)
 
+----------------------------------------------------------------
+-- LOOP UTAMA AUTO / BLATANT
+----------------------------------------------------------------
 task.spawn(function()
     while true do
         if BlatantOn then
-            BlatantCycle_V2()      -- ini otomatis pakai versi improve yang baru
+            BlatantCycle_V2()
         elseif AutoFishAFK then
             Engine_V3_Delayed()
+        else
+            task.wait(0.15)
         end
-        task.wait(0.05)
+
+        task.wait(0.05) -- jeda antar siklus biar server sempet napas
     end
 end)
+
 
 
 -- AUTO SELL ENGINE SIMPLE
