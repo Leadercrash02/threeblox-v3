@@ -914,7 +914,7 @@ local function BuildShopTravelingMerchant()
     cardTitle.TextSize = 14
     cardTitle.TextXAlignment = Enum.TextXAlignment.Left
     cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "Traveling Merchant"
+    cardTitle.Text = "🧳 Traveling Merchant"
 
     local arrow = Instance.new("TextLabel", card)
     arrow.Size = UDim2.new(0,24,0,24)
@@ -975,7 +975,7 @@ local function BuildShopTravelingMerchant()
     lbl.TextSize = 13
     lbl.TextXAlignment = Enum.TextXAlignment.Left
     lbl.TextColor3 = TEXT
-    lbl.Text = "Select Merchant Item"
+    lbl.Text = "🧳 Select Merchant Item"
 
     local hint = Instance.new("TextLabel", row)
     hint.Size = UDim2.new(0.5,-32,1,0)
@@ -1051,7 +1051,7 @@ local function BuildShopTravelingMerchant()
     title.TextSize = 14
     title.TextXAlignment = Enum.TextXAlignment.Left
     title.TextColor3 = TEXT
-    title.Text = "Traveling Merchant"
+    title.Text = "🧳 Traveling Merchant"
 
     local closeBtn = Instance.new("TextButton", panel)
     closeBtn.Size = UDim2.new(0,22,0,22)
@@ -1111,6 +1111,14 @@ local function BuildShopTravelingMerchant()
         return selectedSet[entry.Id] ~= nil
     end
 
+    local function setRowHighlight(rowFrame, on)
+        if not rowFrame then return end
+        local hl = rowFrame:FindFirstChild("Highlight")
+        if hl then
+            hl.BackgroundTransparency = on and 0 or 1
+        end
+    end
+
     local function updateInfo()
         if selectedCount == 0 then
             stroke.Enabled = false
@@ -1164,14 +1172,6 @@ local function BuildShopTravelingMerchant()
             (#totalLines > 0 and table.concat(totalLines, ", ")) or "-",
             table.concat(lines, "\n")
         )
-    end
-
-    local function setRowHighlight(rowFrame, on)
-        if not rowFrame then return end
-        local hl = rowFrame:FindFirstChild("Highlight")
-        if hl then
-            hl.BackgroundTransparency = on and 0 or 1
-        end
     end
 
     local function rebuildList()
@@ -1264,13 +1264,11 @@ local function BuildShopTravelingMerchant()
                 rowItem.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         if isSelected(entry) then
-                            -- deselect
                             selectedSet[entry.Id] = nil
                             selectedCount -= 1
                             setRowHighlight(rowItem, false)
                         else
                             if selectedCount >= 3 then
-                                -- hard limit 3
                                 return
                             end
                             selectedSet[entry.Id] = entry
@@ -1338,6 +1336,7 @@ local function BuildShopTravelingMerchant()
 
     recalc()
 end
+
 
 
 BuildShopTravelingMerchant()
