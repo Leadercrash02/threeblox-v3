@@ -412,7 +412,7 @@ questLayout.Padding = UDim.new(0,8)
 questLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 ----------------------------------------------------------------
--- TRAVELING MERCHANT REQS & HELPERS
+-- TRAVELING MERCHANT | SHOP & TRADE PANEL
 ----------------------------------------------------------------
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -429,6 +429,9 @@ local MerchantReplion = Replion.Client:WaitReplion("Merchant")
 local DataReplion     = Replion.Client:WaitReplion("Data")
 local RF_Purchase     = Net:RemoteFunction("PurchaseMarketItem")
 
+----------------------------------------------------------------
+-- DATA HELPERS (SAMA DENGAN GUI TEST)
+----------------------------------------------------------------
 local function getMarketDataFromId(id)
     for _, v in ipairs(MarketItemData) do
         if v.Id == id then
@@ -437,11 +440,21 @@ local function getMarketDataFromId(id)
     end
 end
 
-local function ownsLocalItem(market)
-    local info = ItemUtility.GetItemDataFromItemType(market.Type, market.Identifier)
+local function getMerchantItems()
+    local ok, items = pcall(function()
+        return MerchantReplion:Get("Items")
+    end)
+    if not ok or type(items) ~= "table" then
+        return {}
+    end
+    return items
+end
+
+local function ownsLocalItem(marketData)
+    local info = ItemUtility.GetItemDataFromItemType(marketData.Type, marketData.Identifier)
     if not info then return false end
 
-    local invPath = InventoryMapping[market.Type or "Items"]
+    local invPath = InventoryMapping[marketData.Type or "Items"]
     if not invPath then return false end
 
     return PlayerStatsUtility:GetItemFromInventory(
@@ -453,18 +466,27 @@ local function ownsLocalItem(market)
     ) ~= nil
 end
 
-local function canAfford(market)
-    if not (market.Price and market.Currency) then
+local function canAfford(marketData)
+    if not (marketData.Price and marketData.Currency) then
         return false
     end
 
-    local curDef = CurrencyUtility:GetCurrency(market.Currency)
+    local curDef = CurrencyUtility:GetCurrency(marketData.Currency)
     if not curDef or not curDef.Path then
         return true
     end
 
     local bal = DataReplion:Get(curDef.Path) or 0
-    return bal >= market.Price
+    return bal >= marketData.Price
+end
+
+local function buyItem(id)
+    local ok, res = pcall(function()
+        return RF_Purchase:InvokeServer(id)
+    end)
+    if not ok then
+        warn("[Traveling Merchant] Purchase error:", res)
+    end
 end
 
 ----------------------------------------------------------------
@@ -478,7 +500,7 @@ local function BuildShopTravelingMerchant()
     card.Name = "TravelingMerchantCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,72) -- 16 + 56, kira-kira di bawah Weather
+    card.Position = UDim2.new(0,16,0,72) -- 16 + 56, adjust kalau perlu
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
@@ -540,9 +562,7 @@ local function BuildShopTravelingMerchant()
         recalc()
     end)
 
-    ----------------------------------------------------------------
-    -- ROW "SELECT ITEM"
-    ----------------------------------------------------------------
+    -- ROW SELECT ITEM
     local row = Instance.new("Frame", subFrame)
     row.Size = UDim2.new(1,0,0,36)
     row.BackgroundTransparency = 1
@@ -565,7 +585,7 @@ local function BuildShopTravelingMerchant()
     hint.TextSize = 11
     hint.TextXAlignment = Enum.TextXAlignment.Right
     hint.TextColor3 = Color3.fromRGB(170,170,170)
-    hint.Text = "Click to open item list"
+    hint.Text = "Click to cycle items"
 
     local chevron = Instance.new("TextLabel", row)
     chevron.Size = UDim2.new(0,20,1,0)
@@ -585,7 +605,7 @@ local function BuildShopTravelingMerchant()
     recalc()
 
     ----------------------------------------------------------------
-    -- OVERLAY + PANEL
+    -- OVERLAY + PANEL DETAIL
     ----------------------------------------------------------------
     local overlay = Instance.new("TextButton")
     overlay.Name = "TravelingOverlay"
@@ -681,17 +701,17 @@ local function BuildShopTravelingMerchant()
     closeBtn.ZIndex = 6
 
     ----------------------------------------------------------------
-    -- DATA & LOGIC
+    -- DATA & PANEL LOGIC (PAKAI getMerchantItems() + filter SkinCrate)
     ----------------------------------------------------------------
     local entries = {}
     local selectedEntry
 
     local function rebuildEntries()
         entries = {}
-        local ids = MerchantReplion:Get("Items") or {}
+        local ids = getMerchantItems()
         for _, id in ipairs(ids) do
             local market = getMarketDataFromId(id)
-            if market then -- tidak filter SkinCrate: semua item merchant masuk
+            if market and not market.SkinCrate then
                 local name  = market.DisplayName or market.Identifier or ("Item "..id)
                 local price = market.Price or 0
                 local curr  = market.Currency or "Coins"
@@ -719,17 +739,17 @@ local function BuildShopTravelingMerchant()
 
         local e = selectedEntry
         local m = e.Market
-        local status = ""
+        local state = ""
 
         if m.Currency == "Robux" then
-            status = "[ROBux]"
+            state = "[ROBux]"
         else
             if ownsLocalItem(m) then
-                status = "[OWNED]"
+                state = "[OWNED]"
             elseif canAfford(m) then
-                status = "[CAN BUY]"
+                state = "[CAN BUY]"
             else
-                status = "[NO FUNDS]"
+                state = "[NO FUNDS]"
             end
         end
 
@@ -739,12 +759,12 @@ local function BuildShopTravelingMerchant()
             m.Type or "-",
             e.Price,
             e.Curr,
-            status
+            state
         )
 
         buyBtn.Visible = true
-        buyBtn.Text = (status == "[OWNED]" and "Owned") or "Buy"
-        buyBtn.AutoButtonColor = (status ~= "[OWNED]")
+        buyBtn.Text = (state == "[OWNED]" and "Owned") or "Buy"
+        buyBtn.AutoButtonColor = (state ~= "[OWNED]")
     end
 
     local function openPanel()
@@ -785,18 +805,12 @@ local function BuildShopTravelingMerchant()
         if not selectedEntry then return end
         local m = selectedEntry.Market
         if m.Currency == "Robux" then
-            warn("[TM] Robux purchase not handled here.")
+            warn("Robux purchase not handled here.")
             return
         end
-        local ok, err = pcall(function()
-            return RF_Purchase:InvokeServer(selectedEntry.Id)
-        end)
-        if not ok then
-            warn("[TM] Purchase error:", err)
-        else
-            rebuildEntries()
-            updateDetail()
-        end
+        buyItem(selectedEntry.Id)
+        rebuildEntries()
+        updateDetail()
     end)
 
     MerchantReplion:OnChange("Items", function()
@@ -810,6 +824,7 @@ local function BuildShopTravelingMerchant()
 
     recalc()
 end
+
 
 BuildShopTravelingMerchant()
 
