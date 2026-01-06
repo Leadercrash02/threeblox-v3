@@ -460,6 +460,7 @@ local function canAfford(market)
 
     local curDef = CurrencyUtility:GetCurrency(market.Currency)
     if not curDef or not curDef.Path then
+        -- kalau path belum ketemu, jangan paksa No Funds
         return true
     end
 
@@ -468,17 +469,17 @@ local function canAfford(market)
 end
 
 ----------------------------------------------------------------
--- SHOP & TRADE : TRAVELING MERCHANT
+-- SHOP & TRADE : TRAVELING MERCHANT (CARD + PANEL)
 ----------------------------------------------------------------
 local function BuildShopTravelingMerchant()
     local shopPage = pages["Shop & Trade"]
 
-    -- 1) CARD HEADER (PERSIS POLA WeatherPresetCard)
+    -- 1) CARD HEADER (di bawah WeatherPresetCard)
     local card = Instance.new("Frame")
     card.Name = "TravelingMerchantCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,16 + 56) -- di bawah Weather card (56 kira2 tinggi + padding)
+    card.Position = UDim2.new(0,16,0,16 + 56) -- atur offset biar di bawah Weather card
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
@@ -517,7 +518,7 @@ local function BuildShopTravelingMerchant()
     subFrame.ClipsDescendants = true
 
     local layout = Instance.new("UIListLayout", subFrame)
-    layout.Padding = UDim.new(0,6)
+    layout.Padding = UDim2.new(0,6)
     layout.FillDirection = Enum.FillDirection.Vertical
     layout.SortOrder = Enum.SortOrder.LayoutOrder
 
@@ -585,7 +586,7 @@ local function BuildShopTravelingMerchant()
     recalc()
 
     ----------------------------------------------------------------
-    -- OVERLAY + PANEL KANAN (PERSIS POLA WEATHER PANEL)
+    -- OVERLAY + PANEL KANAN
     ----------------------------------------------------------------
     local overlay = Instance.new("TextButton")
     overlay.Name = "TravelingOverlay"
@@ -620,7 +621,7 @@ local function BuildShopTravelingMerchant()
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 2
     stroke.Color = Color3.fromRGB(255, 210, 60)
-    stroke.Enabled = true
+    stroke.Enabled = false
     stroke.Parent = panel
 
     local title = Instance.new("TextLabel", panel)
@@ -691,7 +692,7 @@ local function BuildShopTravelingMerchant()
         local ids = MerchantReplion:Get("Items") or {}
         for _, id in ipairs(ids) do
             local market = getMarketDataFromId(id)
-            if market and not market.SkinCrate then
+            if market then -- TANPA filter SkinCrate: 3 item masuk semua
                 local name  = market.DisplayName or market.Identifier or ("Item "..id)
                 local price = market.Price or 0
                 local curr  = market.Currency or "Coins"
@@ -708,10 +709,14 @@ local function BuildShopTravelingMerchant()
 
     local function updateDetail()
         if not selectedEntry then
+            stroke.Enabled = false
             info.Text = "No item selected."
             buyBtn.Visible = false
+            listDropdown.Text = "Select item..."
             return
         end
+
+        stroke.Enabled = true
 
         local e = selectedEntry
         local m = e.Market
@@ -806,6 +811,7 @@ local function BuildShopTravelingMerchant()
 
     recalc()
 end
+
 
 BuildShopTravelingMerchant()
 
