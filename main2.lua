@@ -2982,22 +2982,26 @@ end
 
 
 
+----------------------------------------------------------------
 -- ENGINE STATE
+----------------------------------------------------------------
 local AutoFishAFK = false
 local isFishing   = false
 
 -- delay Auto Fishing (feel V2)
-local DelayReel   = 3   -- sama kayak _G.RAY_DelayCast
-local DelayCatch  = 2   -- sama kayak _G.RAY_DelayFinish
+local DelayReel   = 3    -- sama kayak _G.RAY_DelayCast
+local DelayCatch  = 2    -- sama kayak _G.RAY_DelayFinish
 
 -- Blatant state
-local BlatantOn     = false
-local BlatantReel   = 0.8   -- Reel Delay
-local BlatantCatch  = 0.75  -- = 1.5 * 0.5 default
+local BlatantOn    = false
+local BlatantReel  = 0.8     -- Reel Delay (default lama, kalau mau dipakai)
+local BlatantCatch = 0.75    -- default awal (nggak wajib dipakai, bisa dioverride)
 
 _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
 
+----------------------------------------------------------------
 -- FUNGSI DASAR
+----------------------------------------------------------------
 local function Reel_V3()
     pcall(function()
         Events.fishing:FireServer()
@@ -3014,9 +3018,12 @@ local function Cast_V3()
     end)
 end
 
--- AUTO FISH FEEL V2 (1 cast -> tunggu -> 1 reel -> tunggu)
+----------------------------------------------------------------
+-- ENGINE 0: AUTO FISH FEEL V2
+-- (1 cast -> tunggu -> 1 reel -> tunggu)
+----------------------------------------------------------------
 local function Engine_V3_Delayed()
-    if isFishing then return end
+    if isFishing or not AutoFishAFK then return end
     isFishing = true
 
     Cast_V3()
@@ -3027,9 +3034,12 @@ local function Engine_V3_Delayed()
     isFishing = false
 end
 
--- CONFIG (UI)
-local BlatantReel   = 1.17   -- biarin
-local BlatantCatch  = 0.25   -- 0.2–0.3
+----------------------------------------------------------------
+-- ENGINE 1: BLATANT (V2 CEPAT)
+-- CONFIG (UI) – OVERRIDE NILAI
+----------------------------------------------------------------
+BlatantReel  = 1.17   -- kalau mau dipakai buat tuning lain
+BlatantCatch = 0.25   -- delay catch utama / extra catch
 
 local CastCount        = 3
 local DelayBetweenCast = 0.03
@@ -3052,13 +3062,13 @@ local function BlatantCycle_V2()
         end
     end)
 
-    -- DELAY REAL (SEDIKIT LEBIH CEPAT)
+    -- DELAY REEL (SEDIKIT LEBIH CEPAT)
     local RealReelDelay  = 0.52     -- dari 0.55 → 0.52
     local RealInnerDelay = 0.0009   -- sedikit lebih longgar dari 0.0007
 
     task.wait(RealReelDelay)
 
-    for _ = 1,5 do
+    for _ = 1, 5 do
         Reel_V3()
         task.wait(RealInnerDelay)
     end
@@ -3067,12 +3077,16 @@ local function BlatantCycle_V2()
     isFishing = false
 end
 
--- EXTRA CATCH (pakai BlatantCatch sebagai delay)
+
+
+---------------------------------------------------------------
+-- EXTRA CATCH BLATANT
+----------------------------------------------------------------
 task.spawn(function()
     while true do
         if BlatantOn and _G.RAY_ExtraCatchBlatant and not isFishing then
             Reel_V3()
-            task.wait(BlatantCatch)
+            task.wait(BlatantCatch)   -- pake delay yang sama biar feel-nya konsisten
         end
         task.wait(0.05)
     end
@@ -3935,7 +3949,7 @@ task.wait(0.1)
 task.spawn(function()
     while true do
         if BlatantOn then
-            BlatantCycle_V2()      -- ini otomatis pakai versi improve yang baru
+            BlatantCycle_V2()
         elseif AutoFishAFK then
             Engine_V3_Delayed()
         end
