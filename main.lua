@@ -460,7 +460,6 @@ local function canAfford(market)
 
     local curDef = CurrencyUtility:GetCurrency(market.Currency)
     if not curDef or not curDef.Path then
-        -- kalau path belum ketemu, jangan paksa No Funds
         return true
     end
 
@@ -474,12 +473,12 @@ end
 local function BuildShopTravelingMerchant()
     local shopPage = pages["Shop & Trade"]
 
-    -- 1) CARD HEADER (di bawah WeatherPresetCard)
+    -- CARD HEADER
     local card = Instance.new("Frame")
     card.Name = "TravelingMerchantCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,16 + 56) -- atur offset biar di bawah Weather card
+    card.Position = UDim2.new(0,16,0,72) -- 16 + 56, di bawah Weather
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
@@ -518,7 +517,7 @@ local function BuildShopTravelingMerchant()
     subFrame.ClipsDescendants = true
 
     local layout = Instance.new("UIListLayout", subFrame)
-    layout.Padding = UDim2.new(0,6)
+    layout.Padding = UDim.new(0,6)
     layout.FillDirection = Enum.FillDirection.Vertical
     layout.SortOrder = Enum.SortOrder.LayoutOrder
 
@@ -541,9 +540,7 @@ local function BuildShopTravelingMerchant()
         recalc()
     end)
 
-    ----------------------------------------------------------------
-    -- ROW "SELECT ITEM" (label kiri + tombol buka panel)
-    ----------------------------------------------------------------
+    -- ROW SELECT ITEM
     local row = Instance.new("Frame", subFrame)
     row.Size = UDim2.new(1,0,0,36)
     row.BackgroundTransparency = 1
@@ -585,9 +582,7 @@ local function BuildShopTravelingMerchant()
 
     recalc()
 
-    ----------------------------------------------------------------
-    -- OVERLAY + PANEL KANAN
-    ----------------------------------------------------------------
+    -- OVERLAY + PANEL
     local overlay = Instance.new("TextButton")
     overlay.Name = "TravelingOverlay"
     overlay.Parent = shopPage
@@ -616,7 +611,7 @@ local function BuildShopTravelingMerchant()
     pad.PaddingTop    = UDim.new(0, 8)
     pad.PaddingLeft   = UDim.new(0, 8)
     pad.PaddingRight  = UDim.new(0, 8)
-    pad.PaddingBottom = UDim.new(0, 8)
+    pad.PaddingBottom = UDim2.new(0, 8)
 
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 2
@@ -681,9 +676,7 @@ local function BuildShopTravelingMerchant()
     closeBtn.Text = "✕"
     closeBtn.ZIndex = 6
 
-    ----------------------------------------------------------------
     -- DATA & LOGIC
-    ----------------------------------------------------------------
     local entries = {}
     local selectedEntry
 
@@ -692,7 +685,7 @@ local function BuildShopTravelingMerchant()
         local ids = MerchantReplion:Get("Items") or {}
         for _, id in ipairs(ids) do
             local market = getMarketDataFromId(id)
-            if market then -- TANPA filter SkinCrate: 3 item masuk semua
+            if market then
                 local name  = market.DisplayName or market.Identifier or ("Item "..id)
                 local price = market.Price or 0
                 local curr  = market.Currency or "Coins"
@@ -811,6 +804,7 @@ local function BuildShopTravelingMerchant()
 
     recalc()
 end
+
 
 
 BuildShopTravelingMerchant()
