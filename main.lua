@@ -840,7 +840,7 @@ local Net                = require(ReplicatedStorage.Packages.Net)
 
 local MerchantReplion = Replion.Client:WaitReplion("Merchant")
 local DataReplion     = Replion.Client:WaitReplion("Data")
-local RFPurchase      = Net:RemoteFunction("PurchaseMarketItem")
+local RF_Purchase     = Net:RemoteFunction("PurchaseMarketItem")
 
 local function getMarketDataFromId(id)
     for _, v in ipairs(MarketItemData) do
@@ -883,26 +883,30 @@ local function canAfford(market)
 
     local curDef = CurrencyUtility:GetCurrency(market.Currency)
     if not curDef or not curDef.Path then
-        return true -- jangan paksa NO FUNDS kalau path belum ketemu
+        -- kalau path belum ketemu, jangan paksa No Funds
+        return true
     end
 
     local bal = DataReplion:Get(curDef.Path) or 0
     return bal >= market.Price
 end
 
+----------------------------------------------------------------
+-- SHOP & TRADE : TRAVELING MERCHANT (CARD + PANEL LIST)
+----------------------------------------------------------------
 local function BuildShopTravelingMerchant()
     local shopPage = pages["Shop & Trade"]
 
     ------------------------------------------------------------
-    -- CARD KIRI
+    -- 1) CARD HEADER (di bawah WeatherPresetCard)
     ------------------------------------------------------------
     local card = Instance.new("Frame")
     card.Name = "TravelingMerchantCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,16+56) -- di bawah Weather card
+    card.Position = UDim2.new(0,16,0,16 + 56)
     card.BackgroundColor3 = CARD
-    card.BackgroundTransparency = ALPHACARD
+    card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
     Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
 
@@ -923,7 +927,7 @@ local function BuildShopTravelingMerchant()
     arrow.Font = Enum.Font.Gotham
     arrow.TextSize = 18
     arrow.TextColor3 = TEXT
-    arrow.Text = "+"
+    arrow.Text = "▼"
 
     local cardBtn = Instance.new("TextButton", card)
     cardBtn.BackgroundTransparency = 1
@@ -947,13 +951,13 @@ local function BuildShopTravelingMerchant()
     local function recalc()
         local h = layout.AbsoluteContentSize.Y
         if open then
-            subFrame.Size = UDim2.new(1,0,0,h+8)
-            card.Size = UDim2.new(1,-32,0,48+h+8)
-            arrow.Text = "-"
+            subFrame.Size = UDim2.new(1,0,0,h + 8)
+            card.Size = UDim2.new(1,-32,0,48 + h + 8)
+            arrow.Text = "▲"
         else
             subFrame.Size = UDim2.new(1,0,0,0)
             card.Size = UDim2.new(1,-32,0,48)
-            arrow.Text = "+"
+            arrow.Text = "▼"
         end
     end
     layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
@@ -963,6 +967,9 @@ local function BuildShopTravelingMerchant()
         recalc()
     end)
 
+    ------------------------------------------------------------
+    -- 2) ROW "SELECT ITEM" (label kiri + tombol buka panel)
+    ------------------------------------------------------------
     local row = Instance.new("Frame", subFrame)
     row.Size = UDim2.new(1,0,0,36)
     row.BackgroundTransparency = 1
@@ -994,7 +1001,7 @@ local function BuildShopTravelingMerchant()
     chevron.Font = Enum.Font.Gotham
     chevron.TextSize = 16
     chevron.TextColor3 = TEXT
-    chevron.Text = ">"
+    chevron.Text = "▾"
 
     local selectBtn = Instance.new("TextButton", row)
     selectBtn.BackgroundTransparency = 1
@@ -1005,7 +1012,7 @@ local function BuildShopTravelingMerchant()
     recalc()
 
     ------------------------------------------------------------
-    -- PANEL KANAN: LIST + DETAIL + MAX 3 SELECT + 1 BUY
+    -- 3) OVERLAY + PANEL KANAN (LIST + DETAIL + 1 BUY)
     ------------------------------------------------------------
     local overlay = Instance.new("TextButton")
     overlay.Name = "TravelingOverlay"
@@ -1021,25 +1028,25 @@ local function BuildShopTravelingMerchant()
     local panel = Instance.new("Frame")
     panel.Name = "TravelingMerchantPanel"
     panel.Parent = overlay
-    panel.Size = UDim2.new(0,260,0,230)
-    panel.AnchorPoint = Vector2.new(1,0)
-    panel.Position = UDim2.new(1,-24,0.18,0)
+    panel.Size = UDim2.new(0, 260, 0, 230)
+    panel.AnchorPoint = Vector2.new(1, 0)
+    panel.Position = UDim2.new(1, -24, 0.18, 0)
     panel.BackgroundColor3 = CARD
     panel.BackgroundTransparency = 0.04
     panel.Visible = false
     panel.ZIndex = 5
     panel.Active = true
-    Instance.new("UICorner", panel).CornerRadius = UDim.new(0,12)
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
 
     local pad = Instance.new("UIPadding", panel)
-    pad.PaddingTop    = UDim2.new(0,8)
-    pad.PaddingLeft   = UDim2.new(0,8)
-    pad.PaddingRight  = UDim2.new(0,8)
-    pad.PaddingBottom = UDim2.new(0,8)
+    pad.PaddingTop    = UDim.new(0, 8)
+    pad.PaddingLeft   = UDim.new(0, 8)
+    pad.PaddingRight  = UDim.new(0, 8)
+    pad.PaddingBottom = UDim.new(0, 8)
 
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 2
-    stroke.Color = Color3.fromRGB(255,210,60)
+    stroke.Color = Color3.fromRGB(255, 210, 60)
     stroke.Enabled = false
     stroke.Parent = panel
 
@@ -1060,7 +1067,7 @@ local function BuildShopTravelingMerchant()
     closeBtn.Font = Enum.Font.Gotham
     closeBtn.TextSize = 16
     closeBtn.TextColor3 = TEXT
-    closeBtn.Text = "X"
+    closeBtn.Text = "✕"
     closeBtn.ZIndex = 6
 
     local info = Instance.new("TextLabel", panel)
@@ -1088,7 +1095,7 @@ local function BuildShopTravelingMerchant()
     list.Active = true
 
     local layoutList = Instance.new("UIListLayout", list)
-    layoutList.Padding = UDim.new(0,4)
+    layoutList.Padding = UDim2.new(0,4)
     layoutList.SortOrder = Enum.SortOrder.LayoutOrder
 
     local buyBtn = Instance.new("TextButton", panel)
@@ -1103,6 +1110,9 @@ local function BuildShopTravelingMerchant()
     buyBtn.Visible = false
     Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0,6)
 
+    ------------------------------------------------------------
+    -- 4) DATA: ENTRIES + MULTI SELECT (MAX 3)
+    ------------------------------------------------------------
     local entries = {}
     local selectedSet = {}   -- [Id] = entry
     local selectedCount = 0
@@ -1284,6 +1294,9 @@ local function BuildShopTravelingMerchant()
         updateInfo()
     end
 
+    ------------------------------------------------------------
+    -- 5) OPEN/CLOSE & BUY HANDLER
+    ------------------------------------------------------------
     local function openPanel()
         rebuildList()
         overlay.Visible = true
@@ -1309,7 +1322,7 @@ local function BuildShopTravelingMerchant()
             local m = entry.Market
             if m.Currency ~= "Robux" then
                 local ok, err = pcall(function()
-                    return RFPurchase:InvokeServer(entry.Id)
+                    return RF_Purchase:InvokeServer(entry.Id)
                 end)
                 if not ok then
                     warn("[TM] Purchase error:", err)
@@ -1336,7 +1349,6 @@ local function BuildShopTravelingMerchant()
 
     recalc()
 end
-
 
 BuildShopTravelingMerchant()
 
