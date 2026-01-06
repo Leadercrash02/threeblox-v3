@@ -412,13 +412,10 @@ questLayout.Padding = UDim.new(0,8)
 questLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 ----------------------------------------------------------------
--- TRAVELING MERCHANT (TITLE + DROPDOWN + PANEL KANAN, 1 BUY)
+-- TRAVELING MERCHANT REQS & HELPERS
 ----------------------------------------------------------------
-
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local lp = Players.LocalPlayer
 
 local Replion            = require(ReplicatedStorage.Packages.Replion)
 local MarketItemData     = require(ReplicatedStorage.Shared.MarketItemData)
@@ -431,13 +428,6 @@ local Net                = require(ReplicatedStorage.Packages.Net)
 local MerchantReplion = Replion.Client:WaitReplion("Merchant")
 local DataReplion     = Replion.Client:WaitReplion("Data")
 local RF_Purchase     = Net:RemoteFunction("PurchaseMarketItem")
-
-local TravelingMerchant = {}
-TravelingMerchant.__index = TravelingMerchant
-
-----------------------------------------------------------------
--- HELPERS
-----------------------------------------------------------------
 
 local function getMarketDataFromId(id)
     for _, v in ipairs(MarketItemData) do
@@ -478,267 +468,347 @@ local function canAfford(market)
 end
 
 ----------------------------------------------------------------
--- ENTRY BUILDING
+-- SHOP & TRADE : TRAVELING MERCHANT
 ----------------------------------------------------------------
+local function BuildShopTravelingMerchant()
+    local shopPage = pages["Shop & Trade"]
 
-function TravelingMerchant:BuildEntries()
-    local ids = MerchantReplion:Get("Items") or {}
-    local list = {}
+    -- 1) CARD HEADER (PERSIS POLA WeatherPresetCard)
+    local card = Instance.new("Frame")
+    card.Name = "TravelingMerchantCard"
+    card.Parent = shopPage
+    card.Size = UDim2.new(1,-32,0,48)
+    card.Position = UDim2.new(0,16,0,16 + 56) -- di bawah Weather card (56 kira2 tinggi + padding)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
 
-    for _, id in ipairs(ids) do
-        local market = getMarketDataFromId(id)
-        if market and not market.SkinCrate then
-            local name  = market.DisplayName or market.Identifier or ("Item "..id)
-            local price = market.Price or 0
-            local curr  = market.Currency or "Coins"
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1,-40,0,22)
+    cardTitle.Position = UDim2.new(0,16,0,4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "🧳 Traveling Merchant"
 
-            table.insert(list, {
-                Id     = id,
-                Name   = name,
-                Price  = price,
-                Curr   = curr,
-                Market = market,
-            })
-        end
-    end
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0,24,0,24)
+    arrow.Position = UDim2.new(1,-28,0,10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
 
-    self.Entries = list
-end
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1,0,1,0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
 
-function TravelingMerchant:RefreshDropdown()
-    self:BuildEntries()
+    local subFrame = Instance.new("Frame", card)
+    subFrame.Name = "TravelingContents"
+    subFrame.Position = UDim2.new(0,0,0,48)
+    subFrame.Size = UDim2.new(1,0,0,0)
+    subFrame.BackgroundTransparency = 1
+    subFrame.ClipsDescendants = true
 
-    local options = {}
-    for i, e in ipairs(self.Entries) do
-        options[i] = string.format("%s (%s %s)", e.Name, e.Price, e.Curr)
-    end
+    local layout = Instance.new("UIListLayout", subFrame)
+    layout.Padding = UDim.new(0,6)
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    self.Dropdown:UpdateDropdown(options)
-
-    if options[1] then
-        self.Dropdown:SetValue(options[1])
-        self:Select(1)
-    else
-        self:Select(nil)
-    end
-end
-
-----------------------------------------------------------------
--- DETAIL PANEL
-----------------------------------------------------------------
-
-function TravelingMerchant:UpdateDetail(entry)
-    if not entry then
-        self.Stroke.Enabled = false
-        self.NameLabel.Text = "No item selected"
-        self.InfoLabel.Text = ""
-        self.BuyButton.Visible = false
-        return
-    end
-
-    self.Stroke.Enabled = true
-    self.NameLabel.Text = entry.Name
-
-    local market = entry.Market
-    local status = ""
-
-    if market.Currency == "Robux" then
-        status = "[ROBux]"
-    else
-        if ownsLocalItem(market) then
-            status = "[OWNED]"
-        elseif canAfford(market) then
-            status = "[CAN BUY]"
+    local open = false
+    local function recalc()
+        local h = layout.AbsoluteContentSize.Y
+        if open then
+            subFrame.Size = UDim2.new(1,0,0,h + 8)
+            card.Size = UDim2.new(1,-32,0,48 + h + 8)
+            arrow.Text = "▲"
         else
-            status = "[NO FUNDS]"
+            subFrame.Size = UDim2.new(1,0,0,0)
+            card.Size = UDim2.new(1,-32,0,48)
+            arrow.Text = "▼"
         end
     end
 
-    self.InfoLabel.Text = string.format(
-        "Type: %s\nPrice: %s %s\nStatus: %s",
-        market.Type or "-",
-        entry.Price,
-        entry.Curr,
-        status
-    )
+    cardBtn.MouseButton1Click:Connect(function()
+        open = not open
+        recalc()
+    end)
 
-    self.BuyButton.Visible = true
-    self.BuyButton.Text = (status == "[OWNED]" and "Owned") or "Buy"
-    self.BuyButton.AutoButtonColor = (status ~= "[OWNED]")
-end
+    ----------------------------------------------------------------
+    -- ROW "SELECT ITEM" (label kiri + tombol buka panel)
+    ----------------------------------------------------------------
+    local row = Instance.new("Frame", subFrame)
+    row.Size = UDim2.new(1,0,0,36)
+    row.BackgroundTransparency = 1
 
-function TravelingMerchant:Select(indexOrName)
-    local entry
+    local lbl = Instance.new("TextLabel", row)
+    lbl.Size = UDim2.new(0.5,0,1,0)
+    lbl.Position = UDim2.new(0,16,0,0)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextColor3 = TEXT
+    lbl.Text = "Select Merchant Item"
 
-    if typeof(indexOrName) == "number" then
-        entry = self.Entries[indexOrName]
-    elseif typeof(indexOrName) == "string" then
-        for _, e in ipairs(self.Entries) do
-            local opt = string.format("%s (%s %s)", e.Name, e.Price, e.Curr)
-            if opt == indexOrName then
-                entry = e
-                break
-            end
-        end
-    end
+    local hint = Instance.new("TextLabel", row)
+    hint.Size = UDim2.new(0.5,-32,1,0)
+    hint.Position = UDim2.new(0.5,0,0,0)
+    hint.BackgroundTransparency = 1
+    hint.Font = Enum.Font.Gotham
+    hint.TextSize = 11
+    hint.TextXAlignment = Enum.TextXAlignment.Right
+    hint.TextColor3 = Color3.fromRGB(170,170,170)
+    hint.Text = "Click to open item list"
 
-    self.Selected = entry
-    self:UpdateDetail(entry)
-end
+    local chevron = Instance.new("TextLabel", row)
+    chevron.Size = UDim2.new(0,20,1,0)
+    chevron.Position = UDim2.new(1,-20,0,0)
+    chevron.BackgroundTransparency = 1
+    chevron.Font = Enum.Font.Gotham
+    chevron.TextSize = 16
+    chevron.TextColor3 = TEXT
+    chevron.Text = "▾"
 
-----------------------------------------------------------------
--- INIT (TITLE + DROPDOWN KIRI, PANEL KANAN + 1 BUY)
-----------------------------------------------------------------
+    local selectBtn = Instance.new("TextButton", row)
+    selectBtn.BackgroundTransparency = 1
+    selectBtn.Size = UDim2.new(1,0,1,0)
+    selectBtn.Text = ""
+    selectBtn.AutoButtonColor = false
 
--- uiLib: UI library yang sama dipakai Weather
--- shopPage: pages["Shop & Trade"]
--- weatherLeftFrame: optional, kalau mau posisinya relatif Weather kiri
-function TravelingMerchant:Init(uiLib, shopPage, weatherLeftFrame)
-    local selfObj = setmetatable({}, TravelingMerchant)
+    recalc()
 
-    -- KIRI: TITLE + DROPDOWN
-    local leftFrame = Instance.new("Frame")
-    leftFrame.Name = "TravelingMerchantLeft"
-    leftFrame.Size = UDim2.new(0, 230, 0, 80)
-    if weatherLeftFrame then
-        leftFrame.Parent = weatherLeftFrame.Parent
-        leftFrame.Position = weatherLeftFrame.Position + UDim2.new(0, 0, 0, weatherLeftFrame.Size.Y.Offset + 10)
-    else
-        leftFrame.Parent = shopPage
-        leftFrame.Position = UDim2.new(0, 16, 0, 16)
-    end
-    leftFrame.BackgroundTransparency = 1
+    ----------------------------------------------------------------
+    -- OVERLAY + PANEL KANAN (PERSIS POLA WEATHER PANEL)
+    ----------------------------------------------------------------
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "TravelingOverlay"
+    overlay.Parent = shopPage
+    overlay.Size = UDim2.new(1,0,1,0)
+    overlay.Position = UDim2.new(0,0,0,0)
+    overlay.BackgroundTransparency = 1
+    overlay.Text = ""
+    overlay.Visible = false
+    overlay.ZIndex = 4
+    overlay.AutoButtonColor = false
 
-    local titleLabel = Instance.new("TextLabel")
-    titleLabel.Size = UDim2.new(1, 0, 0, 20)
-    titleLabel.Position = UDim2.new(0, 0, 0, 0)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Font = Enum.Font.GothamSemibold
-    titleLabel.TextSize = 14
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.TextColor3 = Color3.new(1,1,1)
-    titleLabel.Text = "Traveling Merchant"
-    titleLabel.Parent = leftFrame
+    local panel = Instance.new("Frame")
+    panel.Name = "TravelingMerchantPanel"
+    panel.Parent = overlay
+    panel.Size = UDim2.new(0, 220, 0, 220)
+    panel.AnchorPoint = Vector2.new(1, 0)
+    panel.Position = UDim2.new(1, -24, 0.18, 0)
+    panel.BackgroundColor3 = CARD
+    panel.BackgroundTransparency = 0.04
+    panel.Visible = false
+    panel.ZIndex = 5
+    panel.Active = true
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
 
-    local dropdown = uiLib:CreateDropdown(
-        leftFrame,
-        "Items",
-        {},
-        nil,
-        0.25,
-        function(val)
-            selfObj:Select(val)
-        end
-    )
-    dropdown:SetPosition(UDim2.new(0, 0, 0, 24))
-    selfObj.Dropdown = dropdown
-
-    -- KANAN: PANEL DETAIL + HIGHLIGHT KUNING + 1 BUY
-    local detail = Instance.new("Frame")
-    detail.Name = "TravelingMerchantPanel"
-    detail.Size = UDim2.new(0, 230, 0, 160)
-    detail.Position = UDim2.new(1, -240, 0, 16)
-    detail.BackgroundColor3 = Color3.fromRGB(25,25,35)
-    detail.Parent = shopPage
+    local pad = Instance.new("UIPadding", panel)
+    pad.PaddingTop    = UDim.new(0, 8)
+    pad.PaddingLeft   = UDim.new(0, 8)
+    pad.PaddingRight  = UDim.new(0, 8)
+    pad.PaddingBottom = UDim.new(0, 8)
 
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 2
     stroke.Color = Color3.fromRGB(255, 210, 60)
-    stroke.Enabled = false
-    stroke.Parent = detail
+    stroke.Enabled = true
+    stroke.Parent = panel
 
-    local nameLabel = Instance.new("TextLabel")
-    nameLabel.Size = UDim2.new(1,-10,0,20)
-    nameLabel.Position = UDim2.new(0,5,0,5)
-    nameLabel.BackgroundTransparency = 1
-    nameLabel.Font = Enum.Font.GothamSemibold
-    nameLabel.TextSize = 14
-    nameLabel.TextXAlignment = Enum.TextXAlignment.Left
-    nameLabel.TextColor3 = Color3.new(1,1,1)
-    nameLabel.Text = "No item selected"
-    nameLabel.Parent = detail
+    local title = Instance.new("TextLabel", panel)
+    title.Size = UDim2.new(1,-20,0,20)
+    title.Position = UDim2.new(0,4,0,0)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamSemibold
+    title.TextSize = 14
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextColor3 = TEXT
+    title.Text = "Traveling Merchant"
 
-    local infoLabel = Instance.new("TextLabel")
-    infoLabel.Size = UDim2.new(1,-10,0,60)
-    infoLabel.Position = UDim2.new(0,5,0,30)
-    infoLabel.BackgroundTransparency = 1
-    infoLabel.Font = Enum.Font.Gotham
-    infoLabel.TextSize = 12
-    infoLabel.TextWrapped = true
-    infoLabel.TextXAlignment = Enum.TextXAlignment.Left
-    infoLabel.TextYAlignment = Enum.TextYAlignment.Top
-    infoLabel.TextColor3 = Color3.fromRGB(200,200,200)
-    infoLabel.Text = ""
-    infoLabel.Parent = detail
+    local listDropdown = Instance.new("TextButton", panel)
+    listDropdown.Size = UDim2.new(1,-8,0,24)
+    listDropdown.Position = UDim2.new(0,4,0,26)
+    listDropdown.BackgroundColor3 = Color3.fromRGB(30,30,40)
+    listDropdown.AutoButtonColor = true
+    listDropdown.ZIndex = 6
+    listDropdown.Font = Enum.Font.Gotham
+    listDropdown.TextSize = 12
+    listDropdown.TextColor3 = TEXT
+    listDropdown.TextXAlignment = Enum.TextXAlignment.Left
+    listDropdown.Text = "Select item..."
+    Instance.new("UICorner", listDropdown).CornerRadius = UDim.new(0,8)
 
-    local buyBtn = Instance.new("TextButton")
+    local info = Instance.new("TextLabel", panel)
+    info.Size = UDim2.new(1,-8,0,80)
+    info.Position = UDim2.new(0,4,0,56)
+    info.BackgroundTransparency = 1
+    info.Font = Enum.Font.Gotham
+    info.TextSize = 12
+    info.TextWrapped = true
+    info.TextXAlignment = Enum.TextXAlignment.Left
+    info.TextYAlignment = Enum.TextYAlignment.Top
+    info.TextColor3 = Color3.fromRGB(200,200,200)
+    info.Text = "No item selected."
+
+    local buyBtn = Instance.new("TextButton", panel)
     buyBtn.Size = UDim2.new(0,80,0,24)
-    buyBtn.Position = UDim2.new(0,5,1,-29)
+    buyBtn.Position = UDim2.new(0,4,1,-28)
     buyBtn.BackgroundColor3 = Color3.fromRGB(70,130,200)
     buyBtn.Font = Enum.Font.Gotham
     buyBtn.TextSize = 12
-    buyBtn.TextColor3 = Color3.new(1,1,1)
+    buyBtn.TextColor3 = TEXT
     buyBtn.Text = "Buy"
+    buyBtn.ZIndex = 6
     buyBtn.Visible = false
-    buyBtn.Parent = detail
+    Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0,6)
 
-    selfObj.DetailFrame = detail
-    selfObj.Stroke      = stroke
-    selfObj.NameLabel   = nameLabel
-    selfObj.InfoLabel   = infoLabel
-    selfObj.BuyButton   = buyBtn
+    local closeBtn = Instance.new("TextButton", panel)
+    closeBtn.Size = UDim2.new(0,24,0,24)
+    closeBtn.Position = UDim2.new(1,-28,0,0)
+    closeBtn.BackgroundTransparency = 1
+    closeBtn.Font = Enum.Font.Gotham
+    closeBtn.TextSize = 16
+    closeBtn.TextColor3 = TEXT
+    closeBtn.Text = "✕"
+    closeBtn.ZIndex = 6
 
-    selfObj.Entries  = {}
-    selfObj.Selected = nil
+    ----------------------------------------------------------------
+    -- DATA & LOGIC
+    ----------------------------------------------------------------
+    local entries = {}
+    local selectedEntry
 
-    -- BUY: klik sekali, beli item yang lagi kepilih
-    buyBtn.MouseButton1Click:Connect(function()
-        local sel = selfObj.Selected
-        if not sel then return end
-        local market = sel.Market
+    local function rebuildEntries()
+        entries = {}
+        local ids = MerchantReplion:Get("Items") or {}
+        for _, id in ipairs(ids) do
+            local market = getMarketDataFromId(id)
+            if market and not market.SkinCrate then
+                local name  = market.DisplayName or market.Identifier or ("Item "..id)
+                local price = market.Price or 0
+                local curr  = market.Currency or "Coins"
+                table.insert(entries, {
+                    Id     = id,
+                    Name   = name,
+                    Price  = price,
+                    Curr   = curr,
+                    Market = market,
+                })
+            end
+        end
+    end
 
-        if market.Currency == "Robux" then
-            warn("[Traveling Merchant] Robux purchases not handled here.")
+    local function updateDetail()
+        if not selectedEntry then
+            info.Text = "No item selected."
+            buyBtn.Visible = false
             return
         end
 
+        local e = selectedEntry
+        local m = e.Market
+        local status = ""
+
+        if m.Currency == "Robux" then
+            status = "[ROBux]"
+        else
+            if ownsLocalItem(m) then
+                status = "[OWNED]"
+            elseif canAfford(m) then
+                status = "[CAN BUY]"
+            else
+                status = "[NO FUNDS]"
+            end
+        end
+
+        listDropdown.Text = string.format("%s (%s %s)", e.Name, e.Price, e.Curr)
+        info.Text = string.format(
+            "Type: %s\nPrice: %s %s\nStatus: %s",
+            m.Type or "-",
+            e.Price,
+            e.Curr,
+            status
+        )
+
+        buyBtn.Visible = true
+        buyBtn.Text = (status == "[OWNED]" and "Owned") or "Buy"
+        buyBtn.AutoButtonColor = (status ~= "[OWNED]")
+    end
+
+    local function openPanel()
+        rebuildEntries()
+        if not selectedEntry and entries[1] then
+            selectedEntry = entries[1]
+        end
+        updateDetail()
+
+        overlay.Visible = true
+        panel.Visible = true
+    end
+
+    local function closePanel()
+        overlay.Visible = false
+        panel.Visible = false
+    end
+
+    selectBtn.MouseButton1Click:Connect(openPanel)
+    overlay.MouseButton1Click:Connect(closePanel)
+    closeBtn.MouseButton1Click:Connect(closePanel)
+
+    listDropdown.MouseButton1Click:Connect(function()
+        rebuildEntries()
+        if #entries == 0 then return end
+        if not selectedEntry then
+            selectedEntry = entries[1]
+        else
+            local idx = table.find(entries, selectedEntry) or 0
+            idx = idx + 1
+            if idx > #entries then idx = 1 end
+            selectedEntry = entries[idx]
+        end
+        updateDetail()
+    end)
+
+    buyBtn.MouseButton1Click:Connect(function()
+        if not selectedEntry then return end
+        local m = selectedEntry.Market
+        if m.Currency == "Robux" then
+            warn("[TM] Robux purchase not handled here.")
+            return
+        end
         local ok, err = pcall(function()
-            return RF_Purchase:InvokeServer(sel.Id)
+            return RF_Purchase:InvokeServer(selectedEntry.Id)
         end)
         if not ok then
-            warn("[Traveling Merchant] Purchase error:", err)
+            warn("[TM] Purchase error:", err)
         else
-            selfObj:RefreshDropdown()
+            rebuildEntries()
+            updateDetail()
         end
     end)
 
-    -- INIT LIST
-    selfObj:RefreshDropdown()
-
-    -- REPLION EVENTS: refresh UI
     MerchantReplion:OnChange("Items", function()
-        selfObj:RefreshDropdown()
+        rebuildEntries()
+        updateDetail()
     end)
 
     DataReplion:OnChange({"Currencies"}, function()
-        if selfObj.Selected then
-            selfObj:UpdateDetail(selfObj.Selected)
-        end
+        updateDetail()
     end)
 
-    return selfObj
+    recalc()
 end
 
-----------------------------------------------------------------
--- BUILDER UNTUK SHOWPAGE
-----------------------------------------------------------------
+BuildShopTravelingMerchant()
 
-local function BuildTravelingMerchant(shopPage, uiLib, weatherLeftFrame)
-    TravelingMerchant:Init(uiLib, shopPage, weatherLeftFrame)
-end
-
-
-return TravelingMerchant
 
 
 ----------------------------------------------------------------
@@ -1918,8 +1988,8 @@ local function ShowPage(name)
             BuildShopWeather()
         end
 
-        if not shopPage:FindFirstChild("TravelingMerchantPanel") then
-            BuildTravelingMerchant(shopPage, uiLib)
+        if not shopPage:FindFirstChild("TravelingMerchantCard") then
+            BuildShopTravelingMerchant()
         end
 
     elseif name == "Misc" then
@@ -1946,6 +2016,7 @@ local function ShowPage(name)
         end
     end
 end
+
 
 
 BuildShopWeather()
