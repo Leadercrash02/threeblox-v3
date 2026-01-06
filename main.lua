@@ -411,8 +411,421 @@ local questLayout = Instance.new("UIListLayout", pages["Quest"])
 questLayout.Padding = UDim.new(0,8)
 questLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+--// THREEBLOX V3 | AUTO OPTION FIX FINAL
+--// ADD: DROPDOWN + MINIMIZE + CLOSE + LOGO FLOAT
+--// SAFE | TRANSPARENT | XENO PC + ANDROID
+
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- CLEAN
+pcall(function()
+    for _,v in ipairs(CoreGui:GetChildren()) do
+        if v:IsA("ScreenGui") and v.Name == "ThreebloxV3" then
+            v:Destroy()
+        end
+    end
+end)
+
+-- CONFIG
+local LOGO_ID = "rbxassetid://121625492591707"
+
+local BG     = Color3.fromRGB(18,20,28)
+local SIDE   = Color3.fromRGB(22,24,34)
+local CARD   = Color3.fromRGB(28,30,42)
+local TEXT   = Color3.fromRGB(235,235,235)
+local MUTED  = Color3.fromRGB(160,160,160)
+local ACCENT = Color3.fromRGB(170,80,255)
+
+local ALPHA_MAIN = 0.08
+local ALPHA_SIDE = 0.05
+local ALPHA_CARD = 0.06
+
+local lp = Players.LocalPlayer
+local HIDE_DEFAULT_OVERHEAD = true
+local COSTUME_NAME  = "ray"
+local COSTUME_LEVEL = 772
+
 ----------------------------------------------------------------
--- TRAVELING MERCHANT (SHOP & TRADE)
+-- STREAMER CUSTOM NAME (GLOBAL)
+----------------------------------------------------------------
+_G.RAY_StreamerOn  = _G.RAY_StreamerOn  or false
+_G.RAY_CustomName  = _G.RAY_CustomName  or "discord.gg/Threeblox"
+
+local originalHeaderText
+
+local function getHeader()
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+
+    local overhead = hrp:FindFirstChild("Overhead")
+    if not overhead then return end
+
+    local content = overhead:FindFirstChild("Content")
+    if not content then return end
+
+    local header = content:FindFirstChild("Header")
+    return header
+end
+
+function applyStreamerState()
+    local header = getHeader()
+    if not header then return end
+
+    if _G.RAY_StreamerOn then
+        -- simpan nama asli sekali
+        if not originalHeaderText then
+            originalHeaderText = header.Text
+        end
+
+        header.RichText = true
+        header.Text = '<font color="#3b82f6">'.._G.RAY_CustomName..' ✓</font>'
+    else
+        -- balikin ke nama asli
+        if originalHeaderText then
+            header.RichText = false
+            header.Text = originalHeaderText
+        end
+    end
+end
+
+lp.CharacterAdded:Connect(function()
+    task.wait(0.2)
+    originalHeaderText = nil
+    applyStreamerState()
+end)
+
+if lp.Character then
+    task.spawn(function()
+        task.wait(0.2)
+        applyStreamerState()
+    end)
+end
+
+
+
+
+
+local PAGE_ICONS = {
+    {"Information","📘"},
+    {"Auto Option","⚙️"},
+    {"Teleport","🧭"},
+    {"Quest","⭐"},
+    {"Shop & Trade","💰"},
+    {"Misc","⚡"},
+}
+
+local AUTO_OPTIONS = {
+    {"Auto Fishing",""},
+    {"Blatant Fishing",""},
+    {"Coming soon",""},
+    {"Auto Favorite",""},
+    {"Auto Sell",""},
+    {"Auto Megalodon",""},
+    {"Auto Potion",""},
+}
+
+local ISLAND_SPOTS = {
+    ["Christmas Cave"]      = CFrame.new(538.810181, -580.58136, 8900.9873),
+    ["Cafe Besi"]           = CFrame.new(-8642.2588, -547.50031, 161.28636),
+    ["Christmas Spot"]      = CFrame.new(1138.9039, 23.43064, 1560.8541),
+    ["Esoteric Depths"]  = CFrame.new(3232.9036, -1302.8549, 1401.0824),
+    ["Creater Island"]         = CFrame.new(1000.1009, 18.02404, 5093.1221),
+    ["Hutan Kuno"]          = CFrame.new(1470.9269, 4.5879965, -323.6044),
+    ["Temple Guardian"]     = CFrame.new(1486.0616, 127.62498, -590.1211),
+    ["Secred Temple"]       = CFrame.new(1496.1331, -22.125002, -639.2121),
+    ["Ancient Ruin"]        = CFrame.new(6081.9009, -585.92419, 4634.6240),
+    ["Kohana"]              = CFrame.new(-603.82385, 17.250059, 514.24432),
+    ["Kohana Volcano"]      = CFrame.new(-617.46448, 48.560577, 189.16815),
+    ["Fisherman Spawn"]     = CFrame.new(90.31225, 17.033522, 2839.8655),
+    ["Sysphus State"]       = CFrame.new(-3698.2456, -135.07391, -1007.7955),
+    ["Treasure Room"]         = CFrame.new(-3595.2686, -275.74152, -1639.2794),
+    ["Weater Machine"]      = CFrame.new(-1489.2069, 3.5, 1917.9594),
+    ["Coral Reefs"]         = CFrame.new(-2755.0881, 4.0107765, 2163.7251),
+    ["Hutan Tropis"]        = CFrame.new(-2016.4812, 9.037539, 3752.3533),
+}
+
+
+local DEFAULT_SPOT_ORDER = {
+    "Fisherman Spawn",
+    "Kohana",
+    "Kohana Volcano",
+    "Creater Island",
+    "Ancient Ruin",
+    "Hutan Kuno",
+    "Secred Temple",
+    "Temple Guardian",
+    "Christmas Cave",
+    "Cafe Besi",
+    "Sysphus State",
+    "Treasure Room",
+    "Weater Machine",
+    "Coral Reefs",
+    "Hutan Tropis",
+    "Christmas Spot",
+    "Esoteric Depths",
+}
+
+
+
+-- ROOT
+local gui = Instance.new("ScreenGui", CoreGui)
+gui.Name = "ThreebloxV3"
+gui.IgnoreGuiInset = true
+
+-- MAIN
+local main = Instance.new("Frame", gui)
+local mainPad = Instance.new("UIPadding", main)
+mainPad.PaddingBottom = UDim.new(0, 12)
+main.Size = UDim2.new(0.6, 0, 0.7, 0)   -- 60% lebar layar
+main.Position = UDim2.new(0.5, 0, 0.5, 0)
+main.AnchorPoint = Vector2.new(0.5, 0.5)
+main.BackgroundColor3 = BG
+main.BackgroundTransparency = ALPHA_MAIN
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
+
+-- HEADER
+local header = Instance.new("Frame", main)
+header.Size = UDim2.new(1,0,0,48)
+header.BackgroundTransparency = 1
+header.Active = true
+
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.new(1,-160,1,0)
+title.Position = UDim2.new(0,16,0,0)
+title.BackgroundTransparency = 1
+title.Font = Enum.Font.GothamBold
+title.TextSize = 20
+title.TextColor3 = TEXT
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Text = "Threeblox V3 | Auto Option"
+
+-- BUTTONS
+local btnMin = Instance.new("TextButton", header)
+btnMin.Size = UDim2.new(0,36,0,36)
+btnMin.Position = UDim2.new(1,-88,0.5,-18)
+btnMin.Text = "-"
+btnMin.Font = Enum.Font.GothamBold
+btnMin.TextSize = 22
+btnMin.TextColor3 = TEXT
+btnMin.BackgroundColor3 = CARD
+btnMin.BackgroundTransparency = ALPHA_CARD
+Instance.new("UICorner", btnMin).CornerRadius = UDim.new(1,0)
+
+local btnClose = Instance.new("TextButton", header)
+btnClose.Size = UDim2.new(0,36,0,36)
+btnClose.Position = UDim2.new(1,-44,0.5,-18)
+btnClose.Text = "X"
+btnClose.Font = Enum.Font.GothamBold
+btnClose.TextSize = 18
+btnClose.TextColor3 = TEXT
+btnClose.BackgroundColor3 = CARD
+btnClose.BackgroundTransparency = ALPHA_CARD
+Instance.new("UICorner", btnClose).CornerRadius = UDim.new(1,0)
+
+-- FIX CLOSE: matiin semua auto + destroy GUI
+btnClose.MouseButton1Click:Connect(function()
+    if typeof(AutoFishAFK) == "boolean" then
+        AutoFishAFK = false
+    end
+    if typeof(BlatantOn) == "boolean" then
+        BlatantOn = false
+    end
+    if _G then
+        _G.RAY_AutoSellOn = false
+    end
+
+    if gui and gui.Parent then
+        gui:Destroy()
+    end
+end)
+
+-- DRAG MAIN WINDOW
+do
+    local dragging, startPos, startMain
+    header.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1
+        or i.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            startPos = i.Position
+            startMain = main.Position
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(i)
+        if dragging then
+            local delta = i.Position - startPos
+            main.Position = UDim2.new(
+                startMain.X.Scale,
+                startMain.X.Offset + delta.X,
+                startMain.Y.Scale,
+                startMain.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1
+        or i.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+end
+
+-- LOGO FLOAT (MINIMIZE ICON)
+local miniLogo = Instance.new("ImageButton", gui)
+miniLogo.Size = UDim2.new(0,56,0,56)
+miniLogo.Position = UDim2.new(0,20,0.5,-28)
+miniLogo.Image = LOGO_ID
+miniLogo.Visible = false
+miniLogo.BackgroundColor3 = CARD
+miniLogo.BackgroundTransparency = ALPHA_CARD
+Instance.new("UICorner", miniLogo).CornerRadius = UDim.new(1,0)
+
+-- minimize: sembunyikan main, munculkan logo
+btnMin.MouseButton1Click:Connect(function()
+    main.Visible = false
+    miniLogo.Visible = true
+end)
+
+-- DRAG + CLICK MINI LOGO
+do
+    local dragging = false
+    local moved = false
+    local startPos, startLogo
+
+    miniLogo.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1
+        or i.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            moved = false
+            startPos = i.Position
+            startLogo = miniLogo.Position
+        end
+    end)
+
+    UIS.InputChanged:Connect(function(i)
+        if dragging and (i.UserInputType == Enum.UserInputType.MouseMovement
+            or i.UserInputType == Enum.UserInputType.Touch) then
+            local delta = i.Position - startPos
+            if math.abs(delta.X) > 2 or math.abs(delta.Y) > 2 then
+                moved = true
+            end
+            miniLogo.Position = UDim2.new(
+                startLogo.X.Scale,
+                startLogo.X.Offset + delta.X,
+                startLogo.Y.Scale,
+                startLogo.Y.Offset + delta.Y
+            )
+        end
+    end)
+
+    UIS.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.MouseButton1
+        or i.UserInputType == Enum.UserInputType.Touch then
+            if dragging and not moved then
+                -- tap = buka lagi menu
+                main.Visible = true
+                miniLogo.Visible = false
+            end
+            dragging = false
+        end
+    end)
+end
+
+-- SIDEBAR (AMAN DI HP)
+local sidebar = Instance.new("Frame", main)
+sidebar.Position = UDim2.new(0,0,0,48)
+sidebar.Size     = UDim2.new(0.28, 0, 1, -48)
+sidebar.BackgroundColor3 = SIDE
+sidebar.BackgroundTransparency = ALPHA_SIDE
+
+local sidePad = Instance.new("UIPadding", sidebar)
+sidePad.PaddingTop = UDim.new(0,12)
+sidePad.PaddingLeft = UDim.new(0,12)
+sidePad.PaddingRight = UDim.new(0,12)
+
+local sideLayout = Instance.new("UIListLayout", sidebar)
+sideLayout.Padding = UDim.new(0,8)
+sideLayout.FillDirection = Enum.FillDirection.Vertical
+sideLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+sideLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+-- CONTENT (KANAN)
+local content = Instance.new("ScrollingFrame", main)
+content.ScrollingEnabled = true
+content.ScrollBarThickness = 6
+content.AutomaticCanvasSize = Enum.AutomaticSize.Y
+content.Position = UDim2.new(0.28, 0, 0, 48)
+content.Size = UDim2.new(0.72, 0, 1, -48)
+content.CanvasSize = UDim2.new(0,0,0,0)
+content.BackgroundTransparency = 1
+content.ClipsDescendants = true
+
+local contentLayout = Instance.new("UIListLayout", content)
+contentLayout.Padding = UDim.new(0,0)
+
+----------------------------------------------------------------
+-- WEATHER DATA
+----------------------------------------------------------------
+local WEATHER_OPTIONS = {
+    "Cloudy",
+    "Radiant",
+    "Shark Hunt",
+    "Snow",
+    "Storm",
+    "Wind",
+}
+
+local selectedWeather = {}
+
+local function toggleWeather(name)
+    if selectedWeather[name] then
+        selectedWeather[name] = nil
+    else
+        local c = 0
+        for _, on in pairs(selectedWeather) do
+            if on then c += 1 end
+        end
+        if c >= 4 then return end
+        selectedWeather[name] = true
+    end
+end
+
+----------------------------------------------------------------
+-- PAGE SYSTEM
+----------------------------------------------------------------
+local pages = {}
+
+local function newPage(name)
+    local p = Instance.new("Frame", content)
+    p.Size = UDim2.new(1,0,0,0)
+    p.AutomaticSize = Enum.AutomaticSize.Y
+    p.Visible = false
+    p.BackgroundTransparency = 1
+    pages[name] = p
+    return p
+end
+
+local autoPage = newPage("Auto Option")
+autoPage.Size = UDim2.new(1,0,1,0)
+autoPage.ClipsDescendants = false
+newPage("Information")
+newPage("Teleport")
+newPage("Quest")
+newPage("Shop & Trade")
+newPage("Misc")
+
+-- layout untuk halaman Quest (biar card tidak nabrak)
+local questLayout = Instance.new("UIListLayout", pages["Quest"])
+questLayout.Padding = UDim.new(0,8)
+questLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+----------------------------------------------------------------
+-- TRAVELING MERCHANT (SHOP & TRADE) – LIST, MAX 3 SELECT, 1 BUY
 ----------------------------------------------------------------
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -470,37 +883,18 @@ local function canAfford(market)
 
     local curDef = CurrencyUtility:GetCurrency(market.Currency)
     if not curDef or not curDef.Path then
-        return true -- jangan paksa NO FUNDS kalau path belum kebaca
+        return true
     end
 
     local bal = DataReplion:Get(curDef.Path) or 0
     return bal >= market.Price
 end
 
-local function buyMarketEntry(entry)
-    if not entry or not entry.Id or not entry.Market then
-        return
-    end
-
-    local m = entry.Market
-    if m.Currency == "Robux" then
-        warn("[TM] Robux purchase not handled here.")
-        return
-    end
-
-    local ok, err = pcall(function()
-        return RFPurchase:InvokeServer(entry.Id)
-    end)
-    if not ok then
-        warn("[TM] Purchase error:", err)
-    end
-end
-
 local function BuildShopTravelingMerchant()
     local shopPage = pages["Shop & Trade"]
 
     ------------------------------------------------------------
-    -- CARD KIRI: TRAVELING MERCHANT
+    -- CARD KIRI
     ------------------------------------------------------------
     local card = Instance.new("Frame")
     card.Name = "TravelingMerchantCard"
@@ -591,7 +985,7 @@ local function BuildShopTravelingMerchant()
     hint.TextSize = 11
     hint.TextXAlignment = Enum.TextXAlignment.Right
     hint.TextColor3 = Color3.fromRGB(170,170,170)
-    hint.Text = "Click to open item list"
+    hint.Text = "Max 3 selected. Click to open."
 
     local chevron = Instance.new("TextLabel", row)
     chevron.Size = UDim2.new(0,20,1,0)
@@ -611,7 +1005,7 @@ local function BuildShopTravelingMerchant()
     recalc()
 
     ------------------------------------------------------------
-    -- PANEL KANAN: LIST + DETAIL + HIGHLIGHT
+    -- PANEL KANAN: LIST + DETAIL + MAX 3 SELECT + 1 BUY
     ------------------------------------------------------------
     local overlay = Instance.new("TextButton")
     overlay.Name = "TravelingOverlay"
@@ -710,33 +1104,15 @@ local function BuildShopTravelingMerchant()
     Instance.new("UICorner", buyBtn).CornerRadius = UDim.new(0,6)
 
     local entries = {}
-    local selectedEntry
-    local selectedRow -- buat highlight baris terpilih
+    local selectedSet = {}   -- [Id] = entry
+    local selectedCount = 0
 
-    local function setSelected(entry, rowFrame)
-        selectedEntry = entry
-
-        -- reset highlight semua row
-        for _, child in ipairs(list:GetChildren()) do
-            if child:IsA("Frame") and child.Name == "TMRow" then
-                local hl = child:FindFirstChild("Highlight")
-                if hl then
-                    hl.BackgroundTransparency = 1
-                end
-            end
-        end
-
-        selectedRow = rowFrame
-        if selectedRow then
-            local hl = selectedRow:FindFirstChild("Highlight")
-            if hl then
-                hl.BackgroundTransparency = 0 -- garis kuning aktif
-            end
-        end
+    local function isSelected(entry)
+        return selectedSet[entry.Id] ~= nil
     end
 
-    local function updateDetail()
-        if not selectedEntry then
+    local function updateInfo()
+        if selectedCount == 0 then
             stroke.Enabled = false
             info.Text = "No item selected."
             buyBtn.Visible = false
@@ -744,34 +1120,58 @@ local function BuildShopTravelingMerchant()
         end
 
         stroke.Enabled = true
-        local e = selectedEntry
-        local m = e.Market
+        buyBtn.Visible = true
 
-        local status
-        if m.Currency == "Robux" then
-            status = "ROBux"
-        else
-            if ownsLocalItem(m) then
-                status = "OWNED"
-            elseif canAfford(m) then
-                status = "CAN BUY"
+        local lines = {}
+        local totalPriceByCurr = {}
+
+        for _, entry in pairs(selectedSet) do
+            local m = entry.Market
+            local status
+            if m.Currency == "Robux" then
+                status = "ROBux"
             else
-                status = "NO FUNDS"
+                if ownsLocalItem(m) then
+                    status = "OWNED"
+                elseif canAfford(m) then
+                    status = "CAN BUY"
+                else
+                    status = "NO FUNDS"
+                end
+            end
+
+            table.insert(lines, string.format(
+                "- %s (%d %s, %s)",
+                entry.Name,
+                entry.Price,
+                entry.Curr,
+                status
+            ))
+
+            if m.Currency ~= "Robux" then
+                totalPriceByCurr[entry.Curr] = (totalPriceByCurr[entry.Curr] or 0) + (entry.Price or 0)
             end
         end
 
-        info.Text = string.format(
-            "Name: %s\nType: %s\nPrice: %d %s\nStatus: %s",
-            e.Name,
-            m.Type or "-",
-            e.Price,
-            e.Curr,
-            status
-        )
+        local totalLines = {}
+        for curr, sum in pairs(totalPriceByCurr) do
+            table.insert(totalLines, string.format("%d %s", sum, curr))
+        end
 
-        buyBtn.Visible = true
-        buyBtn.Text = (status == "OWNED") and "Owned" or "Buy"
-        buyBtn.AutoButtonColor = (status ~= "OWNED")
+        info.Text = string.format(
+            "Selected: %d item(s)\nTotal: %s\n\n%s",
+            selectedCount,
+            (#totalLines > 0 and table.concat(totalLines, ", ")) or "-",
+            table.concat(lines, "\n")
+        )
+    end
+
+    local function setRowHighlight(rowFrame, on)
+        if not rowFrame then return end
+        local hl = rowFrame:FindFirstChild("Highlight")
+        if hl then
+            hl.BackgroundTransparency = on and 0 or 1
+        end
     end
 
     local function rebuildList()
@@ -783,8 +1183,8 @@ local function BuildShopTravelingMerchant()
         layoutList.Parent = list
 
         entries = {}
-        selectedEntry = nil
-        selectedRow = nil
+        selectedSet = {}
+        selectedCount = 0
 
         local ids = getMerchantItems()
         if #ids == 0 then
@@ -795,13 +1195,13 @@ local function BuildShopTravelingMerchant()
             lblEmpty.TextSize = 13
             lblEmpty.TextColor3 = TEXT
             lblEmpty.Text = "No items available."
-            updateDetail()
+            updateInfo()
             return
         end
 
         for _, id in ipairs(ids) do
             local market = getMarketDataFromId(id)
-            if market then -- kalau mau skip crate: tambah `and not market.SkinCrate`
+            if market then
                 local name  = market.DisplayName or market.Identifier or "Unknown"
                 local price = market.Price or 0
                 local curr  = market.Currency or "Coins"
@@ -821,18 +1221,17 @@ local function BuildShopTravelingMerchant()
                 rowItem.BackgroundTransparency = 1
                 rowItem.ZIndex = 5
 
-                -- garis kuning di kiri row
                 local hl = Instance.new("Frame", rowItem)
                 hl.Name = "Highlight"
                 hl.AnchorPoint = Vector2.new(0,0.5)
                 hl.Position = UDim2.new(0,0,0.5,0)
                 hl.Size = UDim2.new(0,3,1,-6)
                 hl.BackgroundColor3 = Color3.fromRGB(255,220,0)
-                hl.BackgroundTransparency = 1 -- off default
+                hl.BackgroundTransparency = 1
                 hl.ZIndex = 6
 
                 local label = Instance.new("TextLabel", rowItem)
-                label.Size = UDim2.new(1,-90,1,0)
+                label.Size = UDim2.new(1,-10,1,0)
                 label.Position = UDim2.new(0,6,0,0)
                 label.BackgroundTransparency = 1
                 label.Font = Enum.Font.Code
@@ -862,57 +1261,29 @@ local function BuildShopTravelingMerchant()
                     state
                 )
 
-                local btn = Instance.new("TextButton", rowItem)
-                btn.Size = UDim2.new(0,60,0,20)
-                btn.Position = UDim2.new(1,-64,0.5,-10)
-                btn.BackgroundColor3 = ACCENT
-                btn.BackgroundTransparency = 0.1
-                btn.Font = Enum.Font.Gotham
-                btn.TextSize = 12
-                btn.TextColor3 = TEXT
-                btn.Text = "Buy"
-                btn.ZIndex = 6
-
-                if ownsLocalItem(market) then
-                    btn.BackgroundColor3 = Color3.fromRGB(80,180,80)
-                    btn.Text = "Owned"
-                    btn.AutoButtonColor = false
-                elseif not canAfford(market) and market.Currency ~= "Robux" then
-                    btn.BackgroundColor3 = Color3.fromRGB(80,80,80)
-                    btn.AutoButtonColor = false
-                end
-
-                btn.MouseButton1Click:Connect(function()
-                    if market.Currency == "Robux" then
-                        warn("[TM] Robux purchase not handled here.")
-                        return
-                    end
-                    buyMarketEntry(entry)
-                    rebuildList()
-                end)
-
                 rowItem.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        setSelected(entry, rowItem)
-                        updateDetail()
+                        if isSelected(entry) then
+                            -- deselect
+                            selectedSet[entry.Id] = nil
+                            selectedCount -= 1
+                            setRowHighlight(rowItem, false)
+                        else
+                            if selectedCount >= 3 then
+                                -- hard limit 3
+                                return
+                            end
+                            selectedSet[entry.Id] = entry
+                            selectedCount += 1
+                            setRowHighlight(rowItem, true)
+                        end
+                        updateInfo()
                     end
                 end)
             end
         end
 
-        if entries[1] and list:FindFirstChild("TMRow") then
-            local firstRow
-            for _, c in ipairs(list:GetChildren()) do
-                if c:IsA("Frame") and c.Name == "TMRow" then
-                    firstRow = c
-                    break
-                end
-            end
-            if firstRow then
-                setSelected(entries[1], firstRow)
-            end
-        end
-        updateDetail()
+        updateInfo()
     end
 
     local function openPanel()
@@ -928,15 +1299,28 @@ local function BuildShopTravelingMerchant()
 
     selectBtn.MouseButton1Click:Connect(openPanel)
     overlay.MouseButton1Click:Connect(function()
-        -- klik area kosong nutup, tapi jangan nutup kalau klik di panel
         if not panel.Visible then return end
         closePanel()
     end)
     closeBtn.MouseButton1Click:Connect(closePanel)
 
     buyBtn.MouseButton1Click:Connect(function()
-        if not selectedEntry then return end
-        buyMarketEntry(selectedEntry)
+        if selectedCount == 0 then return end
+
+        for _, entry in pairs(selectedSet) do
+            local m = entry.Market
+            if m.Currency ~= "Robux" then
+                local ok, err = pcall(function()
+                    return RFPurchase:InvokeServer(entry.Id)
+                end)
+                if not ok then
+                    warn("[TM] Purchase error:", err)
+                end
+            else
+                warn("[TM] Robux purchase not handled here for:", entry.Name)
+            end
+        end
+
         rebuildList()
     end)
 
@@ -954,6 +1338,7 @@ local function BuildShopTravelingMerchant()
 
     recalc()
 end
+
 
 BuildShopTravelingMerchant()
 
