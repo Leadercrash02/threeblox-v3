@@ -448,6 +448,8 @@ local function getMerchantItems()
 end
 
 local function ownsLocalItem(market)
+    if not market then return false end
+
     local info = ItemUtility.GetItemDataFromItemType(market.Type, market.Identifier)
     if not info then return false end
 
@@ -464,7 +466,7 @@ local function ownsLocalItem(market)
 end
 
 local function canAfford(market)
-    if not (market.Price and market.Currency) then
+    if not market or not market.Price or not market.Currency then
         return false
     end
 
@@ -628,10 +630,10 @@ local function BuildShopTravelingMerchant()
     Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
 
     local pad = Instance.new("UIPadding", panel)
-    pad.PaddingTop    = UDim2.new(0, 8)
-    pad.PaddingLeft   = UDim2.new(0, 8)
-    pad.PaddingRight  = UDim2.new(0, 8)
-    pad.PaddingBottom = UDim2.new(0, 8)
+    pad.PaddingTop    = UDim.new(0, 8)
+    pad.PaddingLeft   = UDim.new(0, 8)
+    pad.PaddingRight  = UDim.new(0, 8)
+    pad.PaddingBottom = UDim.new(0, 8)
 
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 2
@@ -735,7 +737,7 @@ local function BuildShopTravelingMerchant()
         for _, entry in pairs(selectedSet) do
             local m = entry.Market
             local status
-            if m.Currency == "Robux" then
+            if m and m.Currency == "Robux" then
                 status = "ROBux"
             else
                 if ownsLocalItem(m) then
@@ -750,12 +752,12 @@ local function BuildShopTravelingMerchant()
             table.insert(lines, string.format(
                 "- %s (%d %s, %s)",
                 entry.Name,
-                entry.Price,
-                entry.Curr,
-                status
+                entry.Price or 0,
+                entry.Curr or "?",
+                status or "?"
             ))
 
-            if m.Currency ~= "Robux" then
+            if m and m.Currency ~= "Robux" then
                 totalPriceByCurr[entry.Curr] = (totalPriceByCurr[entry.Curr] or 0) + (entry.Price or 0)
             end
         end
@@ -800,8 +802,14 @@ local function BuildShopTravelingMerchant()
 
         for _, id in ipairs(ids) do
             local market = getMarketDataFromId(id)
-            if market then
-                local name  = market.DisplayName or market.Identifier or "Unknown"
+
+            -- PROTEKSI DATA INVALID
+            if not market then
+                warn("[TM] skip id", id, "market nil")
+            elseif not market.Price or not market.Currency then
+                warn("[TM] skip id", id, "missing Price/Currency")
+            else
+                local name  = market.DisplayName or market.Identifier or ("Item "..tostring(id))
                 local price = market.Price or 0
                 local curr  = market.Currency or "Coins"
 
@@ -862,7 +870,7 @@ local function BuildShopTravelingMerchant()
 
                 rowItem.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-                        warn("TM row clicked:", entry.Id, entry.Name) -- DEBUG
+                        warn("TM row clicked:", entry.Id, entry.Name)
                         if isSelected(entry) then
                             selectedSet[entry.Id] = nil
                             selectedCount -= 1
@@ -899,7 +907,7 @@ local function BuildShopTravelingMerchant()
     end
 
     selectBtn.MouseButton1Click:Connect(function()
-        warn("TM selectBtn clicked") -- DEBUG
+        warn("TM selectBtn clicked")
         openPanel()
     end)
 
@@ -910,19 +918,19 @@ local function BuildShopTravelingMerchant()
     closeBtn.MouseButton1Click:Connect(closePanel)
 
     buyBtn.MouseButton1Click:Connect(function()
-        warn("TM Buy clicked, selectedCount =", selectedCount) -- DEBUG
+        warn("TM Buy clicked, selectedCount =", selectedCount)
         if selectedCount == 0 then return end
 
         for _, entry in pairs(selectedSet) do
             local m = entry.Market
-            if m.Currency ~= "Robux" then
+            if m and m.Currency ~= "Robux" then
                 local ok, err = pcall(function()
                     return RF_Purchase:InvokeServer(entry.Id)
                 end)
                 if not ok then
                     warn("[TM] Purchase error:", err)
                 end
-            else
+            elseif m then
                 warn("[TM] Robux purchase not handled here for:", entry.Name)
             end
         end
@@ -944,6 +952,7 @@ local function BuildShopTravelingMerchant()
 
     recalc()
 end
+
 
 
 
