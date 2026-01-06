@@ -883,7 +883,7 @@ local function canAfford(market)
 
     local curDef = CurrencyUtility:GetCurrency(market.Currency)
     if not curDef or not curDef.Path then
-        return true
+        return true -- jangan paksa NO FUNDS kalau path belum ketemu
     end
 
     local bal = DataReplion:Get(curDef.Path) or 0
@@ -900,7 +900,7 @@ local function BuildShopTravelingMerchant()
     card.Name = "TravelingMerchantCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,16+56)
+    card.Position = UDim2.new(0,16,0,16+56) -- di bawah Weather card
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHACARD
     card.ClipsDescendants = true
@@ -1032,10 +1032,10 @@ local function BuildShopTravelingMerchant()
     Instance.new("UICorner", panel).CornerRadius = UDim.new(0,12)
 
     local pad = Instance.new("UIPadding", panel)
-    pad.PaddingTop    = UDim.new(0,8)
-    pad.PaddingLeft   = UDim.new(0,8)
-    pad.PaddingRight  = UDim.new(0,8)
-    pad.PaddingBottom = UDim.new(0,8)
+    pad.PaddingTop    = UDim2.new(0,8)
+    pad.PaddingLeft   = UDim2.new(0,8)
+    pad.PaddingRight  = UDim2.new(0,8)
+    pad.PaddingBottom = UDim2.new(0,8)
 
     local stroke = Instance.new("UIStroke")
     stroke.Thickness = 2
@@ -1064,7 +1064,7 @@ local function BuildShopTravelingMerchant()
     closeBtn.ZIndex = 6
 
     local info = Instance.new("TextLabel", panel)
-    info.Size = UDim2.new(1,-8,0,44)
+    info.Size = UDim2.new(1,-8,0,60)
     info.Position = UDim2.new(0,4,0,24)
     info.BackgroundTransparency = 1
     info.Font = Enum.Font.Gotham
@@ -1077,8 +1077,8 @@ local function BuildShopTravelingMerchant()
     info.ZIndex = 5
 
     local list = Instance.new("ScrollingFrame", panel)
-    list.Position = UDim2.new(0,4,0,72)
-    list.Size = UDim2.new(1,-8,1,-76)
+    list.Position = UDim2.new(0,4,0,88)
+    list.Size = UDim2.new(1,-8,1,-92)
     list.CanvasSize = UDim2.new(0,0,0,0)
     list.AutomaticCanvasSize = Enum.AutomaticSize.Y
     list.ScrollBarThickness = 4
@@ -1336,7 +1336,6 @@ local function BuildShopTravelingMerchant()
 
     recalc()
 end
-
 
 
 BuildShopTravelingMerchant()
