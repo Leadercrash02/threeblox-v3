@@ -412,7 +412,7 @@ questLayout.Padding = UDim.new(0,8)
 questLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 ----------------------------------------------------------------
--- TRAVELING MERCHANT | SHOP & TRADE PANEL
+-- TRAVELING MERCHANT | SHOP & TRADE PANEL (MATCH GUI TEST DATA)
 ----------------------------------------------------------------
 local Players           = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -430,7 +430,7 @@ local DataReplion     = Replion.Client:WaitReplion("Data")
 local RF_Purchase     = Net:RemoteFunction("PurchaseMarketItem")
 
 ----------------------------------------------------------------
--- DATA HELPERS (SAMA DENGAN GUI TEST)
+-- DATA HELPERS (PERSIS GUI TEST)
 ----------------------------------------------------------------
 local function getMarketDataFromId(id)
     for _, v in ipairs(MarketItemData) do
@@ -602,6 +602,17 @@ local function BuildShopTravelingMerchant()
     selectBtn.Text = ""
     selectBtn.AutoButtonColor = false
 
+    -- LABEL NAMA ITEM TERPILIH DI BAWAH ROW
+    local currentLabel = Instance.new("TextLabel", subFrame)
+    currentLabel.Name = "CurrentMerchantItemLabel"
+    currentLabel.Size = UDim2.new(1,-32,0,18)
+    currentLabel.BackgroundTransparency = 1
+    currentLabel.Font = Enum.Font.Gotham
+    currentLabel.TextSize = 12
+    currentLabel.TextXAlignment = Enum.TextXAlignment.Left
+    currentLabel.TextColor3 = Color3.fromRGB(200,200,200)
+    currentLabel.Text = "Selected: -"
+
     recalc()
 
     ----------------------------------------------------------------
@@ -701,7 +712,7 @@ local function BuildShopTravelingMerchant()
     closeBtn.ZIndex = 6
 
     ----------------------------------------------------------------
-    -- DATA & PANEL LOGIC (PAKAI getMerchantItems() + filter SkinCrate)
+    -- DATA & PANEL LOGIC (PAKAI getMerchantItems + FILTER GUI TEST)
     ----------------------------------------------------------------
     local entries = {}
     local selectedEntry
@@ -732,6 +743,7 @@ local function BuildShopTravelingMerchant()
             info.Text = "No item selected."
             buyBtn.Visible = false
             listDropdown.Text = "Select item..."
+            currentLabel.Text = "Selected: -"
             return
         end
 
@@ -754,6 +766,8 @@ local function BuildShopTravelingMerchant()
         end
 
         listDropdown.Text = string.format("%s (%s %s)", e.Name, e.Price, e.Curr)
+        currentLabel.Text = string.format("Selected: %s", e.Name)
+
         info.Text = string.format(
             "Type: %s\nPrice: %s %s\nStatus: %s",
             m.Type or "-",
@@ -824,6 +838,7 @@ local function BuildShopTravelingMerchant()
 
     recalc()
 end
+
 
 
 BuildShopTravelingMerchant()
