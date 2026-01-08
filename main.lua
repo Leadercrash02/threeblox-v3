@@ -112,7 +112,7 @@ local AUTO_OPTIONS = {
     {"Auto Favorite",""},
     {"Auto Sell",""},
     {"Auto Megalodon",""},
-    {"Auto Potion",""},
+    {"Auto Totem",""},
 }
 
 local ISLAND_SPOTS = {
@@ -1591,11 +1591,6 @@ local function ShowPage(name)
             BuildShopWeather()
         end
 
-        -- panggil Traveling Merchant sekali, cek card-nya
-        if not shopPage:FindFirstChild("TravelingMerchantCard") then
-            BuildShopTravelingMerchant()
-        end
-
     elseif name == "Misc" then
         pages["Misc"].Visible = true
 
@@ -1620,7 +1615,6 @@ local function ShowPage(name)
         end
     end
 end
-
 
 BuildShopWeather()
 ----------------------------------------------------------------
@@ -3991,26 +3985,22 @@ function TeleportToMegalodon()
     char:PivotTo(cf)
 end
 
-----------------------------------------------------------------
 -- ENGINE STATE
-----------------------------------------------------------------
 local AutoFishAFK = false
 local isFishing   = false
 
 -- delay Auto Fishing (feel V2)
-local DelayReel   = 3    -- sama kayak _G.RAY_DelayCast
-local DelayCatch  = 2    -- sama kayak _G.RAY_DelayFinish
+local DelayReel   = 3   -- sama kayak _G.RAY_DelayCast
+local DelayCatch  = 2   -- sama kayak _G.RAY_DelayFinish
 
 -- Blatant state
-local BlatantOn    = false
-local BlatantReel  = 0.8     -- Reel Delay (default lama, kalau mau dipakai)
-local BlatantCatch = 0.75    -- default awal (nggak wajib dipakai, bisa dioverride)
+local BlatantOn     = false
+local BlatantReel   = 0.8   -- Reel Delay
+local BlatantCatch  = 0.75  -- = 1.5 * 0.5 default
 
 _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
 
-----------------------------------------------------------------
 -- FUNGSI DASAR
-----------------------------------------------------------------
 local function Reel_V3()
     pcall(function()
         Events.fishing:FireServer()
@@ -4027,12 +4017,9 @@ local function Cast_V3()
     end)
 end
 
-----------------------------------------------------------------
--- ENGINE 0: AUTO FISH FEEL V2
--- (1 cast -> tunggu -> 1 reel -> tunggu)
-----------------------------------------------------------------
+-- AUTO FISH FEEL V2 (1 cast -> tunggu -> 1 reel -> tunggu)
 local function Engine_V3_Delayed()
-    if isFishing or not AutoFishAFK then return end
+    if isFishing then return end
     isFishing = true
 
     Cast_V3()
@@ -4043,12 +4030,9 @@ local function Engine_V3_Delayed()
     isFishing = false
 end
 
-----------------------------------------------------------------
--- ENGINE 1: BLATANT (V2 CEPAT)
--- CONFIG (UI) – OVERRIDE NILAI
-----------------------------------------------------------------
-BlatantReel  = 1.17   -- kalau mau dipakai buat tuning lain
-BlatantCatch = 0.25   -- delay catch utama / extra catch
+-- CONFIG (UI)
+local BlatantReel   = 1.17   -- biarin
+local BlatantCatch  = 0.25   -- 0.2–0.3
 
 local CastCount        = 3
 local DelayBetweenCast = 0.03
@@ -4071,13 +4055,13 @@ local function BlatantCycle_V2()
         end
     end)
 
-    -- DELAY REEL (SEDIKIT LEBIH CEPAT)
+    -- DELAY REAL (SEDIKIT LEBIH CEPAT)
     local RealReelDelay  = 0.52     -- dari 0.55 → 0.52
     local RealInnerDelay = 0.0009   -- sedikit lebih longgar dari 0.0007
 
     task.wait(RealReelDelay)
 
-    for _ = 1, 5 do
+    for _ = 1,5 do
         Reel_V3()
         task.wait(RealInnerDelay)
     end
@@ -4086,14 +4070,12 @@ local function BlatantCycle_V2()
     isFishing = false
 end
 
----------------------------------------------------------------
--- EXTRA CATCH BLATANT
-----------------------------------------------------------------
+-- EXTRA CATCH (pakai BlatantCatch sebagai delay)
 task.spawn(function()
     while true do
         if BlatantOn and _G.RAY_ExtraCatchBlatant and not isFishing then
             Reel_V3()
-            task.wait(BlatantCatch)   -- pake delay yang sama biar feel-nya konsisten
+            task.wait(BlatantCatch)
         end
         task.wait(0.05)
     end
@@ -4936,10 +4918,141 @@ elseif text == "Auto Megalodon" then
         TeleportToMegalodon()  -- TELEPORT SEKALI, TIDAK AUTO FARM
     end)
 
-    elseif text == "Auto Potion" then
-        toggle("Auto Potion")
-        input("HP Threshold","%")
+----------------------------------------------------------------
+-- AUTO TOTEM (MENU)
+----------------------------------------------------------------
+elseif text == "Auto Totem" then
+    list.Padding = UDim.new(0,4)
+
+    _G.RAY_AutoTotemOn   = _G.RAY_AutoTotemOn   or false
+    _G.RAY_AutoTotemType = _G.RAY_AutoTotemType or "Lucky" -- "Lucky","Mutasi","Shiny"
+
+    -- Row judul + toggle
+    local row = Instance.new("Frame", sub)
+    row.Size = UDim2.new(1,0,0,32)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(1,-100,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT
+    label.Text = "Auto Totem"
+
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    knob.BackgroundTransparency = 0
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    local function refreshAutoTotem()
+        local on = _G.RAY_AutoTotemOn
+        pill.BackgroundColor3 = on and ACCENT or MUTED
+        knob.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
     end
+
+    pill.MouseButton1Click:Connect(function()
+        _G.RAY_AutoTotemOn = not _G.RAY_AutoTotemOn
+        refreshAutoTotem()
+    end)
+
+    refreshAutoTotem()
+
+    ----------------------------------------------------------------
+    -- PANEL KANAN LIST TOTEM (mirip dropdown / panel Auto Weather)
+    ----------------------------------------------------------------
+
+    local panel = Instance.new("Frame", sub)
+    panel.AnchorPoint = Vector2.new(1,0)
+    panel.Position = UDim2.new(1,-12,0,40) -- kanan atas di dalam submenu
+    panel.Size = UDim2.new(0,150,0,90)
+    panel.BackgroundColor3 = CARD
+    panel.BackgroundTransparency = 0.04
+    panel.BorderSizePixel = 0
+    panel.ZIndex = 5
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0,8)
+
+    local list2 = Instance.new("UIListLayout", panel)
+    list2.Padding = UDim.new(0,4)
+    list2.FillDirection = Enum.FillDirection.Vertical
+    list2.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local function makeOption(name)
+        local btn = Instance.new("TextButton", panel)
+        btn.Size = UDim2.new(1,-8,0,24)
+        btn.Position = UDim2.new(0,4,0,0)
+        btn.BackgroundColor3 = CARD
+        btn.BackgroundTransparency = 0.12
+        btn.Text = name
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 12
+        btn.TextColor3 = MUTED
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.ZIndex = 6
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+        -- highlight kuning di keliling tombol (aktif kalau terpilih)
+        local highlight = Instance.new("Frame", btn)
+        highlight.Name = "Highlight"
+        highlight.Size = UDim2.new(1,0,1,0)
+        highlight.BackgroundTransparency = 1
+        highlight.BorderSizePixel = 0
+        highlight.ZIndex = 7
+
+        local stroke = Instance.new("UIStroke", highlight)
+        stroke.Thickness = 2
+        stroke.Color = Color3.fromRGB(255,230,80)
+        stroke.Enabled = false
+
+        btn.MouseButton1Click:Connect(function()
+            _G.RAY_AutoTotemType = name
+            -- reset semua opsi, cuma satu yang boleh aktif
+            for _,child in ipairs(panel:GetChildren()) do
+                if child:IsA("TextButton") then
+                    local h = child:FindFirstChild("Highlight")
+                    if h then
+                        local s = h:FindFirstChildOfClass("UIStroke")
+                        if s then
+                            s.Enabled = (child == btn)
+                        end
+                    end
+                end
+            end
+        end)
+
+        return btn
+    end
+
+    local optLucky  = makeOption("Lucky")
+    local optMutasi = makeOption("Mutasi")
+    local optShiny  = makeOption("Shiny")
+
+    -- set highlight awal sesuai _G.RAY_AutoTotemType
+    for _,child in ipairs(panel:GetChildren()) do
+        if child:IsA("TextButton") then
+            local h = child:FindFirstChild("Highlight")
+            if h then
+                local s = h:FindFirstChildOfClass("UIStroke")
+                if s then
+                    s.Enabled = (child.Text == _G.RAY_AutoTotemType)
+                end
+            end
+        end
+    end
+
 
     list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
     recalc()
@@ -4955,7 +5068,7 @@ task.wait(0.1)
 task.spawn(function()
     while true do
         if BlatantOn then
-            BlatantCycle_V2()
+            BlatantCycle_V2()      -- ini otomatis pakai versi improve yang baru
         elseif AutoFishAFK then
             Engine_V3_Delayed()
         end
