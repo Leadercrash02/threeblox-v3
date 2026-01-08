@@ -5253,15 +5253,13 @@ elseif text == "Auto Megalodon" then
         end)
     end -- tutup if/elseif text == ...
 
-    -- ini MASIH di dalam function autoDropdown, setelah semua cabang
     list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
     recalc()
-end -- tutup function autoDropdown
+end
 
 for _,v in ipairs(AUTO_OPTIONS) do
     autoDropdown(v[1])
 end
-
 
 pages["Auto Option"].Visible = true
 task.wait(0.1)
@@ -5269,14 +5267,13 @@ task.wait(0.1)
 task.spawn(function()
     while true do
         if BlatantOn then
-            BlatantCycle_V2()      -- ini otomatis pakai versi improve yang baru
+            BlatantCycle_V2()
         elseif AutoFishAFK then
             Engine_V3_Delayed()
         end
         task.wait(0.05)
     end
 end)
-
 
 
 -- AUTO SELL ENGINE SIMPLE
