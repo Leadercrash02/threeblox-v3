@@ -92,6 +92,10 @@ if lp.Character then
     end)
 end
 
+
+
+
+
 local PAGE_ICONS = {
     {"Information","📘"},
     {"Auto Option","⚙️"},
@@ -4090,7 +4094,6 @@ function _G.RAY_SetTotemAuto(on)
 end
 
 
-
 ----------------------------------------------------------------
 -- MEGALODON HUNT TELEPORT (ANCHOR PART)
 ----------------------------------------------------------------
@@ -4369,7 +4372,7 @@ local function autoDropdown(text)
         icon.Text = "💰"
     elseif text == "Auto Megalodon" then
         icon.Text = "🦈"
-    elseif text == "Auto Totem" then
+    elseif text == "Auto Potion" then
         icon.Text = "🧪"
     else
         icon.Text = "⚙️"
@@ -5056,138 +5059,7 @@ elseif text == "Auto Megalodon" then
         TeleportToMegalodon()  -- TELEPORT SEKALI, TIDAK AUTO FARM
     end)
 
-Ini versi full dari fungsi autoDropdown + pemanggilnya, sudah termasuk cabang Auto Totem yang kamu kirim, dan list:GetPropertyChangedSignal diletakkan di tempat yang bener supaya tidak ada null/nil error dari situ.
-​
-
-lua
-local function autoDropdown(text)
-    local holder = Instance.new("Frame", autoScroll)
-    holder.Size = UDim2.new(1,0,0,42)
-    holder.BackgroundTransparency = 1
-
-    local card = Instance.new("Frame", holder)
-    card.Size = UDim2.new(1,0,1,0)
-    card.BackgroundTransparency = 1
-
-    local mainBtn = Instance.new("TextButton", card)
-    mainBtn.Size = UDim2.new(1,-8,0,42)
-    mainBtn.Position = UDim2.new(0,28,0,0)
-    mainBtn.Text = text.."  ▼"
-    mainBtn.Font = Enum.Font.Gotham
-    mainBtn.TextSize = 15
-    mainBtn.TextXAlignment = Enum.TextXAlignment.Left
-    mainBtn.TextColor3 = TEXT
-    mainBtn.BackgroundColor3 = CARD
-    mainBtn.BackgroundTransparency = ALPHA_CARD
-    mainBtn.AutoButtonColor = false
-    Instance.new("UICorner", mainBtn).CornerRadius = UDim.new(0,10)
-
-    local sub = Instance.new("Frame", holder)
-    sub.Position = UDim2.new(0,0,0,42)
-    sub.Size = UDim2.new(1,0,0,0)
-    sub.ClipsDescendants = true
-    sub.BackgroundTransparency = 1
-
-    local list = Instance.new("UIListLayout", sub)
-    list.Padding = UDim.new(0,6)
-    list.SortOrder = Enum.SortOrder.LayoutOrder
-
-    local open = false
-    local function recalc()
-        task.wait()
-        local h = list.AbsoluteContentSize.Y
-        if open then
-            sub.Size = UDim2.new(1,0,0,h)
-            holder.Size = UDim2.new(1,0,0,42 + h)
-            mainBtn.Text = text.."  ▲"
-        else
-            sub.Size = UDim2.new(1,0,0,0)
-            holder.Size = UDim2.new(1,0,0,42)
-            mainBtn.Text = text.."  ▼"
-        end
-        scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 20)
-    end
-
-    mainBtn.MouseButton1Click:Connect(function()
-        open = not open
-        recalc()
-    end)
-
-    local function toggle(labelText, callback)
-        local b = Instance.new("TextButton", sub)
-        b.Size = UDim2.new(1,0,0,32)
-        b.Text = "   "..labelText.." : OFF"
-        b.Font = Enum.Font.Gotham
-        b.TextSize = 13
-        b.TextXAlignment = Enum.TextXAlignment.Left
-        b.TextColor3 = MUTED
-        b.BackgroundColor3 = CARD
-        b.BackgroundTransparency = 0.12
-        Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
-
-        local on = false
-        b.MouseButton1Click:Connect(function()
-            on = not on
-            b.Text = "   "..labelText.." : "..(on and "ON" or "OFF")
-            if callback then
-                callback(on)
-            end
-        end)
-    end
-
-    local function input(t, placeholder)
-        local b = Instance.new("TextBox", sub)
-        b.Size = UDim2.new(1,0,0,32)
-        b.Text = "   "..t.." ("..placeholder..")"
-        b.Font = Enum.Font.Gotham
-        b.TextSize = 13
-        b.TextXAlignment = Enum.TextXAlignment.Left
-        b.TextColor3 = MUTED
-        b.ClearTextOnFocus = false
-        b.BackgroundColor3 = CARD
-        b.BackgroundTransparency = 0.12
-        Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
-        return b
-    end
-
-    ----------------------------------------------------------------
-    -- AUTO FISHING
-    ----------------------------------------------------------------
-    if text == "Auto Fishing" then
-        -- (isi Auto Fishing kamu di sini; tidak diubah)
-
-    ----------------------------------------------------------------
-    -- BLATANT FISHING
-    ----------------------------------------------------------------
-    elseif text == "Blatant Fishing" then
-        -- (isi Blatant Fishing kamu di sini)
-
-    ----------------------------------------------------------------
-    -- AUTO SPOT ISLAND
-    ----------------------------------------------------------------
-    elseif text == "Auto Spot Island" then
-        -- (isi Auto Spot Island kamu di sini)
-
-    ----------------------------------------------------------------
-    -- AUTO FAVORITE
-    ----------------------------------------------------------------
-    elseif text == "Auto Favorite" then
-        toggle("Favorite Rare")
-        toggle("Favorite Epic")
-
-    ----------------------------------------------------------------
-    -- AUTO SELL
-    ----------------------------------------------------------------
-    elseif text == "Auto Sell" then
-        -- (isi Auto Sell kamu di sini)
-
-    ----------------------------------------------------------------
-    -- AUTO MEGALODON
-    ----------------------------------------------------------------
-    elseif text == "Auto Megalodon" then
-        -- (isi Auto Megalodon kamu di sini)
-
-    ----------------------------------------------------------------
+----------------------------------------------------------------
     -- AUTO TOTEM
     ----------------------------------------------------------------
     elseif text == "Auto Totem" then
@@ -5197,7 +5069,9 @@ local function autoDropdown(text)
         _G.RAY_AutoTotemType = _G.RAY_AutoTotemType or "Lucky"
         _G.RAY_AutoTotemMode = _G.RAY_AutoTotemMode or "X1"
 
+        ----------------------------------------------------------------
         -- ROW JUDUL + TOGGLE
+        ----------------------------------------------------------------
         local row = Instance.new("Frame", sub)
         row.Size = UDim2.new(1,0,0,32)
         row.BackgroundTransparency = 1
@@ -5244,7 +5118,9 @@ local function autoDropdown(text)
 
         refreshAutoTotem()
 
+        ----------------------------------------------------------------
         -- PANEL KANAN: PILIH JENIS TOTEM
+        ----------------------------------------------------------------
         local panel = Instance.new("Frame", sub)
         panel.AnchorPoint = Vector2.new(1,0)
         panel.Position = UDim2.new(1,-12,0,40)
@@ -5262,7 +5138,7 @@ local function autoDropdown(text)
         pad.PaddingBottom = UDim.new(0,6)
 
         local list2 = Instance.new("UIListLayout", panel)
-        list2.Padding = UDim.new(0,4)
+        list2.Padding = UDim2.new(0,4)
         list2.FillDirection = Enum.FillDirection.Vertical
         list2.SortOrder = Enum.SortOrder.LayoutOrder
 
@@ -5321,7 +5197,9 @@ local function autoDropdown(text)
             end
         end
 
+        ----------------------------------------------------------------
         -- MODE X1 / X9 + PLACE NOW
+        ----------------------------------------------------------------
         local modeRow = Instance.new("Frame", sub)
         modeRow.Size = UDim2.new(1,0,0,32)
         modeRow.BackgroundTransparency = 1
@@ -5383,6 +5261,7 @@ end -- tutup function autoDropdown
 for _,v in ipairs(AUTO_OPTIONS) do
     autoDropdown(v[1])
 end
+
 
 pages["Auto Option"].Visible = true
 task.wait(0.1)
