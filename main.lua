@@ -4372,7 +4372,7 @@ local function autoDropdown(text)
         icon.Text = "💰"
     elseif text == "Auto Megalodon" then
         icon.Text = "🦈"
-    elseif text == "Auto Potion" then
+    elseif text == "Auto Totem" then
         icon.Text = "🧪"
     else
         icon.Text = "⚙️"
