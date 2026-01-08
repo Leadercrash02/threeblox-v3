@@ -4918,133 +4918,179 @@ elseif text == "Auto Megalodon" then
         TeleportToMegalodon()  -- TELEPORT SEKALI, TIDAK AUTO FARM
     end)
 
-    ----------------------------------------------------------------
-    -- AUTO TOTEM (MENU)
-    ----------------------------------------------------------------
-    elseif text == "Auto Totem" then
-        list.Padding = UDim.new(0,4)
+----------------------------------------------------------------
+-- AUTO TOTEM (MENU)
+----------------------------------------------------------------
+elseif text == "Auto Totem" then
+    list.Padding = UDim.new(0,4)
 
-        _G.RAY_AutoTotemOn   = _G.RAY_AutoTotemOn   or false
-        _G.RAY_AutoTotemType = _G.RAY_AutoTotemType or "Lucky"
+    _G.RAY_AutoTotemOn    = _G.RAY_AutoTotemOn    or false
+    _G.RAY_AutoTotemType  = _G.RAY_AutoTotemType  or "Lucky" -- "Lucky","Mutasi","Shiny"
+    _G.RAY_AutoTotemMode  = _G.RAY_AutoTotemMode  or "X1"    -- "X1","X9"
 
-        local row = Instance.new("Frame", sub)
-        row.Size = UDim2.new(1,0,0,32)
-        row.BackgroundTransparency = 1
+    -- Row judul + toggle
+    local row = Instance.new("Frame", sub)
+    row.Size = UDim2.new(1,0,0,32)
+    row.BackgroundTransparency = 1
 
-        local label = Instance.new("TextLabel", row)
-        label.Size = UDim2.new(1,-100,1,0)
-        label.Position = UDim2.new(0,16,0,0)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = TEXT
-        label.Text = "Auto Totem"
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(1,-100,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT
+    label.Text = "Auto Totem"
 
-        local pill = Instance.new("TextButton", row)
-        pill.Size = UDim2.new(0,50,0,24)
-        pill.Position = UDim2.new(1,-80,0.5,-12)
-        pill.BackgroundColor3 = MUTED
-        pill.BackgroundTransparency = 0.1
-        pill.Text = ""
-        pill.AutoButtonColor = false
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
 
-        local knob = Instance.new("Frame", pill)
-        knob.Size = UDim2.new(0,18,0,18)
-        knob.Position = UDim2.new(0,3,0.5,-9)
-        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        knob.BackgroundTransparency = 0
-        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    knob.BackgroundTransparency = 0
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-        local function refreshAutoTotem()
-            local on = _G.RAY_AutoTotemOn
-            pill.BackgroundColor3 = on and ACCENT or MUTED
-            knob.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
-        end
+    local function refreshAutoTotem()
+        local on = _G.RAY_AutoTotemOn
+        pill.BackgroundColor3 = on and ACCENT or MUTED
+        knob.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+    end
 
-        pill.MouseButton1Click:Connect(function()
-            _G.RAY_AutoTotemOn = not _G.RAY_AutoTotemOn
-            refreshAutoTotem()
-        end)
-
+    pill.MouseButton1Click:Connect(function()
+        _G.RAY_AutoTotemOn = not _G.RAY_AutoTotemOn
         refreshAutoTotem()
+    end)
 
-        local panel = Instance.new("Frame", sub)
-        panel.AnchorPoint = Vector2.new(1,0)
-        panel.Position = UDim2.new(1,-12,0,40)
-        panel.Size = UDim2.new(0,150,0,90)
-        panel.BackgroundColor3 = CARD
-        panel.BackgroundTransparency = 0.04
-        panel.BorderSizePixel = 0
-        panel.ZIndex = 5
-        Instance.new("UICorner", panel).CornerRadius = UDim.new(0,8)
+    refreshAutoTotem()
 
-        local list2 = Instance.new("UIListLayout", panel)
-        list2.Padding = UDim.new(0,4)
-        list2.FillDirection = Enum.FillDirection.Vertical
-        list2.SortOrder = Enum.SortOrder.LayoutOrder
+    ----------------------------------------------------------------
+    -- PANEL KANAN LIST TOTEM
+    ----------------------------------------------------------------
+    local panel = Instance.new("Frame", sub)
+    panel.AnchorPoint = Vector2.new(1,0)
+    panel.Position = UDim2.new(1,-12,0,40) -- kanan atas di dalam submenu
+    panel.Size = UDim2.new(0,150,0,90)
+    panel.BackgroundColor3 = CARD
+    panel.BackgroundTransparency = 0.04
+    panel.BorderSizePixel = 0
+    panel.ZIndex = 5
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0,8)
 
-        local function makeOption(name)
-            local btn2 = Instance.new("TextButton", panel)
-            btn2.Size = UDim2.new(1,-8,0,24)
-            btn2.Position = UDim2.new(0,4,0,0)
-            btn2.BackgroundColor3 = CARD
-            btn2.BackgroundTransparency = 0.12
-            btn2.Text = name
-            btn2.Font = Enum.Font.Gotham
-            btn2.TextSize = 12
-            btn2.TextColor3 = MUTED
-            btn2.TextXAlignment = Enum.TextXAlignment.Left
-            btn2.ZIndex = 6
-            Instance.new("UICorner", btn2).CornerRadius = UDim.new(0,6)
+    local list2 = Instance.new("UIListLayout", panel)
+    list2.Padding = UDim2.new(0,4)
+    list2.FillDirection = Enum.FillDirection.Vertical
+    list2.SortOrder = Enum.SortOrder.LayoutOrder
 
-            local highlight = Instance.new("Frame", btn2)
-            highlight.Name = "Highlight"
-            highlight.Size = UDim2.new(1,0,1,0)
-            highlight.BackgroundTransparency = 1
-            highlight.BorderSizePixel = 0
-            highlight.ZIndex = 7
+    local function makeOption(name)
+        local btn = Instance.new("TextButton", panel)
+        btn.Size = UDim2.new(1,-8,0,24)
+        btn.Position = UDim2.new(0,4,0,0)
+        btn.BackgroundColor3 = CARD
+        btn.BackgroundTransparency = 0.12
+        btn.Text = name
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 12
+        btn.TextColor3 = TEXT -- putih
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.ZIndex = 6
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
-            local stroke = Instance.new("UIStroke", highlight)
-            stroke.Thickness = 2
-            stroke.Color = Color3.fromRGB(255,230,80)
-            stroke.Enabled = false
+        -- highlight kuning di keliling tombol (aktif kalau terpilih)
+        local highlight = Instance.new("Frame", btn)
+        highlight.Name = "Highlight"
+        highlight.Size = UDim2.new(1,0,1,0)
+        highlight.BackgroundTransparency = 1
+        highlight.BorderSizePixel = 0
+        highlight.ZIndex = 7
 
-            btn2.MouseButton1Click:Connect(function()
-                _G.RAY_AutoTotemType = name
-                for _,child in ipairs(panel:GetChildren()) do
-                    if child:IsA("TextButton") then
-                        local h = child:FindFirstChild("Highlight")
-                        if h then
-                            local s = h:FindFirstChildOfClass("UIStroke")
-                            if s then
-                                s.Enabled = (child == btn2)
-                            end
+        local stroke = Instance.new("UIStroke", highlight)
+        stroke.Thickness = 2
+        stroke.Color = Color3.fromRGB(255,230,80)
+        stroke.Enabled = false
+
+        btn.MouseButton1Click:Connect(function()
+            _G.RAY_AutoTotemType = name
+            -- reset semua opsi, cuma satu yang boleh aktif
+            for _,child in ipairs(panel:GetChildren()) do
+                if child:IsA("TextButton") then
+                    local h = child:FindFirstChild("Highlight")
+                    if h then
+                        local s = h:FindFirstChildOfClass("UIStroke")
+                        if s then
+                            s.Enabled = (child == btn)
                         end
                     end
                 end
-            end)
+            end
+        end)
 
-            return btn2
-        end
+        return btn
+    end
 
-        makeOption("Lucky")
-        makeOption("Mutasi")
-        makeOption("Shiny")
+    makeOption("Lucky")
+    makeOption("Mutasi")
+    makeOption("Shiny")
 
-        for _,child in ipairs(panel:GetChildren()) do
-            if child:IsA("TextButton") then
-                local h = child:FindFirstChild("Highlight")
-                if h then
-                    local s = h:FindFirstChildOfClass("UIStroke")
-                    if s then
-                        s.Enabled = (child.Text == _G.RAY_AutoTotemType)
-                    end
+    -- set highlight awal sesuai _G.RAY_AutoTotemType
+    for _,child in ipairs(panel:GetChildren()) do
+        if child:IsA("TextButton") then
+            local h = child:FindFirstChild("Highlight")
+            if h then
+                local s = h:FindFirstChildOfClass("UIStroke")
+                if s then
+                    s.Enabled = (child.Text == _G.RAY_AutoTotemType)
                 end
             end
         end
     end
+
+    ----------------------------------------------------------------
+    -- MODE X1 / X9
+    ----------------------------------------------------------------
+    local modeRow = Instance.new("Frame", sub)
+    modeRow.Size = UDim2.new(1,0,0,32)
+    modeRow.BackgroundTransparency = 1
+
+    local modeLabel = Instance.new("TextLabel", modeRow)
+    modeLabel.Size = UDim2.new(1,-100,1,0)
+    modeLabel.Position = UDim2.new(0,16,0,0)
+    modeLabel.BackgroundTransparency = 1
+    modeLabel.Font = Enum.Font.Gotham
+    modeLabel.TextSize = 13
+    modeLabel.TextXAlignment = Enum.TextXAlignment.Left
+    modeLabel.TextColor3 = TEXT
+    modeLabel.Text = "Totem Mode"
+
+    local modeBtn = Instance.new("TextButton", modeRow)
+    modeBtn.Size = UDim2.new(0,70,0,24)
+    modeBtn.Position = UDim2.new(1,-90,0.5,-12)
+    modeBtn.BackgroundColor3 = CARD
+    modeBtn.BackgroundTransparency = 0.12
+    modeBtn.Text = _G.RAY_AutoTotemMode
+    modeBtn.Font = Enum.Font.Gotham
+    modeBtn.TextSize = 13
+    modeBtn.TextColor3 = TEXT
+    modeBtn.AutoButtonColor = false
+    Instance.new("UICorner", modeBtn).CornerRadius = UDim.new(0,999)
+
+    modeBtn.MouseButton1Click:Connect(function()
+        if _G.RAY_AutoTotemMode == "X1" then
+            _G.RAY_AutoTotemMode = "X9"
+        else
+            _G.RAY_AutoTotemMode = "X1"
+        end
+        modeBtn.Text = _G.RAY_AutoTotemMode
+    end)
+
 
     list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
     recalc()
