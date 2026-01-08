@@ -4929,7 +4929,7 @@ elseif text == "Auto Totem" then
     _G.RAY_AutoTotemMode  = _G.RAY_AutoTotemMode  or "X1"    -- "X1","X9"
 
     ----------------------------------------------------------------
-    -- ROW JUDUL + TOGGLE (KIRI, SAMA KAYAK WEATHER)
+    -- ROW JUDUL + TOGGLE
     ----------------------------------------------------------------
     local row = Instance.new("Frame", sub)
     row.Size = UDim2.new(1,0,0,32)
@@ -4975,11 +4975,11 @@ elseif text == "Auto Totem" then
     refreshAutoTotem()
 
     ----------------------------------------------------------------
-    -- PANEL KANAN (FLOAT) PERSIS WEATHER: LIST JENIS TOTEM
+    -- PANEL KANAN (FLOAT) LIST JENIS TOTEM
     ----------------------------------------------------------------
     local panel = Instance.new("Frame", sub)
     panel.AnchorPoint = Vector2.new(1,0)
-    panel.Position = UDim2.new(1,-12,0,40) -- kanan atas relatif ke sub
+    panel.Position = UDim2.new(1,-12,0,40)
     panel.Size = UDim2.new(0,160,0,110)
     panel.BackgroundColor3 = CARD
     panel.BackgroundTransparency = 0.04
@@ -4994,7 +4994,7 @@ elseif text == "Auto Totem" then
     pad.PaddingBottom = UDim.new(0,6)
 
     local list2 = Instance.new("UIListLayout", panel)
-    list2.Padding = UDim2.new(0,4)
+    list2.Padding = UDim.new(0,4)
     list2.FillDirection = Enum.FillDirection.Vertical
     list2.SortOrder = Enum.SortOrder.LayoutOrder
 
@@ -5006,12 +5006,11 @@ elseif text == "Auto Totem" then
         btn.Text = name
         btn.Font = Enum.Font.Gotham
         btn.TextSize = 12
-        btn.TextColor3 = TEXT -- putih, biar jelas
+        btn.TextColor3 = TEXT
         btn.TextXAlignment = Enum.TextXAlignment.Left
         btn.ZIndex = 6
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
-        -- highlight kuning garis luar (ON kalau kepilih, sama kayak weather)
         local stroke = Instance.new("UIStroke")
         stroke.Color = Color3.fromRGB(255,230,80)
         stroke.Thickness = 2
@@ -5034,11 +5033,10 @@ elseif text == "Auto Totem" then
         return btn
     end
 
-    local btnLucky  = makeOption("Lucky")
-    local btnMutasi = makeOption("Mutasi")
-    local btnShiny  = makeOption("Shiny")
+    makeOption("Lucky")
+    makeOption("Mutasi")
+    makeOption("Shiny")
 
-    -- set highlight awal
     for _,child in ipairs(panel:GetChildren()) do
         if child:IsA("TextButton") then
             local s = child:FindFirstChildOfClass("UIStroke")
@@ -5049,7 +5047,7 @@ elseif text == "Auto Totem" then
     end
 
     ----------------------------------------------------------------
-    -- MODE X1 / X9 (ROW DI KIRI, MASIH DALAM SUB)
+    -- MODE X1 / X9
     ----------------------------------------------------------------
     local modeRow = Instance.new("Frame", sub)
     modeRow.Size = UDim2.new(1,0,0,32)
@@ -5082,8 +5080,6 @@ elseif text == "Auto Totem" then
         modeBtn.Text = _G.RAY_AutoTotemMode
     end)
 end
-
-
 
     list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
     recalc()
