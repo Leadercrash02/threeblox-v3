@@ -10,7 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- CLEAN
 pcall(function()
     for _,v in ipairs(CoreGui:GetChildren()) do
-        if v:IsA("ScreenGui") and v.Name == "ThreebloxV3" then
+        if v:IsA("ScreenGui") and v.Name == "Threeblox Freemium" then
             v:Destroy()
         end
     end
@@ -100,7 +100,6 @@ local PAGE_ICONS = {
     {"Information","📘"},
     {"Auto Option","⚙️"},
     {"Teleport","🧭"},
-    {"Quest","⭐"},
     {"Shop & Trade","💰"},
     {"Misc","⚡"},
 }
@@ -108,11 +107,9 @@ local PAGE_ICONS = {
 local AUTO_OPTIONS = {
     {"Auto Fishing",""},
     {"Blatant Fishing",""},
-    {"Coming soon",""},
     {"Auto Favorite",""},
     {"Auto Sell",""},
     {"Auto Megalodon",""},
-    {"Auto Totem",""},
 }
 
 local ISLAND_SPOTS = {
@@ -160,7 +157,7 @@ local DEFAULT_SPOT_ORDER = {
 
 -- ROOT
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "ThreebloxV3"
+gui.Name = "Threeblox Freemium"
 gui.IgnoreGuiInset = true
 
 -- MAIN
@@ -188,7 +185,7 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 20
 title.TextColor3 = TEXT
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.Text = "Threeblox V3 | Auto Option"
+title.Text = "Threeblox Freemium | Auto Option"
 
 -- BUTTONS
 local btnMin = Instance.new("TextButton", header)
