@@ -4372,7 +4372,7 @@ local function autoDropdown(text)
         icon.Text = "💰"
     elseif text == "Auto Megalodon" then
         icon.Text = "🦈"
-    elseif text == "Auto Totem" then
+    elseif text == "Auto Potion" then
         icon.Text = "🧪"
     else
         icon.Text = "⚙️"
@@ -5073,13 +5073,14 @@ task.wait(0.1)
 task.spawn(function()
     while true do
         if BlatantOn then
-            BlatantCycle_V2()
+            BlatantCycle_V2()      -- ini otomatis pakai versi improve yang baru
         elseif AutoFishAFK then
             Engine_V3_Delayed()
         end
         task.wait(0.05)
     end
 end)
+
 
 
 -- AUTO SELL ENGINE SIMPLE
