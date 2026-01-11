@@ -2985,19 +2985,21 @@ end
 ----------------------------------------------------------------
 -- ENGINE STATE
 ----------------------------------------------------------------
-local AutoFishAFK = false
-local isFishing   = false
+local AutoFishAFK   = false
+local isFishing     = false
 
 -- delay Auto Fishing (feel V2)
-local DelayReel   = 3    -- sama kayak _G.RAY_DelayCast
-local DelayCatch  = 2    -- sama kayak _G.RAY_DelayFinish
+local DelayReel     = 3      -- sama kayak _G.RAY_DelayCast
+local DelayCatch    = 2      -- sama kayak _G.RAY_DelayFinish
 
--- Blatant state
-local BlatantOn    = false
-local BlatantReel  = 0.8     -- Reel Delay (default lama, kalau mau dipakai)
-local BlatantCatch = 0.75    -- default awal (nggak wajib dipakai, bisa dioverride)
+-- Blatant state (V2 cepat)
+local BlatantOn     = false
+local BlatantReel   = 1.17   -- default GUI Reel Delay
+local BlatantCatch  = 0.25   -- default GUI Catch Delay
+local InnerDelayGui = 0.0009 -- default inner delay (kalau nanti mau TextBox)
 
 _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
+
 
 ----------------------------------------------------------------
 -- FUNGSI DASAR
@@ -3018,6 +3020,7 @@ local function Cast_V3()
     end)
 end
 
+
 ----------------------------------------------------------------
 -- ENGINE 0: AUTO FISH FEEL V2
 -- (1 cast -> tunggu -> 1 reel -> tunggu)
@@ -3034,13 +3037,10 @@ local function Engine_V3_Delayed()
     isFishing = false
 end
 
-----------------------------------------------------------------
--- ENGINE 1: BLATANT (V2 CEPAT)
--- CONFIG (UI) – OVERRIDE NILAI
-----------------------------------------------------------------
-BlatantReel  = 1.17   -- kalau mau dipakai buat tuning lain
-BlatantCatch = 0.25   -- delay catch utama / extra catch
 
+-----------------------------------------------------------------
+-- ENGINE 1: BLATANT (V2 CEPAT, ANTI KE-LOCK)
+----------------------------------------------------------------
 local CastCount        = 3
 local DelayBetweenCast = 0.03
 
@@ -3062,9 +3062,19 @@ local function BlatantCycle_V2()
         end
     end)
 
-    -- DELAY REEL (SEDIKIT LEBIH CEPAT)
-    local RealReelDelay  = 0.52     -- dari 0.55 → 0.52
-    local RealInnerDelay = 0.0009   -- sedikit lebih longgar dari 0.0007
+    ----------------------------------------------------------------
+    -- DELAY REEL: AMBIL DARI GUI + JITTER DIKIT BIAR GAK KE-LOCK
+    ----------------------------------------------------------------
+    local baseReel = 0.52                   -- timing dasar lama
+    local offset   = (BlatantReel - 1.17)   -- offset dari GUI
+    local jitter   = (math.random() - 0.5) * 0.01  -- ±0.005 detik
+
+    local RealReelDelay = baseReel + offset + jitter
+
+    ----------------------------------------------------------------
+    -- INNER DELAY: BISA DIATUR DARI GUI, TAPI DISNAP KE RANGE AMAN
+    ----------------------------------------------------------------
+    local RealInnerDelay = math.clamp(InnerDelayGui, 0.001, 0.01)
 
     task.wait(RealReelDelay)
 
@@ -3078,19 +3088,20 @@ local function BlatantCycle_V2()
 end
 
 
-
----------------------------------------------------------------
+----------------------------------------------------------------
 -- EXTRA CATCH BLATANT
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
         if BlatantOn and _G.RAY_ExtraCatchBlatant and not isFishing then
             Reel_V3()
-            task.wait(BlatantCatch)   -- pake delay yang sama biar feel-nya konsisten
+            task.wait(BlatantCatch)
         end
         task.wait(0.05)
     end
 end)
+
+
 
 
 -- ====================== AUTO OPTION CONTENT ======================
@@ -3464,172 +3475,173 @@ end)
             end
         end)
 
-    ----------------------------------------------------------------
-    -- BLATANT FISHING
-    ----------------------------------------------------------------
-    elseif text == "Blatant Fishing" then
-        local row = Instance.new("Frame", sub)
-        row.Size = UDim2.new(1,0,0,36)
-        row.BackgroundTransparency = 1
+        ----------------------------------------------------------------
+        -- BLATANT FISHING
+        ----------------------------------------------------------------
+        elseif text == "Blatant Fishing" then
+            local row = Instance.new("Frame", sub)
+            row.Size = UDim2.new(1,0,0,36)
+            row.BackgroundTransparency = 1
 
-        local label = Instance.new("TextLabel", row)
-        label.Size = UDim2.new(1,-100,1,0)
-        label.Position = UDim2.new(0,16,0,0)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = TEXT
-        label.Text = "Auto Fishing Blatant"
+            local label = Instance.new("TextLabel", row)
+            label.Size = UDim2.new(1,-100,1,0)
+            label.Position = UDim2.new(0,16,0,0)
+            label.BackgroundTransparency = 1
+            label.Font = Enum.Font.Gotham
+            label.TextSize = 13
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.TextColor3 = TEXT
+            label.Text = "Auto Fishing Blatant"
 
-        local pill = Instance.new("TextButton", row)
-        pill.Size = UDim2.new(0,50,0,24)
-        pill.Position = UDim2.new(1,-80,0.5,-12)
-        pill.BackgroundColor3 = MUTED
-        pill.BackgroundTransparency = 0.1
-        pill.Text = ""
-        pill.AutoButtonColor = false
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+            local pill = Instance.new("TextButton", row)
+            pill.Size = UDim2.new(0,50,0,24)
+            pill.Position = UDim2.new(1,-80,0.5,-12)
+            pill.BackgroundColor3 = MUTED
+            pill.BackgroundTransparency = 0.1
+            pill.Text = ""
+            pill.AutoButtonColor = false
+            Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
 
-        local knob = Instance.new("Frame", pill)
-        knob.Size = UDim2.new(0,18,0,18)
-        knob.Position = UDim2.new(0,3,0.5,-9)
-        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        knob.BackgroundTransparency = 0
-        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+            local knob = Instance.new("Frame", pill)
+            knob.Size = UDim2.new(0,18,0,18)
+            knob.Position = UDim2.new(0,3,0.5,-9)
+            knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            knob.BackgroundTransparency = 0
+            Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-        local function refreshBlatant()
-            pill.BackgroundColor3 = BlatantOn and ACCENT or MUTED
-            knob.Position = BlatantOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
-        end
+            local function refreshBlatant()
+                pill.BackgroundColor3 = BlatantOn and ACCENT or MUTED
+                knob.Position = BlatantOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+            end
 
-        pill.MouseButton1Click:Connect(function()
-            BlatantOn = not BlatantOn
+            pill.MouseButton1Click:Connect(function()
+                BlatantOn = not BlatantOn
+                refreshBlatant()
+            end)
+
             refreshBlatant()
-        end)
 
-        refreshBlatant()
+            -- Reel delay blatant
+            local reelRow = Instance.new("Frame", sub)
+            reelRow.Size = UDim2.new(1,0,0,30)
+            reelRow.BackgroundTransparency = 1
 
-        -- Reel delay blatant
-        local reelRow = Instance.new("Frame", sub)
-        reelRow.Size = UDim2.new(1,0,0,30)
-        reelRow.BackgroundTransparency = 1
+            local reelLabel = Instance.new("TextLabel", reelRow)
+            reelLabel.Size = UDim2.new(0.6,0,1,0)
+            reelLabel.Position = UDim2.new(0,16,0,0)
+            reelLabel.BackgroundTransparency = 1
+            reelLabel.Font = Enum.Font.Gotham
+            reelLabel.TextSize = 13
+            reelLabel.TextXAlignment = Enum.TextXAlignment.Left
+            reelLabel.TextColor3 = TEXT
+            reelLabel.Text = "Reel Delay (sec)"
 
-        local reelLabel = Instance.new("TextLabel", reelRow)
-        reelLabel.Size = UDim2.new(0.6,0,1,0)
-        reelLabel.Position = UDim2.new(0,16,0,0)
-        reelLabel.BackgroundTransparency = 1
-        reelLabel.Font = Enum.Font.Gotham
-        reelLabel.TextSize = 13
-        reelLabel.TextXAlignment = Enum.TextXAlignment.Left
-        reelLabel.TextColor3 = TEXT
-        reelLabel.Text = "Reel Delay (sec)"
+            local reelBox = Instance.new("TextBox", reelRow)
+            reelBox.Size = UDim2.new(0.35,0,1,0)
+            reelBox.Position = UDim2.new(0.6,8,0,0)
+            reelBox.Text = tostring(BlatantReel)
+            reelBox.Font = Enum.Font.Gotham
+            reelBox.TextSize = 13
+            reelBox.TextXAlignment = Enum.TextXAlignment.Center
+            reelBox.TextColor3 = TEXT
+            reelBox.ClearTextOnFocus = false
+            reelBox.BackgroundColor3 = CARD
+            reelBox.BackgroundTransparency = 0.12
+            Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0,8)
 
-        local reelBox = Instance.new("TextBox", reelRow)
-        reelBox.Size = UDim2.new(0.35,0,1,0)
-        reelBox.Position = UDim2.new(0.6,8,0,0)
-        reelBox.Text = tostring(BlatantReel)
-        reelBox.Font = Enum.Font.Gotham
-        reelBox.TextSize = 13
-        reelBox.TextXAlignment = Enum.TextXAlignment.Center
-        reelBox.TextColor3 = TEXT
-        reelBox.ClearTextOnFocus = false
-        reelBox.BackgroundColor3 = CARD
-        reelBox.BackgroundTransparency = 0.12
-        Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0,8)
+            reelBox.FocusLost:Connect(function()
+                local n = tonumber(reelBox.Text:match("[%d%.]+"))
+                if n and n > 0 then
+                    BlatantReel = n
+                    reelBox.Text = tostring(n)
+                else
+                    reelBox.Text = tostring(BlatantReel)
+                end
+            end)
 
-        reelBox.FocusLost:Connect(function()
-            local n = tonumber(reelBox.Text:match("[%d%.]+"))
-            if n and n > 0 then
-                BlatantReel = n
-                reelBox.Text = tostring(n)
-            else
-                reelBox.Text = tostring(BlatantReel)
+            -- Catch delay blatant
+            local catchRow = Instance.new("Frame", sub)
+            catchRow.Size = UDim2.new(1,0,0,30)
+            catchRow.BackgroundTransparency = 1
+
+            local catchLabel = Instance.new("TextLabel", catchRow)
+            catchLabel.Size = UDim2.new(0.6,0,1,0)
+            catchLabel.Position = UDim2.new(0,16,0,0)
+            catchLabel.BackgroundTransparency = 1
+            catchLabel.Font = Enum.Font.Gotham
+            catchLabel.TextSize = 13
+            catchLabel.TextXAlignment = Enum.TextXAlignment.Left
+            catchLabel.TextColor3 = TEXT
+            catchLabel.Text = "Catch Delay (sec)"
+
+            local catchBox = Instance.new("TextBox", catchRow)
+            catchBox.Size = UDim2.new(0.35,0,1,0)
+            catchBox.Position = UDim2.new(0.6,8,0,0)
+            catchBox.Text = tostring(BlatantCatch)
+            catchBox.Font = Enum.Font.Gotham
+            catchBox.TextSize = 13
+            catchBox.TextXAlignment = Enum.TextXAlignment.Center
+            catchBox.TextColor3 = TEXT
+            catchBox.ClearTextOnFocus = false
+            catchBox.BackgroundColor3 = CARD
+            catchBox.BackgroundTransparency = 0.12
+            Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0,8)
+
+            catchBox.FocusLost:Connect(function()
+                local n = tonumber(catchBox.Text:match("[%d%.]+"))
+                if n and n > 0 then
+                    BlatantCatch = n
+                    catchBox.Text = tostring(n)
+                else
+                    catchBox.Text = tostring(BlatantCatch)
+                end
+            end)
+
+            -- Extra catch blatant
+            _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
+
+            local extraRow = Instance.new("Frame", sub)
+            extraRow.Size = UDim2.new(1,0,0,32)
+            extraRow.BackgroundTransparency = 1
+
+            local extraLabel = Instance.new("TextLabel", extraRow)
+            extraLabel.Size = UDim2.new(1,-100,1,0)
+            extraLabel.Position = UDim2.new(0,16,0,0)
+            extraLabel.BackgroundTransparency = 1
+            extraLabel.Font = Enum.Font.Gotham
+            extraLabel.TextSize = 13
+            extraLabel.TextXAlignment = Enum.TextXAlignment.Left
+            extraLabel.TextColor3 = TEXT
+            extraLabel.Text = "Extra Catch"
+
+            local extraPill = Instance.new("TextButton", extraRow)
+            extraPill.Size = UDim2.new(0,50,0,24)
+            extraPill.Position = UDim2.new(1,-80,0.5,-12)
+            extraPill.BackgroundColor3 = MUTED
+            extraPill.BackgroundTransparency = 0.1
+            extraPill.Text = ""
+            extraPill.AutoButtonColor = false
+            Instance.new("UICorner", extraPill).CornerRadius = UDim.new(0,999)
+
+            local extraKnob = Instance.new("Frame", extraPill)
+            extraKnob.Size = UDim2.new(0,18,0,18)
+            extraKnob.Position = UDim2.new(0,3,0.5,-9)
+            extraKnob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            extraKnob.BackgroundTransparency = 0
+            Instance.new("UICorner", extraKnob).CornerRadius = UDim.new(0,999)
+
+            local function refreshExtra()
+                extraPill.BackgroundColor3 = _G.RAY_ExtraCatchBlatant and Color3.fromRGB(80,200,120) or MUTED
+                extraKnob.Position = _G.RAY_ExtraCatchBlatant and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
             end
-        end)
 
-        -- Catch delay blatant
-        local catchRow = Instance.new("Frame", sub)
-        catchRow.Size = UDim2.new(1,0,0,30)
-        catchRow.BackgroundTransparency = 1
+            extraPill.MouseButton1Click:Connect(function()
+                _G.RAY_ExtraCatchBlatant = not _G.RAY_ExtraCatchBlatant
+                refreshExtra()
+            end)
 
-        local catchLabel = Instance.new("TextLabel", catchRow)
-        catchLabel.Size = UDim2.new(0.6,0,1,0)
-        catchLabel.Position = UDim2.new(0,16,0,0)
-        catchLabel.BackgroundTransparency = 1
-        catchLabel.Font = Enum.Font.Gotham
-        catchLabel.TextSize = 13
-        catchLabel.TextXAlignment = Enum.TextXAlignment.Left
-        catchLabel.TextColor3 = TEXT
-        catchLabel.Text = "Catch Delay (sec)"
-
-        local catchBox = Instance.new("TextBox", catchRow)
-        catchBox.Size = UDim2.new(0.35,0,1,0)
-        catchBox.Position = UDim2.new(0.6,8,0,0)
-        catchBox.Text = tostring(BlatantCatch)
-        catchBox.Font = Enum.Font.Gotham
-        catchBox.TextSize = 13
-        catchBox.TextXAlignment = Enum.TextXAlignment.Center
-        catchBox.TextColor3 = TEXT
-        catchBox.ClearTextOnFocus = false
-        catchBox.BackgroundColor3 = CARD
-        catchBox.BackgroundTransparency = 0.12
-        Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0,8)
-
-        catchBox.FocusLost:Connect(function()
-            local n = tonumber(catchBox.Text:match("[%d%.]+"))
-            if n and n > 0 then
-                BlatantCatch = n
-                catchBox.Text = tostring(n)
-            else
-                catchBox.Text = tostring(BlatantCatch)
-            end
-        end)
-
-        -- Extra catch blatant
-        _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
-
-        local extraRow = Instance.new("Frame", sub)
-        extraRow.Size = UDim2.new(1,0,0,32)
-        extraRow.BackgroundTransparency = 1
-
-        local extraLabel = Instance.new("TextLabel", extraRow)
-        extraLabel.Size = UDim2.new(1,-100,1,0)
-        extraLabel.Position = UDim2.new(0,16,0,0)
-        extraLabel.BackgroundTransparency = 1
-        extraLabel.Font = Enum.Font.Gotham
-        extraLabel.TextSize = 13
-        extraLabel.TextXAlignment = Enum.TextXAlignment.Left
-        extraLabel.TextColor3 = TEXT
-        extraLabel.Text = "Extra Catch"
-
-        local extraPill = Instance.new("TextButton", extraRow)
-        extraPill.Size = UDim2.new(0,50,0,24)
-        extraPill.Position = UDim2.new(1,-80,0.5,-12)
-        extraPill.BackgroundColor3 = MUTED
-        extraPill.BackgroundTransparency = 0.1
-        extraPill.Text = ""
-        extraPill.AutoButtonColor = false
-        Instance.new("UICorner", extraPill).CornerRadius = UDim.new(0,999)
-
-        local extraKnob = Instance.new("Frame", extraPill)
-        extraKnob.Size = UDim2.new(0,18,0,18)
-        extraKnob.Position = UDim2.new(0,3,0.5,-9)
-        extraKnob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        extraKnob.BackgroundTransparency = 0
-        Instance.new("UICorner", extraKnob).CornerRadius = UDim.new(0,999)
-
-        local function refreshExtra()
-            extraPill.BackgroundColor3 = _G.RAY_ExtraCatchBlatant and Color3.fromRGB(80,200,120) or MUTED
-            extraKnob.Position = _G.RAY_ExtraCatchBlatant and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
-        end
-
-        extraPill.MouseButton1Click:Connect(function()
-            _G.RAY_ExtraCatchBlatant = not _G.RAY_ExtraCatchBlatant
             refreshExtra()
-        end)
 
-        refreshExtra()
 
 elseif text == "Auto Spot Island" then
     local info = Instance.new("TextLabel", sub)
