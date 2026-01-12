@@ -4947,4 +4947,3 @@ task.spawn(function()
         task.wait(3) -- interval scan inventory
     end
 end)
-
