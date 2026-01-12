@@ -3724,7 +3724,10 @@ local Events = {
     purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
 }
 
+----------------------------------------------------------------
 -- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
+----------------------------------------------------------------
+
 local Replion = require(ReplicatedStorage.Packages.Replion)
 
 local SpawnTotemRemote = ReplicatedStorage
@@ -3734,15 +3737,15 @@ local SpawnTotemRemote = ReplicatedStorage
     :WaitForChild("net")
     :WaitForChild("RE/SpawnTotem")
 
--- 1 = Lucky, 2 = Mutasi, 3 = Shiny (SAMA PERSIS DENGAN X1 GUI KAMU)
+-- 1 = Lucky, 2 = Mutasi, 3 = Shiny (SAMA PERSIS DENGAN GUI X1)
 local TotemTypeId = {
     Mutasi = 2,
     Shiny  = 3,
     Lucky  = 1,
 }
 
-_G.RAYAutoTotemOn      = _G.RAYAutoTotemOn or false
-_G.RAYSelectedTotemUUID = _G.RAYSelectedTotemUUID or nil
+_G.RAYAutoTotemOn        = _G.RAYAutoTotemOn or false
+_G.RAYSelectedTotemUUID  = _G.RAYSelectedTotemUUID or nil
 
 local function GetTotemDataReplion()
     local ok, data = pcall(function()
@@ -3753,7 +3756,7 @@ local function GetTotemDataReplion()
     return data
 end
 
--- List totem untuk UI (sudah dimapping ke Lucky/Mutasi/Shiny)
+-- List totem untuk UI (max 1 Lucky, 1 Mutasi, 1 Shiny)
 function GetTotemList()
     local data = GetTotemDataReplion()
     local inv = data and data.Inventory
@@ -3762,33 +3765,58 @@ function GetTotemList()
         return {}
     end
 
-    local list = {}
-    for _, entry in pairs(totems) do
-        local name =
-            (entry.Id == TotemTypeId.Lucky  and "Lucky Totem")
-            or (entry.Id == TotemTypeId.Mutasi and "Mutasi Totem")
-            or (entry.Id == TotemTypeId.Shiny  and "Shiny Totem")
-            or ("Totem "..tostring(entry.Id))
+    -- ambil satu UUID pertama per jenis
+    local picked = {
+        Lucky  = nil,
+        Mutasi = nil,
+        Shiny  = nil,
+    }
 
-        table.insert(list, {
-            Id   = entry.Id,
-            UUID = entry.UUID,
-            Name = name,
-        })
+    for _, entry in pairs(totems) do
+        if entry.Id == TotemTypeId.Lucky and not picked.Lucky then
+            picked.Lucky = {
+                Id   = entry.Id,
+                UUID = entry.UUID,
+                Name = "Lucky Totem",
+            }
+        elseif entry.Id == TotemTypeId.Mutasi and not picked.Mutasi then
+            picked.Mutasi = {
+                Id   = entry.Id,
+                UUID = entry.UUID,
+                Name = "Mutasi Totem",
+            }
+        elseif entry.Id == TotemTypeId.Shiny and not picked.Shiny then
+            picked.Shiny = {
+                Id   = entry.Id,
+                UUID = entry.UUID,
+                Name = "Shiny Totem",
+            }
+        end
     end
+
+    local list = {}
+    for _, info in pairs(picked) do
+        if info then
+            table.insert(list, info)
+        end
+    end
+
+    table.sort(list, function(a,b)
+        return a.Id < b.Id
+    end)
 
     return list
 end
 
--- Spawn satu UUID (dipakai Auto Totem & bisa dipakai X1 kalau mau)
 function SpawnTotemUUID(uuid)
     if not uuid then return end
     pcall(function()
         SpawnTotemRemote:FireServer(uuid)
-        -- kalau game ternyata butuh table:
+        -- kalau game butuh table:
         -- SpawnTotemRemote:FireServer({UUID = uuid})
     end)
 end
+
 
 
 
@@ -4913,10 +4941,6 @@ elseif text == "Auto Totem" then
             return
         end
 
-        table.sort(totems, function(a,b)
-            return tostring(a.Name) < tostring(b.Name)
-        end)
-
         for _, info in ipairs(totems) do
             local b = Instance.new("TextButton", listFrame)
             b.Size = UDim2.new(1,0,0,26)
@@ -5080,15 +5104,11 @@ end)
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
-        if _G.RAYAutoTotemOn then
-            local totems = GetTotemList()
-            for _, info in ipairs(totems) do
-                if _G.RAYSelectedTotems[info.UUID] then
-                    SpawnTotemUUID(info.UUID)
-                    task.wait(1.0) -- delay per totem
-                end
-            end
+        if _G.RAYAutoTotemOn and _G.RAYSelectedTotemUUID then
+            SpawnTotemUUID(_G.RAYSelectedTotemUUID)
+            task.wait(1.0) -- delay per spawn
         end
-        task.wait(3) -- interval scan inventory
+        task.wait(3) -- interval cek lagi
     end
 end)
+
