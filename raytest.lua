@@ -3817,10 +3817,6 @@ function TeleportToMegalodon()
     char:PivotTo(cf)
 end
 
-
-
-
-
 ----------------------------------------------------------------
 -- ENGINE STATE
 ----------------------------------------------------------------
@@ -4905,7 +4901,7 @@ elseif text == "Auto Totem" then
             b.TextSize = 13
             b.TextXAlignment = Enum.TextXAlignment.Left
             b.TextColor3 = TEXT
-            b.Text = "🗿 "..jenis.." Totem  ["..tostring(id).."]"
+            b.Text = "◆ "..jenis.." Totem  ["..tostring(id).."]"
             b.ZIndex = 6
             b.AutoButtonColor = false
             Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
@@ -4945,7 +4941,7 @@ elseif text == "Auto Totem" then
     openBtn.TextSize = 13
     openBtn.TextColor3 = TEXT
     openBtn.TextXAlignment = Enum.TextXAlignment.Left
-    openBtn.Text = "Select Totem List 🗿"
+    openBtn.Text = "Select Totem List ◆"
     Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0,8)
 
     local panelOpen = false
@@ -4967,7 +4963,6 @@ elseif text == "Auto Totem" then
     end)
 
     rebuildTotemPanel()
-
 
     end -- akhir blok if/elseif text
 
