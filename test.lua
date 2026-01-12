@@ -4280,7 +4280,7 @@ searchBoxIsland:GetPropertyChangedSignal("Text"):Connect(rebuildIslandPanel)
 rebuildIslandPanel()
 
 ----------------------------------------------------------------
--- AUTO OPTION DROPDOWN BUILDER (FIXED)
+-- AUTO OPTION DROPDOWN BUILDER (FINAL)
 ----------------------------------------------------------------
 local function autoDropdown(text)
     local holder = Instance.new("Frame", scroll)
@@ -4326,7 +4326,7 @@ local function autoDropdown(text)
     mainBtn.TextXAlignment = Enum.TextXAlignment.Left
     mainBtn.TextColor3 = TEXT
     mainBtn.BackgroundColor3 = CARD
-    mainBtn.BackgroundTransparency = ALPHACARD
+    mainBtn.BackgroundTransparency = ALPHA_CARD
     mainBtn.AutoButtonColor = false
     Instance.new("UICorner", mainBtn).CornerRadius = UDim.new(0, 10)
 
@@ -4394,12 +4394,12 @@ local function autoDropdown(text)
         local knob = Instance.new("Frame", pill)
         knob.Size = UDim2.new(0, 18, 0, 18)
         knob.Position = UDim2.new(0, 3, 0.5, -9)
-        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
         Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 999)
 
         local function refresh()
             pill.BackgroundColor3 = AutoFishAFK and ACCENT or MUTED
-            knob.Position = AutoFishAFK and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+            knob.Position = AutoFishAFK and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
         end
 
         pill.MouseButton1Click:Connect(function()
@@ -4493,12 +4493,12 @@ local function autoDropdown(text)
     ----------------------------------------------------------------
     elseif text == "Blatant Fishing" then
         local row = Instance.new("Frame", sub)
-        row.Size = UDim2.new(1,0,0,36)
+        row.Size = UDim2.new(1, 0, 0, 36)
         row.BackgroundTransparency = 1
 
         local label = Instance.new("TextLabel", row)
-        label.Size = UDim2.new(1,-100,1,0)
-        label.Position = UDim2.new(0,16,0,0)
+        label.Size = UDim2.new(1, -100, 1, 0)
+        label.Position = UDim2.new(0, 16, 0, 0)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.Gotham
         label.TextSize = 13
@@ -4507,23 +4507,23 @@ local function autoDropdown(text)
         label.Text = "Auto Fishing Blatant"
 
         local pill = Instance.new("TextButton", row)
-        pill.Size = UDim2.new(0,50,0,24)
-        pill.Position = UDim2.new(1,-80,0.5,-12)
+        pill.Size = UDim2.new(0, 50, 0, 24)
+        pill.Position = UDim2.new(1, -80, 0.5, -12)
         pill.BackgroundColor3 = MUTED
         pill.BackgroundTransparency = 0.1
         pill.Text = ""
         pill.AutoButtonColor = false
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+        Instance.new("UICorner", pill).CornerRadius = UDim.new(0, 999)
 
         local knob = Instance.new("Frame", pill)
-        knob.Size = UDim2.new(0,18,0,18)
-        knob.Position = UDim2.new(0,3,0.5,-9)
-        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+        knob.Size = UDim2.new(0, 18, 0, 18)
+        knob.Position = UDim2.new(0, 3, 0.5, -9)
+        knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+        Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 999)
 
         local function refreshBlatant()
             pill.BackgroundColor3 = BlatantOn and ACCENT or MUTED
-            knob.Position = BlatantOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+            knob.Position = BlatantOn and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
         end
 
         pill.MouseButton1Click:Connect(function()
@@ -4538,12 +4538,12 @@ local function autoDropdown(text)
 
         -- Reel delay blatant
         local reelRow = Instance.new("Frame", sub)
-        reelRow.Size = UDim2.new(1,0,0,30)
+        reelRow.Size = UDim2.new(1, 0, 0, 30)
         reelRow.BackgroundTransparency = 1
 
         local reelLabel = Instance.new("TextLabel", reelRow)
-        reelLabel.Size = UDim2.new(0.6,0,1,0)
-        reelLabel.Position = UDim2.new(0,16,0,0)
+        reelLabel.Size = UDim2.new(0.6, 0, 1, 0)
+        reelLabel.Position = UDim2.new(0, 16, 0, 0)
         reelLabel.BackgroundTransparency = 1
         reelLabel.Font = Enum.Font.Gotham
         reelLabel.TextSize = 13
@@ -4552,8 +4552,8 @@ local function autoDropdown(text)
         reelLabel.Text = "Reel Delay (sec)"
 
         local reelBox = Instance.new("TextBox", reelRow)
-        reelBox.Size = UDim2.new(0.35,0,1,0)
-        reelBox.Position = UDim2.new(0.6,8,0,0)
+        reelBox.Size = UDim2.new(0.35, 0, 1, 0)
+        reelBox.Position = UDim2.new(0.6, 8, 0, 0)
         reelBox.Text = tostring(BlatantReel)
         reelBox.Font = Enum.Font.Gotham
         reelBox.TextSize = 13
@@ -4562,7 +4562,7 @@ local function autoDropdown(text)
         reelBox.ClearTextOnFocus = false
         reelBox.BackgroundColor3 = CARD
         reelBox.BackgroundTransparency = 0.12
-        Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0,8)
+        Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0, 8)
 
         reelBox.FocusLost:Connect(function()
             local n = tonumber(reelBox.Text:match("%d+%.?%d*"))
@@ -4576,12 +4576,12 @@ local function autoDropdown(text)
 
         -- Catch delay blatant
         local catchRow = Instance.new("Frame", sub)
-        catchRow.Size = UDim2.new(1,0,0,30)
+        catchRow.Size = UDim2.new(1, 0, 0, 30)
         catchRow.BackgroundTransparency = 1
 
         local catchLabel = Instance.new("TextLabel", catchRow)
-        catchLabel.Size = UDim2.new(0.6,0,1,0)
-        catchLabel.Position = UDim2.new(0,16,0,0)
+        catchLabel.Size = UDim2.new(0.6, 0, 1, 0)
+        catchLabel.Position = UDim2.new(0, 16, 0, 0)
         catchLabel.BackgroundTransparency = 1
         catchLabel.Font = Enum.Font.Gotham
         catchLabel.TextSize = 13
@@ -4590,8 +4590,8 @@ local function autoDropdown(text)
         catchLabel.Text = "Catch Delay (sec)"
 
         local catchBox = Instance.new("TextBox", catchRow)
-        catchBox.Size = UDim2.new(0.35,0,1,0)
-        catchBox.Position = UDim2.new(0.6,8,0,0)
+        catchBox.Size = UDim2.new(0.35, 0, 1, 0)
+        catchBox.Position = UDim2.new(0.6, 8, 0, 0)
         catchBox.Text = tostring(BlatantCatch)
         catchBox.Font = Enum.Font.Gotham
         catchBox.TextSize = 13
@@ -4600,7 +4600,7 @@ local function autoDropdown(text)
         catchBox.ClearTextOnFocus = false
         catchBox.BackgroundColor3 = CARD
         catchBox.BackgroundTransparency = 0.12
-        Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0,8)
+        Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0, 8)
 
         catchBox.FocusLost:Connect(function()
             local n = tonumber(catchBox.Text:match("%d+%.?%d*"))
@@ -4616,7 +4616,7 @@ local function autoDropdown(text)
     -- AUTO MEGALODON (MENU)
     ----------------------------------------------------------------
     elseif text == "Auto Megalodon" then
-        list.Padding = UDim2.new(0,4)
+        list.Padding = UDim.new(0, 4)
 
         local info = Instance.new("TextLabel", sub)
         info.Size = UDim2.new(1,0,0,28)
@@ -4661,7 +4661,7 @@ local function autoDropdown(text)
     -- AUTO TOTEM 🗿
     ----------------------------------------------------------------
     elseif text == "Auto Totem" then
-        list.Padding = UDim.new(0,4)
+        list.Padding = UDim.new(0, 4)
 
         -- TOGGLE AUTO TOTEM
         local rowToggle = Instance.new("Frame", sub)
@@ -4750,7 +4750,7 @@ local function autoDropdown(text)
         listFrame.Active = true
 
         local layout = Instance.new("UIListLayout", listFrame)
-        layout.Padding = UDim2.new(0,4)
+        layout.Padding = UDim.new(0,4)
         layout.SortOrder = Enum.SortOrder.LayoutOrder
         layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
             listFrame.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 8)
@@ -4848,8 +4848,8 @@ local function autoDropdown(text)
 end
 
 
-for _,v in ipairs(AUTO_OPTIONS) do
-    autoDropdown(v[1])
+for _, v in ipairs(AUTOOPTIONS) do
+    autoDropdown(v)
 end
 
 pages["Auto Option"].Visible = true
