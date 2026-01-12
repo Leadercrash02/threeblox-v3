@@ -4616,7 +4616,7 @@ local function autoDropdown(text)
     -- AUTO MEGALODON (MENU)
     ----------------------------------------------------------------
     elseif text == "Auto Megalodon" then
-        list.Padding = UDim.new(0,4)
+        list.Padding = UDim2.new(0,4)
 
         local info = Instance.new("TextLabel", sub)
         info.Size = UDim2.new(1,0,0,28)
@@ -4658,197 +4658,195 @@ local function autoDropdown(text)
         end)
 
     ----------------------------------------------------------------
--- AUTO TOTEM 🗿
-----------------------------------------------------------------
-elseif text == "Auto Totem" then
-    list.Padding = UDim.new(0,4)
+    -- AUTO TOTEM 🗿
+    ----------------------------------------------------------------
+    elseif text == "Auto Totem" then
+        list.Padding = UDim.new(0,4)
 
-    -- TOGGLE AUTO TOTEM (pakai _G)
-    local rowToggle = Instance.new("Frame", sub)
-    rowToggle.Size = UDim2.new(1,0,0,32)
-    rowToggle.BackgroundTransparency = 1
+        -- TOGGLE AUTO TOTEM
+        local rowToggle = Instance.new("Frame", sub)
+        rowToggle.Size = UDim2.new(1,0,0,32)
+        rowToggle.BackgroundTransparency = 1
 
-    local label = Instance.new("TextLabel", rowToggle)
-    label.Size = UDim2.new(1,-100,1,0)
-    label.Position = UDim2.new(0,16,0,0)
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 13
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextColor3 = TEXT
-    label.Text = "Auto Totem 🗿"
+        local label = Instance.new("TextLabel", rowToggle)
+        label.Size = UDim2.new(1,-100,1,0)
+        label.Position = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.Gotham
+        label.TextSize = 13
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextColor3 = TEXT
+        label.Text = "Auto Totem 🗿"
 
-    local pill = Instance.new("TextButton", rowToggle)
-    pill.Size = UDim2.new(0,50,0,24)
-    pill.Position = UDim2.new(1,-80,0.5,-12)
-    pill.BackgroundColor3 = MUTED
-    pill.BackgroundTransparency = 0.1
-    pill.Text = ""
-    pill.AutoButtonColor = false
-    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+        local pill = Instance.new("TextButton", rowToggle)
+        pill.Size = UDim2.new(0,50,0,24)
+        pill.Position = UDim2.new(1,-80,0.5,-12)
+        pill.BackgroundColor3 = MUTED
+        pill.BackgroundTransparency = 0.1
+        pill.Text = ""
+        pill.AutoButtonColor = false
+        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
 
-    local knob = Instance.new("Frame", pill)
-    knob.Size = UDim2.new(0,18,0,18)
-    knob.Position = UDim2.new(0,3,0.5,-9)
-    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+        local knob = Instance.new("Frame", pill)
+        knob.Size = UDim2.new(0,18,0,18)
+        knob.Position = UDim2.new(0,3,0.5,-9)
+        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-    local function refreshToggle()
-        pill.BackgroundColor3 = _G.RAYAutoTotemOn and ACCENT or MUTED
-        knob.Position = _G.RAYAutoTotemOn
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
-    end
+        local function refreshToggle()
+            pill.BackgroundColor3 = _G.RAYAutoTotemOn and ACCENT or MUTED
+            knob.Position = _G.RAYAutoTotemOn
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
 
-    pill.MouseButton1Click:Connect(function()
-        _G.RAYAutoTotemOn = not _G.RAYAutoTotemOn
+        pill.MouseButton1Click:Connect(function()
+            _G.RAYAutoTotemOn = not _G.RAYAutoTotemOn
+            refreshToggle()
+        end)
+
         refreshToggle()
-    end)
 
-    refreshToggle()
+        -- OVERLAY + PANEL KANAN LIST TOTEM
+        local overlay = Instance.new("TextButton")
+        overlay.Name = "TotemOverlay"
+        overlay.Parent = autoPage
+        overlay.Size = UDim2.new(1,0,1,0)
+        overlay.Position = UDim2.new(0,0,0,0)
+        overlay.BackgroundTransparency = 1
+        overlay.Text = ""
+        overlay.Visible = false
+        overlay.ZIndex = 4
+        overlay.AutoButtonColor = false
 
-    --------------------------------------------------------
-    -- OVERLAY + PANEL KANAN LIST TOTEM
-    --------------------------------------------------------
-    local overlay = Instance.new("TextButton")
-    overlay.Name = "TotemOverlay"
-    overlay.Parent = autoPage
-    overlay.Size = UDim2.new(1,0,1,0)
-    overlay.Position = UDim2.new(0,0,0,0)
-    overlay.BackgroundTransparency = 1
-    overlay.Text = ""
-    overlay.Visible = false
-    overlay.ZIndex = 4
-    overlay.AutoButtonColor = false
+        local panel = Instance.new("Frame")
+        panel.Name = "TotemPanel"
+        panel.Parent = overlay
+        panel.Size = UDim2.new(0, 230, 0, 250)
+        panel.AnchorPoint = Vector2.new(1,0)
+        panel.Position = UDim2.new(1,-24,0.18,0)
+        panel.BackgroundColor3 = CARD
+        panel.BackgroundTransparency = 0.04
+        panel.Visible = false
+        panel.ZIndex = 5
+        panel.Active = true
+        Instance.new("UICorner", panel).CornerRadius = UDim.new(0,12)
 
-    local panel = Instance.new("Frame")
-    panel.Name = "TotemPanel"
-    panel.Parent = overlay
-    panel.Size = UDim2.new(0, 230, 0, 250)
-    panel.AnchorPoint = Vector2.new(1,0)
-    panel.Position = UDim2.new(1,-24,0.18,0)
-    panel.BackgroundColor3 = CARD
-    panel.BackgroundTransparency = 0.04
-    panel.Visible = false
-    panel.ZIndex = 5
-    panel.Active = true
-    Instance.new("UICorner", panel).CornerRadius = UDim.new(0,12)
+        local pad = Instance.new("UIPadding", panel)
+        pad.PaddingTop = UDim2.new(0,8)
+        pad.PaddingLeft = UDim2.new(0,8)
+        pad.PaddingRight = UDim2.new(0,8)
+        pad.PaddingBottom = UDim2.new(0,8)
 
-    local pad = Instance.new("UIPadding", panel)
-    pad.PaddingTop = UDim.new(0,8)
-    pad.PaddingLeft = UDim.new(0,8)
-    pad.PaddingRight = UDim.new(0,8)
-    pad.PaddingBottom = UDim.new(0,8)
+        local listFrame = Instance.new("ScrollingFrame", panel)
+        listFrame.Position = UDim2.new(0,0,0,0)
+        listFrame.Size = UDim2.new(1,0,1,0)
+        listFrame.ScrollBarThickness = 4
+        listFrame.ScrollingDirection = Enum.ScrollingDirection.Y
+        listFrame.CanvasSize = UDim2.new(0,0,0,0)
+        listFrame.BackgroundTransparency = 1
+        listFrame.ClipsDescendants = true
+        listFrame.ZIndex = 6
+        listFrame.Active = true
 
-    local listFrame = Instance.new("ScrollingFrame", panel)
-    listFrame.Position = UDim2.new(0,0,0,0)
-    listFrame.Size = UDim2.new(1,0,1,0)
-    listFrame.ScrollBarThickness = 4
-    listFrame.ScrollingDirection = Enum.ScrollingDirection.Y
-    listFrame.CanvasSize = UDim2.new(0,0,0,0)
-    listFrame.BackgroundTransparency = 1
-    listFrame.ClipsDescendants = true
-    listFrame.ZIndex = 6
-    listFrame.Active = true
+        local layout = Instance.new("UIListLayout", listFrame)
+        layout.Padding = UDim2.new(0,4)
+        layout.SortOrder = Enum.SortOrder.LayoutOrder
+        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            listFrame.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 8)
+        end)
 
-    local layout = Instance.new("UIListLayout", listFrame)
-    layout.Padding = UDim.new(0,4)
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        listFrame.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 8)
-    end)
+        -- tombol buka panel
+        local rowOpen = Instance.new("Frame", sub)
+        rowOpen.Size = UDim2.new(1,0,0,32)
+        rowOpen.BackgroundTransparency = 1
 
-    -- TOMBOL BUKA PANEL
-    local rowOpen = Instance.new("Frame", sub)
-    rowOpen.Size = UDim2.new(1,0,0,32)
-    rowOpen.BackgroundTransparency = 1
+        local openBtn = Instance.new("TextButton", rowOpen)
+        openBtn.Size = UDim2.new(1,-32,0,30)
+        openBtn.Position = UDim2.new(0,16,0,0)
+        openBtn.BackgroundColor3 = CARD
+        openBtn.BackgroundTransparency = 0.12
+        openBtn.AutoButtonColor = false
+        openBtn.Font = Enum.Font.Gotham
+        openBtn.TextSize = 13
+        openBtn.TextColor3 = TEXT
+        openBtn.TextXAlignment = Enum.TextXAlignment.Left
+        openBtn.Text = "Select Totem List 🗿"
+        Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0,8)
 
-    local openBtn = Instance.new("TextButton", rowOpen)
-    openBtn.Size = UDim2.new(1,-32,0,30)
-    openBtn.Position = UDim2.new(0,16,0,0)
-    openBtn.BackgroundColor3 = CARD
-    openBtn.BackgroundTransparency = 0.12
-    openBtn.AutoButtonColor = false
-    openBtn.Font = Enum.Font.Gotham
-    openBtn.TextSize = 13
-    openBtn.TextColor3 = TEXT
-    openBtn.TextXAlignment = Enum.TextXAlignment.Left
-    openBtn.Text = "Select Totem List 🗿"
-    Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0,8)
+        local panelOpen = false
+        local function setPanelOpen(state)
+            panelOpen = state
+            overlay.Visible = panelOpen
+            panel.Visible = panelOpen
+        end
 
-    local panelOpen = false
-    local function setPanelOpen(state)
-        panelOpen = state
-        overlay.Visible = panelOpen
-        panel.Visible = panelOpen
-    end
+        openBtn.MouseButton1Click:Connect(function()
+            setPanelOpen(not panelOpen)
+        end)
 
-    openBtn.MouseButton1Click:Connect(function()
-        setPanelOpen(not panelOpen)
-    end)
+        overlay.MouseButton1Click:Connect(function()
+            setPanelOpen(false)
+        end)
 
-    overlay.MouseButton1Click:Connect(function()
-        setPanelOpen(false)
-    end)
+        -- rebuild panel list totem
+        local function rebuildTotemPanel()
+            for _,c in ipairs(listFrame:GetChildren()) do
+                if c:IsA("TextButton") then
+                    c:Destroy()
+                end
+            end
 
-    --------------------------------------------------------
-    -- REBUILD PANEL LIST TOTEM (PAKE _G.RAYSelectedTotems)
-    --------------------------------------------------------
-    local function rebuildTotemPanel()
-        for _,c in ipairs(listFrame:GetChildren()) do
-            if c:IsA("TextButton") then
-                c:Destroy()
+            local totems = GetTotemList()
+            if #totems == 0 then
+                local info = Instance.new("TextLabel", listFrame)
+                info.Size = UDim2.new(1,0,0,24)
+                info.BackgroundTransparency = 1
+                info.Font = Enum.Font.Gotham
+                info.TextSize = 12
+                info.TextColor3 = MUTED
+                info.TextXAlignment = Enum.TextXAlignment.Center
+                info.Text = "Totem tidak ditemukan di inventory."
+                info.ZIndex = 6
+                return
+            end
+
+            table.sort(totems, function(a,b)
+                return tostring(a.Name) < tostring(b.Name)
+            end)
+
+            for _, info in ipairs(totems) do
+                local b = Instance.new("TextButton", listFrame)
+                b.Size = UDim2.new(1,0,0,26)
+                b.BackgroundColor3 = CARD
+                b.BackgroundTransparency = _G.RAYSelectedTotems[info.UUID] and 0.08 or 0.18
+                b.Font = Enum.Font.Gotham
+                b.TextSize = 13
+                b.TextXAlignment = Enum.TextXAlignment.Left
+                b.TextColor3 = TEXT
+                b.Text = "🗿 "..info.Name.."  ["..tostring(info.Id).."]"
+                b.ZIndex = 6
+                b.AutoButtonColor = false
+                Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+                b.MouseButton1Click:Connect(function()
+                    if _G.RAYSelectedTotems[info.UUID] then
+                        _G.RAYSelectedTotems[info.UUID] = nil
+                    else
+                        _G.RAYSelectedTotems[info.UUID] = true
+                    end
+                    rebuildTotemPanel()
+                end)
             end
         end
 
-        local totems = GetTotemList()
-        if #totems == 0 then
-            local info = Instance.new("TextLabel", listFrame)
-            info.Size = UDim2.new(1,0,0,24)
-            info.BackgroundTransparency = 1
-            info.Font = Enum.Font.Gotham
-            info.TextSize = 12
-            info.TextColor3 = MUTED
-            info.TextXAlignment = Enum.TextXAlignment.Center
-            info.Text = "Totem tidak ditemukan di inventory."
-            info.ZIndex = 6
-            return
-        end
+        rebuildTotemPanel()
+    end -- akhir blok if/elseif text
 
-        table.sort(totems, function(a,b)
-            return tostring(a.Name) < tostring(b.Name)
-        end)
-
-        for _, info in ipairs(totems) do
-            local b = Instance.new("TextButton", listFrame)
-            b.Size = UDim2.new(1,0,0,26)
-            b.BackgroundColor3 = CARD
-            b.BackgroundTransparency = _G.RAYSelectedTotems[info.UUID] and 0.08 or 0.18
-            b.Font = Enum.Font.Gotham
-            b.TextSize = 13
-            b.TextXAlignment = Enum.TextXAlignment.Left
-            b.TextColor3 = TEXT
-            b.Text = "🗿 "..info.Name.."  ["..tostring(info.Id).."]"
-            b.ZIndex = 6
-            b.AutoButtonColor = false
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
-
-            b.MouseButton1Click:Connect(function()
-                if _G.RAYSelectedTotems[info.UUID] then
-                    _G.RAYSelectedTotems[info.UUID] = nil
-                else
-                    _G.RAYSelectedTotems[info.UUID] = true
-                end
-                rebuildTotemPanel()
-            end)
-        end
-    end
-
-    rebuildTotemPanel()
-
-        list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
+    list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
     recalc()
-end -- penutup function autoDropdown
+end
+
 
 for _,v in ipairs(AUTO_OPTIONS) do
     autoDropdown(v[1])
@@ -4947,3 +4945,4 @@ task.spawn(function()
         task.wait(3) -- interval scan inventory
     end
 end)
+
