@@ -3745,7 +3745,7 @@ local TotemTypeId = {
 }
 
 _G.RAYAutoTotemOn        = _G.RAYAutoTotemOn or false
-_G.RAYSelectedTotemUUID  = _G.RAYSelectedTotemUUID or nil
+_G.RAYSelectedTotemType  = _G.RAYSelectedTotemType or "Lucky"  -- jenis, bukan UUID
 
 local function GetTotemDataReplion()
     local ok, data = pcall(function()
@@ -3756,56 +3756,24 @@ local function GetTotemDataReplion()
     return data
 end
 
--- List totem untuk UI (max 1 Lucky, 1 Mutasi, 1 Shiny)
-function GetTotemList()
-    local data = GetTotemDataReplion()
-    local inv = data and data.Inventory
-    local totems = inv and inv.Totems
-    if typeof(totems) ~= "table" then
-        return {}
-    end
+-- Resolver UUID realtime dari jenis (logic X1 kamu)
+local function findTotemUuidByType(jenis)
+    local targetId = TotemTypeId[jenis]
+    if not targetId then return nil end
 
-    -- ambil satu UUID pertama per jenis
-    local picked = {
-        Lucky  = nil,
-        Mutasi = nil,
-        Shiny  = nil,
-    }
+    local data = GetTotemDataReplion()
+    if not data then return nil end
+
+    local inv = data.Inventory
+    local totems = inv and inv.Totems
+    if typeof(totems) ~= "table" then return nil end
 
     for _, entry in pairs(totems) do
-        if entry.Id == TotemTypeId.Lucky and not picked.Lucky then
-            picked.Lucky = {
-                Id   = entry.Id,
-                UUID = entry.UUID,
-                Name = "Lucky Totem",
-            }
-        elseif entry.Id == TotemTypeId.Mutasi and not picked.Mutasi then
-            picked.Mutasi = {
-                Id   = entry.Id,
-                UUID = entry.UUID,
-                Name = "Mutasi Totem",
-            }
-        elseif entry.Id == TotemTypeId.Shiny and not picked.Shiny then
-            picked.Shiny = {
-                Id   = entry.Id,
-                UUID = entry.UUID,
-                Name = "Shiny Totem",
-            }
+        if entry.Id == targetId then
+            return entry.UUID
         end
     end
-
-    local list = {}
-    for _, info in pairs(picked) do
-        if info then
-            table.insert(list, info)
-        end
-    end
-
-    table.sort(list, function(a,b)
-        return a.Id < b.Id
-    end)
-
-    return list
+    return nil
 end
 
 function SpawnTotemUUID(uuid)
@@ -3816,9 +3784,6 @@ function SpawnTotemUUID(uuid)
         -- SpawnTotemRemote:FireServer({UUID = uuid})
     end)
 end
-
-
-
 
 ----------------------------------------------------------------
 -- MEGALODON HUNT TELEPORT (ANCHOR PART)
@@ -4918,8 +4883,10 @@ elseif text == "Auto Totem" then
     end)
 
     ----------------------------------------------------
-    -- REBUILD PANEL LIST TOTEM (SINGLE SELECT + GARIS KUNING)
+    -- REBUILD PANEL LIST TOTEM (SELALU 3, SINGLE SELECT)
     ----------------------------------------------------
+    local TO_TYPES = { "Lucky", "Mutasi", "Shiny" }
+
     local function rebuildTotemPanel()
         for _,c in ipairs(listFrame:GetChildren()) do
             if c:IsA("TextButton") then
@@ -4927,21 +4894,9 @@ elseif text == "Auto Totem" then
             end
         end
 
-        local totems = GetTotemList()
-        if not totems or #totems == 0 then
-            local info = Instance.new("TextLabel", listFrame)
-            info.Size = UDim2.new(1,0,0,24)
-            info.BackgroundTransparency = 1
-            info.Font = Enum.Font.Gotham
-            info.TextSize = 12
-            info.TextColor3 = MUTED
-            info.TextXAlignment = Enum.TextXAlignment.Center
-            info.Text = "Totem tidak ditemukan di inventory."
-            info.ZIndex = 6
-            return
-        end
+        for _, jenis in ipairs(TO_TYPES) do
+            local id = TotemTypeId[jenis]
 
-        for _, info in ipairs(totems) do
             local b = Instance.new("TextButton", listFrame)
             b.Size = UDim2.new(1,0,0,26)
             b.BackgroundColor3 = CARD
@@ -4950,23 +4905,23 @@ elseif text == "Auto Totem" then
             b.TextSize = 13
             b.TextXAlignment = Enum.TextXAlignment.Left
             b.TextColor3 = TEXT
-            b.Text = "🗿 "..info.Name.."  ["..tostring(info.Id).."]"
+            b.Text = "🗿 "..jenis.." Totem  ["..tostring(id).."]"
             b.ZIndex = 6
             b.AutoButtonColor = false
             Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
 
-            -- garis kuning di kiri
+            -- GARIS KUNING DI KIRI
             local bar = Instance.new("Frame", b)
             bar.Size = UDim2.new(0,3,1,0)
             bar.Position = UDim2.new(0,0,0,0)
             bar.BackgroundColor3 = ACCENT
-            bar.BackgroundTransparency = (_G.RAYSelectedTotemUUID == info.UUID) and 0 or 1
+            bar.BackgroundTransparency = (_G.RAYSelectedTotemType == jenis) and 0 or 1
 
             b.MouseButton1Click:Connect(function()
-                if _G.RAYSelectedTotemUUID == info.UUID then
-                    _G.RAYSelectedTotemUUID = nil
+                if _G.RAYSelectedTotemType == jenis then
+                    _G.RAYSelectedTotemType = nil
                 else
-                    _G.RAYSelectedTotemUUID = info.UUID
+                    _G.RAYSelectedTotemType = jenis
                 end
                 rebuildTotemPanel()
             end)
@@ -5012,6 +4967,7 @@ elseif text == "Auto Totem" then
     end)
 
     rebuildTotemPanel()
+
 
     end -- akhir blok if/elseif text
 
@@ -5104,11 +5060,15 @@ end)
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
-        if _G.RAYAutoTotemOn and _G.RAYSelectedTotemUUID then
-            SpawnTotemUUID(_G.RAYSelectedTotemUUID)
-            task.wait(1.0) -- delay per spawn
+        if _G.RAYAutoTotemOn and _G.RAYSelectedTotemType then
+            local uuid = findTotemUuidByType(_G.RAYSelectedTotemType)
+            if uuid then
+                SpawnTotemUUID(uuid)
+                task.wait(1.0) -- delay per spawn
+            end
         end
         task.wait(3) -- interval cek lagi
     end
 end)
+
 
