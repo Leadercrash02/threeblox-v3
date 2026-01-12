@@ -101,15 +101,16 @@ local PAGE_ICONS = {
     {"Misc","⚡"},
 }
 
-local AUTO_OPTIONS = {
-    {"Auto Fishing",""},
-    {"Blatant Fishing",""},
-    {"Coming soon",""},
-    {"Auto Favorite (comingsoon)",""},
-    {"Auto Sell",""},
-    {"Auto Megalodon",""},
-    {"Auto Totem",""},
+local AUTOOPTIONS = {
+    "Auto Fishing",
+    "Blatant Fishing",
+    "Coming soon",
+    "Auto Favorite",
+    "Auto Sell",
+    "Auto Megalodon",
+    "Auto Totem",
 }
+
 
 local ISLAND_SPOTS = {
     ["Christmas Cave"]      = CFrame.new(538.810181, -580.58136, 8900.9873),
@@ -4971,8 +4972,8 @@ elseif text == "Auto Megalodon" then
     recalc()
 end
 
-for _,v in ipairs(AUTO_OPTIONS) do
-    autoDropdown(v[1])
+for _, v in ipairs(AUTOOPTIONS) do
+    autoDropdown(v)
 end
 
 pages["Auto Option"].Visible = true
@@ -5047,5 +5048,24 @@ task.spawn(function()
             end
         end
         task.wait(5)
+    end
+end)
+
+
+----------------------------------------------------------------
+-- LOOP ENGINE AUTO TOTEM
+----------------------------------------------------------------
+task.spawn(function()
+    while true do
+        if _G.RAYAutoTotemOn then
+            local totems = GetTotemList()
+            for _, info in ipairs(totems) do
+                if _G.RAYSelectedTotems[info.UUID] then
+                    SpawnTotemUUID(info.UUID)
+                    task.wait(1.0) -- delay per totem
+                end
+            end
+        end
+        task.wait(3) -- interval scan inventory
     end
 end)
