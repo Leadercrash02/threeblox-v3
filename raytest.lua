@@ -94,12 +94,13 @@ end
 
 local PAGE_ICONS = {
     {"Information","📘"},
-    {"Auto Option",⚙️"},
+    {"Auto Option","⚙️"},
     {"Teleport","🧭"},
     {"Quest","⭐"},
     {"Shop & Trade","💰"},
     {"Misc","⚡"},
 }
+
 
 local AUTOOPTIONS = {
     "Auto Fishing",
