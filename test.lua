@@ -10,7 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 -- CLEAN
 pcall(function()
     for _,v in ipairs(CoreGui:GetChildren()) do
-        if v:IsA("ScreenGui") and v.Name == "ThreebloxV3" then
+        if v:IsA("ScreenGui") and v.Name == "Threeblox Freemuim" then
             v:Destroy()
         end
     end
@@ -92,13 +92,9 @@ if lp.Character then
     end)
 end
 
-
-
-
-
 local PAGE_ICONS = {
     {"Information","📘"},
-    {"Auto Option","⚙️"},
+    {"Auto Option",⚙️"},
     {"Teleport","🧭"},
     {"Quest","⭐"},
     {"Shop & Trade","💰"},
@@ -109,7 +105,7 @@ local AUTO_OPTIONS = {
     {"Auto Fishing",""},
     {"Blatant Fishing",""},
     {"Coming soon",""},
-    {"Auto Favorite",""},
+    {"Auto Favorite (comingsoon)",""},
     {"Auto Sell",""},
     {"Auto Megalodon",""},
     {"Auto Totem",""},
@@ -156,11 +152,9 @@ local DEFAULT_SPOT_ORDER = {
     "Esoteric Depths",
 }
 
-
-
 -- ROOT
 local gui = Instance.new("ScreenGui", CoreGui)
-gui.Name = "ThreebloxV3"
+gui.Name = "Threeblox Freemuim"
 gui.IgnoreGuiInset = true
 
 -- MAIN
@@ -188,7 +182,7 @@ title.Font = Enum.Font.GothamBold
 title.TextSize = 20
 title.TextColor3 = TEXT
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.Text = "Threeblox V3 | Auto Option"
+title.Text = "Threeblox Freemium | Auto Option"
 
 -- BUTTONS
 local btnMin = Instance.new("TextButton", header)
@@ -1261,10 +1255,7 @@ local function BuildQuestDiamond()
     refreshDia()
 end
 
-
-
 BuildQuestDiamond()
-
 
 ----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
@@ -1617,6 +1608,9 @@ local function ShowPage(name)
 end
 
 BuildShopWeather()
+
+
+
 ----------------------------------------------------------------
 -- MISC PAGE : BUILD FUNCTION
 ----------------------------------------------------------------
@@ -2115,7 +2109,7 @@ do
     pillRadar.MouseButton1Click:Connect(function()
         local rf = GetRadarRF()
         if not rf then
-            warn("[Threeblox] UpdateFishingRadar RF not found")
+            warn("[Threeblox Freemium] UpdateFishingRadar RF not found")
             return
         end
 
@@ -2130,7 +2124,7 @@ do
             _G.RAY_FishingRadarOn = radarOn
             refresh()
         else
-            warn("[Threeblox] Radar toggle failed:", res)
+            warn("[Threeblox Freemium] Radar toggle failed:", res)
         end
     end)
 
@@ -2837,7 +2831,7 @@ end
 
     refresh()
 
-    ----------------------------------------------------------------
+        ----------------------------------------------------------------
 -- 🎬 DISABLE CUTSCENE (KILL REMOTE)
 ----------------------------------------------------------------
 do
@@ -2922,7 +2916,6 @@ do
 
     refresh()
 end
-
 
     ----------------------------------------------------------------
 -- 🎣 DISABLE ROD EFFECT
@@ -3079,91 +3072,6 @@ do
     refreshSkin()
 end
 
-
-    ----------------------------------------------------------------
-    -- TOGGLE : 📝 DISABLE FISH TEXT
-    ----------------------------------------------------------------
-    local rowText = Instance.new("Frame", sub)
-    rowText.Size = UDim2.new(1,0,0,36)
-    rowText.BackgroundTransparency = 1
-
-    local labelText = Instance.new("TextLabel", rowText)
-    labelText.Size = UDim2.new(1,-100,1,0)
-    labelText.Position = UDim2.new(0,16,0,0)
-    labelText.BackgroundTransparency = 1
-    labelText.Font = Enum.Font.Gotham
-    labelText.TextSize = 13
-    labelText.TextXAlignment = Enum.TextXAlignment.Left
-    labelText.TextColor3 = TEXT
-    labelText.Text = "📝 Disable Fish Text"
-
-    local pillText = Instance.new("TextButton", rowText)
-    pillText.Size = UDim2.new(0,50,0,24)
-    pillText.Position = UDim2.new(1,-80,0.5,-12)
-    pillText.BackgroundColor3 = MUTED
-    pillText.BackgroundTransparency = 0.1
-    pillText.Text = ""
-    pillText.AutoButtonColor = false
-    Instance.new("UICorner", pillText).CornerRadius = UDim.new(0,999)
-
-    local knobText = Instance.new("Frame", pillText)
-    knobText.Size = UDim2.new(0,18,0,18)
-    knobText.Position = UDim2.new(0,3,0.5,-9)
-    knobText.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knobText).CornerRadius = UDim.new(0,999)
-
-    local textOff = false
-    local textConn
-
-    local function refreshText()
-        pillText.BackgroundColor3 = textOff and ACCENT or MUTED
-        knobText.Position = textOff
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
-    end
-
-    local function setFishTextVisible(v, state)
-        for _, d in ipairs(v:GetDescendants()) do
-            if d:IsA("TextLabel") then
-                d.Visible = state
-            end
-        end
-    end
-
-    pillText.MouseButton1Click:Connect(function()
-        textOff = not textOff
-        local gui = Players.LocalPlayer:WaitForChild("PlayerGui")
-
-        if textOff then
-            for _,v in ipairs(gui:GetDescendants()) do
-                if v.Name == "Small Notification" then
-                    setFishTextVisible(v, false)
-                end
-            end
-
-            textConn = gui.DescendantAdded:Connect(function(v)
-                if v.Name == "Small Notification" then
-                    setFishTextVisible(v, false)
-                end
-            end)
-        else
-            if textConn then
-                textConn:Disconnect()
-                textConn = nil
-            end
-
-            for _,v in ipairs(gui:GetDescendants()) do
-                if v.Name == "Small Notification" then
-                    setFishTextVisible(v, true)
-                end
-            end
-        end
-
-        refreshText()
-    end)
-
-    refreshText()
-
     ----------------------------------------------------------------
     -- TOGGLE : 🔕 DISABLE ALL NOTIFICATIONS
     ----------------------------------------------------------------
@@ -3307,108 +3215,6 @@ tpTitleMain.Text = "Teleport"
 tpTitleMain.LayoutOrder = 1
 
 ----------------------------------------------------------------
--- 🎄 CHRISTMAS CAVE SCHEDULE (WITH SECONDS)
-----------------------------------------------------------------
-local function GetChristmasCaveStatus()
-    -- Buka setiap 2 jam, 30 menit per sesi. [web:24][web:33]
-    local t = os.date("*t")
-    local h, m, s = t.hour, t.min, t.sec
-
-    local openHours = {1,3,5,7,9,11,13,15,17,19,21,23}
-    local isOpen = false
-
-    for _, oh in ipairs(openHours) do
-        if h == oh and m >= 0 and m < 30 then
-            isOpen = true
-            break
-        end
-    end
-
-    -- hitung next open (dalam detik dari sekarang)
-    local nowSeconds = h * 3600 + m * 60 + s
-    local nextDiff = math.huge
-    local nextHour
-
-    for _, oh in ipairs(openHours) do
-        local candidate = oh * 3600 -- jam:00:00
-        if candidate <= nowSeconds then
-            candidate = candidate + 24 * 3600 -- geser ke hari berikutnya
-        end
-        local diff = candidate - nowSeconds
-        if diff < nextDiff then
-            nextDiff = diff
-            nextHour = oh
-        end
-    end
-
-    local nextInSeconds = nextDiff
-    return isOpen, nextHour, nextInSeconds
-end
-
-----------------------------------------------------------------
--- 🎄 CHRISTMAS CAVE SCHEDULE (WITH SECONDS + OFFSET)
-----------------------------------------------------------------
-local openHours = {1,3,5,7,9,11,13,15,17,19,21,23} -- tiap 2 jam. [web:24][web:33]
-
--- offset detik (positif = mundurin waktu script dibanding device)
-local TIME_OFFSET = 60 -- 60 detik = 1 menit
-
-local function GetChristmasCaveState()
-    local t = os.date("*t")
-    local h, m, s = t.hour or 0, t.min or 0, t.sec or 0
-
-    -- terapkan offset
-    local nowSec = h*3600 + m*60 + s - TIME_OFFSET
-    if nowSec < 0 then
-        nowSec = nowSec + 24*3600
-    end
-
-    -- hitung ulang h,m,s setelah offset
-    h = math.floor(nowSec / 3600)
-    m = math.floor((nowSec % 3600) / 60)
-    s = nowSec % 60
-
-    -- cek lagi buka/tutup (00–29 menit)
-    local isOpen = false
-    local currentOpenHour = nil
-    for _, oh in ipairs(openHours) do
-        if h == oh and m >= 0 and m < 30 then
-            isOpen = true
-            currentOpenHour = oh
-            break
-        end
-    end
-
-    -- next open
-    local nextOpenDiff = 24*3600
-    local nextOpenHour = openHours[1]
-    for _, oh in ipairs(openHours) do
-        local candidate = oh*3600
-        if candidate <= nowSec then
-            candidate = candidate + 24*3600
-        end
-        local diff = candidate - nowSec
-        if diff < nextOpenDiff then
-            nextOpenDiff = diff
-            nextOpenHour = oh
-        end
-    end
-
-    -- next close (kalau lagi OPEN, durasi 30 menit)
-    local nextCloseDiff = nil
-    if isOpen and currentOpenHour then
-        local openStart = currentOpenHour*3600
-        local closeTime = openStart + 30*60
-        if closeTime <= nowSec then
-            closeTime = closeTime + 24*3600
-        end
-        nextCloseDiff = closeTime - nowSec
-    end
-
-    return isOpen, nextOpenHour, nextOpenDiff, nextCloseDiff
-end
-
-----------------------------------------------------------------
 -- 🏝️ TELEPORT TO ISLAND
 ----------------------------------------------------------------
 local holderIsland = Instance.new("Frame", teleportPage)
@@ -3436,7 +3242,7 @@ tpIslandFrame.BackgroundTransparency = 1
 tpIslandFrame.Visible = false
 
 local islandCard = Instance.new("Frame", tpIslandFrame)
-islandCard.Size = UDim2.new(1,-32,0,190) -- tinggi dinaikkan buat 2 baris status
+islandCard.Size = UDim2.new(1,-32,0,160) -- sama tinggi
 islandCard.Position = UDim2.new(0,16,0,0)
 islandCard.BackgroundColor3 = CARD
 islandCard.BackgroundTransparency = 0.12
@@ -3457,22 +3263,9 @@ islandTitle.TextColor3 = TEXT
 islandTitle.TextXAlignment = Enum.TextXAlignment.Left
 islandTitle.Text = "🏝️ Teleport to Island"
 
--- STATUS TEXT CHRISTMAS CAVE (2 baris, kuning)
-local statusLabel = Instance.new("TextLabel", islandCard)
-statusLabel.Size = UDim2.new(1,0,0,32)
-statusLabel.Position = UDim2.new(0,0,0,22)
-statusLabel.BackgroundTransparency = 1
-statusLabel.Font = Enum.Font.Gotham
-statusLabel.TextSize = 11
-statusLabel.TextColor3 = Color3.fromRGB(255, 220, 0)
-statusLabel.TextXAlignment = Enum.TextXAlignment.Left
-statusLabel.TextYAlignment = Enum.TextYAlignment.Top
-statusLabel.TextWrapped = true
-statusLabel.Text = "Checking Christmas Cave status..."
-
 local selectIslandBtn = Instance.new("TextButton", islandCard)
 selectIslandBtn.Size = UDim2.new(0.4,0,0,26)
-selectIslandBtn.Position = UDim2.new(0,0,0,56)
+selectIslandBtn.Position = UDim2.new(0,0,0,26)
 selectIslandBtn.BackgroundColor3 = CARD
 selectIslandBtn.BackgroundTransparency = 0.16
 selectIslandBtn.AutoButtonColor = false
@@ -3485,7 +3278,7 @@ Instance.new("UICorner", selectIslandBtn).CornerRadius = UDim.new(0,8)
 
 local tpIslandBtn = Instance.new("TextButton", islandCard)
 tpIslandBtn.Size = UDim2.new(0.4,0,0,28)
-tpIslandBtn.Position = UDim2.new(0,0,0,86)
+tpIslandBtn.Position = UDim2.new(0,0,0,56)
 tpIslandBtn.BackgroundColor3 = ACCENT
 tpIslandBtn.BackgroundTransparency = 0.08
 tpIslandBtn.AutoButtonColor = false
@@ -3497,7 +3290,7 @@ Instance.new("UICorner", tpIslandBtn).CornerRadius = UDim.new(0,8)
 
 local refreshIslandBtn = Instance.new("TextButton", islandCard)
 refreshIslandBtn.Size = UDim2.new(0.4,0,0,24)
-refreshIslandBtn.Position = UDim2.new(0,0,0,120)
+refreshIslandBtn.Position = UDim2.new(0,0,0,90)
 refreshIslandBtn.BackgroundColor3 = CARD
 refreshIslandBtn.BackgroundTransparency = 0.18
 refreshIslandBtn.AutoButtonColor = false
@@ -3508,11 +3301,11 @@ refreshIslandBtn.TextXAlignment = Enum.TextXAlignment.Center
 refreshIslandBtn.Text = "Refresh Island"
 Instance.new("UICorner", refreshIslandBtn).CornerRadius = UDim.new(0,8)
 
--- PANEL KANAN ISLAND
+-- PANEL KANAN ISLAND (SAMA PERSIS STYLE PLAYER)
 local islandDropFrame = Instance.new("Frame", islandCard)
 islandDropFrame.Size = UDim2.new(0.55,0,0,140)
 islandDropFrame.AnchorPoint = Vector2.new(1,0)
-islandDropFrame.Position = UDim2.new(1,-8,0,56)
+islandDropFrame.Position = UDim2.new(1,-8,0,26)
 islandDropFrame.BackgroundColor3 = CARD
 islandDropFrame.BackgroundTransparency = 0.06
 islandDropFrame.Visible = false
@@ -3587,8 +3380,8 @@ local islandOpen = false
 local function recalcIsland()
     if islandOpen then
         tpIslandFrame.Visible = true
-        tpIslandFrame.Size = UDim2.new(1,0,0,198)
-        holderIsland.Size = UDim2.new(1,0,0,34 + 198)
+        tpIslandFrame.Size = UDim2.new(1,0,0,168)
+        holderIsland.Size = UDim2.new(1,0,0,34 + 168)
         rowIsland.Text = "  🏝️ Teleport to Island  v"
     else
         tpIslandFrame.Visible = false
@@ -3633,30 +3426,6 @@ end)
 
 rebuildIslandDropdown()
 
--- LOOP UPDATE STATUS CHRISTMAS CAVE (COUNTDOWN OPEN & CLOSE)
-task.spawn(function()
-    while true do
-        local isOpen, nextOpenHour, toOpenSec, toCloseSec = GetChristmasCaveState()
-
-        local hrsO  = math.floor(toOpenSec / 3600)
-        local minsO = math.floor((toOpenSec % 3600) / 60)
-        local secsO = toOpenSec % 60
-        local line2 = string.format("Next OPEN in %02d:%02d:%02d", hrsO, minsO, secsO)
-
-        local line1
-        if isOpen and toCloseSec then
-            local hrsC  = math.floor(toCloseSec / 3600)
-            local minsC = math.floor((toCloseSec % 3600) / 60)
-            local secsC = toCloseSec % 60
-            line1 = string.format("Christmas Cave: OPEN | Close in %02d:%02d:%02d", hrsC, minsC, secsC)
-        else
-            line1 = "Christmas Cave: CLOSED"
-        end
-
-        statusLabel.Text = line1 .. "\n" .. line2
-        task.wait(1)
-    end
-end)
 
 ----------------------------------------------------------------
 -- 🧍‍♂️ TELEPORT TO PLAYER
@@ -4015,8 +3784,6 @@ function SpawnTotemUUID(uuid)
     end)
 end
 
-
-
 ----------------------------------------------------------------
 -- MEGALODON HUNT TELEPORT (ANCHOR PART)
 ----------------------------------------------------------------
@@ -4049,22 +3816,28 @@ function TeleportToMegalodon()
     char:PivotTo(cf)
 end
 
+
+
+
+
 ----------------------------------------------------------------
 -- ENGINE STATE
 ----------------------------------------------------------------
-local AutoFishAFK = false
-local isFishing   = false
+local AutoFishAFK   = false
+local isFishing     = false
 
 -- delay Auto Fishing (feel V2)
-local DelayReel   = 3    -- sama kayak _G.RAY_DelayCast
-local DelayCatch  = 2    -- sama kayak _G.RAY_DelayFinish
+local DelayReel     = 3      -- sama kayak _G.RAY_DelayCast
+local DelayCatch    = 2      -- sama kayak _G.RAY_DelayFinish
 
--- Blatant state
-local BlatantOn    = false
-local BlatantReel  = 0.8     -- Reel Delay (default lama, kalau mau dipakai)
-local BlatantCatch = 0.75    -- default awal (nggak wajib dipakai, bisa dioverride)
+-- Blatant state (V2 cepat)
+local BlatantOn     = false
+local BlatantReel   = 1.17   -- default GUI Reel Delay
+local BlatantCatch  = 0.25   -- default GUI Catch Delay
+local InnerDelayGui = 0.0009 -- default inner delay (kalau nanti mau TextBox)
 
 _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
+
 
 ----------------------------------------------------------------
 -- FUNGSI DASAR
@@ -4085,6 +3858,7 @@ local function Cast_V3()
     end)
 end
 
+
 ----------------------------------------------------------------
 -- ENGINE 0: AUTO FISH FEEL V2
 -- (1 cast -> tunggu -> 1 reel -> tunggu)
@@ -4101,13 +3875,10 @@ local function Engine_V3_Delayed()
     isFishing = false
 end
 
-----------------------------------------------------------------
--- ENGINE 1: BLATANT (V2 CEPAT)
--- CONFIG (UI) – OVERRIDE NILAI
-----------------------------------------------------------------
-BlatantReel  = 1.17   -- kalau mau dipakai buat tuning lain
-BlatantCatch = 0.25   -- delay catch utama / extra catch
 
+-----------------------------------------------------------------
+-- ENGINE 1: BLATANT (V2 CEPAT, ANTI KE-LOCK)
+----------------------------------------------------------------
 local CastCount        = 3
 local DelayBetweenCast = 0.03
 
@@ -4129,9 +3900,19 @@ local function BlatantCycle_V2()
         end
     end)
 
-    -- DELAY REEL (SEDIKIT LEBIH CEPAT)
-    local RealReelDelay  = 0.52     -- dari 0.55 → 0.52
-    local RealInnerDelay = 0.0009   -- sedikit lebih longgar dari 0.0007
+    ----------------------------------------------------------------
+    -- DELAY REEL: AMBIL DARI GUI + JITTER DIKIT BIAR GAK KE-LOCK
+    ----------------------------------------------------------------
+    local baseReel = 0.52                   -- timing dasar lama
+    local offset   = (BlatantReel - 1.17)   -- offset dari GUI
+    local jitter   = (math.random() - 0.5) * 0.01  -- ±0.005 detik
+
+    local RealReelDelay = baseReel + offset + jitter
+
+    ----------------------------------------------------------------
+    -- INNER DELAY: BISA DIATUR DARI GUI, TAPI DISNAP KE RANGE AMAN
+    ----------------------------------------------------------------
+    local RealInnerDelay = math.clamp(InnerDelayGui, 0.001, 0.01)
 
     task.wait(RealReelDelay)
 
@@ -4144,18 +3925,22 @@ local function BlatantCycle_V2()
     isFishing = false
 end
 
----------------------------------------------------------------
+
+----------------------------------------------------------------
 -- EXTRA CATCH BLATANT
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
         if BlatantOn and _G.RAY_ExtraCatchBlatant and not isFishing then
             Reel_V3()
-            task.wait(BlatantCatch)   -- pake delay yang sama biar feel-nya konsisten
+            task.wait(BlatantCatch)
         end
         task.wait(0.05)
     end
 end)
+
+
+
 
 -- ====================== AUTO OPTION CONTENT ======================
 
@@ -4279,18 +4064,15 @@ end
 searchBoxIsland:GetPropertyChangedSignal("Text"):Connect(rebuildIslandPanel)
 rebuildIslandPanel()
 
-----------------------------------------------------------------
--- AUTO OPTION DROPDOWN BUILDER (FINAL)
-----------------------------------------------------------------
 local function autoDropdown(text)
     local holder = Instance.new("Frame", scroll)
-    holder.Size = UDim2.new(1, 0, 0, 42)
+    holder.Size = UDim2.new(1,0,0,42)
     holder.BackgroundTransparency = 1
 
     local icon = Instance.new("TextLabel", holder)
-    icon.AnchorPoint = Vector2.new(0, 0.5)
-    icon.Position = UDim2.new(0, 4, 0, 21)
-    icon.Size = UDim2.new(0, 20, 0, 20)
+    icon.AnchorPoint = Vector2.new(0,0.5)
+    icon.Position = UDim2.new(0,4,0,21)
+    icon.Size = UDim2.new(0,20,0,20)
     icon.BackgroundTransparency = 1
     icon.Font = Enum.Font.GothamBold
     icon.TextSize = 16
@@ -4300,27 +4082,32 @@ local function autoDropdown(text)
 
     if text == "Auto Fishing" then
         icon.Text = "🎣"
+    elseif text == "Auto Legit ( comingsoon )" then
+        icon.Text = "🌴"
     elseif text == "Blatant Fishing" then
         icon.Text = "⚡"
-    elseif text == "Auto Favorite" then
+    elseif text == "Comingsoon" then
+        icon.Text = "🌴"
+    elseif text == "Auto Favorite (comingsoon)" then
         icon.Text = "⭐"
     elseif text == "Auto Sell" then
         icon.Text = "💰"
     elseif text == "Auto Megalodon" then
         icon.Text = "🦈"
     elseif text == "Auto Totem" then
-        icon.Text = "🗿"
+        icon.Text = "🌴"
     else
-        icon.Text = "•"
+        icon.Text = "⚙️"
     end
 
     local card = Instance.new("Frame", holder)
-    card.Size = UDim2.new(1, 0, 1, 0)
+    card.Size = UDim2.new(1,0,1,0)
     card.BackgroundTransparency = 1
 
     local mainBtn = Instance.new("TextButton", card)
-    mainBtn.Size = UDim2.new(1, -8, 0, 42)
-    mainBtn.Position = UDim2.new(0, 28, 0, 0)
+    mainBtn.Size = UDim2.new(1,-8,0,42)
+    mainBtn.Position = UDim2.new(0,28,0,0)
+    mainBtn.Text = text.."  ▼"
     mainBtn.Font = Enum.Font.Gotham
     mainBtn.TextSize = 15
     mainBtn.TextXAlignment = Enum.TextXAlignment.Left
@@ -4328,22 +4115,16 @@ local function autoDropdown(text)
     mainBtn.BackgroundColor3 = CARD
     mainBtn.BackgroundTransparency = ALPHA_CARD
     mainBtn.AutoButtonColor = false
-    Instance.new("UICorner", mainBtn).CornerRadius = UDim.new(0, 10)
-
-    if text == "Auto Totem" then
-        mainBtn.Text = "Auto Totem 🗿"
-    else
-        mainBtn.Text = text
-    end
+    Instance.new("UICorner", mainBtn).CornerRadius = UDim.new(0,10)
 
     local sub = Instance.new("Frame", holder)
-    sub.Position = UDim2.new(0, 0, 0, 42)
-    sub.Size = UDim2.new(1, 0, 0, 0)
+    sub.Position = UDim2.new(0,0,0,42)
+    sub.Size = UDim2.new(1,0,0,0)
     sub.ClipsDescendants = true
     sub.BackgroundTransparency = 1
 
     local list = Instance.new("UIListLayout", sub)
-    list.Padding = UDim.new(0, 6)
+    list.Padding = UDim.new(0,6)
     list.SortOrder = Enum.SortOrder.LayoutOrder
 
     local open = false
@@ -4351,12 +4132,15 @@ local function autoDropdown(text)
         task.wait()
         local h = list.AbsoluteContentSize.Y
         if open then
-            sub.Size = UDim2.new(1, 0, 0, h)
-            holder.Size = UDim2.new(1, 0, 0, 42 + h)
+            sub.Size = UDim2.new(1,0,0,h)
+            holder.Size = UDim2.new(1,0,0,42 + h)
+            mainBtn.Text = text.."  ▲"
         else
-            sub.Size = UDim2.new(1, 0, 0, 0)
-            holder.Size = UDim2.new(1, 0, 0, 42)
+            sub.Size = UDim2.new(1,0,0,0)
+            holder.Size = UDim2.new(1,0,0,42)
+            mainBtn.Text = text.."  ▼"
         end
+        scroll.CanvasSize = UDim2.new(0,0,0,layout.AbsoluteContentSize.Y + 20)
     end
 
     mainBtn.MouseButton1Click:Connect(function()
@@ -4364,17 +4148,52 @@ local function autoDropdown(text)
         recalc()
     end)
 
+    local function toggle(labelText, callback)
+        local b = Instance.new("TextButton", sub)
+        b.Size = UDim2.new(1,0,0,32)
+        b.Text = "   "..labelText.." : OFF"
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 13
+        b.TextXAlignment = Enum.TextXAlignment.Left
+        b.TextColor3 = MUTED
+        b.BackgroundColor3 = CARD
+        b.BackgroundTransparency = 0.12
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+
+        local on = false
+        b.MouseButton1Click:Connect(function()
+            on = not on
+            b.Text = "   "..labelText.." : "..(on and "ON" or "OFF")
+            if callback then callback(on) end
+        end)
+    end
+
+    local function input(t, placeholder)
+        local b = Instance.new("TextBox", sub)
+        b.Size = UDim2.new(1,0,0,32)
+        b.Text = "   "..t.." ("..placeholder..")"
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 13
+        b.TextXAlignment = Enum.TextXAlignment.Left
+        b.TextColor3 = MUTED
+        b.ClearTextOnFocus = false
+        b.BackgroundColor3 = CARD
+        b.BackgroundTransparency = 0.12
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+        return b
+    end
+
     ----------------------------------------------------------------
     -- AUTO FISHING
     ----------------------------------------------------------------
     if text == "Auto Fishing" then
         local row = Instance.new("Frame", sub)
-        row.Size = UDim2.new(1, 0, 0, 36)
+        row.Size = UDim2.new(1,0,0,36)
         row.BackgroundTransparency = 1
 
         local label = Instance.new("TextLabel", row)
-        label.Size = UDim2.new(1, -100, 1, 0)
-        label.Position = UDim2.new(0, 16, 0, 0)
+        label.Size = UDim2.new(1,-100,1,0)
+        label.Position = UDim2.new(0,16,0,0)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.Gotham
         label.TextSize = 13
@@ -4383,43 +4202,51 @@ local function autoDropdown(text)
         label.Text = "Auto Fishing"
 
         local pill = Instance.new("TextButton", row)
-        pill.Size = UDim2.new(0, 50, 0, 24)
-        pill.Position = UDim2.new(1, -80, 0.5, -12)
+        pill.Size = UDim2.new(0,50,0,24)
+        pill.Position = UDim2.new(1,-80,0.5,-12)
         pill.BackgroundColor3 = MUTED
         pill.BackgroundTransparency = 0.1
         pill.Text = ""
         pill.AutoButtonColor = false
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(0, 999)
+        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
 
         local knob = Instance.new("Frame", pill)
-        knob.Size = UDim2.new(0, 18, 0, 18)
-        knob.Position = UDim2.new(0, 3, 0.5, -9)
-        knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 999)
+        knob.Size = UDim2.new(0,18,0,18)
+        knob.Position = UDim2.new(0,3,0.5,-9)
+        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        knob.BackgroundTransparency = 0
+        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
+        local on = false
         local function refresh()
-            pill.BackgroundColor3 = AutoFishAFK and ACCENT or MUTED
-            knob.Position = AutoFishAFK and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+            pill.BackgroundColor3 = on and ACCENT or MUTED
+            knob.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
         end
 
-        pill.MouseButton1Click:Connect(function()
-            AutoFishAFK = not AutoFishAFK
-            if AutoFishAFK then
-                BlatantOn = false
-            end
-            refresh()
-        end)
+pill.MouseButton1Click:Connect(function()
+    on = not on
+
+    if on then
+        AutoFishAFK = true
+        BlatantOn = false   -- matiin blatant kalau auto fishing dinyalain
+    else
+        AutoFishAFK = false
+    end
+
+    refresh()
+end)
+
 
         refresh()
 
         -- Reel delay
         local reelRow = Instance.new("Frame", sub)
-        reelRow.Size = UDim2.new(1, 0, 0, 30)
+        reelRow.Size = UDim2.new(1,0,0,30)
         reelRow.BackgroundTransparency = 1
 
         local reelLabel = Instance.new("TextLabel", reelRow)
-        reelLabel.Size = UDim2.new(0.6, 0, 1, 0)
-        reelLabel.Position = UDim2.new(0, 16, 0, 0)
+        reelLabel.Size = UDim2.new(0.6,0,1,0)
+        reelLabel.Position = UDim2.new(0,16,0,0)
         reelLabel.BackgroundTransparency = 1
         reelLabel.Font = Enum.Font.Gotham
         reelLabel.TextSize = 13
@@ -4428,8 +4255,8 @@ local function autoDropdown(text)
         reelLabel.Text = "Reel Delay (sec)"
 
         local reelBox = Instance.new("TextBox", reelRow)
-        reelBox.Size = UDim2.new(0.35, 0, 1, 0)
-        reelBox.Position = UDim2.new(0.6, 8, 0, 0)
+        reelBox.Size = UDim2.new(0.35,0,1,0)
+        reelBox.Position = UDim2.new(0.6,8,0,0)
         reelBox.Text = tostring(DelayReel)
         reelBox.Font = Enum.Font.Gotham
         reelBox.TextSize = 13
@@ -4438,10 +4265,10 @@ local function autoDropdown(text)
         reelBox.ClearTextOnFocus = false
         reelBox.BackgroundColor3 = CARD
         reelBox.BackgroundTransparency = 0.12
-        Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0, 8)
+        Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0,8)
 
         reelBox.FocusLost:Connect(function()
-            local n = tonumber(reelBox.Text:match("%d+%.?%d*"))
+            local n = tonumber(reelBox.Text:match("[%d%.]+"))
             if n and n > 0 then
                 DelayReel = n
                 reelBox.Text = tostring(n)
@@ -4452,12 +4279,12 @@ local function autoDropdown(text)
 
         -- Catch delay
         local catchRow = Instance.new("Frame", sub)
-        catchRow.Size = UDim2.new(1, 0, 0, 30)
+        catchRow.Size = UDim2.new(1,0,0,30)
         catchRow.BackgroundTransparency = 1
 
         local catchLabel = Instance.new("TextLabel", catchRow)
-        catchLabel.Size = UDim2.new(0.6, 0, 1, 0)
-        catchLabel.Position = UDim2.new(0, 16, 0, 0)
+        catchLabel.Size = UDim2.new(0.6,0,1,0)
+        catchLabel.Position = UDim2.new(0,16,0,0)
         catchLabel.BackgroundTransparency = 1
         catchLabel.Font = Enum.Font.Gotham
         catchLabel.TextSize = 13
@@ -4466,8 +4293,8 @@ local function autoDropdown(text)
         catchLabel.Text = "Catch Delay (sec)"
 
         local catchBox = Instance.new("TextBox", catchRow)
-        catchBox.Size = UDim2.new(0.35, 0, 1, 0)
-        catchBox.Position = UDim2.new(0.6, 8, 0, 0)
+        catchBox.Size = UDim2.new(0.35,0,1,0)
+        catchBox.Position = UDim2.new(0.6,8,0,0)
         catchBox.Text = tostring(DelayCatch)
         catchBox.Font = Enum.Font.Gotham
         catchBox.TextSize = 13
@@ -4476,10 +4303,10 @@ local function autoDropdown(text)
         catchBox.ClearTextOnFocus = false
         catchBox.BackgroundColor3 = CARD
         catchBox.BackgroundTransparency = 0.12
-        Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0, 8)
+        Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0,8)
 
         catchBox.FocusLost:Connect(function()
-            local n = tonumber(catchBox.Text:match("%d+%.?%d*"))
+            local n = tonumber(catchBox.Text:match("[%d%.]+"))
             if n and n > 0 then
                 DelayCatch = n
                 catchBox.Text = tostring(n)
@@ -4488,176 +4315,472 @@ local function autoDropdown(text)
             end
         end)
 
+        ----------------------------------------------------------------
+        -- BLATANT FISHING
+        ----------------------------------------------------------------
+        elseif text == "Blatant Fishing" then
+            local row = Instance.new("Frame", sub)
+            row.Size = UDim2.new(1,0,0,36)
+            row.BackgroundTransparency = 1
+
+            local label = Instance.new("TextLabel", row)
+            label.Size = UDim2.new(1,-100,1,0)
+            label.Position = UDim2.new(0,16,0,0)
+            label.BackgroundTransparency = 1
+            label.Font = Enum.Font.Gotham
+            label.TextSize = 13
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.TextColor3 = TEXT
+            label.Text = "Auto Fishing Blatant"
+
+            local pill = Instance.new("TextButton", row)
+            pill.Size = UDim2.new(0,50,0,24)
+            pill.Position = UDim2.new(1,-80,0.5,-12)
+            pill.BackgroundColor3 = MUTED
+            pill.BackgroundTransparency = 0.1
+            pill.Text = ""
+            pill.AutoButtonColor = false
+            Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+            local knob = Instance.new("Frame", pill)
+            knob.Size = UDim2.new(0,18,0,18)
+            knob.Position = UDim2.new(0,3,0.5,-9)
+            knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            knob.BackgroundTransparency = 0
+            Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+            local function refreshBlatant()
+                pill.BackgroundColor3 = BlatantOn and ACCENT or MUTED
+                knob.Position = BlatantOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+            end
+
+            pill.MouseButton1Click:Connect(function()
+                BlatantOn = not BlatantOn
+                refreshBlatant()
+            end)
+
+            refreshBlatant()
+
+            -- Reel delay blatant
+            local reelRow = Instance.new("Frame", sub)
+            reelRow.Size = UDim2.new(1,0,0,30)
+            reelRow.BackgroundTransparency = 1
+
+            local reelLabel = Instance.new("TextLabel", reelRow)
+            reelLabel.Size = UDim2.new(0.6,0,1,0)
+            reelLabel.Position = UDim2.new(0,16,0,0)
+            reelLabel.BackgroundTransparency = 1
+            reelLabel.Font = Enum.Font.Gotham
+            reelLabel.TextSize = 13
+            reelLabel.TextXAlignment = Enum.TextXAlignment.Left
+            reelLabel.TextColor3 = TEXT
+            reelLabel.Text = "Reel Delay (sec)"
+
+            local reelBox = Instance.new("TextBox", reelRow)
+            reelBox.Size = UDim2.new(0.35,0,1,0)
+            reelBox.Position = UDim2.new(0.6,8,0,0)
+            reelBox.Text = tostring(BlatantReel)
+            reelBox.Font = Enum.Font.Gotham
+            reelBox.TextSize = 13
+            reelBox.TextXAlignment = Enum.TextXAlignment.Center
+            reelBox.TextColor3 = TEXT
+            reelBox.ClearTextOnFocus = false
+            reelBox.BackgroundColor3 = CARD
+            reelBox.BackgroundTransparency = 0.12
+            Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0,8)
+
+            reelBox.FocusLost:Connect(function()
+                local n = tonumber(reelBox.Text:match("[%d%.]+"))
+                if n and n > 0 then
+                    BlatantReel = n
+                    reelBox.Text = tostring(n)
+                else
+                    reelBox.Text = tostring(BlatantReel)
+                end
+            end)
+
+            -- Catch delay blatant
+            local catchRow = Instance.new("Frame", sub)
+            catchRow.Size = UDim2.new(1,0,0,30)
+            catchRow.BackgroundTransparency = 1
+
+            local catchLabel = Instance.new("TextLabel", catchRow)
+            catchLabel.Size = UDim2.new(0.6,0,1,0)
+            catchLabel.Position = UDim2.new(0,16,0,0)
+            catchLabel.BackgroundTransparency = 1
+            catchLabel.Font = Enum.Font.Gotham
+            catchLabel.TextSize = 13
+            catchLabel.TextXAlignment = Enum.TextXAlignment.Left
+            catchLabel.TextColor3 = TEXT
+            catchLabel.Text = "Catch Delay (sec)"
+
+            local catchBox = Instance.new("TextBox", catchRow)
+            catchBox.Size = UDim2.new(0.35,0,1,0)
+            catchBox.Position = UDim2.new(0.6,8,0,0)
+            catchBox.Text = tostring(BlatantCatch)
+            catchBox.Font = Enum.Font.Gotham
+            catchBox.TextSize = 13
+            catchBox.TextXAlignment = Enum.TextXAlignment.Center
+            catchBox.TextColor3 = TEXT
+            catchBox.ClearTextOnFocus = false
+            catchBox.BackgroundColor3 = CARD
+            catchBox.BackgroundTransparency = 0.12
+            Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0,8)
+
+            catchBox.FocusLost:Connect(function()
+                local n = tonumber(catchBox.Text:match("[%d%.]+"))
+                if n and n > 0 then
+                    BlatantCatch = n
+                    catchBox.Text = tostring(n)
+                else
+                    catchBox.Text = tostring(BlatantCatch)
+                end
+            end)
+
+            -- Extra catch blatant
+            _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
+
+            local extraRow = Instance.new("Frame", sub)
+            extraRow.Size = UDim2.new(1,0,0,32)
+            extraRow.BackgroundTransparency = 1
+
+            local extraLabel = Instance.new("TextLabel", extraRow)
+            extraLabel.Size = UDim2.new(1,-100,1,0)
+            extraLabel.Position = UDim2.new(0,16,0,0)
+            extraLabel.BackgroundTransparency = 1
+            extraLabel.Font = Enum.Font.Gotham
+            extraLabel.TextSize = 13
+            extraLabel.TextXAlignment = Enum.TextXAlignment.Left
+            extraLabel.TextColor3 = TEXT
+            extraLabel.Text = "Extra Catch"
+
+            local extraPill = Instance.new("TextButton", extraRow)
+            extraPill.Size = UDim2.new(0,50,0,24)
+            extraPill.Position = UDim2.new(1,-80,0.5,-12)
+            extraPill.BackgroundColor3 = MUTED
+            extraPill.BackgroundTransparency = 0.1
+            extraPill.Text = ""
+            extraPill.AutoButtonColor = false
+            Instance.new("UICorner", extraPill).CornerRadius = UDim.new(0,999)
+
+            local extraKnob = Instance.new("Frame", extraPill)
+            extraKnob.Size = UDim2.new(0,18,0,18)
+            extraKnob.Position = UDim2.new(0,3,0.5,-9)
+            extraKnob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+            extraKnob.BackgroundTransparency = 0
+            Instance.new("UICorner", extraKnob).CornerRadius = UDim.new(0,999)
+
+            local function refreshExtra()
+                extraPill.BackgroundColor3 = _G.RAY_ExtraCatchBlatant and Color3.fromRGB(80,200,120) or MUTED
+                extraKnob.Position = _G.RAY_ExtraCatchBlatant and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+            end
+
+            extraPill.MouseButton1Click:Connect(function()
+                _G.RAY_ExtraCatchBlatant = not _G.RAY_ExtraCatchBlatant
+                refreshExtra()
+            end)
+
+            refreshExtra()
+
+
+elseif text == "Auto Spot Island" then
+    local info = Instance.new("TextLabel", sub)
+    info.Size = UDim2.new(1,0,0,32)
+    info.BackgroundTransparency = 1
+    info.Font = Enum.Font.Gotham
+    info.TextSize = 13
+    info.TextColor3 = MUTED
+    info.TextXAlignment = Enum.TextXAlignment.Left
+    info.Text = "Click a spot to instantly teleport."
+
+    local openBtn = Instance.new("TextButton", sub)
+    openBtn.Size = UDim2.new(1,0,0,32)
+    openBtn.BackgroundColor3 = CARD
+    openBtn.BackgroundTransparency = 0.12
+    openBtn.Text = "Open Teleport Spot List  ▼"
+    openBtn.Font = Enum.Font.Gotham
+    openBtn.TextSize = 13
+    openBtn.TextColor3 = TEXT
+    openBtn.AutoButtonColor = false
+    Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0,8)
+
+    openBtn.MouseButton1Click:Connect(function()
+        islandPanel.Visible = not islandPanel.Visible
+    end)
+
+
+    elseif text == "Auto Favorite" then
+
     ----------------------------------------------------------------
-    -- BLATANT FISHING
+    -- AUTO SELL (RAPIH)
     ----------------------------------------------------------------
-    elseif text == "Blatant Fishing" then
-        local row = Instance.new("Frame", sub)
-        row.Size = UDim2.new(1, 0, 0, 36)
-        row.BackgroundTransparency = 1
+    elseif text == "Auto Sell" then
+        local AutoSellOn = _G.RAY_AutoSellOn or false
+        _G.RAY_SellThreshold = _G.RAY_SellThreshold or "Legendary"
+        _G.RAY_SellMode = _G.RAY_SellMode or "time"
+        _G.RAY_SellDelay = _G.RAY_SellDelay or 5
+        _G.RAY_SellInventoryThreshold = _G.RAY_SellInventoryThreshold or 30
 
-        local label = Instance.new("TextLabel", row)
-        label.Size = UDim2.new(1, -100, 1, 0)
-        label.Position = UDim2.new(0, 16, 0, 0)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = TEXT
-        label.Text = "Auto Fishing Blatant"
+        list.Padding = UDim.new(0,4)
 
-        local pill = Instance.new("TextButton", row)
-        pill.Size = UDim2.new(0, 50, 0, 24)
-        pill.Position = UDim2.new(1, -80, 0.5, -12)
-        pill.BackgroundColor3 = MUTED
-        pill.BackgroundTransparency = 0.1
-        pill.Text = ""
-        pill.AutoButtonColor = false
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(0, 999)
+        local function makeRow(title)
+            local row = Instance.new("Frame", sub)
+            row.Size = UDim2.new(1,0,0,32)
+            row.BackgroundTransparency = 1
 
-        local knob = Instance.new("Frame", pill)
-        knob.Size = UDim2.new(0, 18, 0, 18)
-        knob.Position = UDim2.new(0, 3, 0.5, -9)
-        knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-        Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 999)
+            local label = Instance.new("TextLabel", row)
+            label.Size = UDim2.new(0.55,0,1,0)
+            label.Position = UDim2.new(0,16,0,-2)
+            label.BackgroundTransparency = 1
+            label.Font = Enum.Font.Gotham
+            label.TextSize = 13
+            label.TextXAlignment = Enum.TextXAlignment.Left
+            label.TextColor3 = TEXT
+            label.Text = title
 
-        local function refreshBlatant()
-            pill.BackgroundColor3 = BlatantOn and ACCENT or MUTED
-            knob.Position = BlatantOn and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+            return row
         end
 
-        pill.MouseButton1Click:Connect(function()
-            BlatantOn = not BlatantOn
-            if BlatantOn then
-                AutoFishAFK = false
-            end
-            refreshBlatant()
+        -- Threshold
+        local thRow = makeRow("Sell Threshold")
+
+        local thBtn = Instance.new("TextButton", thRow)
+        thBtn.Size = UDim2.new(0.38,0,0,28)
+        thBtn.Position = UDim2.new(0.58,0,0.5,-14)
+        thBtn.BackgroundColor3 = CARD
+        thBtn.BackgroundTransparency = 0.12
+        thBtn.Text = _G.RAY_SellThreshold.."  ▼"
+        thBtn.Font = Enum.Font.Gotham
+        thBtn.TextSize = 13
+        thBtn.TextColor3 = MUTED
+        thBtn.AutoButtonColor = false
+        Instance.new("UICorner", thBtn).CornerRadius = UDim.new(0,8)
+
+        local thDrop = Instance.new("Frame", thRow)
+        thDrop.Position = UDim2.new(0.58,0,1,4)
+        thDrop.Size = UDim2.new(0.38,0,0,72)
+        thDrop.BackgroundColor3 = CARD
+        thDrop.BackgroundTransparency = 0.06
+        thDrop.Visible = false
+        thDrop.ZIndex = 5
+        Instance.new("UICorner", thDrop).CornerRadius = UDim.new(0,8)
+
+        local thList = Instance.new("UIListLayout", thDrop)
+        thList.Padding = UDim.new(0,4)
+        thList.SortOrder = Enum.SortOrder.LayoutOrder
+
+        for _,rar in ipairs({"Legendary","Mythic","Secret"}) do
+            local b = Instance.new("TextButton", thDrop)
+            b.Size = UDim2.new(1,-8,0,24)
+            b.BackgroundColor3 = CARD
+            b.BackgroundTransparency = 0.18
+            b.Text = rar
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 12
+            b.TextColor3 = MUTED
+            b.TextXAlignment = Enum.TextXAlignment.Left
+            b.ZIndex = 6
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+            b.MouseButton1Click:Connect(function()
+                _G.RAY_SellThreshold = rar
+                thBtn.Text = rar.."  ▼"
+                thDrop.Visible = false
+            end)
+        end
+
+        local thOpen = false
+        thBtn.MouseButton1Click:Connect(function()
+            thOpen = not thOpen
+            thDrop.Visible = thOpen
         end)
 
-        refreshBlatant()
+        -- Mode
+        local modeRow = makeRow("Sell Mode")
 
-        -- Reel delay blatant
-        local reelRow = Instance.new("Frame", sub)
-        reelRow.Size = UDim2.new(1, 0, 0, 30)
-        reelRow.BackgroundTransparency = 1
+        local modeBtn = Instance.new("TextButton", modeRow)
+        modeBtn.Size = UDim2.new(0.38,0,0,28)
+        modeBtn.Position = UDim2.new(0.58,0,0.5,-14)
+        modeBtn.BackgroundColor3 = CARD
+        modeBtn.BackgroundTransparency = 0.12
+        modeBtn.Text = _G.RAY_SellMode.."  ▼"
+        modeBtn.Font = Enum.Font.Gotham
+        modeBtn.TextSize = 13
+        modeBtn.TextColor3 = MUTED
+        modeBtn.AutoButtonColor = false
+        Instance.new("UICorner", modeBtn).CornerRadius = UDim.new(0,8)
 
-        local reelLabel = Instance.new("TextLabel", reelRow)
-        reelLabel.Size = UDim2.new(0.6, 0, 1, 0)
-        reelLabel.Position = UDim2.new(0, 16, 0, 0)
-        reelLabel.BackgroundTransparency = 1
-        reelLabel.Font = Enum.Font.Gotham
-        reelLabel.TextSize = 13
-        reelLabel.TextXAlignment = Enum.TextXAlignment.Left
-        reelLabel.TextColor3 = TEXT
-        reelLabel.Text = "Reel Delay (sec)"
+        local modeDrop = Instance.new("Frame", modeRow)
+        modeDrop.Position = UDim2.new(0.58,0,1,4)
+        modeDrop.Size = UDim2.new(0.38,0,0,48)
+        modeDrop.BackgroundColor3 = CARD
+        modeDrop.BackgroundTransparency = 0.06
+        modeDrop.Visible = false
+        modeDrop.ZIndex = 5
+        Instance.new("UICorner", modeDrop).CornerRadius = UDim.new(0,8)
 
-        local reelBox = Instance.new("TextBox", reelRow)
-        reelBox.Size = UDim2.new(0.35, 0, 1, 0)
-        reelBox.Position = UDim2.new(0.6, 8, 0, 0)
-        reelBox.Text = tostring(BlatantReel)
-        reelBox.Font = Enum.Font.Gotham
-        reelBox.TextSize = 13
-        reelBox.TextXAlignment = Enum.TextXAlignment.Center
-        reelBox.TextColor3 = TEXT
-        reelBox.ClearTextOnFocus = false
-        reelBox.BackgroundColor3 = CARD
-        reelBox.BackgroundTransparency = 0.12
-        Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0, 8)
+        local modeList = Instance.new("UIListLayout", modeDrop)
+        modeList.Padding = UDim.new(0,4)
+        modeList.SortOrder = Enum.SortOrder.LayoutOrder
 
-        reelBox.FocusLost:Connect(function()
-            local n = tonumber(reelBox.Text:match("%d+%.?%d*"))
+        for _,m in ipairs({"time","inventory"}) do
+            local b = Instance.new("TextButton", modeDrop)
+            b.Size = UDim2.new(1,-8,0,24)
+            b.BackgroundColor3 = CARD
+            b.BackgroundTransparency = 0.18
+            b.Text = m
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 12
+            b.TextColor3 = MUTED
+            b.TextXAlignment = Enum.TextXAlignment.Left
+            b.ZIndex = 6
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+            b.MouseButton1Click:Connect(function()
+                _G.RAY_SellMode = m
+                modeBtn.Text = m.."  ▼"
+                modeDrop.Visible = false
+            end)
+        end
+
+        local modeOpen = false
+        modeBtn.MouseButton1Click:Connect(function()
+            modeOpen = not modeOpen
+            modeDrop.Visible = modeOpen
+        end)
+
+        -- Delay
+        local delayRow = makeRow("Sell Delay (seconds)")
+
+        local delayBox = Instance.new("TextBox", delayRow)
+        delayBox.Size = UDim2.new(0.38,0,1,0)
+        delayBox.Position = UDim2.new(0.58,0,0,0)
+        delayBox.Text = tostring(_G.RAY_SellDelay)
+        delayBox.Font = Enum.Font.Gotham
+        delayBox.TextSize = 13
+        delayBox.TextXAlignment = Enum.TextXAlignment.Center
+        delayBox.TextColor3 = TEXT
+        delayBox.ClearTextOnFocus = false
+        delayBox.BackgroundColor3 = CARD
+        delayBox.BackgroundTransparency = 0.12
+        Instance.new("UICorner", delayBox).CornerRadius = UDim.new(0,8)
+
+        delayBox.FocusLost:Connect(function()
+            local n = tonumber(delayBox.Text:match("[%d%.]+"))
             if n and n > 0 then
-                BlatantReel = n
-                reelBox.Text = tostring(n)
+                _G.RAY_SellDelay = n
+                delayBox.Text = tostring(n)
             else
-                reelBox.Text = tostring(BlatantReel)
+                delayBox.Text = tostring(_G.RAY_SellDelay)
             end
         end)
 
-        -- Catch delay blatant
-        local catchRow = Instance.new("Frame", sub)
-        catchRow.Size = UDim2.new(1, 0, 0, 30)
-        catchRow.BackgroundTransparency = 1
+        -- Inventory threshold
+        local invRow = makeRow("Inventory Threshold")
 
-        local catchLabel = Instance.new("TextLabel", catchRow)
-        catchLabel.Size = UDim2.new(0.6, 0, 1, 0)
-        catchLabel.Position = UDim2.new(0, 16, 0, 0)
-        catchLabel.BackgroundTransparency = 1
-        catchLabel.Font = Enum.Font.Gotham
-        catchLabel.TextSize = 13
-        catchLabel.TextXAlignment = Enum.TextXAlignment.Left
-        catchLabel.TextColor3 = TEXT
-        catchLabel.Text = "Catch Delay (sec)"
+        local invBox = Instance.new("TextBox", invRow)
+        invBox.Size = UDim2.new(0.38,0,1,0)
+        invBox.Position = UDim2.new(0.58,0,0,0)
+        invBox.Text = tostring(_G.RAY_SellInventoryThreshold)
+        invBox.Font = Enum.Font.Gotham
+        invBox.TextSize = 13
+        invBox.TextXAlignment = Enum.TextXAlignment.Center
+        invBox.TextColor3 = TEXT
+        invBox.ClearTextOnFocus = false
+        invBox.BackgroundColor3 = CARD
+        invBox.BackgroundTransparency = 0.12
+        Instance.new("UICorner", invBox).CornerRadius = UDim.new(0,8)
 
-        local catchBox = Instance.new("TextBox", catchRow)
-        catchBox.Size = UDim2.new(0.35, 0, 1, 0)
-        catchBox.Position = UDim2.new(0.6, 8, 0, 0)
-        catchBox.Text = tostring(BlatantCatch)
-        catchBox.Font = Enum.Font.Gotham
-        catchBox.TextSize = 13
-        catchBox.TextXAlignment = Enum.TextXAlignment.Center
-        catchBox.TextColor3 = TEXT
-        catchBox.ClearTextOnFocus = false
-        catchBox.BackgroundColor3 = CARD
-        catchBox.BackgroundTransparency = 0.12
-        Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0, 8)
-
-        catchBox.FocusLost:Connect(function()
-            local n = tonumber(catchBox.Text:match("%d+%.?%d*"))
+        invBox.FocusLost:Connect(function()
+            local n = tonumber(invBox.Text:match("%d+"))
             if n and n > 0 then
-                BlatantCatch = n
-                catchBox.Text = tostring(n)
+                _G.RAY_SellInventoryThreshold = n
+                invBox.Text = tostring(n)
             else
-                catchBox.Text = tostring(BlatantCatch)
+                invBox.Text = tostring(_G.RAY_SellInventoryThreshold)
             end
         end)
 
-    ----------------------------------------------------------------
-    -- AUTO MEGALODON (MENU)
-    ----------------------------------------------------------------
-    elseif text == "Auto Megalodon" then
-        list.Padding = UDim.new(0, 4)
+        -- Toggle
+        local row2 = makeRow("Auto Sell")
 
-        local info = Instance.new("TextLabel", sub)
-        info.Size = UDim2.new(1,0,0,28)
-        info.BackgroundTransparency = 1
-        info.Font = Enum.Font.Gotham
-        info.TextSize = 13
-        info.TextColor3 = MUTED
-        info.TextXAlignment = Enum.TextXAlignment.Left
-        info.Text = "🦈 Klik tombol di bawah untuk teleport ke spot Megalodon."
+        local pill2 = Instance.new("TextButton", row2)
+        pill2.Size = UDim2.new(0,50,0,24)
+        pill2.Position = UDim2.new(1,-80,0.5,-12)
+        pill2.BackgroundColor3 = MUTED
+        pill2.BackgroundTransparency = 0.1
+        pill2.Text = ""
+        pill2.AutoButtonColor = false
+        Instance.new("UICorner", pill2).CornerRadius = UDim.new(0,999)
 
-        local row = Instance.new("Frame", sub)
-        row.Size = UDim2.new(1,0,0,32)
-        row.BackgroundTransparency = 1
+        local knob2 = Instance.new("Frame", pill2)
+        knob2.Size = UDim2.new(0,18,0,18)
+        knob2.Position = UDim2.new(0,3,0.5,-9)
+        knob2.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        knob2.BackgroundTransparency = 0
+        Instance.new("UICorner", knob2).CornerRadius = UDim.new(0,999)
 
-        local label = Instance.new("TextLabel", row)
-        label.Size = UDim2.new(1,-120,1,0)
-        label.Position = UDim2.new(0,16,0,0)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = TEXT
-        label.Text = "Teleport Megalodon (once)"
+        local function refreshSell()
+            pill2.BackgroundColor3 = AutoSellOn and ACCENT or MUTED
+            knob2.Position = AutoSellOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+        end
 
-        local btn = Instance.new("TextButton", row)
-        btn.Size = UDim2.new(0,90,0,24)
-        btn.Position = UDim2.new(1,-110,0.5,-12)
-        btn.BackgroundColor3 = ACCENT
-        btn.BackgroundTransparency = 0.08
-        btn.Text = "TELEPORT"
-        btn.Font = Enum.Font.Gotham
-        btn.TextSize = 12
-        btn.TextColor3 = TEXT
-        btn.AutoButtonColor = false
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,999)
-
-        btn.MouseButton1Click:Connect(function()
-            TeleportToMegalodon()
+        pill2.MouseButton1Click:Connect(function()
+            AutoSellOn = not AutoSellOn
+            _G.RAY_AutoSellOn = AutoSellOn
+            refreshSell()
         end)
 
-    ----------------------------------------------------------------
+        refreshSell()
+
+----------------------------------------------------------------
+-- AUTO MEGALODON (MENU)
+----------------------------------------------------------------
+elseif text == "Auto Megalodon" then
+    list.Padding = UDim.new(0,4)
+
+    -- Info
+    local info = Instance.new("TextLabel", sub)
+    info.Size = UDim2.new(1,0,0,28)
+    info.BackgroundTransparency = 1
+    info.Font = Enum.Font.Gotham
+    info.TextSize = 13
+    info.TextColor3 = MUTED
+    info.TextXAlignment = Enum.TextXAlignment.Left
+    info.Text = "🦈 Klik tombol di bawah untuk teleport ke spot Megalodon."
+
+    -- Row tombol (stylenya sama kayak toggle lain, tapi di sini single click)
+    local row = Instance.new("Frame", sub)
+    row.Size = UDim2.new(1,0,0,32)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(1,-120,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT
+    label.Text = "Teleport Megalodon (once)"
+
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(0,90,0,24)
+    btn.Position = UDim2.new(1,-110,0.5,-12)
+    btn.BackgroundColor3 = ACCENT
+    btn.BackgroundTransparency = 0.08
+    btn.Text = "TELEPORT"
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 12
+    btn.TextColor3 = TEXT
+    btn.AutoButtonColor = false
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,999)
+
+    btn.MouseButton1Click:Connect(function()
+        TeleportToMegalodon()  -- TELEPORT SEKALI, TIDAK AUTO FARM
+    end)
+
+        ----------------------------------------------------------------
     -- AUTO TOTEM 🗿
     ----------------------------------------------------------------
     elseif text == "Auto Totem" then
@@ -4843,13 +4966,13 @@ local function autoDropdown(text)
         rebuildTotemPanel()
     end -- akhir blok if/elseif text
 
+
     list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
     recalc()
 end
 
-
-for _, v in ipairs(AUTOOPTIONS) do
-    autoDropdown(v)
+for _,v in ipairs(AUTO_OPTIONS) do
+    autoDropdown(v[1])
 end
 
 pages["Auto Option"].Visible = true
@@ -4865,7 +4988,6 @@ task.spawn(function()
         task.wait(0.05)
     end
 end)
-
 
 
 -- AUTO SELL ENGINE SIMPLE
@@ -4927,22 +5049,3 @@ task.spawn(function()
         task.wait(5)
     end
 end)
-
-----------------------------------------------------------------
--- LOOP ENGINE AUTO TOTEM
-----------------------------------------------------------------
-task.spawn(function()
-    while true do
-        if _G.RAYAutoTotemOn then
-            local totems = GetTotemList()
-            for _, info in ipairs(totems) do
-                if _G.RAYSelectedTotems[info.UUID] then
-                    SpawnTotemUUID(info.UUID)
-                    task.wait(1.0) -- delay per totem, sesuaikan
-                end
-            end
-        end
-        task.wait(3) -- interval scan inventory
-    end
-end)
-
