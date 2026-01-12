@@ -4773,7 +4773,7 @@ elseif text == "Auto Megalodon" then
         TeleportToMegalodon()  -- TELEPORT SEKALI, TIDAK AUTO FARM
     end)
 
-        ----------------------------------------------------------------
+    ----------------------------------------------------------------
     -- AUTO TOTEM 🗿
     ----------------------------------------------------------------
     elseif text == "Auto Totem" then
@@ -4823,7 +4823,9 @@ elseif text == "Auto Megalodon" then
 
         refreshToggle()
 
+        ----------------------------------------------------
         -- OVERLAY + PANEL KANAN LIST TOTEM
+        ----------------------------------------------------
         local overlay = Instance.new("TextButton")
         overlay.Name = "TotemOverlay"
         overlay.Parent = autoPage
@@ -4849,10 +4851,10 @@ elseif text == "Auto Megalodon" then
         Instance.new("UICorner", panel).CornerRadius = UDim.new(0,12)
 
         local pad = Instance.new("UIPadding", panel)
-        pad.PaddingTop = UDim2.new(0,8)
-        pad.PaddingLeft = UDim2.new(0,8)
-        pad.PaddingRight = UDim2.new(0,8)
-        pad.PaddingBottom = UDim2.new(0,8)
+        pad.PaddingTop    = UDim.new(0,8)
+        pad.PaddingLeft   = UDim.new(0,8)
+        pad.PaddingRight  = UDim.new(0,8)
+        pad.PaddingBottom = UDim.new(0,8)
 
         local listFrame = Instance.new("ScrollingFrame", panel)
         listFrame.Position = UDim2.new(0,0,0,0)
@@ -4865,47 +4867,16 @@ elseif text == "Auto Megalodon" then
         listFrame.ZIndex = 6
         listFrame.Active = true
 
-        local layout = Instance.new("UIListLayout", listFrame)
-        layout.Padding = UDim.new(0,4)
-        layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-            listFrame.CanvasSize = UDim2.new(0,0,0, layout.AbsoluteContentSize.Y + 8)
+        local layoutTotem = Instance.new("UIListLayout", listFrame)
+        layoutTotem.Padding = UDim.new(0,4)
+        layoutTotem.SortOrder = Enum.SortOrder.LayoutOrder
+        layoutTotem:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+            listFrame.CanvasSize = UDim2.new(0,0,0, layoutTotem.AbsoluteContentSize.Y + 8)
         end)
 
-        -- tombol buka panel
-        local rowOpen = Instance.new("Frame", sub)
-        rowOpen.Size = UDim2.new(1,0,0,32)
-        rowOpen.BackgroundTransparency = 1
-
-        local openBtn = Instance.new("TextButton", rowOpen)
-        openBtn.Size = UDim2.new(1,-32,0,30)
-        openBtn.Position = UDim2.new(0,16,0,0)
-        openBtn.BackgroundColor3 = CARD
-        openBtn.BackgroundTransparency = 0.12
-        openBtn.AutoButtonColor = false
-        openBtn.Font = Enum.Font.Gotham
-        openBtn.TextSize = 13
-        openBtn.TextColor3 = TEXT
-        openBtn.TextXAlignment = Enum.TextXAlignment.Left
-        openBtn.Text = "Select Totem List 🗿"
-        Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0,8)
-
-        local panelOpen = false
-        local function setPanelOpen(state)
-            panelOpen = state
-            overlay.Visible = panelOpen
-            panel.Visible = panelOpen
-        end
-
-        openBtn.MouseButton1Click:Connect(function()
-            setPanelOpen(not panelOpen)
-        end)
-
-        overlay.MouseButton1Click:Connect(function()
-            setPanelOpen(false)
-        end)
-
-        -- rebuild panel list totem
+        ----------------------------------------------------
+        -- REBUILD PANEL LIST TOTEM
+        ----------------------------------------------------
         local function rebuildTotemPanel()
             for _,c in ipairs(listFrame:GetChildren()) do
                 if c:IsA("TextButton") then
@@ -4914,7 +4885,7 @@ elseif text == "Auto Megalodon" then
             end
 
             local totems = GetTotemList()
-            if #totems == 0 then
+            if not totems or #totems == 0 then
                 local info = Instance.new("TextLabel", listFrame)
                 info.Size = UDim2.new(1,0,0,24)
                 info.BackgroundTransparency = 1
@@ -4956,13 +4927,50 @@ elseif text == "Auto Megalodon" then
             end
         end
 
+        ----------------------------------------------------
+        -- TOMBOL BUKA PANEL
+        ----------------------------------------------------
+        local rowOpen = Instance.new("Frame", sub)
+        rowOpen.Size = UDim2.new(1,0,0,32)
+        rowOpen.BackgroundTransparency = 1
+
+        local openBtn = Instance.new("TextButton", rowOpen)
+        openBtn.Size = UDim2.new(1,-32,0,30)
+        openBtn.Position = UDim2.new(0,16,0,0)
+        openBtn.BackgroundColor3 = CARD
+        openBtn.BackgroundTransparency = 0.12
+        openBtn.AutoButtonColor = false
+        openBtn.Font = Enum.Font.Gotham
+        openBtn.TextSize = 13
+        openBtn.TextColor3 = TEXT
+        openBtn.TextXAlignment = Enum.TextXAlignment.Left
+        openBtn.Text = "Select Totem List 🗿"
+        Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0,8)
+
+        local panelOpen = false
+        local function setPanelOpen(state)
+            panelOpen = state
+            overlay.Visible = panelOpen
+            panel.Visible = panelOpen
+        end
+
+        openBtn.MouseButton1Click:Connect(function()
+            setPanelOpen(not panelOpen)
+            if panelOpen then
+                rebuildTotemPanel()
+            end
+        end)
+
+        overlay.MouseButton1Click:Connect(function()
+            setPanelOpen(false)
+        end)
+
         rebuildTotemPanel()
     end -- akhir blok if/elseif text
 
-
     list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalc)
     recalc()
-end
+end -- akhir function autoDropdown
 
 for _, v in ipairs(AUTOOPTIONS) do
     autoDropdown(v)
