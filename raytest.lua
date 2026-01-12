@@ -4092,7 +4092,7 @@ local function autoDropdown(text)
     elseif text == "Auto Megalodon" then
         icon.Text = "🦈"
     elseif text == "Auto Totem" then
-        icon.Text = "🌴"
+        icon.Text = "🔱"
     else
         icon.Text = "⚙️"
     end
@@ -4796,7 +4796,7 @@ elseif text == "Auto Totem" then
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
     label.TextColor3 = TEXT
-    label.Text = "Auto Totem 🗿"
+    label.Text = "Auto Totem 🔱"
 
     local pill = Instance.new("TextButton", rowToggle)
     pill.Size = UDim2.new(0,50,0,24)
