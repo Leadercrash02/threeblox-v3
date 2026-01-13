@@ -3815,7 +3815,7 @@ for _, info in Tiers do
     TierByIndex[info.Tier] = info
 end
 
--- toggle utama
+-- toggle utama / state panel
 _G.RAYFavOn            = _G.RAYFavOn or false          -- auto scan inventory
 _G.RAYFavCurrentOn     = _G.RAYFavCurrentOn or false   -- auto fish yang lagi kepilih
 _G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {}  -- [Name] = true
@@ -3890,7 +3890,7 @@ function AutoFavoriteOnce()
     end
 end
 
--- OPTIONAL: mode "current fish" kalau mau dipakai
+-- OPTIONAL: mode "current fish" (kalau mau dipakai toggle kedua)
 function GetCurrentEquippedFishUUID()
     local ok, data = pcall(function()
         local r = ReplionFav.Client:WaitReplion("Data")
@@ -3902,7 +3902,8 @@ function GetCurrentEquippedFishUUID()
     local items = inv and inv.Items
     if typeof(items) ~= "table" then return nil end
 
-    local currentUuid = data.CurrentFishUUID -- GANTI ke field Replion yang bener
+    -- GANTI field ini ke yang sesuai data Replion game lu
+    local currentUuid = data.CurrentFishUUID
     if not currentUuid then return nil end
 
     for _, entry in pairs(items) do
@@ -3919,6 +3920,7 @@ function AutoFavoriteCurrentOnce()
         FavoriteRemote:FireServer(uuid)
     end
 end
+
 
 ----------------------------------------------------------------
 -- MEGALODON HUNT TELEPORT (ANCHOR PART)
@@ -4641,7 +4643,7 @@ elseif text == "Auto Spot Island" then
     end)
 
 ----------------------------------------------------------------
--- AUTO FAVORITE 🐟 (panel kanan + toggle + 3 rarity)
+-- AUTO FAVORITE 🐟 (panel kanan + toggle + 3 rarity + garis kuning)
 ----------------------------------------------------------------
 elseif text == "Auto Favorite" then
     list.Padding = UDim.new(0, 4)
@@ -4863,7 +4865,7 @@ elseif text == "Auto Favorite" then
     -- LIST FRAME (NAMA IKAN)
     ----------------------------------------------------
     local listFrame = Instance.new("ScrollingFrame", panel)
-    listFrame.Position = UDim2.new(0,0,0,32 + 24) -- turun dikit karena row rarity
+    listFrame.Position = UDim2.new(0,0,0,32 + 24) -- turun karena row rarity
     listFrame.Size = UDim2.new(1,0,1,-(36 + 24))
     listFrame.ScrollBarThickness = 4
     listFrame.ScrollingDirection = Enum.ScrollingDirection.Y
@@ -4897,8 +4899,10 @@ elseif text == "Auto Favorite" then
     table.sort(sortedNames)
 
     ----------------------------------------------------
-    -- REBUILD PANEL LIST (multi-select + highlight)
+    -- REBUILD PANEL LIST (multi-select + highlight KUNING)
     ----------------------------------------------------
+    local HIGHLIGHT = Color3.fromRGB(255, 210, 80) -- samain dengan Auto Totem
+
     local function rebuildFavPanel()
         for _, c in ipairs(listFrame:GetChildren()) do
             if c:IsA("TextButton") then
@@ -4907,11 +4911,13 @@ elseif text == "Auto Favorite" then
         end
 
         for _, name in ipairs(sortedNames) do
+            local selected = _G.RAYFavSelectedNames[name] == true
+
             local btn = Instance.new("TextButton", listFrame)
             btn.Name = name
             btn.Size = UDim2.new(1,0,0,24)
             btn.BackgroundColor3 = CARD
-            btn.BackgroundTransparency = (_G.RAYFavSelectedNames[name] and 0.08) or 0.18
+            btn.BackgroundTransparency = selected and 0.08 or 0.18
             btn.Font = Enum.Font.Gotham
             btn.TextSize = 13
             btn.TextColor3 = TEXT
@@ -4927,8 +4933,8 @@ elseif text == "Auto Favorite" then
             highlight.AnchorPoint = Vector2.new(0,0.5)
             highlight.Position = UDim2.new(0,0,0.5,0)
             highlight.Size = UDim2.new(0,3,1,-6)
-            highlight.BackgroundColor3 = ACCENT
-            highlight.BackgroundTransparency = (_G.RAYFavSelectedNames[name] and 0) or 1
+            highlight.BackgroundColor3 = HIGHLIGHT
+            highlight.BackgroundTransparency = selected and 0 or 1
             highlight.ZIndex = 7
 
             btn.MouseButton1Click:Connect(function()
@@ -4982,9 +4988,6 @@ elseif text == "Auto Favorite" then
     end)
 
     rebuildFavPanel()
-
-
-
 
     ----------------------------------------------------------------
     -- AUTO SELL (RAPIH)
@@ -5563,9 +5566,6 @@ task.spawn(function()
     end
 end)
 
-----------------------------------------------------------------
--- LOOP ENGINE AUTO FAVORITE INVENTORY
-----------------------------------------------------------------
 task.spawn(function()
     while true do
         if _G.RAYFavOn then
@@ -5577,9 +5577,6 @@ task.spawn(function()
     end
 end)
 
-----------------------------------------------------------------
--- LOOP ENGINE AUTO FAVORITE CURRENT FISH
-----------------------------------------------------------------
 task.spawn(function()
     while true do
         if _G.RAYFavCurrentOn then
