@@ -1905,8 +1905,7 @@ BuildTravelingMerchant()
     end)
 end
 
-
-
+BuildShopWeather()
 
 ----------------------------------------------------------------
 -- PAGE SWITCH
@@ -1931,8 +1930,6 @@ local function ShowPage(name)
             BuildTravelingMerchant()
         end
         
-        
-
     elseif name == "Misc" then
         pages["Misc"].Visible = true
 
@@ -1958,7 +1955,7 @@ local function ShowPage(name)
     end
 end
 
-BuildShopWeather()
+
 
 ----------------------------------------------------------------
 -- MISC PAGE : BUILD FUNCTION
