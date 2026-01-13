@@ -350,6 +350,9 @@ contentLayout.Padding = UDim.new(0,0)
 ----------------------------------------------------------------
 -- WEATHER DATA
 ----------------------------------------------------------------
+----------------------------------------------------------------
+-- WEATHER DATA
+----------------------------------------------------------------
 local WEATHER_OPTIONS = {
     "Cloudy",
     "Radiant",
@@ -417,7 +420,6 @@ local function BuyMerchantId(id)
     end)
 end
 
-
 ----------------------------------------------------------------
 -- PAGE SYSTEM
 ----------------------------------------------------------------
@@ -447,7 +449,7 @@ local questLayout = Instance.new("UIListLayout", pages["Quest"])
 questLayout.Padding = UDim.new(0,8)
 questLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- layout untuk halaman Shop & Trade (BIAR GA TABRAKAN)
+-- layout untuk halaman Shop & Trade (biar card Weather/Merchant rapi)
 local shopLayout = Instance.new("UIListLayout", pages["Shop & Trade"])
 shopLayout.Padding = UDim.new(0,8)
 shopLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1306,6 +1308,49 @@ end
 BuildQuestDiamond()
 
 ----------------------------------------------------------------
+-- TRAVELING MERCHANT DATA
+----------------------------------------------------------------
+local Replion = require(ReplicatedStorage.Packages.Replion)
+local MarketItemData = require(ReplicatedStorage.Shared.MarketItemData)
+
+local merchantReplion = Replion.Client:WaitReplion("Merchant")
+
+local AutoMerchantOn = false
+local selectedMerchant = {}  -- [def.Id] = true/false
+local qtyPerItem = 1
+
+local function GetCurrentMerchantStock()
+    local ids = merchantReplion:GetExpect("Items") or {}
+    local list = {}
+
+    for _, id in ipairs(ids) do
+        for _, def in ipairs(MarketItemData) do
+            if def.Id == id then
+                table.insert(list, def)
+                break
+            end
+        end
+    end
+
+    return list
+end
+
+local function BuyMerchantId(id)
+    task.spawn(function()
+        pcall(function()
+            local rf = ReplicatedStorage
+                :WaitForChild("Packages")
+                :WaitForChild("_Index")
+                :WaitForChild("sleitnick_net@0.2.0")
+                :WaitForChild("net")
+                :WaitForChild("RF/PurchaseMarketItem")
+
+            rf:InvokeServer(id)
+        end)
+    end)
+end
+
+----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
 ----------------------------------------------------------------
 local function BuildShopWeather()
@@ -1496,7 +1541,7 @@ local function BuildShopWeather()
     weatherPanel.Visible = false
     weatherPanel.ZIndex = 5
     weatherPanel.Active = true
-    Instance.new("UICorner", weatherPanel).CornerRadius = UDim.new(0, 12)
+    Instance.new("UICorner", weatherPanel).CornerRadius = UDim2.new(0, 12)
 
     local wPad = Instance.new("UIPadding", weatherPanel)
     wPad.PaddingTop    = UDim.new(0, 8)
@@ -1628,8 +1673,8 @@ local function BuildTravelingMerchant()
     local pad = Instance.new("UIPadding", card)
     pad.PaddingTop = UDim.new(0,8)
     pad.PaddingBottom = UDim.new(0,8)
-    pad.PaddingLeft = UDim.new(0,16)
-    pad.PaddingRight = UDim.new(0,16)
+    pad.PaddingLeft = UDimNew(0,16)
+    pad.PaddingRight = UDimNew(0,16)
 
     local title = Instance.new("TextLabel", card)
     title.Size = UDim2.new(1,-140,0,20)
@@ -1661,7 +1706,7 @@ local function BuildTravelingMerchant()
     openBtn.TextSize = 13
     openBtn.Text = "Open Traveling Merchant"
     openBtn.AutoButtonColor = false
-    Instance.new("UICorner", openBtn).CornerRadius = UDim.new(0,8)
+    Instance.new("UICorner", openBtn).CornerRadius = UDim2.new(0,8)
 
     ----------------------------------------------------------------
     -- OVERLAY + PANEL
@@ -1684,7 +1729,7 @@ local function BuildTravelingMerchant()
     panel.ZIndex = 6
     panel.Visible = false
     panel.ClipsDescendants = true
-    Instance.new("UICorner", panel).CornerRadius = UDim.new(0,10)
+    Instance.new("UICorner", panel).CornerRadius = UDim2.new(0,10)
 
     local panelPad = Instance.new("UIPadding", panel)
     panelPad.PaddingTop = UDim2.new(0,10)
@@ -1718,7 +1763,7 @@ local function BuildTravelingMerchant()
     pClose.Text = "X"
     pClose.AutoButtonColor = false
     pClose.ZIndex = 7
-    Instance.new("UICorner", pClose).CornerRadius = UDim新(1,0)
+    Instance.new("UICorner", pClose).CornerRadius = UDim2.new(1,0)
 
     ----------------------------------------------------------------
     -- PANEL BODY: LIST KIRI + CONTROL KANAN
@@ -1903,16 +1948,11 @@ local function BuildTravelingMerchant()
     end)
 end
 
--- BUILDER CALL (yang sekarang masih ada di file)
-BuildTravelingMerchant()
-BuildShopWeather()
-
-
-
 ----------------------------------------------------------------
 -- PAGE SWITCH
 ----------------------------------------------------------------
 local function ShowPage(name)
+    -- sembunyiin semua page dulu
     for _, page in pairs(pages) do
         page.Visible = false
     end
@@ -1921,17 +1961,11 @@ local function ShowPage(name)
         pages["Auto Option"].Visible = true
 
     elseif name == "Shop & Trade" then
-        local shopPage = pages["Shop & Trade"]
-        shopPage.Visible = true
+        -- card Shop & Trade sudah dibangun manual:
+        -- BuildShopWeather()
+        -- BuildTravelingMerchant()
+        pages["Shop & Trade"].Visible = true
 
-        if not shopPage:FindFirstChild("WeatherPresetCard") then
-            BuildShopWeather()
-        end
-
-        if not shopPage:FindFirstChild("TravelingMerchantCard") then
-            BuildTravelingMerchant()
-        end
-        
     elseif name == "Misc" then
         pages["Misc"].Visible = true
 
@@ -1957,6 +1991,10 @@ local function ShowPage(name)
     end
 end
 
+-- sekali di bawah, setelah pages & layout jadi:
+BuildShopWeather()
+BuildTravelingMerchant()
+ShowPage("Auto Option")  -- page default waktu UI kebuka
 
 
 
@@ -6162,25 +6200,3 @@ task.spawn(function()
         end
     end
 end)
-
-----------------------------------------------------------------
--- ENGINE: AUTO BUY TRAVELING MERCHANT
-----------------------------------------------------------------
-task.spawn(function()
-    while true do
-        if AutoMerchantOn then
-            local stock = GetCurrentMerchantStock()
-            for _, def in ipairs(stock) do
-                if selectedMerchant[def.Id] then
-                    for i = 1, qtyPerItem do
-                        BuyMerchantId(def.Id)
-                        task.wait(0.2)
-                    end
-                    task.wait(1.5)
-                end
-            end
-        end
-        task.wait(0.5)
-    end
-end)
-
