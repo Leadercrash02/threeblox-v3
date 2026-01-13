@@ -114,22 +114,25 @@ local AUTOOPTIONS = {
 
 
 local ISLAND_SPOTS = {
-    ["Esoteric Depths"]   = CFrame.new(3232.9036, -1302.8549, 1401.0824),
-    ["Creater Island"]    = CFrame.new(1000.1009, 18.02404, 5093.1221),
-    ["Ancient Jungle"]        = CFrame.new(1470.9269, 4.5879965, -323.6044),
-    ["Temple Guardian"]   = CFrame.new(1486.0616, 127.62498, -590.1211),
-    ["Secred Temple"]     = CFrame.new(1496.1331, -22.125002, -639.2121),
-    ["Ancient Ruin"]      = CFrame.new(6081.9009, -585.92419, 4634.6240),
-    ["Kohana"]            = CFrame.new(-603.82385, 17.250059, 514.24432),
-    ["Kohana Volcano"]    = CFrame.new(-617.46448, 48.560577, 189.16815),
-    ["Fisherman Spawn"]   = CFrame.new(90.31225, 17.033522, 2839.8655),
-    ["Sysphus State"]     = CFrame.new(-3698.2456, -135.07391, -1007.7955),
-    ["Treasure Room"]     = CFrame.new(-3595.2686, -275.74152, -1639.2794),
-    ["Weater Machine"]    = CFrame.new(-1489.2069, 3.5, 1917.9594),
-    ["Coral Reefs"]       = CFrame.new(-2755.0881, 4.0107765, 2163.7251),
-    ["Tropical Grouve"]      = CFrame.new(-2016.4812, 9.037539, 3752.3533),
-    ["Pirate Cuve Spot 1"]= CFrame.new(3443.581787, 4.192471, 3428.265381),
+    ["Christmas Cave"]      = CFrame.new(538.810181, -580.58136, 8900.9873),
+    ["Cafe Besi"]           = CFrame.new(-8642.2588, -547.50031, 161.28636),
+    ["Christmas Spot"]      = CFrame.new(1138.9039, 23.43064, 1560.8541),
+    ["Esoteric Depths"]  = CFrame.new(3232.9036, -1302.8549, 1401.0824),
+    ["Creater Island"]         = CFrame.new(1000.1009, 18.02404, 5093.1221),
+    ["Hutan Kuno"]          = CFrame.new(1470.9269, 4.5879965, -323.6044),
+    ["Temple Guardian"]     = CFrame.new(1486.0616, 127.62498, -590.1211),
+    ["Secred Temple"]       = CFrame.new(1496.1331, -22.125002, -639.2121),
+    ["Ancient Ruin"]        = CFrame.new(6081.9009, -585.92419, 4634.6240),
+    ["Kohana"]              = CFrame.new(-603.82385, 17.250059, 514.24432),
+    ["Kohana Volcano"]      = CFrame.new(-617.46448, 48.560577, 189.16815),
+    ["Fisherman Spawn"]     = CFrame.new(90.31225, 17.033522, 2839.8655),
+    ["Sysphus State"]       = CFrame.new(-3698.2456, -135.07391, -1007.7955),
+    ["Treasure Room"]         = CFrame.new(-3595.2686, -275.74152, -1639.2794),
+    ["Weater Machine"]      = CFrame.new(-1489.2069, 3.5, 1917.9594),
+    ["Coral Reefs"]         = CFrame.new(-2755.0881, 4.0107765, 2163.7251),
+    ["Hutan Tropis"]        = CFrame.new(-2016.4812, 9.037539, 3752.3533),
 }
+
 
 local DEFAULT_SPOT_ORDER = {
     "Fisherman Spawn",
@@ -137,18 +140,19 @@ local DEFAULT_SPOT_ORDER = {
     "Kohana Volcano",
     "Creater Island",
     "Ancient Ruin",
-    "Ancient Jungle",
+    "Hutan Kuno",
     "Secred Temple",
     "Temple Guardian",
+    "Christmas Cave",
+    "Cafe Besi",
     "Sysphus State",
     "Treasure Room",
     "Weater Machine",
     "Coral Reefs",
-    "Tropical Grouve",
-    "Pirate Cuve Spot 1",
+    "Hutan Tropis",
+    "Christmas Spot",
     "Esoteric Depths",
 }
-
 
 -- ROOT
 local gui = Instance.new("ScreenGui", CoreGui)
@@ -1047,7 +1051,7 @@ local function BuildQuestDiamond()
     tpTropis.Font = Enum.Font.Gotham
     tpTropis.TextSize = 13
     tpTropis.TextColor3 = TEXT
-    tpTropis.Text = "🌴 Tropical Grouve"
+    tpTropis.Text = "🌴 Hutan Tropis"
     tpTropis.AutoButtonColor = false
     Instance.new("UICorner", tpTropis).CornerRadius = UDim.new(0,8)
 
@@ -1060,7 +1064,7 @@ local function BuildQuestDiamond()
     tpAncient.Font = Enum.Font.Gotham
     tpAncient.TextSize = 13
     tpAncient.TextColor3 = TEXT
-    tpAncient.Text = "🏛 Kohana"
+    tpAncient.Text = "🏛 Ancient Ruin"
     tpAncient.AutoButtonColor = false
     Instance.new("UICorner", tpAncient).CornerRadius = UDim.new(0,8)
 
@@ -1107,11 +1111,11 @@ local function BuildQuestDiamond()
     end)
 
     tpTropis.MouseButton1Click:Connect(function()
-        tpTo("Tropical Grouve")
+        tpTo("Hutan Tropis")
     end)
 
     tpAncient.MouseButton1Click:Connect(function()
-        tpTo("Kohana")
+        tpTo("Ancient Ruin")
     end)
 
     ----------------------------------------------------------------
@@ -1629,193 +1633,6 @@ local function BuildMisc()
     local miscLayout = Instance.new("UIListLayout", miscContainer)
     miscLayout.Padding = UDim.new(0,8)
     miscLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    ----------------------------------------------------------------
-    -- CONFIG REDUCE MAP + INVISIBLE (GLOBAL DALAM BuildMisc)
-    ----------------------------------------------------------------
-    local ws = workspace
-
-    local TARGET_COLOR = Color3.fromRGB(235, 220, 200)
-    local SIMPLE_MATERIALS = true
-    local INVISIBLE_DECOR = true
-
-    local function isDecorPart(inst)
-        if not inst:IsA("BasePart") then
-            return false
-        end
-        local name = inst.Name:lower()
-        if name:find("boat") or name:find("npc") or name:find("fish") or name:find("player") then
-            return false
-        end
-        return true
-    end
-
-    -- backup state awal
-    local ReduceBackup = {
-        Decals = {},
-        Emitters = {},
-        BeamsTrails = {},
-        Parts = {},
-        Lighting = nil
-    }
-
-    local function ApplyReduceMap()
-        -- simpan sekali (pertama ON)
-        if not ReduceBackup.Lighting then
-            ReduceBackup.Lighting = {
-                Brightness      = Lighting.Brightness,
-                GlobalShadows   = Lighting.GlobalShadows,
-                Ambient         = Lighting.Ambient,
-                OutdoorAmbient  = Lighting.OutdoorAmbient,
-                FogColor        = Lighting.FogColor,
-                FogStart        = Lighting.FogStart,
-                FogEnd          = Lighting.FogEnd,
-            }
-
-            for _, inst in ipairs(ws:GetDescendants()) do
-                if inst:IsA("Decal") or inst:IsA("Texture") then
-                    ReduceBackup.Decals[inst] = {Texture = inst.Texture}
-                elseif inst:IsA("ParticleEmitter") then
-                    ReduceBackup.Emitters[inst] = {
-                        Enabled = inst.Enabled,
-                        Rate    = inst.Rate,
-                    }
-                elseif inst:IsA("Beam") or inst:IsA("Trail") then
-                    ReduceBackup.BeamsTrails[inst] = {
-                        Enabled = inst.Enabled,
-                    }
-                elseif inst:IsA("BasePart") then
-                    ReduceBackup.Parts[inst] = {
-                        Color        = inst.Color,
-                        Material     = inst.Material,
-                        Transparency = inst.Transparency,
-                        CanCollide   = inst.CanCollide,
-                        CanTouch     = inst.CanTouch,
-                        CanQuery     = inst.CanQuery,
-                        CastShadow   = inst.CastShadow,
-                    }
-                end
-            end
-        end
-
-        ----------------------------------------------------------------
-        -- LOGIC REDUCE MAP ASLI (PERSIS PUNYA KAMU)
-        ----------------------------------------------------------------
-        for _, inst in ipairs(ws:GetDescendants()) do
-            if inst:IsA("Decal") or inst:IsA("Texture") then
-                inst.Texture = ""
-            elseif inst:IsA("ParticleEmitter") then
-                inst.Enabled = false
-                inst.Rate = 0
-            elseif inst:IsA("Beam") or inst:IsA("Trail") then
-                inst.Enabled = false
-            end
-        end
-
-        for _, inst in ipairs(ws:GetDescendants()) do
-            if inst:IsA("BasePart") then
-                if SIMPLE_MATERIALS then
-                    inst.Material = Enum.Material.SmoothPlastic
-                end
-                inst.Color = TARGET_COLOR
-            end
-        end
-
-        do
-            for _, v in ipairs(Lighting:GetChildren()) do
-                if v:IsA("BloomEffect")
-                or v:IsA("BlurEffect")
-                or v:IsA("SunRaysEffect")
-                or v:IsA("DepthOfFieldEffect")
-                or v:IsA("ColorCorrectionEffect") then
-                    v.Enabled = false
-                end
-            end
-
-            Lighting.Brightness = 0.3
-            Lighting.GlobalShadows = true
-
-            Lighting.Ambient = Color3.fromRGB(0, 0, 0)
-            Lighting.OutdoorAmbient = Color3.fromRGB(0, 0, 0)
-
-            Lighting.FogColor = Color3.fromRGB(15, 10, 5)
-            Lighting.FogStart = 50
-            Lighting.FogEnd = 200
-        end
-
-        if INVISIBLE_DECOR then
-            local TARGET_CONTAINERS = {
-                "World",
-                "Map",
-                "Details"
-            }
-
-            for _, containerName in ipairs(TARGET_CONTAINERS) do
-                local container = ws:FindFirstChild(containerName)
-                if container then
-                    for _, inst in ipairs(container:GetDescendants()) do
-                        if isDecorPart(inst) then
-                            inst.Transparency = 1
-                            inst.CanCollide = false
-                            inst.CanTouch = false
-                            inst.CanQuery = false
-                            inst.CastShadow = false
-                        end
-                    end
-                end
-            end
-        end
-    end
-
-    local function ResetReduceMap()
-        if not ReduceBackup.Lighting then return end
-
-        -- restore Lighting
-        local l = ReduceBackup.Lighting
-        Lighting.Brightness      = l.Brightness
-        Lighting.GlobalShadows   = l.GlobalShadows
-        Lighting.Ambient         = l.Ambient
-        Lighting.OutdoorAmbient  = l.OutdoorAmbient
-        Lighting.FogColor        = l.FogColor
-        Lighting.FogStart        = l.FogStart
-        Lighting.FogEnd          = l.FogEnd
-
-        -- restore decals/textures
-        for inst, props in pairs(ReduceBackup.Decals) do
-            if inst.Parent then
-                inst.Texture = props.Texture
-            end
-        end
-
-        -- restore emitters
-        for inst, props in pairs(ReduceBackup.Emitters) do
-            if inst.Parent then
-                inst.Enabled = props.Enabled
-                inst.Rate    = props.Rate
-            end
-        end
-
-        -- restore beams/trails
-        for inst, props in pairs(ReduceBackup.BeamsTrails) do
-            if inst.Parent then
-                inst.Enabled = props.Enabled
-            end
-        end
-
-        -- restore parts (warna/material/transparency/collide/dll.)
-        for inst, props in pairs(ReduceBackup.Parts) do
-            if inst.Parent then
-                inst.Color        = props.Color
-                inst.Material     = props.Material
-                inst.Transparency = props.Transparency
-                inst.CanCollide   = props.CanCollide
-                inst.CanTouch     = props.CanTouch
-                inst.CanQuery     = props.CanQuery
-                inst.CastShadow   = props.CastShadow
-            end
-        end
-    end
-
 
 ----------------------------------------------------------------
 -- DROPDOWN : 🎥 STREAMER HIDE NAME
@@ -2695,60 +2512,117 @@ end
         refreshFreeze()
     end
 
-----------------------------------------------------------------
--- 🧱 Reduce Map + 👻 Invisible
-----------------------------------------------------------------
-do
-    local rowReduce = Instance.new("Frame", subPU)
-    rowReduce.Size = UDim2.new(1,0,0,36)
-    rowReduce.BackgroundTransparency = 1
+    ----------------------------------------------------------------
+    -- 🧱 FPS BOOST
+    ----------------------------------------------------------------
+    do
+        local rowLow = Instance.new("Frame", subPU)
+        rowLow.Size = UDim2.new(1,0,0,36)
+        rowLow.BackgroundTransparency = 1
 
-    local labelReduce = Instance.new("TextLabel", rowReduce)
-    labelReduce.Size = UDim2.new(1,-100,1,0)
-    labelReduce.Position = UDim2.new(0,16,0,0)
-    labelReduce.BackgroundTransparency = 1
-    labelReduce.Font = Enum.Font.Gotham
-    labelReduce.TextSize = 13
-    labelReduce.TextXAlignment = Enum.TextXAlignment.Left
-    labelReduce.TextColor3 = TEXT
-    labelReduce.Text = "🧱 Reduce Map + 👻 Invisible"
+        local labelLow = Instance.new("TextLabel", rowLow)
+        labelLow.Size = UDim2.new(1,-100,1,0)
+        labelLow.Position = UDim2.new(0,16,0,0)
+        labelLow.BackgroundTransparency = 1
+        labelLow.Font = Enum.Font.Gotham
+        labelLow.TextSize = 13
+        labelLow.TextXAlignment = Enum.TextXAlignment.Left
+        labelLow.TextColor3 = TEXT
+        labelLow.Text = "🧱 FPS Boost"
 
-    local pillReduce = Instance.new("TextButton", rowReduce)
-    pillReduce.Size = UDim2.new(0,50,0,24)
-    pillReduce.Position = UDim2.new(1,-80,0.5,-12)
-    pillReduce.BackgroundColor3 = MUTED
-    pillReduce.BackgroundTransparency = 0.1
-    pillReduce.Text = ""
-    pillReduce.AutoButtonColor = false
-    Instance.new("UICorner", pillReduce).CornerRadius = UDim.new(0,999)
+        local pillLow = Instance.new("TextButton", rowLow)
+        pillLow.Size = UDim2.new(0,50,0,24)
+        pillLow.Position = UDim2.new(1,-80,0.5,-12)
+        pillLow.BackgroundColor3 = MUTED
+        pillLow.BackgroundTransparency = 0.1
+        pillLow.Text = ""
+        pillLow.AutoButtonColor = false
+        Instance.new("UICorner", pillLow).CornerRadius = UDim.new(0,999)
 
-    local knobReduce = Instance.new("Frame", pillReduce)
-    knobReduce.Size = UDim2.new(0,18,0,18)
-    knobReduce.Position = UDim2.new(0,3,0.5,-9)
-    knobReduce.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knobReduce).CornerRadius = UDim.new(0,999)
+        local knobLow = Instance.new("Frame", pillLow)
+        knobLow.Size = UDim2.new(0,18,0,18)
+        knobLow.Position = UDim2.new(0,3,0.5,-9)
+        knobLow.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knobLow).CornerRadius = UDim.new(0,999)
 
-    local reduceOn = false
+        local lowOn = false
 
-    local function refreshReduce()
-        pillReduce.BackgroundColor3 = reduceOn and ACCENT or MUTED
-        knobReduce.Position = reduceOn
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
-    end
+        local oldQuality = RenderSettings.QualityLevel
+        local oldBrightness = Lighting.Brightness
+        local oldFogEnd = Lighting.FogEnd
+        local oldGlobalShadows = Lighting.GlobalShadows
+        local oldAmbient = Lighting.Ambient
+        local oldOutdoorAmbient = Lighting.OutdoorAmbient
+        local oldWaterWaveSize = Terrain.WaterWaveSize
+        local oldWaterWaveSpeed = Terrain.WaterWaveSpeed
+        local oldWaterTransparency = Terrain.WaterTransparency
+        local oldWaterReflectance = Terrain.WaterReflectance
 
-    pillReduce.MouseButton1Click:Connect(function()
-        reduceOn = not reduceOn
-        if reduceOn then
-            ApplyReduceMap()   -- ON: jalankan logic reduce map (script kamu yang sudah dibungkus fungsi)
-        else
-            ResetReduceMap()   -- OFF: balikin semua ke state awal
+        local function refreshLow()
+            pillLow.BackgroundColor3 = lowOn and ACCENT or MUTED
+            knobLow.Position = lowOn
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
         end
-        refreshReduce()
-    end)
 
-    refreshReduce()
-end
+        local function applyFPSBoost()
+            oldQuality = RenderSettings.QualityLevel
+            pcall(function()
+                RenderSettings.QualityLevel = Enum.QualityLevel.Level01
+            end)
+
+            oldBrightness = Lighting.Brightness
+            oldFogEnd = Lighting.FogEnd
+            oldGlobalShadows = Lighting.GlobalShadows
+            oldAmbient = Lighting.Ambient
+            oldOutdoorAmbient = Lighting.OutdoorAmbient
+
+            Lighting.Brightness = 1
+            Lighting.FogEnd = 100
+            Lighting.GlobalShadows = false
+            Lighting.Ambient = Color3.fromRGB(128,128,128)
+            Lighting.OutdoorAmbient = Color3.fromRGB(128,128,128)
+
+            oldWaterWaveSize = Terrain.WaterWaveSize
+            oldWaterWaveSpeed = Terrain.WaterWaveSpeed
+            oldWaterTransparency = Terrain.WaterTransparency
+            oldWaterReflectance = Terrain.WaterReflectance
+
+            Terrain.WaterWaveSize = 0
+            Terrain.WaterWaveSpeed = 0
+            Terrain.WaterTransparency = 1
+            Terrain.WaterReflectance = 0
+        end
+
+        local function resetFPSBoost()
+            pcall(function()
+                RenderSettings.QualityLevel = oldQuality
+            end)
+
+            Lighting.Brightness = oldBrightness
+            Lighting.FogEnd = oldFogEnd
+            Lighting.GlobalShadows = oldGlobalShadows
+            Lighting.Ambient = oldAmbient
+            Lighting.OutdoorAmbient = oldOutdoorAmbient
+
+            Terrain.WaterWaveSize = oldWaterWaveSize
+            Terrain.WaterWaveSpeed = oldWaterWaveSpeed
+            Terrain.WaterTransparency = oldWaterTransparency
+            Terrain.WaterReflectance = oldWaterReflectance
+        end
+
+        pillLow.MouseButton1Click:Connect(function()
+            lowOn = not lowOn
+            if lowOn then
+                applyFPSBoost()
+            else
+                resetFPSBoost()
+            end
+            refreshLow()
+        end)
+
+        refreshLow()
+    end
 
     ----------------------------------------------------------------
     -- 🌑 DARK SCREEN (COLORCORRECTION)
