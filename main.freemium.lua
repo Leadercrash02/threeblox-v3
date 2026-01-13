@@ -1306,57 +1306,12 @@ end
 BuildQuestDiamond()
 
 ----------------------------------------------------------------
--- TRAVELING MERCHANT DATA
-----------------------------------------------------------------
-local Replion = require(ReplicatedStorage.Packages.Replion)
-local MarketItemData = require(ReplicatedStorage.Shared.MarketItemData)
-
-local merchantReplion = Replion.Client:WaitReplion("Merchant")
-
-local AutoMerchantOn = false
-local selectedMerchant = {}  -- [def.Id] = true/false
-local qtyPerItem = 1
-
-local function GetCurrentMerchantStock()
-    local ids = merchantReplion:GetExpect("Items") or {}
-    local list = {}
-
-    for _, id in ipairs(ids) do
-        for _, def in ipairs(MarketItemData) do
-            if def.Id == id then
-                table.insert(list, def)
-                break
-            end
-        end
-    end
-
-    return list
-end
-
-local function BuyMerchantId(id)
-    task.spawn(function()
-        pcall(function()
-            local rf = ReplicatedStorage
-                :WaitForChild("Packages")
-                :WaitForChild("_Index")
-                :WaitForChild("sleitnick_net@0.2.0")
-                :WaitForChild("net")
-                :WaitForChild("RF/PurchaseMarketItem")
-
-            rf:InvokeServer(id)
-        end)
-    end)
-end
-
-----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
 ----------------------------------------------------------------
 local function BuildShopWeather()
     local shopPage = pages["Shop & Trade"]
 
-    ------------------------------------------------------------
-    -- 1) CARD "WEATHER PRESET" (DROPDOWN LEVEL 1)
-    ------------------------------------------------------------
+    -- 1) CARD
     local card = Instance.new("Frame")
     card.Name = "WeatherPresetCard"
     card.Parent = shopPage
@@ -1386,14 +1341,12 @@ local function BuildShopWeather()
     arrow.TextColor3 = TEXT
     arrow.Text = "▼"
 
-    -- area clickable buat buka/tutup dropdown
     local cardBtn = Instance.new("TextButton", card)
     cardBtn.BackgroundTransparency = 1
     cardBtn.Size = UDim2.new(1,0,1,0)
     cardBtn.Text = ""
     cardBtn.AutoButtonColor = false
 
-    -- container isi dropdown (Select Weather, Auto Buy, dsb)
     local subPreset = Instance.new("Frame", card)
     subPreset.Name = "PresetContents"
     subPreset.Position = UDim2.new(0,0,0,48)
@@ -1426,9 +1379,7 @@ local function BuildShopWeather()
         recalcPreset()
     end)
 
-    ------------------------------------------------------------
-    -- 2) ROW "SELECT WEATHER" DI DALAM CARD
-    ------------------------------------------------------------
+    -- 2) ROW SELECT WEATHER
     local rowSelect = Instance.new("Frame", subPreset)
     rowSelect.Size = UDim2.new(1,0,0,36)
     rowSelect.BackgroundTransparency = 1
@@ -1468,9 +1419,7 @@ local function BuildShopWeather()
     selectBtn.Text = ""
     selectBtn.AutoButtonColor = false
 
-    ------------------------------------------------------------
-    -- 3) ROW AUTO BUY WEATHER
-    ------------------------------------------------------------
+    -- 3) ROW AUTO BUY
     local rowAuto = Instance.new("Frame", subPreset)
     rowAuto.Size = UDim2.new(1,0,0,36)
     rowAuto.BackgroundTransparency = 1
@@ -1514,9 +1463,7 @@ local function BuildShopWeather()
     refreshAuto()
     recalcPreset()
 
-    ------------------------------------------------------------
-    -- 4) OVERLAY + PANEL SELECTOR WEATHER
-    ------------------------------------------------------------
+    -- 4) OVERLAY + PANEL
     local overlay = Instance.new("TextButton")
     overlay.Name = "WeatherOverlay"
     overlay.Parent = shopPage
@@ -1539,7 +1486,7 @@ local function BuildShopWeather()
     weatherPanel.Visible = false
     weatherPanel.ZIndex = 5
     weatherPanel.Active = true
-    Instance.new("UICorner", weatherPanel).CornerRadius = UDim2.new(0, 12)
+    Instance.new("UICorner", weatherPanel).CornerRadius = UDim.new(0, 12)
 
     local wPad = Instance.new("UIPadding", weatherPanel)
     wPad.PaddingTop    = UDim.new(0, 8)
@@ -1622,9 +1569,7 @@ local function BuildShopWeather()
         setPanelOpen(false)
     end)
 
-    ------------------------------------------------------------
     -- 5) ENGINE AUTO BUY WEATHER
-    ------------------------------------------------------------
     task.spawn(function()
         task.wait(5)
         while true do
@@ -1650,6 +1595,7 @@ local function BuildShopWeather()
         end
     end)
 end
+
 
 ----------------------------------------------------------------
 -- 💼 TRAVELING MERCHANT
