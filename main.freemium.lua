@@ -4180,7 +4180,7 @@ local function autoDropdown(text)
         icon.Text = "⚡"
     elseif text == "Comingsoon" then
         icon.Text = "🌴"
-    elseif text == "Auto Favorite (BETA)" then
+    elseif text == "Auto Favorite" then
         icon.Text = "⭐"
     elseif text == "Auto Sell" then
         icon.Text = "💰"
