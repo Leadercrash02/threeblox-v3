@@ -1904,11 +1904,6 @@ local function BuildTravelingMerchant()
     end)
 end
 
-
-BuildTravelingMerchant()
-
-
-
 ----------------------------------------------------------------
 -- PAGE SWITCH
 ----------------------------------------------------------------
@@ -1959,7 +1954,7 @@ local function ShowPage(name)
     end
 end
 
-BuildShopWeather()
+
 
 
 
