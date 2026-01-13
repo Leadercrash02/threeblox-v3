@@ -3786,16 +3786,15 @@ function SpawnTotemUUID(uuid)
 end
 
 ----------------------------------------------------------------
--- AUTO FAVORITE FISH BACKEND
+-- AUTO FAVORITE FISH BACKEND (MULTI RARITY)
 ----------------------------------------------------------------
-
 local RS = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 
 local Items = require(RS.Items)
 local Tiers = require(RS.Tiers or RS:WaitForChild("Tiers"))
-local Replion = require(RS.Packages.Replion)
+local ReplionFav = require(RS.Packages.Replion)
 
 local FavoriteRemote = RS.Packages
     :WaitForChild("_Index")
@@ -3816,11 +3815,18 @@ for _, info in Tiers do
     TierByIndex[info.Tier] = info
 end
 
-_G.RAYFavOn            = _G.RAYFavOn or false
-_G.RAYFavRarityMode    = _G.RAYFavRarityMode or "Legendary" -- Legendary/Mythic/SECRET
-_G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {}       -- [Name] = true
+_G.RAYFavOn            = _G.RAYFavOn or false          -- auto scan inventory
+_G.RAYFavCurrentOn     = _G.RAYFavCurrentOn or false   -- auto fish yang lagi kepilih
+_G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {}  -- [Name] = true
 
-local FavRarityOptions = {"Legendary","Mythic","SECRET"}
+-- MULTI RARITY (bisa kombinasi, max 2 via UI)
+_G.RAYFavRaritySet = _G.RAYFavRaritySet or {
+    Legendary = true,
+    Mythic   = false,
+    SECRET   = false,
+}
+
+local RARITY_KEYS = {"Legendary","Mythic","SECRET"}
 
 local function getTierFromItem(data)
     if data.Tier then
@@ -3834,15 +3840,10 @@ local function passesRarityFilterFav(data)
     local rName = tierInfo and tierInfo.Name
     if not rName then return false end
 
-    local mode = _G.RAYFavRarityMode
-    if mode == "Legendary" then
-        return (rName == "Legendary" or rName == "Mythic" or rName == "SECRET")
-    elseif mode == "Mythic" then
-        return (rName == "Mythic" or rName == "SECRET")
-    elseif mode == "SECRET" then
-        return (rName == "SECRET")
-    end
-    return false
+    local set = _G.RAYFavRaritySet
+    if not set then return false end
+
+    return set[rName] == true
 end
 
 local function passesNameFilterFav(data)
@@ -3862,13 +3863,13 @@ local function shouldFavoriteId(id)
 end
 
 local function getInvItems()
-    local repl = Replion.Client:WaitReplion("Data")
+    local repl = ReplionFav.Client:WaitReplion("Data")
     local root = repl.Data
     local inv = root and root.Inventory
     return (inv and inv.Items) or {}
 end
 
-local function AutoFavoriteOnce()
+function AutoFavoriteOnce()
     local items = getInvItems()
     for _, entry in pairs(items) do
         local id = entry.Id
@@ -3878,6 +3879,38 @@ local function AutoFavoriteOnce()
         end
     end
 end
+
+-- OPTIONAL: kalau mau mode current fish beneran, sesuaikan field Replion di sini
+function GetCurrentEquippedFishUUID()
+    local ok, data = pcall(function()
+        local r = ReplionFav.Client:WaitReplion("Data")
+        return r.Data
+    end)
+    if not ok or not data then return nil end
+
+    local inv = data.Inventory
+    local items = inv and inv.Items
+    if typeof(items) ~= "table" then return nil end
+
+    local currentUuid = data.CurrentFishUUID -- GANTI ke field yang benar
+    if not currentUuid then return nil end
+
+    for _, entry in pairs(items) do
+        if entry.UUID == currentUuid and shouldFavoriteId(entry.Id) then
+            return entry.UUID
+        end
+    end
+    return nil
+end
+
+function AutoFavoriteCurrentOnce()
+    local uuid = GetCurrentEquippedFishUUID()
+    if uuid then
+        FavoriteRemote:FireServer(uuid)
+    end
+end
+
+
 
 
 ----------------------------------------------------------------
@@ -4601,7 +4634,7 @@ elseif text == "Auto Spot Island" then
     end)
 
 ----------------------------------------------------------------
--- AUTO FAVORITE 🐟 (panel kanan)
+-- AUTO FAVORITE 🐟 (panel kanan + toggle)
 ----------------------------------------------------------------
 elseif text == "Auto Favorite" then
     list.Padding = UDim.new(0, 4)
@@ -4766,7 +4799,9 @@ elseif text == "Auto Favorite" then
     pad.PaddingRight  = UDim.new(0,8)
     pad.PaddingBottom = UDim.new(0,8)
 
-    -- RARITY DROPDOWN (cycle button)
+    ----------------------------------------------------
+    -- RARITY DROPDOWN (MULTI, MYTHIC+SECRET DLL)
+    ----------------------------------------------------
     local rarityBtn = Instance.new("TextButton", panel)
     rarityBtn.Size = UDim2.new(1,0,0,26)
     rarityBtn.Position = UDim2.new(0,0,0,0)
@@ -4779,29 +4814,70 @@ elseif text == "Auto Favorite" then
     rarityBtn.AutoButtonColor = false
     Instance.new("UICorner", rarityBtn).CornerRadius = UDim.new(0,6)
 
-    local rarityIndex = 1
-    for i, v in ipairs(FavRarityOptions) do
-        if v == _G.RAYFavRarityMode then
-            rarityIndex = i
-            break
+    local function getRarityLabel()
+        local set = _G.RAYFavRaritySet
+        local active = {}
+        for _, key in ipairs(RARITY_KEYS) do
+            if set[key] then
+                table.insert(active, key)
+            end
+        end
+        if #active == 0 then
+            return "🎣 Rarity: (None)"
+        elseif #active == 1 then
+            return "🎣 Rarity: "..active[1]
+        else
+            return "🎣 Rarity: "..table.concat(active, " + ")
         end
     end
 
-    local function updateRarityText()
-        _G.RAYFavRarityMode = FavRarityOptions[rarityIndex]
-        rarityBtn.Text = "🎣 Rarity: ".._G.RAYFavRarityMode
+    local function refreshRarityText()
+        rarityBtn.Text = getRarityLabel()
     end
-    updateRarityText()
+    refreshRarityText()
 
     rarityBtn.MouseButton1Click:Connect(function()
-        rarityIndex += 1
-        if rarityIndex > #FavRarityOptions then
-            rarityIndex = 1
+        local set = _G.RAYFavRaritySet
+
+        local L = set.Legendary or false
+        local M = set.Mythic   or false
+        local S = set.SECRET   or false
+
+        if (not L and not M and not S) then
+            -- None -> Legendary
+            set.Legendary, set.Mythic, set.SECRET = true, false, false
+
+        elseif (L and not M and not S) then
+            -- Legendary -> Legendary+Mythic
+            set.Legendary, set.Mythic, set.SECRET = true, true, false
+
+        elseif (L and M and not S) then
+            -- Legendary+Mythic -> Mythic+SECRET
+            set.Legendary, set.Mythic, set.SECRET = false, true, true
+
+        elseif (not L and M and S) then
+            -- Mythic+SECRET -> SECRET
+            set.Legendary, set.Mythic, set.SECRET = false, false, true
+
+        elseif (not L and not M and S) then
+            -- SECRET -> Mythic
+            set.Legendary, set.Mythic, set.SECRET = false, true, false
+
+        elseif (not L and M and not S) then
+            -- Mythic -> Legendary
+            set.Legendary, set.Mythic, set.SECRET = true, false, false
+
+        else
+            -- fallback: reset ke Legendary
+            set.Legendary, set.Mythic, set.SECRET = true, false, false
         end
-        updateRarityText()
+
+        refreshRarityText()
     end)
 
-    -- LIST FRAME (nama ikan)
+    ----------------------------------------------------
+    -- LIST FRAME (NAMA IKAN)
+    ----------------------------------------------------
     local listFrame = Instance.new("ScrollingFrame", panel)
     listFrame.Position = UDim2.new(0,0,0,32)
     listFrame.Size = UDim2.new(1,0,1,-36)
@@ -4820,9 +4896,6 @@ elseif text == "Auto Favorite" then
         listFrame.CanvasSize = UDim2.new(0,0,0, layoutFav.AbsoluteContentSize.Y + 8)
     end)
 
-    ----------------------------------------------------
-    -- BUILD DATA NAMA IKAN SEKALI
-    ----------------------------------------------------
     local allFishNames = {}
     for _, data in pairs(ItemDataById) do
         if data.Type == "Fish" and data.Name then
@@ -4836,9 +4909,6 @@ elseif text == "Auto Favorite" then
     end
     table.sort(sortedNames)
 
-    ----------------------------------------------------
-    -- REBUILD PANEL LIST (multi-select + highlight)
-    ----------------------------------------------------
     local function rebuildFavPanel()
         for _, c in ipairs(listFrame:GetChildren()) do
             if c:IsA("TextButton") then
@@ -4884,7 +4954,7 @@ elseif text == "Auto Favorite" then
     end
 
     ----------------------------------------------------
-    -- TOMBOL BUKA PANEL (CLICK ANYWHERE OVERLAY = CLOSE)
+    -- TOMBOL BUKA PANEL
     ----------------------------------------------------
     local rowOpen = Instance.new("Frame", sub)
     rowOpen.Size = UDim2.new(1,0,0,32)
@@ -4922,6 +4992,8 @@ elseif text == "Auto Favorite" then
     end)
 
     rebuildFavPanel()
+
+
 
     ----------------------------------------------------------------
     -- AUTO SELL (RAPIH)
@@ -5501,13 +5573,27 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------------------
+-- LOOP ENGINE AUTO FAVORITE INVENTORY
+----------------------------------------------------------------
+task.spawn(function()
+    while true do
+        if _G.RAYFavOn then
+            pcall(AutoFavoriteOnce)
+            task.wait(5)
+        else
+            task.wait(1)
+        end
+    end
+end)
+
+----------------------------------------------------------------
 -- LOOP ENGINE AUTO FAVORITE CURRENT FISH
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
         if _G.RAYFavCurrentOn then
             pcall(AutoFavoriteCurrentOnce)
-            task.wait(2) -- interval cek fish yang lagi kepilih
+            task.wait(2)
         else
             task.wait(1)
         end
