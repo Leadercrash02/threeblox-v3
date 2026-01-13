@@ -347,9 +347,7 @@ content.ClipsDescendants = true
 local contentLayout = Instance.new("UIListLayout", content)
 contentLayout.Padding = UDim.new(0,0)
 
-----------------------------------------------------------------
--- WEATHER DATA
-----------------------------------------------------------------
+
 ----------------------------------------------------------------
 -- WEATHER DATA
 ----------------------------------------------------------------
@@ -1673,8 +1671,8 @@ local function BuildTravelingMerchant()
     local pad = Instance.new("UIPadding", card)
     pad.PaddingTop = UDim.new(0,8)
     pad.PaddingBottom = UDim.new(0,8)
-    pad.PaddingLeft = UDimNew(0,16)
-    pad.PaddingRight = UDimNew(0,16)
+    pad.PaddingLeft = UDim.new(0,16)
+    pad.PaddingRight = UDim.new(0,16)
 
     local title = Instance.new("TextLabel", card)
     title.Size = UDim2.new(1,-140,0,20)
@@ -1732,10 +1730,10 @@ local function BuildTravelingMerchant()
     Instance.new("UICorner", panel).CornerRadius = UDim2.new(0,10)
 
     local panelPad = Instance.new("UIPadding", panel)
-    panelPad.PaddingTop = UDim2.new(0,10)
-    panelPad.PaddingBottom = UDim2.new(0,10)
-    panelPad.PaddingLeft = UDim2.new(0,12)
-    panelPad.PaddingRight = UDim2.new(0,12)
+    panelPad.PaddingTop = UDim.new(0,10)
+    panelPad.PaddingBottom = UDim.new(0,10)
+    panelPad.PaddingLeft = UDim.new(0,12)
+    panelPad.PaddingRight = UDim.new(0,12)
 
     local header = Instance.new("Frame", panel)
     header.Size = UDim2.new(1,0,0,24)
@@ -1948,6 +1946,7 @@ local function BuildTravelingMerchant()
     end)
 end
 
+
 ----------------------------------------------------------------
 -- PAGE SWITCH
 ----------------------------------------------------------------
@@ -1995,9 +1994,6 @@ end
 BuildShopWeather()
 BuildTravelingMerchant()
 ShowPage("Auto Option")  -- page default waktu UI kebuka
-
-
-
 
 ----------------------------------------------------------------
 -- MISC PAGE : BUILD FUNCTION
