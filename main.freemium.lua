@@ -1630,6 +1630,35 @@ local function BuildMisc()
     miscLayout.Padding = UDim.new(0,8)
     miscLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+    ----------------------------------------------------------------
+    -- CONFIG REDUCE MAP + INVISIBLE (GLOBAL DALAM BuildMisc)
+    ----------------------------------------------------------------
+    local ws = workspace
+
+    local TARGET_COLOR = Color3.fromRGB(235, 220, 200)
+    local SIMPLE_MATERIALS = true
+    local INVISIBLE_DECOR = true
+
+    local function isDecorPart(inst)
+        if not inst:IsA("BasePart") then
+            return false
+        end
+        local name = inst.Name:lower()
+        if name:find("boat") or name:find("npc") or name:find("fish") or name:find("player") then
+            return false
+        end
+        return true
+    end
+
+    local OriginalProps = {
+        Parts = {},
+        Decals = {},
+        Emitters = {},
+        BeamsTrails = {}
+    }
+
+
+
 ----------------------------------------------------------------
 -- DROPDOWN : 🎥 STREAMER HIDE NAME
 ----------------------------------------------------------------
@@ -2509,116 +2538,158 @@ end
     end
 
     ----------------------------------------------------------------
-    -- 🧱 FPS BOOST
-    ----------------------------------------------------------------
-    do
-        local rowLow = Instance.new("Frame", subPU)
-        rowLow.Size = UDim2.new(1,0,0,36)
-        rowLow.BackgroundTransparency = 1
+-- 🧱 Reduce Map + 👻 Invisible
+----------------------------------------------------------------
+do
+    local rowReduce = Instance.new("Frame", subPU)
+    rowReduce.Size = UDim2.new(1,0,0,36)
+    rowReduce.BackgroundTransparency = 1
 
-        local labelLow = Instance.new("TextLabel", rowLow)
-        labelLow.Size = UDim2.new(1,-100,1,0)
-        labelLow.Position = UDim2.new(0,16,0,0)
-        labelLow.BackgroundTransparency = 1
-        labelLow.Font = Enum.Font.Gotham
-        labelLow.TextSize = 13
-        labelLow.TextXAlignment = Enum.TextXAlignment.Left
-        labelLow.TextColor3 = TEXT
-        labelLow.Text = "🧱 FPS Boost"
+    local labelReduce = Instance.new("TextLabel", rowReduce)
+    labelReduce.Size = UDim2.new(1,-100,1,0)
+    labelReduce.Position = UDim2.new(0,16,0,0)
+    labelReduce.BackgroundTransparency = 1
+    labelReduce.Font = Enum.Font.Gotham
+    labelReduce.TextSize = 13
+    labelReduce.TextXAlignment = Enum.TextXAlignment.Left
+    labelReduce.TextColor3 = TEXT
+    labelReduce.Text = "🧱 Reduce Map + 👻 Invisible"
 
-        local pillLow = Instance.new("TextButton", rowLow)
-        pillLow.Size = UDim2.new(0,50,0,24)
-        pillLow.Position = UDim2.new(1,-80,0.5,-12)
-        pillLow.BackgroundColor3 = MUTED
-        pillLow.BackgroundTransparency = 0.1
-        pillLow.Text = ""
-        pillLow.AutoButtonColor = false
-        Instance.new("UICorner", pillLow).CornerRadius = UDim.new(0,999)
+    local pillReduce = Instance.new("TextButton", rowReduce)
+    pillReduce.Size = UDim2.new(0,50,0,24)
+    pillReduce.Position = UDim2.new(1,-80,0.5,-12)
+    pillReduce.BackgroundColor3 = MUTED
+    pillReduce.BackgroundTransparency = 0.1
+    pillReduce.Text = ""
+    pillReduce.AutoButtonColor = false
+    Instance.new("UICorner", pillReduce).CornerRadius = UDim.new(0,999)
 
-        local knobLow = Instance.new("Frame", pillLow)
-        knobLow.Size = UDim2.new(0,18,0,18)
-        knobLow.Position = UDim2.new(0,3,0.5,-9)
-        knobLow.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        Instance.new("UICorner", knobLow).CornerRadius = UDim.new(0,999)
+    local knobReduce = Instance.new("Frame", pillReduce)
+    knobReduce.Size = UDim2.new(0,18,0,18)
+    knobReduce.Position = UDim2.new(0,3,0.5,-9)
+    knobReduce.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobReduce).CornerRadius = UDim.new(0,999)
 
-        local lowOn = false
+    local reduceOn = false
 
-        local oldQuality = RenderSettings.QualityLevel
-        local oldBrightness = Lighting.Brightness
-        local oldFogEnd = Lighting.FogEnd
-        local oldGlobalShadows = Lighting.GlobalShadows
-        local oldAmbient = Lighting.Ambient
-        local oldOutdoorAmbient = Lighting.OutdoorAmbient
-        local oldWaterWaveSize = Terrain.WaterWaveSize
-        local oldWaterWaveSpeed = Terrain.WaterWaveSpeed
-        local oldWaterTransparency = Terrain.WaterTransparency
-        local oldWaterReflectance = Terrain.WaterReflectance
-
-        local function refreshLow()
-            pillLow.BackgroundColor3 = lowOn and ACCENT or MUTED
-            knobLow.Position = lowOn
-                and UDim2.new(1,-21,0.5,-9)
-                or  UDim2.new(0,3,0.5,-9)
-        end
-
-        local function applyFPSBoost()
-            oldQuality = RenderSettings.QualityLevel
-            pcall(function()
-                RenderSettings.QualityLevel = Enum.QualityLevel.Level01
-            end)
-
-            oldBrightness = Lighting.Brightness
-            oldFogEnd = Lighting.FogEnd
-            oldGlobalShadows = Lighting.GlobalShadows
-            oldAmbient = Lighting.Ambient
-            oldOutdoorAmbient = Lighting.OutdoorAmbient
-
-            Lighting.Brightness = 1
-            Lighting.FogEnd = 100
-            Lighting.GlobalShadows = false
-            Lighting.Ambient = Color3.fromRGB(128,128,128)
-            Lighting.OutdoorAmbient = Color3.fromRGB(128,128,128)
-
-            oldWaterWaveSize = Terrain.WaterWaveSize
-            oldWaterWaveSpeed = Terrain.WaterWaveSpeed
-            oldWaterTransparency = Terrain.WaterTransparency
-            oldWaterReflectance = Terrain.WaterReflectance
-
-            Terrain.WaterWaveSize = 0
-            Terrain.WaterWaveSpeed = 0
-            Terrain.WaterTransparency = 1
-            Terrain.WaterReflectance = 0
-        end
-
-        local function resetFPSBoost()
-            pcall(function()
-                RenderSettings.QualityLevel = oldQuality
-            end)
-
-            Lighting.Brightness = oldBrightness
-            Lighting.FogEnd = oldFogEnd
-            Lighting.GlobalShadows = oldGlobalShadows
-            Lighting.Ambient = oldAmbient
-            Lighting.OutdoorAmbient = oldOutdoorAmbient
-
-            Terrain.WaterWaveSize = oldWaterWaveSize
-            Terrain.WaterWaveSpeed = oldWaterWaveSpeed
-            Terrain.WaterTransparency = oldWaterTransparency
-            Terrain.WaterReflectance = oldWaterReflectance
-        end
-
-        pillLow.MouseButton1Click:Connect(function()
-            lowOn = not lowOn
-            if lowOn then
-                applyFPSBoost()
-            else
-                resetFPSBoost()
-            end
-            refreshLow()
-        end)
-
-        refreshLow()
+    local function refreshReduce()
+        pillReduce.BackgroundColor3 = reduceOn and ACCENT or MUTED
+        knobReduce.Position = reduceOn
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
     end
+
+    local function applyReduce()
+        -- simpan state awal sekali
+        if next(OriginalProps.Parts) == nil then
+            for _, inst in ipairs(ws:GetDescendants()) do
+                if inst:IsA("Decal") or inst:IsA("Texture") then
+                    OriginalProps.Decals[inst] = {Texture = inst.Texture}
+                elseif inst:IsA("ParticleEmitter") then
+                    OriginalProps.Emitters[inst] = {
+                        Enabled = inst.Enabled,
+                        Rate = inst.Rate
+                    }
+                elseif inst:IsA("Beam") or inst:IsA("Trail") then
+                    OriginalProps.BeamsTrails[inst] = {Enabled = inst.Enabled}
+                elseif inst:IsA("BasePart") then
+                    OriginalProps.Parts[inst] = {
+                        Color        = inst.Color,
+                        Material     = inst.Material,
+                        Transparency = inst.Transparency,
+                        CanCollide   = inst.CanCollide,
+                        CanTouch     = inst.CanTouch,
+                        CanQuery     = inst.CanQuery,
+                        CastShadow   = inst.CastShadow
+                    }
+                end
+            end
+        end
+
+        -- apply reduce
+        for inst in pairs(OriginalProps.Decals) do
+            if inst.Parent then
+                inst.Texture = ""
+            end
+        end
+
+        for inst in pairs(OriginalProps.Emitters) do
+            if inst.Parent then
+                inst.Enabled = false
+                inst.Rate = 0
+            end
+        end
+
+        for inst in pairs(OriginalProps.BeamsTrails) do
+            if inst.Parent then
+                inst.Enabled = false
+            end
+        end
+
+        for inst in pairs(OriginalProps.Parts) do
+            if inst.Parent then
+                if SIMPLE_MATERIALS then
+                    inst.Material = Enum.Material.SmoothPlastic
+                end
+                inst.Color = TARGET_COLOR
+
+                if INVISIBLE_DECOR and isDecorPart(inst) then
+                    inst.Transparency = 1
+                    inst.CanCollide = false
+                    inst.CanTouch = false
+                    inst.CanQuery = false
+                    inst.CastShadow = false
+                end
+            end
+        end
+    end
+
+    local function resetReduce()
+        for inst, props in pairs(OriginalProps.Decals) do
+            if inst.Parent then
+                inst.Texture = props.Texture
+            end
+        end
+
+        for inst, props in pairs(OriginalProps.Emitters) do
+            if inst.Parent then
+                inst.Enabled = props.Enabled
+                inst.Rate    = props.Rate
+            end
+        end
+
+        for inst, props in pairs(OriginalProps.BeamsTrails) do
+            if inst.Parent then
+                inst.Enabled = props.Enabled
+            end
+        end
+
+        for inst, props in pairs(OriginalProps.Parts) do
+            if inst.Parent then
+                inst.Color        = props.Color
+                inst.Material     = props.Material
+                inst.Transparency = props.Transparency
+                inst.CanCollide   = props.CanCollide
+                inst.CanTouch     = props.CanTouch
+                inst.CanQuery     = props.CanQuery
+                inst.CastShadow   = props.CastShadow
+            end
+        end
+    end
+
+    pillReduce.MouseButton1Click:Connect(function()
+        reduceOn = not reduceOn
+        if reduceOn then
+            applyReduce()
+        else
+            resetReduce()
+        end
+        refreshReduce()
+    end)
+
+    refreshReduce()
+end
+
 
     ----------------------------------------------------------------
     -- 🌑 DARK SCREEN (COLORCORRECTION)
