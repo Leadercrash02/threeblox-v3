@@ -4811,13 +4811,15 @@ elseif text == "Auto Favorite" then
     pad.PaddingBottom = UDim.new(0,8)
 
     ----------------------------------------------------
-    -- TIGA TOGGLE RARITY (LEGEND / MYTHIC / SECRET)
+    -- TIGA TOGGLE RARITY (LEGEND / MYTHIC / SECRET) + GARIS KUNING
     ----------------------------------------------------
     local rarityRow = Instance.new("Frame", panel)
     rarityRow.Size = UDim2.new(1,0,0,24)
     rarityRow.Position = UDim2.new(0,0,0,0)
     rarityRow.BackgroundTransparency = 1
     rarityRow.ZIndex = 6
+
+    local RARITY_HIGHLIGHT = Color3.fromRGB(255, 210, 80)
 
     local function makeRarityButton(txt)
         local btn = Instance.new("TextButton", rarityRow)
@@ -4826,29 +4828,47 @@ elseif text == "Auto Favorite" then
         btn.BackgroundTransparency = 0.18
         btn.Font = Enum.Font.Gotham
         btn.TextSize = 12
-        btn.TextColor3 = TEXT -- pakai TEXT biar jelas
+        btn.TextColor3 = TEXT
         btn.Text = txt
         btn.AutoButtonColor = false
         btn.ZIndex = 7
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-        return btn
+
+        local line = Instance.new("Frame")
+        line.Name = "Highlight"
+        line.Parent = btn
+        line.AnchorPoint = Vector2.new(0,0.5)
+        line.Position = UDim2.new(0,0,0.5,0)
+        line.Size = UDim2.new(0,3,1,-6)
+        line.BackgroundColor3 = RARITY_HIGHLIGHT
+        line.BackgroundTransparency = 1
+        line.ZIndex = 8
+
+        return btn, line
     end
 
-    local legendBtn = makeRarityButton("Legend")
+    local legendBtn, legendLine = makeRarityButton("Legend")
     legendBtn.Position = UDim2.new(0,0,0,0)
 
-    local mythicBtn = makeRarityButton("Mythic")
+    local mythicBtn, mythicLine = makeRarityButton("Mythic")
     mythicBtn.Position = UDim2.new(0,80,0,0)
 
-    local secretBtn = makeRarityButton("Secret")
+    local secretBtn, secretLine = makeRarityButton("Secret")
     secretBtn.Position = UDim2.new(0,160,0,0)
 
     local function refreshRarityButtons()
-        legendBtn.BackgroundTransparency = _G.RAYFavLegendOn and 0.08 or 0.18
-        mythicBtn.BackgroundTransparency = _G.RAYFavMythicOn and 0.08 or 0.18
-        secretBtn.BackgroundTransparency = _G.RAYFavSecretOn and 0.08 or 0.18
+        local L = _G.RAYFavLegendOn
+        local M = _G.RAYFavMythicOn
+        local S = _G.RAYFavSecretOn
+
+        legendBtn.BackgroundTransparency = L and 0.08 or 0.18
+        mythicBtn.BackgroundTransparency = M and 0.08 or 0.18
+        secretBtn.BackgroundTransparency = S and 0.08 or 0.18
+
+        legendLine.BackgroundTransparency = L and 0 or 1
+        mythicLine.BackgroundTransparency = M and 0 or 1
+        secretLine.BackgroundTransparency = S and 0 or 1
     end
-    refreshRarityButtons()
 
     legendBtn.MouseButton1Click:Connect(function()
         _G.RAYFavLegendOn = not _G.RAYFavLegendOn
@@ -4865,18 +4885,20 @@ elseif text == "Auto Favorite" then
         refreshRarityButtons()
     end)
 
+    refreshRarityButtons()
+
     ----------------------------------------------------
     -- LIST FRAME (NAMA IKAN)
     ----------------------------------------------------
     local listFrame = Instance.new("ScrollingFrame", panel)
-    listFrame.Position = UDim2.new(0,0,0,32 + 24) -- turun karena row rarity
+    listFrame.Position = UDim2.new(0,0,0,32 + 24)
     listFrame.Size = UDim2.new(1,0,1,-(36 + 24))
     listFrame.ScrollBarThickness = 4
     listFrame.ScrollingDirection = Enum.ScrollingDirection.Y
     listFrame.CanvasSize = UDim2.new(0,0,0,0)
     listFrame.BackgroundTransparency = 1
     listFrame.ClipsDescendants = true
-    listFrame.ZIndex = 5 -- di bawah rarityRow
+    listFrame.ZIndex = 5
     listFrame.Active = true
 
     local layoutFav = Instance.new("UIListLayout", listFrame)
@@ -4905,8 +4927,6 @@ elseif text == "Auto Favorite" then
     ----------------------------------------------------
     -- REBUILD PANEL LIST (multi-select + highlight KUNING)
     ----------------------------------------------------
-    local HIGHLIGHT = Color3.fromRGB(255, 210, 80) -- samain dengan Auto Totem
-
     local function rebuildFavPanel()
         for _, c in ipairs(listFrame:GetChildren()) do
             if c:IsA("TextButton") then
@@ -4937,7 +4957,7 @@ elseif text == "Auto Favorite" then
             highlight.AnchorPoint = Vector2.new(0,0.5)
             highlight.Position = UDim2.new(0,0,0.5,0)
             highlight.Size = UDim2.new(0,3,1,-6)
-            highlight.BackgroundColor3 = HIGHLIGHT
+            highlight.BackgroundColor3 = RARITY_HIGHLIGHT
             highlight.BackgroundTransparency = selected and 0 or 1
             highlight.ZIndex = 7
 
@@ -4992,6 +5012,7 @@ elseif text == "Auto Favorite" then
     end)
 
     rebuildFavPanel()
+
 
     ----------------------------------------------------------------
     -- AUTO SELL (RAPIH)
