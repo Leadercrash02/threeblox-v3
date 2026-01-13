@@ -3725,11 +3725,8 @@ local Events = {
 }
 
 ----------------------------------------------------------------
--- AUTO TOTEM BACKEND (READ DURATION FROM INVENTORY)
+-- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
 ----------------------------------------------------------------
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local lp = Players.LocalPlayer
 
 local Replion = require(ReplicatedStorage.Packages.Replion)
 
@@ -3740,20 +3737,16 @@ local SpawnTotemRemote = ReplicatedStorage
     :WaitForChild("net")
     :WaitForChild("RE/SpawnTotem")
 
--- OPTIONAL: mapping Id → nama jenis (kalau masih dipakai di UI)
+-- 1 = Lucky, 2 = Mutasi, 3 = Shiny (SAMA PERSIS DENGAN GUI X1)
 local TotemTypeId = {
     Mutasi = 2,
     Shiny  = 3,
     Lucky  = 1,
 }
 
--- GLOBAL STATE
-_G.RAYAutoTotemOn    = _G.RAYAutoTotemOn or false
-_G.RAYSelectedTotems = _G.RAYSelectedTotems or {} -- [UUID] = true
+_G.RAYAutoTotemOn        = _G.RAYAutoTotemOn or false
+_G.RAYSelectedTotemType  = _G.RAYSelectedTotemType or "Lucky"  -- jenis, bukan UUID
 
-----------------------------------------------------------------
--- REPLION DATA ACCESS
-----------------------------------------------------------------
 local function GetTotemDataReplion()
     local ok, data = pcall(function()
         local r = Replion.Client:WaitReplion("Data")
@@ -3763,64 +3756,34 @@ local function GetTotemDataReplion()
     return data
 end
 
-----------------------------------------------------------------
--- LIST TOTEM DI INVENT (UNTUK PANEL KANAN)
-----------------------------------------------------------------
-function GetTotemList()
-    local data   = GetTotemDataReplion()
-    local inv    = data and data.Inventory
+-- Resolver UUID realtime dari jenis (logic X1 kamu)
+local function findTotemUuidByType(jenis)
+    local targetId = TotemTypeId[jenis]
+    if not targetId then return nil end
+
+    local data = GetTotemDataReplion()
+    if not data then return nil end
+
+    local inv = data.Inventory
     local totems = inv and inv.Totems
-    if typeof(totems) ~= "table" then
-        return {}
-    end
+    if typeof(totems) ~= "table" then return nil end
 
-    local list = {}
-    for _, t in pairs(totems) do
-        table.insert(list, {
-            Id      = t.Id,
-            UUID    = t.UUID,
-            Name    = t.Name or ("Totem " .. tostring(t.Id)),
-            -- SESUAIKAN nama field durasi di sini:
-            Seconds = t.SecondsLeft or t.Duration or 0,
-        })
-    end
-    return list
-end
-
-----------------------------------------------------------------
--- HELPER: SISA DETIK TOTEM DARI INVENTORY
-----------------------------------------------------------------
-local function GetRemainingSeconds(uuid)
-    if not uuid then return 0 end
-
-    local data   = GetTotemDataReplion()
-    local inv    = data and data.Inventory
-    local totems = inv and inv.Totems
-    if typeof(totems) ~= "table" then
-        return 0
-    end
-
-    for _, t in pairs(totems) do
-        if t.UUID == uuid then
-            local sec = t.SecondsLeft or t.Duration or 0  -- GANTI ke field asli kalau beda
-            return tonumber(sec) or 0
+    for _, entry in pairs(totems) do
+        if entry.Id == targetId then
+            return entry.UUID
         end
     end
-
-    return 0
+    return nil
 end
 
-----------------------------------------------------------------
--- REMOTE SPAWN TOTEM
-----------------------------------------------------------------
 function SpawnTotemUUID(uuid)
     if not uuid then return end
     pcall(function()
         SpawnTotemRemote:FireServer(uuid)
-        -- kalau SimpleSpy lu nunjuknya table: SpawnTotemRemote:FireServer({UUID = uuid})
+        -- kalau game butuh table:
+        -- SpawnTotemRemote:FireServer({UUID = uuid})
     end)
 end
-
 
 ----------------------------------------------------------------
 -- AUTO FAVORITE FISH BACKEND (LEGEND / MYTHIC / SECRET)
@@ -5597,27 +5560,105 @@ task.spawn(function()
     end
 end)
 
-----------------------------------------------------------------
--- ENGINE AUTO TOTEM (AUTO DETECT DURATION)
-----------------------------------------------------------------
-local SAFETY_MARGIN = 3 -- detik sebelum habis baru respawn
 
+----------------------------------------------------------------
+-- LOOP ENGINE AUTO TOTEM
+----------------------------------------------------------------
 task.spawn(function()
     while true do
-        if _G.RAYAutoTotemOn then
-            for uuid, on in pairs(_G.RAYSelectedTotems) do
-                if on then
-                    local remain = GetRemainingSeconds(uuid)
-                    -- kalau durasi belum ada / sudah habis → respawn
-                    if remain <= SAFETY_MARGIN then
-                        SpawnTotemUUID(uuid)
-                    end
-                end
+        if _G.RAYAutoTotemOn and _G.RAYSelectedTotemType then
+            local uuid = findTotemUuidByType(_G.RAYSelectedTotemType)
+            if uuid then
+                SpawnTotemUUID(uuid)
+                task.wait(1.0) -- delay per spawn
             end
         end
-        task.wait(5) -- cek tiap 5 detik (durasi totem panjang, aman)
+        task.wait(3) -- interval cek lagi
     end
 end)
+
+----------------------------------------------------------------
+-- REMOTES
+----------------------------------------------------------------
+local Net = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+
+local Events = {
+    fishing  = Net:WaitForChild("RE/FishingCompleted"),
+    sell     = Net:WaitForChild("RF/SellAllItems"),
+    charge   = Net:WaitForChild("RF/ChargeFishingRod"),
+    minigame = Net:WaitForChild("RF/RequestFishingMinigameStarted"),
+    cancel   = Net:WaitForChild("RF/CancelFishingInputs"),
+    equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
+    unequip  = Net:WaitForChild("RE/UnequipToolFromHotbar"),
+
+    -- WEATHER
+    purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
+}
+
+----------------------------------------------------------------
+-- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
+----------------------------------------------------------------
+
+local Replion = require(ReplicatedStorage.Packages.Replion)
+
+local SpawnTotemRemote = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RE/SpawnTotem")
+
+-- 1 = Lucky, 2 = Mutasi, 3 = Shiny (SAMA PERSIS DENGAN GUI X1)
+local TotemTypeId = {
+    Mutasi = 2,
+    Shiny  = 3,
+    Lucky  = 1,
+}
+
+_G.RAYAutoTotemOn        = _G.RAYAutoTotemOn or false
+_G.RAYSelectedTotemType  = _G.RAYSelectedTotemType or "Lucky"  -- jenis, bukan UUID
+
+local function GetTotemDataReplion()
+    local ok, data = pcall(function()
+        local r = Replion.Client:WaitReplion("Data")
+        return r.Data
+    end)
+    if not ok or not data then return nil end
+    return data
+end
+
+-- Resolver UUID realtime dari jenis (logic X1 kamu)
+local function findTotemUuidByType(jenis)
+    local targetId = TotemTypeId[jenis]
+    if not targetId then return nil end
+
+    local data = GetTotemDataReplion()
+    if not data then return nil end
+
+    local inv = data.Inventory
+    local totems = inv and inv.Totems
+    if typeof(totems) ~= "table" then return nil end
+
+    for _, entry in pairs(totems) do
+        if entry.Id == targetId then
+            return entry.UUID
+        end
+    end
+    return nil
+end
+
+function SpawnTotemUUID(uuid)
+    if not uuid then return end
+    pcall(function()
+        SpawnTotemRemote:FireServer(uuid)
+        -- kalau game butuh table:
+        -- SpawnTotemRemote:FireServer({UUID = uuid})
+    end)
+end
 
 ----------------------------------------------------------------
 -- LOOP ENGINE AUTO FAVORITE
