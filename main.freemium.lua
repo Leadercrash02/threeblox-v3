@@ -3802,7 +3802,7 @@ local FavoriteRemote = RS.Packages
     :WaitForChild("net")
     :WaitForChild("RE/FavoriteItem")
 
--- cache master data
+-- cache master data ikan
 local ItemDataById = {}
 for _, v in Items do
     if v.Data and v.Data.Id then
@@ -3815,12 +3815,12 @@ for _, info in Tiers do
     TierByIndex[info.Tier] = info
 end
 
--- toggle utama / state panel
+-- state utama
 _G.RAYFavOn            = _G.RAYFavOn or false          -- auto scan inventory
 _G.RAYFavCurrentOn     = _G.RAYFavCurrentOn or false   -- auto fish yang lagi kepilih
 _G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {}  -- [Name] = true
 
--- PANEL KANAN: 3 toggle rarity
+-- state panel kanan: 3 rarity
 _G.RAYFavLegendOn = _G.RAYFavLegendOn or false
 _G.RAYFavMythicOn = _G.RAYFavMythicOn or false
 _G.RAYFavSecretOn = _G.RAYFavSecretOn or false
@@ -3832,13 +3832,13 @@ local function getTierFromItem(data)
     return TierByIndex[1]
 end
 
--- filter rarity pakai 3 toggle panel kanan
+-- filter rarity pakai 3 toggle (Legend/Mythic/SECRET)
 local function passesRarityFilterFav(data)
     local tierInfo = getTierFromItem(data)
     local rName = tierInfo and tierInfo.Name
     if not rName then return false end
 
-    -- kalau semua OFF, berarti jangan filter by rarity (boleh semua)
+    -- kalau semua OFF, jangan filter rarity (semua lolos)
     if not _G.RAYFavLegendOn and not _G.RAYFavMythicOn and not _G.RAYFavSecretOn then
         return true
     end
@@ -3856,6 +3856,7 @@ local function passesRarityFilterFav(data)
     return false
 end
 
+-- filter nama sesuai list panel kanan (kalau kosong = semua)
 local function passesNameFilterFav(data)
     local sel = _G.RAYFavSelectedNames
     if not sel or next(sel) == nil then
@@ -3890,7 +3891,7 @@ function AutoFavoriteOnce()
     end
 end
 
--- OPTIONAL: mode "current fish" (kalau mau dipakai toggle kedua)
+-- OPTIONAL: mode "current fish" (pakai toggle kedua di UI)
 function GetCurrentEquippedFishUUID()
     local ok, data = pcall(function()
         local r = ReplionFav.Client:WaitReplion("Data")
@@ -3902,7 +3903,7 @@ function GetCurrentEquippedFishUUID()
     local items = inv and inv.Items
     if typeof(items) ~= "table" then return nil end
 
-    -- GANTI field ini ke yang sesuai data Replion game lu
+    -- GANTI ke field Replion yang benar kalau beda
     local currentUuid = data.CurrentFishUUID
     if not currentUuid then return nil end
 
@@ -3920,6 +3921,7 @@ function AutoFavoriteCurrentOnce()
         FavoriteRemote:FireServer(uuid)
     end
 end
+
 
 
 ----------------------------------------------------------------
@@ -4815,28 +4817,30 @@ elseif text == "Auto Favorite" then
     rarityRow.Size = UDim2.new(1,0,0,24)
     rarityRow.Position = UDim2.new(0,0,0,0)
     rarityRow.BackgroundTransparency = 1
+    rarityRow.ZIndex = 6
 
-    local function makeRarityButton(txt, color)
+    local function makeRarityButton(txt)
         local btn = Instance.new("TextButton", rarityRow)
         btn.Size = UDim2.new(0,72,1,0)
         btn.BackgroundColor3 = CARD
         btn.BackgroundTransparency = 0.18
         btn.Font = Enum.Font.Gotham
         btn.TextSize = 12
-        btn.TextColor3 = color
+        btn.TextColor3 = TEXT -- pakai TEXT biar jelas
         btn.Text = txt
         btn.AutoButtonColor = false
+        btn.ZIndex = 7
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
         return btn
     end
 
-    local legendBtn = makeRarityButton("Legend", Color3.fromRGB(255,215,0))
+    local legendBtn = makeRarityButton("Legend")
     legendBtn.Position = UDim2.new(0,0,0,0)
 
-    local mythicBtn = makeRarityButton("Mythic", Color3.fromRGB(255,100,255))
+    local mythicBtn = makeRarityButton("Mythic")
     mythicBtn.Position = UDim2.new(0,80,0,0)
 
-    local secretBtn = makeRarityButton("Secret", Color3.fromRGB(120,240,255))
+    local secretBtn = makeRarityButton("Secret")
     secretBtn.Position = UDim2.new(0,160,0,0)
 
     local function refreshRarityButtons()
@@ -4872,7 +4876,7 @@ elseif text == "Auto Favorite" then
     listFrame.CanvasSize = UDim2.new(0,0,0,0)
     listFrame.BackgroundTransparency = 1
     listFrame.ClipsDescendants = true
-    listFrame.ZIndex = 6
+    listFrame.ZIndex = 5 -- di bawah rarityRow
     listFrame.Active = true
 
     local layoutFav = Instance.new("UIListLayout", listFrame)
@@ -5553,18 +5557,87 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------------------
--- LOOP ENGINE AUTO FAVORITE INVENTORY
+-- REMOTES
 ----------------------------------------------------------------
-task.spawn(function()
-    while true do
-        if _G.RAYFavOn then
-            pcall(AutoFavoriteOnce)
-            task.wait(5) -- interval scan inventory
-        else
-            task.wait(1)
+local Net = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+
+local Events = {
+    fishing  = Net:WaitForChild("RE/FishingCompleted"),
+    sell     = Net:WaitForChild("RF/SellAllItems"),
+    charge   = Net:WaitForChild("RF/ChargeFishingRod"),
+    minigame = Net:WaitForChild("RF/RequestFishingMinigameStarted"),
+    cancel   = Net:WaitForChild("RF/CancelFishingInputs"),
+    equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
+    unequip  = Net:WaitForChild("RE/UnequipToolFromHotbar"),
+
+    -- WEATHER
+    purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
+}
+
+----------------------------------------------------------------
+-- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
+----------------------------------------------------------------
+
+local Replion = require(ReplicatedStorage.Packages.Replion)
+
+local SpawnTotemRemote = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RE/SpawnTotem")
+
+-- 1 = Lucky, 2 = Mutasi, 3 = Shiny (SAMA PERSIS DENGAN GUI X1)
+local TotemTypeId = {
+    Mutasi = 2,
+    Shiny  = 3,
+    Lucky  = 1,
+}
+
+_G.RAYAutoTotemOn        = _G.RAYAutoTotemOn or false
+_G.RAYSelectedTotemType  = _G.RAYSelectedTotemType or "Lucky"  -- jenis, bukan UUID
+
+local function GetTotemDataReplion()
+    local ok, data = pcall(function()
+        local r = Replion.Client:WaitReplion("Data")
+        return r.Data
+    end)
+    if not ok or not data then return nil end
+    return data
+end
+
+-- Resolver UUID realtime dari jenis (logic X1 kamu)
+local function findTotemUuidByType(jenis)
+    local targetId = TotemTypeId[jenis]
+    if not targetId then return nil end
+
+    local data = GetTotemDataReplion()
+    if not data then return nil end
+
+    local inv = data.Inventory
+    local totems = inv and inv.Totems
+    if typeof(totems) ~= "table" then return nil end
+
+    for _, entry in pairs(totems) do
+        if entry.Id == targetId then
+            return entry.UUID
         end
     end
-end)
+    return nil
+end
+
+function SpawnTotemUUID(uuid)
+    if not uuid then return end
+    pcall(function()
+        SpawnTotemRemote:FireServer(uuid)
+        -- kalau game butuh table:
+        -- SpawnTotemRemote:FireServer({UUID = uuid})
+    end)
+end
 
 task.spawn(function()
     while true do
@@ -5587,3 +5660,4 @@ task.spawn(function()
         end
     end
 end)
+
