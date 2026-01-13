@@ -3786,7 +3786,7 @@ function SpawnTotemUUID(uuid)
 end
 
 ----------------------------------------------------------------
--- AUTO FAVORITE FISH BACKEND (MULTI RARITY)
+-- AUTO FAVORITE FISH BACKEND (LEGEND / MYTHIC / SECRET)
 ----------------------------------------------------------------
 local RS = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
@@ -3815,18 +3815,15 @@ for _, info in Tiers do
     TierByIndex[info.Tier] = info
 end
 
+-- toggle utama
 _G.RAYFavOn            = _G.RAYFavOn or false          -- auto scan inventory
 _G.RAYFavCurrentOn     = _G.RAYFavCurrentOn or false   -- auto fish yang lagi kepilih
 _G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {}  -- [Name] = true
 
--- MULTI RARITY (bisa kombinasi, max 2 via UI)
-_G.RAYFavRaritySet = _G.RAYFavRaritySet or {
-    Legendary = true,
-    Mythic   = false,
-    SECRET   = false,
-}
-
-local RARITY_KEYS = {"Legendary","Mythic","SECRET"}
+-- PANEL KANAN: 3 toggle rarity
+_G.RAYFavLegendOn = _G.RAYFavLegendOn or false
+_G.RAYFavMythicOn = _G.RAYFavMythicOn or false
+_G.RAYFavSecretOn = _G.RAYFavSecretOn or false
 
 local function getTierFromItem(data)
     if data.Tier then
@@ -3835,15 +3832,28 @@ local function getTierFromItem(data)
     return TierByIndex[1]
 end
 
+-- filter rarity pakai 3 toggle panel kanan
 local function passesRarityFilterFav(data)
     local tierInfo = getTierFromItem(data)
     local rName = tierInfo and tierInfo.Name
     if not rName then return false end
 
-    local set = _G.RAYFavRaritySet
-    if not set then return false end
+    -- kalau semua OFF, berarti jangan filter by rarity (boleh semua)
+    if not _G.RAYFavLegendOn and not _G.RAYFavMythicOn and not _G.RAYFavSecretOn then
+        return true
+    end
 
-    return set[rName] == true
+    if rName == "Legendary" and _G.RAYFavLegendOn then
+        return true
+    end
+    if rName == "Mythic" and _G.RAYFavMythicOn then
+        return true
+    end
+    if rName == "SECRET" and _G.RAYFavSecretOn then
+        return true
+    end
+
+    return false
 end
 
 local function passesNameFilterFav(data)
@@ -3880,7 +3890,7 @@ function AutoFavoriteOnce()
     end
 end
 
--- OPTIONAL: kalau mau mode current fish beneran, sesuaikan field Replion di sini
+-- OPTIONAL: mode "current fish" kalau mau dipakai
 function GetCurrentEquippedFishUUID()
     local ok, data = pcall(function()
         local r = ReplionFav.Client:WaitReplion("Data")
@@ -3892,7 +3902,7 @@ function GetCurrentEquippedFishUUID()
     local items = inv and inv.Items
     if typeof(items) ~= "table" then return nil end
 
-    local currentUuid = data.CurrentFishUUID -- GANTI ke field yang benar
+    local currentUuid = data.CurrentFishUUID -- GANTI ke field Replion yang bener
     if not currentUuid then return nil end
 
     for _, entry in pairs(items) do
@@ -3909,9 +3919,6 @@ function AutoFavoriteCurrentOnce()
         FavoriteRemote:FireServer(uuid)
     end
 end
-
-
-
 
 ----------------------------------------------------------------
 -- MEGALODON HUNT TELEPORT (ANCHOR PART)
@@ -4634,7 +4641,7 @@ elseif text == "Auto Spot Island" then
     end)
 
 ----------------------------------------------------------------
--- AUTO FAVORITE 🐟 (panel kanan + toggle)
+-- AUTO FAVORITE 🐟 (panel kanan + toggle + 3 rarity)
 ----------------------------------------------------------------
 elseif text == "Auto Favorite" then
     list.Padding = UDim.new(0, 4)
@@ -4800,87 +4807,64 @@ elseif text == "Auto Favorite" then
     pad.PaddingBottom = UDim.new(0,8)
 
     ----------------------------------------------------
-    -- RARITY DROPDOWN (MULTI, MYTHIC+SECRET DLL)
+    -- TIGA TOGGLE RARITY (LEGEND / MYTHIC / SECRET)
     ----------------------------------------------------
-    local rarityBtn = Instance.new("TextButton", panel)
-    rarityBtn.Size = UDim2.new(1,0,0,26)
-    rarityBtn.Position = UDim2.new(0,0,0,0)
-    rarityBtn.BackgroundColor3 = CARD
-    rarityBtn.BackgroundTransparency = 0.16
-    rarityBtn.Font = Enum.Font.Gotham
-    rarityBtn.TextSize = 13
-    rarityBtn.TextColor3 = TEXT
-    rarityBtn.TextXAlignment = Enum.TextXAlignment.Left
-    rarityBtn.AutoButtonColor = false
-    Instance.new("UICorner", rarityBtn).CornerRadius = UDim.new(0,6)
+    local rarityRow = Instance.new("Frame", panel)
+    rarityRow.Size = UDim2.new(1,0,0,24)
+    rarityRow.Position = UDim2.new(0,0,0,0)
+    rarityRow.BackgroundTransparency = 1
 
-    local function getRarityLabel()
-        local set = _G.RAYFavRaritySet
-        local active = {}
-        for _, key in ipairs(RARITY_KEYS) do
-            if set[key] then
-                table.insert(active, key)
-            end
-        end
-        if #active == 0 then
-            return "🎣 Rarity: (None)"
-        elseif #active == 1 then
-            return "🎣 Rarity: "..active[1]
-        else
-            return "🎣 Rarity: "..table.concat(active, " + ")
-        end
+    local function makeRarityButton(txt, color)
+        local btn = Instance.new("TextButton", rarityRow)
+        btn.Size = UDim2.new(0,72,1,0)
+        btn.BackgroundColor3 = CARD
+        btn.BackgroundTransparency = 0.18
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 12
+        btn.TextColor3 = color
+        btn.Text = txt
+        btn.AutoButtonColor = false
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+        return btn
     end
 
-    local function refreshRarityText()
-        rarityBtn.Text = getRarityLabel()
+    local legendBtn = makeRarityButton("Legend", Color3.fromRGB(255,215,0))
+    legendBtn.Position = UDim2.new(0,0,0,0)
+
+    local mythicBtn = makeRarityButton("Mythic", Color3.fromRGB(255,100,255))
+    mythicBtn.Position = UDim2.new(0,80,0,0)
+
+    local secretBtn = makeRarityButton("Secret", Color3.fromRGB(120,240,255))
+    secretBtn.Position = UDim2.new(0,160,0,0)
+
+    local function refreshRarityButtons()
+        legendBtn.BackgroundTransparency = _G.RAYFavLegendOn and 0.08 or 0.18
+        mythicBtn.BackgroundTransparency = _G.RAYFavMythicOn and 0.08 or 0.18
+        secretBtn.BackgroundTransparency = _G.RAYFavSecretOn and 0.08 or 0.18
     end
-    refreshRarityText()
+    refreshRarityButtons()
 
-    rarityBtn.MouseButton1Click:Connect(function()
-        local set = _G.RAYFavRaritySet
+    legendBtn.MouseButton1Click:Connect(function()
+        _G.RAYFavLegendOn = not _G.RAYFavLegendOn
+        refreshRarityButtons()
+    end)
 
-        local L = set.Legendary or false
-        local M = set.Mythic   or false
-        local S = set.SECRET   or false
+    mythicBtn.MouseButton1Click:Connect(function()
+        _G.RAYFavMythicOn = not _G.RAYFavMythicOn
+        refreshRarityButtons()
+    end)
 
-        if (not L and not M and not S) then
-            -- None -> Legendary
-            set.Legendary, set.Mythic, set.SECRET = true, false, false
-
-        elseif (L and not M and not S) then
-            -- Legendary -> Legendary+Mythic
-            set.Legendary, set.Mythic, set.SECRET = true, true, false
-
-        elseif (L and M and not S) then
-            -- Legendary+Mythic -> Mythic+SECRET
-            set.Legendary, set.Mythic, set.SECRET = false, true, true
-
-        elseif (not L and M and S) then
-            -- Mythic+SECRET -> SECRET
-            set.Legendary, set.Mythic, set.SECRET = false, false, true
-
-        elseif (not L and not M and S) then
-            -- SECRET -> Mythic
-            set.Legendary, set.Mythic, set.SECRET = false, true, false
-
-        elseif (not L and M and not S) then
-            -- Mythic -> Legendary
-            set.Legendary, set.Mythic, set.SECRET = true, false, false
-
-        else
-            -- fallback: reset ke Legendary
-            set.Legendary, set.Mythic, set.SECRET = true, false, false
-        end
-
-        refreshRarityText()
+    secretBtn.MouseButton1Click:Connect(function()
+        _G.RAYFavSecretOn = not _G.RAYFavSecretOn
+        refreshRarityButtons()
     end)
 
     ----------------------------------------------------
     -- LIST FRAME (NAMA IKAN)
     ----------------------------------------------------
     local listFrame = Instance.new("ScrollingFrame", panel)
-    listFrame.Position = UDim2.new(0,0,0,32)
-    listFrame.Size = UDim2.new(1,0,1,-36)
+    listFrame.Position = UDim2.new(0,0,0,32 + 24) -- turun dikit karena row rarity
+    listFrame.Size = UDim2.new(1,0,1,-(36 + 24))
     listFrame.ScrollBarThickness = 4
     listFrame.ScrollingDirection = Enum.ScrollingDirection.Y
     listFrame.CanvasSize = UDim2.new(0,0,0,0)
@@ -4896,6 +4880,9 @@ elseif text == "Auto Favorite" then
         listFrame.CanvasSize = UDim2.new(0,0,0, layoutFav.AbsoluteContentSize.Y + 8)
     end)
 
+    ----------------------------------------------------
+    -- BUILD DATA NAMA IKAN SEKALI
+    ----------------------------------------------------
     local allFishNames = {}
     for _, data in pairs(ItemDataById) do
         if data.Type == "Fish" and data.Name then
@@ -4909,6 +4896,9 @@ elseif text == "Auto Favorite" then
     end
     table.sort(sortedNames)
 
+    ----------------------------------------------------
+    -- REBUILD PANEL LIST (multi-select + highlight)
+    ----------------------------------------------------
     local function rebuildFavPanel()
         for _, c in ipairs(listFrame:GetChildren()) do
             if c:IsA("TextButton") then
@@ -4992,6 +4982,7 @@ elseif text == "Auto Favorite" then
     end)
 
     rebuildFavPanel()
+
 
 
 
