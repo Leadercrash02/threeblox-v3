@@ -1900,6 +1900,9 @@ local function BuildTravelingMerchant()
     end)
 end
 
+BuildTravelingMerchant()
+
+
 
 ----------------------------------------------------------------
 -- PAGE SWITCH
@@ -6156,3 +6159,25 @@ task.spawn(function()
         end
     end
 end)
+
+----------------------------------------------------------------
+-- ENGINE: AUTO BUY TRAVELING MERCHANT
+----------------------------------------------------------------
+task.spawn(function()
+    while true do
+        if AutoMerchantOn then
+            local stock = GetCurrentMerchantStock()
+            for _, def in ipairs(stock) do
+                if selectedMerchant[def.Id] then
+                    for i = 1, qtyPerItem do
+                        BuyMerchantId(def.Id)
+                        task.wait(0.2)
+                    end
+                    task.wait(1.5)
+                end
+            end
+        end
+        task.wait(0.5)
+    end
+end)
+
