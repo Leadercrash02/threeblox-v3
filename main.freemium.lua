@@ -1650,13 +1650,171 @@ local function BuildMisc()
         return true
     end
 
-    local OriginalProps = {
-        Parts = {},
+    -- backup state awal
+    local ReduceBackup = {
         Decals = {},
         Emitters = {},
-        BeamsTrails = {}
+        BeamsTrails = {},
+        Parts = {},
+        Lighting = nil
     }
 
+    local function ApplyReduceMap()
+        -- simpan sekali (pertama ON)
+        if not ReduceBackup.Lighting then
+            ReduceBackup.Lighting = {
+                Brightness      = Lighting.Brightness,
+                GlobalShadows   = Lighting.GlobalShadows,
+                Ambient         = Lighting.Ambient,
+                OutdoorAmbient  = Lighting.OutdoorAmbient,
+                FogColor        = Lighting.FogColor,
+                FogStart        = Lighting.FogStart,
+                FogEnd          = Lighting.FogEnd,
+            }
+
+            for _, inst in ipairs(ws:GetDescendants()) do
+                if inst:IsA("Decal") or inst:IsA("Texture") then
+                    ReduceBackup.Decals[inst] = {Texture = inst.Texture}
+                elseif inst:IsA("ParticleEmitter") then
+                    ReduceBackup.Emitters[inst] = {
+                        Enabled = inst.Enabled,
+                        Rate    = inst.Rate,
+                    }
+                elseif inst:IsA("Beam") or inst:IsA("Trail") then
+                    ReduceBackup.BeamsTrails[inst] = {
+                        Enabled = inst.Enabled,
+                    }
+                elseif inst:IsA("BasePart") then
+                    ReduceBackup.Parts[inst] = {
+                        Color        = inst.Color,
+                        Material     = inst.Material,
+                        Transparency = inst.Transparency,
+                        CanCollide   = inst.CanCollide,
+                        CanTouch     = inst.CanTouch,
+                        CanQuery     = inst.CanQuery,
+                        CastShadow   = inst.CastShadow,
+                    }
+                end
+            end
+        end
+
+        ----------------------------------------------------------------
+        -- LOGIC REDUCE MAP ASLI (PERSIS PUNYA KAMU)
+        ----------------------------------------------------------------
+        for _, inst in ipairs(ws:GetDescendants()) do
+            if inst:IsA("Decal") or inst:IsA("Texture") then
+                inst.Texture = ""
+            elseif inst:IsA("ParticleEmitter") then
+                inst.Enabled = false
+                inst.Rate = 0
+            elseif inst:IsA("Beam") or inst:IsA("Trail") then
+                inst.Enabled = false
+            end
+        end
+
+        for _, inst in ipairs(ws:GetDescendants()) do
+            if inst:IsA("BasePart") then
+                if SIMPLE_MATERIALS then
+                    inst.Material = Enum.Material.SmoothPlastic
+                end
+                inst.Color = TARGET_COLOR
+            end
+        end
+
+        do
+            for _, v in ipairs(Lighting:GetChildren()) do
+                if v:IsA("BloomEffect")
+                or v:IsA("BlurEffect")
+                or v:IsA("SunRaysEffect")
+                or v:IsA("DepthOfFieldEffect")
+                or v:IsA("ColorCorrectionEffect") then
+                    v.Enabled = false
+                end
+            end
+
+            Lighting.Brightness = 0.3
+            Lighting.GlobalShadows = true
+
+            Lighting.Ambient = Color3.fromRGB(0, 0, 0)
+            Lighting.OutdoorAmbient = Color3.fromRGB(0, 0, 0)
+
+            Lighting.FogColor = Color3.fromRGB(15, 10, 5)
+            Lighting.FogStart = 50
+            Lighting.FogEnd = 200
+        end
+
+        if INVISIBLE_DECOR then
+            local TARGET_CONTAINERS = {
+                "World",
+                "Map",
+                "Details"
+            }
+
+            for _, containerName in ipairs(TARGET_CONTAINERS) do
+                local container = ws:FindFirstChild(containerName)
+                if container then
+                    for _, inst in ipairs(container:GetDescendants()) do
+                        if isDecorPart(inst) then
+                            inst.Transparency = 1
+                            inst.CanCollide = false
+                            inst.CanTouch = false
+                            inst.CanQuery = false
+                            inst.CastShadow = false
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    local function ResetReduceMap()
+        if not ReduceBackup.Lighting then return end
+
+        -- restore Lighting
+        local l = ReduceBackup.Lighting
+        Lighting.Brightness      = l.Brightness
+        Lighting.GlobalShadows   = l.GlobalShadows
+        Lighting.Ambient         = l.Ambient
+        Lighting.OutdoorAmbient  = l.OutdoorAmbient
+        Lighting.FogColor        = l.FogColor
+        Lighting.FogStart        = l.FogStart
+        Lighting.FogEnd          = l.FogEnd
+
+        -- restore decals/textures
+        for inst, props in pairs(ReduceBackup.Decals) do
+            if inst.Parent then
+                inst.Texture = props.Texture
+            end
+        end
+
+        -- restore emitters
+        for inst, props in pairs(ReduceBackup.Emitters) do
+            if inst.Parent then
+                inst.Enabled = props.Enabled
+                inst.Rate    = props.Rate
+            end
+        end
+
+        -- restore beams/trails
+        for inst, props in pairs(ReduceBackup.BeamsTrails) do
+            if inst.Parent then
+                inst.Enabled = props.Enabled
+            end
+        end
+
+        -- restore parts (warna/material/transparency/collide/dll.)
+        for inst, props in pairs(ReduceBackup.Parts) do
+            if inst.Parent then
+                inst.Color        = props.Color
+                inst.Material     = props.Material
+                inst.Transparency = props.Transparency
+                inst.CanCollide   = props.CanCollide
+                inst.CanTouch     = props.CanTouch
+                inst.CanQuery     = props.CanQuery
+                inst.CastShadow   = props.CastShadow
+            end
+        end
+    end
 
 
 ----------------------------------------------------------------
@@ -2537,7 +2695,7 @@ end
         refreshFreeze()
     end
 
-    ----------------------------------------------------------------
+----------------------------------------------------------------
 -- 🧱 Reduce Map + 👻 Invisible
 ----------------------------------------------------------------
 do
@@ -2579,117 +2737,18 @@ do
             or  UDim2.new(0,3,0.5,-9)
     end
 
-    local function applyReduce()
-        -- simpan state awal sekali
-        if next(OriginalProps.Parts) == nil then
-            for _, inst in ipairs(ws:GetDescendants()) do
-                if inst:IsA("Decal") or inst:IsA("Texture") then
-                    OriginalProps.Decals[inst] = {Texture = inst.Texture}
-                elseif inst:IsA("ParticleEmitter") then
-                    OriginalProps.Emitters[inst] = {
-                        Enabled = inst.Enabled,
-                        Rate = inst.Rate
-                    }
-                elseif inst:IsA("Beam") or inst:IsA("Trail") then
-                    OriginalProps.BeamsTrails[inst] = {Enabled = inst.Enabled}
-                elseif inst:IsA("BasePart") then
-                    OriginalProps.Parts[inst] = {
-                        Color        = inst.Color,
-                        Material     = inst.Material,
-                        Transparency = inst.Transparency,
-                        CanCollide   = inst.CanCollide,
-                        CanTouch     = inst.CanTouch,
-                        CanQuery     = inst.CanQuery,
-                        CastShadow   = inst.CastShadow
-                    }
-                end
-            end
-        end
-
-        -- apply reduce
-        for inst in pairs(OriginalProps.Decals) do
-            if inst.Parent then
-                inst.Texture = ""
-            end
-        end
-
-        for inst in pairs(OriginalProps.Emitters) do
-            if inst.Parent then
-                inst.Enabled = false
-                inst.Rate = 0
-            end
-        end
-
-        for inst in pairs(OriginalProps.BeamsTrails) do
-            if inst.Parent then
-                inst.Enabled = false
-            end
-        end
-
-        for inst in pairs(OriginalProps.Parts) do
-            if inst.Parent then
-                if SIMPLE_MATERIALS then
-                    inst.Material = Enum.Material.SmoothPlastic
-                end
-                inst.Color = TARGET_COLOR
-
-                if INVISIBLE_DECOR and isDecorPart(inst) then
-                    inst.Transparency = 1
-                    inst.CanCollide = false
-                    inst.CanTouch = false
-                    inst.CanQuery = false
-                    inst.CastShadow = false
-                end
-            end
-        end
-    end
-
-    local function resetReduce()
-        for inst, props in pairs(OriginalProps.Decals) do
-            if inst.Parent then
-                inst.Texture = props.Texture
-            end
-        end
-
-        for inst, props in pairs(OriginalProps.Emitters) do
-            if inst.Parent then
-                inst.Enabled = props.Enabled
-                inst.Rate    = props.Rate
-            end
-        end
-
-        for inst, props in pairs(OriginalProps.BeamsTrails) do
-            if inst.Parent then
-                inst.Enabled = props.Enabled
-            end
-        end
-
-        for inst, props in pairs(OriginalProps.Parts) do
-            if inst.Parent then
-                inst.Color        = props.Color
-                inst.Material     = props.Material
-                inst.Transparency = props.Transparency
-                inst.CanCollide   = props.CanCollide
-                inst.CanTouch     = props.CanTouch
-                inst.CanQuery     = props.CanQuery
-                inst.CastShadow   = props.CastShadow
-            end
-        end
-    end
-
     pillReduce.MouseButton1Click:Connect(function()
         reduceOn = not reduceOn
         if reduceOn then
-            applyReduce()
+            ApplyReduceMap()   -- ON: jalankan logic reduce map (script kamu yang sudah dibungkus fungsi)
         else
-            resetReduce()
+            ResetReduceMap()   -- OFF: balikin semua ke state awal
         end
         refreshReduce()
     end)
 
     refreshReduce()
 end
-
 
     ----------------------------------------------------------------
     -- 🌑 DARK SCREEN (COLORCORRECTION)
