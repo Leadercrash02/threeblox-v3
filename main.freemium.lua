@@ -447,6 +447,12 @@ local questLayout = Instance.new("UIListLayout", pages["Quest"])
 questLayout.Padding = UDim.new(0,8)
 questLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
+-- layout untuk halaman Shop & Trade (BIAR GA TABRAKAN)
+local shopLayout = Instance.new("UIListLayout", pages["Shop & Trade"])
+shopLayout.Padding = UDim.new(0,8)
+shopLayout.SortOrder = Enum.SortOrder.LayoutOrder
+shopLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+
 ----------------------------------------------------------------
 -- QUEST : DEEPSEA (GHOSTFINN)
 ----------------------------------------------------------------
@@ -1312,11 +1318,10 @@ local function BuildShopWeather()
     card.Name = "WeatherPresetCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,16)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
-
+    card.LayoutOrder = 1
     Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
 
     local cardTitle = Instance.new("TextLabel", card)
@@ -1421,7 +1426,7 @@ local function BuildShopWeather()
     selectBtn.AutoButtonColor = false
 
     ------------------------------------------------------------
-    -- 3) ROW AUTO BUY WEATHER (MASIH DI DALAM CARD)
+    -- 3) ROW AUTO BUY WEATHER
     ------------------------------------------------------------
     local rowAuto = Instance.new("Frame", subPreset)
     rowAuto.Size = UDim2.new(1,0,0,36)
@@ -1467,7 +1472,7 @@ local function BuildShopWeather()
     recalcPreset()
 
     ------------------------------------------------------------
-    -- 4) OVERLAY + PANEL KANAN (LEVEL 2)
+    -- 4) OVERLAY + PANEL SELECTOR WEATHER
     ------------------------------------------------------------
     local overlay = Instance.new("TextButton")
     overlay.Name = "WeatherOverlay"
@@ -1511,7 +1516,7 @@ local function BuildShopWeather()
     weatherList.Active = true
 
     local wlLayout = Instance.new("UIListLayout", weatherList)
-    wlLayout.Padding = UDim.new(0, 4)
+    wlLayout.Padding = UDim2.new(0, 4)
     wlLayout.SortOrder = Enum.SortOrder.LayoutOrder
     wlLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
         weatherList.CanvasSize = UDim2.new(0, 0, 0, wlLayout.AbsoluteContentSize.Y + 8)
@@ -1566,18 +1571,16 @@ local function BuildShopWeather()
         weatherPanel.Visible = panelOpen
     end
 
-    -- klik "Select Weather" -> buka/tutup panel
     selectBtn.MouseButton1Click:Connect(function()
         setPanelOpen(not panelOpen)
     end)
 
-    -- klik overlay kosong -> close panel
     overlay.MouseButton1Click:Connect(function()
         setPanelOpen(false)
     end)
 
     ------------------------------------------------------------
-    -- 5) ENGINE AUTO BUY (REMOTE RF/PurchaseWeatherEvent)
+    -- 5) ENGINE AUTO BUY WEATHER
     ------------------------------------------------------------
     task.spawn(function()
         task.wait(5)
@@ -1604,6 +1607,7 @@ local function BuildShopWeather()
         end
     end)
 end
+
 
 ----------------------------------------------------------------
 -- 💼 TRAVELING MERCHANT
@@ -1684,10 +1688,10 @@ local function BuildTravelingMerchant()
     Instance.new("UICorner", panel).CornerRadius = UDim.new(0,10)
 
     local panelPad = Instance.new("UIPadding", panel)
-    panelPad.PaddingTop = UDim.new(0,10)
-    panelPad.PaddingBottom = UDim.new(0,10)
-    panelPad.PaddingLeft = UDim.new(0,12)
-    panelPad.PaddingRight = UDim.new(0,12)
+    panelPad.PaddingTop = UDim2.new(0,10)
+    panelPad.PaddingBottom = UDim2.new(0,10)
+    panelPad.PaddingLeft = UDim2.new(0,12)
+    panelPad.PaddingRight = UDim2.new(0,12)
 
     local header = Instance.new("Frame", panel)
     header.Size = UDim2.new(1,0,0,24)
@@ -1733,7 +1737,7 @@ local function BuildTravelingMerchant()
     listFrame.ZIndex = 6
 
     local listLayout = Instance.new("UIListLayout", listFrame)
-    listLayout.Padding = UDim.new(0,4)
+    listLayout.Padding = UDim2.new(0,4)
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     local right = Instance.new("Frame", body)
@@ -1791,7 +1795,7 @@ local function BuildTravelingMerchant()
     Instance.new("UICorner", autoBtn).CornerRadius = UDim.new(0,8)
 
     ----------------------------------------------------------------
-    -- REBUILD LIST ITEM (GAYA WEATHER)
+    -- REBUILD LIST ITEM
     ----------------------------------------------------------------
     local function rebuildMerchantList()
         for _, c in ipairs(listFrame:GetChildren()) do
@@ -1882,7 +1886,7 @@ local function BuildTravelingMerchant()
     end)
 
     ----------------------------------------------------------------
-    -- TOGGLE AUTO BUY (PAKAI BUTTON)
+    -- TOGGLE AUTO BUY
     ----------------------------------------------------------------
     autoBtn.MouseButton1Click:Connect(function()
         AutoMerchantOn = not AutoMerchantOn
@@ -1899,6 +1903,7 @@ local function BuildTravelingMerchant()
         end
     end)
 end
+
 
 BuildTravelingMerchant()
 
