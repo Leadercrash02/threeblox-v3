@@ -3922,8 +3922,6 @@ function AutoFavoriteCurrentOnce()
     end
 end
 
-
-
 ----------------------------------------------------------------
 -- MEGALODON HUNT TELEPORT (ANCHOR PART)
 ----------------------------------------------------------------
@@ -4811,7 +4809,7 @@ elseif text == "Auto Favorite" then
     pad.PaddingBottom = UDim.new(0,8)
 
     ----------------------------------------------------
-    -- TIGA TOGGLE RARITY (LEGEND / MYTHIC / SECRET) + GARIS KUNING
+    -- TIGA TOGGLE RARITY (LEGEND / MYTHIC / SECRET) GAYA TOTEM
     ----------------------------------------------------
     local rarityRow = Instance.new("Frame", panel)
     rarityRow.Size = UDim2.new(1,0,0,24)
@@ -4819,42 +4817,43 @@ elseif text == "Auto Favorite" then
     rarityRow.BackgroundTransparency = 1
     rarityRow.ZIndex = 6
 
-    local RARITY_HIGHLIGHT = Color3.fromRGB(255, 210, 80)
+    local HIGHLIGHT = Color3.fromRGB(255, 210, 80) -- sama dengan Auto Totem
 
-    local function makeRarityButton(txt)
+    local function makeRarityButton(txt, flagName)
         local btn = Instance.new("TextButton", rarityRow)
-        btn.Size = UDim2.new(0,72,1,0)
+        btn.Size = UDim2.new(0,90,1,0)
         btn.BackgroundColor3 = CARD
         btn.BackgroundTransparency = 0.18
         btn.Font = Enum.Font.Gotham
         btn.TextSize = 12
         btn.TextColor3 = TEXT
-        btn.Text = txt
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.Text = "◆ "..txt
         btn.AutoButtonColor = false
         btn.ZIndex = 7
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
-        local line = Instance.new("Frame")
-        line.Name = "Highlight"
-        line.Parent = btn
-        line.AnchorPoint = Vector2.new(0,0.5)
-        line.Position = UDim2.new(0,0,0.5,0)
-        line.Size = UDim2.new(0,3,1,-6)
-        line.BackgroundColor3 = RARITY_HIGHLIGHT
-        line.BackgroundTransparency = 1
-        line.ZIndex = 8
+        local highlight = Instance.new("Frame")
+        highlight.Name = "Highlight"
+        highlight.Parent = btn
+        highlight.AnchorPoint = Vector2.new(0,0.5)
+        highlight.Position = UDim2.new(0,0,0.5,0)
+        highlight.Size = UDim2.new(0,3,1,-6)
+        highlight.BackgroundColor3 = HIGHLIGHT
+        highlight.BackgroundTransparency = 1
+        highlight.ZIndex = 8
 
-        return btn, line
+        return btn, highlight, flagName
     end
 
-    local legendBtn, legendLine = makeRarityButton("Legend")
+    local legendBtn, legendLine = makeRarityButton("Legend", "RAYFavLegendOn")
     legendBtn.Position = UDim2.new(0,0,0,0)
 
-    local mythicBtn, mythicLine = makeRarityButton("Mythic")
-    mythicBtn.Position = UDim2.new(0,80,0,0)
+    local mythicBtn, mythicLine = makeRarityButton("Mythic", "RAYFavMythicOn")
+    mythicBtn.Position = UDim2.new(0,96,0,0)
 
-    local secretBtn, secretLine = makeRarityButton("Secret")
-    secretBtn.Position = UDim2.new(0,160,0,0)
+    local secretBtn, secretLine = makeRarityButton("Secret", "RAYFavSecretOn")
+    secretBtn.Position = UDim2.new(0,192,0,0)
 
     local function refreshRarityButtons()
         local L = _G.RAYFavLegendOn
@@ -4957,7 +4956,7 @@ elseif text == "Auto Favorite" then
             highlight.AnchorPoint = Vector2.new(0,0.5)
             highlight.Position = UDim2.new(0,0,0.5,0)
             highlight.Size = UDim2.new(0,3,1,-6)
-            highlight.BackgroundColor3 = RARITY_HIGHLIGHT
+            highlight.BackgroundColor3 = HIGHLIGHT
             highlight.BackgroundTransparency = selected and 0 or 1
             highlight.ZIndex = 7
 
@@ -5012,6 +5011,7 @@ elseif text == "Auto Favorite" then
     end)
 
     rebuildFavPanel()
+
 
 
     ----------------------------------------------------------------
@@ -5660,6 +5660,9 @@ function SpawnTotemUUID(uuid)
     end)
 end
 
+----------------------------------------------------------------
+-- LOOP ENGINE AUTO FAVORITE
+----------------------------------------------------------------
 task.spawn(function()
     while true do
         if _G.RAYFavOn then
@@ -5681,4 +5684,3 @@ task.spawn(function()
         end
     end
 end)
-
