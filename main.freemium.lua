@@ -2476,15 +2476,22 @@ do
 
     local function DestroyPingCard()
         if PingMonitorCard then
+            print("[THREEBLOX] DestroyPingCard()")
             PingMonitorCard:Destroy()
             PingMonitorCard = nil
         end
     end
 
     local function SpawnPingCard()
-        if PingMonitorCard and PingMonitorCard.Parent then return end
+        print("[THREEBLOX] SpawnPingCard() CALLED")
+        if PingMonitorCard and PingMonitorCard.Parent then
+            print("[THREEBLOX] Card already exists, skip spawn")
+            return
+        end
 
         local guiRoot = lp:WaitForChild("PlayerGui")
+        print("[THREEBLOX] guiRoot =", guiRoot)
+
         local card = Instance.new("Frame")
         PingMonitorCard = card
 
@@ -2573,17 +2580,20 @@ do
 
         -- update F3-style
         task.spawn(function()
+            print("[THREEBLOX] Ping update loop start")
             while card.Parent do
                 local ping = GetPingMs_F3()
                 local cpu  = GetCpuMs()
                 info.Text  = string.format("📡 PING: %dms   ⚡ CPU: %dms", ping, cpu)
                 task.wait(1)
             end
+            print("[THREEBLOX] Ping update loop end")
         end)
     end
 
     pill.MouseButton1Click:Connect(function()
         enabled = not enabled
+        print("[THREEBLOX] PingToggle =", enabled)
         if enabled then
             SpawnPingCard()
         else
@@ -2594,6 +2604,7 @@ do
 
     refresh()
 end
+
 
 ----------------------------------------------------------------
 -- 🎯 FISHING RADAR
