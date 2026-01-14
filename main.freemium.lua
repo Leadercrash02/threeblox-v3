@@ -1815,35 +1815,39 @@ recalcSHN()
 
 
 ----------------------------------------------------------------
--- CORE UNTUK PLAYER UTILITY
+-- CORE UNTUK PLAYER UTILITY + F3 PING
 ----------------------------------------------------------------
-local VirtualUser      = game:GetService("VirtualUser")
-local Players          = game:GetService("Players")
-local lp               = Players.LocalPlayer
+local VirtualUser       = game:GetService("VirtualUser")
+local Players           = game:GetService("Players")
+local RunService        = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Stats            = game:GetService("Stats")
 
--- REAL PING FUNCTION
-local function GetPingMs()
-    local net = Stats.Network
-    if not net then return 0 end
+local lp      = Players.LocalPlayer
+local player  = lp
 
-    local s = net:FindFirstChild("Ping")
-        or net:FindFirstChild("Data Ping")
-        or net:FindFirstChild("Server Ping")
-
-    if not s then return 0 end
-    local v = s:GetValue()
-    return (typeof(v) == "number") and math.floor(v + 0.5) or 0
+-- REAL PING ala F3 (Shift+F3)
+local function GetPingMs_F3()
+    local ok, value = pcall(function()
+        return player:GetNetworkPing()   -- detik
+    end)
+    if not ok or type(value) ~= "number" then
+        return 0
+    end
+    return math.floor(value * 1000 + 0.5) -- ms
 end
 
-_G.RAY_AntiAFK_On       = false
+-- CPU pseudo ms (frame time)
+local function GetCpuMs()
+    local dt = RunService.Heartbeat:Wait()  -- detik per frame
+    return math.floor(dt * 1000 + 0.5)
+end
+
+_G.RAY_AntiAFK_On       = _G.RAY_AntiAFK_On or false
 _G.RAY_DisableRodSkin   = _G.RAY_DisableRodSkin   or false
 _G.RAY_DisableRodEffect = _G.RAY_DisableRodEffect or false
 
 local AntiAFKConn
 
--- Anti AFK (VirtualUser + Idled).
 function StartAntiAFK()
     if AntiAFKConn then
         AntiAFKConn:Disconnect()
@@ -1883,7 +1887,6 @@ local ROD_VFX_NAMES = {
 function KillAllRodSkins()
     local vfxRoot = ReplicatedStorage:FindFirstChild("VFX")
     if not vfxRoot then return end
-
     for _, name in ipairs(ROD_VFX_NAMES) do
         local obj = vfxRoot:FindFirstChild(name, true)
         if obj then
@@ -1893,6 +1896,7 @@ function KillAllRodSkins()
         end
     end
 end
+
 
 
     ----------------------------------------------------------------
@@ -2092,64 +2096,166 @@ do
 end
 
 ----------------------------------------------------------------
--- 📡 PING & ⚡ CPU MONITOR
+-- 📡 PING MONITOR TOGGLE → SPAWN CARD DRAG/CLOSE
 ----------------------------------------------------------------
-do
-    local Stats = game:GetService("Stats")
+local PingMonitorCard
 
-    local function GetPingMs()
-        local net = Stats.Network
-        if not net then return 0 end
-        local s = net:FindFirstChild("Ping")
-            or net:FindFirstChild("Data Ping")
-            or net:FindFirstChild("Data Ping (ms)")
-        if not s then return 0 end
-        local v = s:GetValue()
-        return (typeof(v) == "number") and math.floor(v + 0.5) or 0
+do
+    local rowPingToggle = Instance.new("Frame", subPU)
+    rowPingToggle.Size = UDim2.new(1,0,0,36)
+    rowPingToggle.BackgroundTransparency = 1
+
+    local labelPing = Instance.new("TextLabel", rowPingToggle)
+    labelPing.Size = UDim2.new(1,-100,1,0)
+    labelPing.Position = UDim2.new(0,16,0,0)
+    labelPing.BackgroundTransparency = 1
+    labelPing.Font = Enum.Font.Gotham
+    labelPing.TextSize = 13
+    labelPing.TextXAlignment = Enum.TextXAlignment.Left
+    labelPing.TextColor3 = TEXT
+    labelPing.Text = "📡 Ping Monitor (F3 style)"
+
+    local pill = Instance.new("TextButton", rowPingToggle)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.New(0,999)
+
+    local enabled = false
+
+    local function refresh()
+        pill.BackgroundColor3 = enabled and ACCENT or MUTED
+        knob.Position = enabled and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
     end
 
-    local rowPing = Instance.new("Frame", subPU)
-    rowPing.Size = UDim2.new(1,0,0,50)
-    rowPing.BackgroundTransparency = 1
-
-    local card = Instance.new("Frame", rowPing)
-    card.Size = UDim2.new(1,-32,1,0)
-    card.Position = UDim2.new(0,16,0,0)
-    card.BackgroundColor3 = CARD
-    card.BackgroundTransparency = ALPHA_CARD
-    card.ClipsDescendants = true
-    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
-
-    local title = Instance.new("TextLabel", card)
-    title.Size = UDim2.new(1,-8,0,16)
-    title.Position = UDim2.new(0,8,0,4)
-    title.BackgroundTransparency = 1
-    title.Font = Enum.Font.GothamSemibold
-    title.TextSize = 13
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.TextColor3 = TEXT
-    title.Text = "THREEBLOX Monitor"
-
-    local info = Instance.new("TextLabel", card)
-    info.Size = UDim2.new(1,-8,0,22)
-    info.Position = UDim2.new(0,8,0,22)
-    info.BackgroundTransparency = 1
-    info.Font = Enum.Font.GothamBold
-    info.TextSize = 14
-    info.TextXAlignment = Enum.TextXAlignment.Left
-    info.TextColor3 = TEXT
-    info.Text = "📡 PING: 0ms   ⚡ CPU: 0.0ms"
-
-    task.spawn(function()
-        local t = 0
-        while card.Parent do
-            t += 0.15
-            local ping = GetPingMs()
-            local cpu  = 20 + 5 * math.sin(t) -- angka bergerak biar kayak CPU ms
-            info.Text  = string.format("📡 PING: %dms   ⚡ CPU: %.1fms", ping, cpu)
-            task.wait(1)
+    local function DestroyPingCard()
+        if PingMonitorCard then
+            PingMonitorCard:Destroy()
+            PingMonitorCard = nil
         end
+    end
+
+    local function SpawnPingCard()
+        if PingMonitorCard and PingMonitorCard.Parent then return end
+
+        local guiRoot = lp:WaitForChild("PlayerGui")
+        local card = Instance.new("Frame")
+        PingMonitorCard = card
+
+        card.Name = "ThreebloxPingMonitor"
+        card.Parent = guiRoot
+        card.Size = UDim2.new(0, 230, 0, 70)
+        card.Position = UDim2.new(0, 40, 0.2, 0)
+        card.BackgroundColor3 = CARD
+        card.BackgroundTransparency = ALPHA_CARD
+        card.Active = true
+        card.ZIndex = 50
+        card.ClipsDescendants = true
+        Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
+
+        local header = Instance.new("TextLabel", card)
+        header.Size = UDim2.new(1,-28,0,22)
+        header.Position = UDim2.new(0,8,0,2)
+        header.BackgroundTransparency = 1
+        header.Font = Enum.Font.GothamSemibold
+        header.TextSize = 13
+        header.TextXAlignment = Enum.TextXAlignment.Left
+        header.TextColor3 = TEXT
+        header.Text = "THREEBLOX Monitor"
+
+        local closeBtn = Instance.new("TextButton", card)
+        closeBtn.Size = UDim2.new(0,22,0,22)
+        closeBtn.Position = UDim2.new(1,-24,0,4)
+        closeBtn.BackgroundColor3 = CARD
+        closeBtn.BackgroundTransparency = 0.2
+        closeBtn.Font = Enum.Font.GothamBold
+        closeBtn.TextSize = 16
+        closeBtn.Text = "X"
+        closeBtn.TextColor3 = TEXT
+        closeBtn.ZIndex = 51
+        Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
+
+        local info = Instance.new("TextLabel", card)
+        info.Size = UDim2.new(1,-16,0,32)
+        info.Position = UDim2.new(0,8,0,30)
+        info.BackgroundTransparency = 1
+        info.Font = Enum.Font.GothamBold
+        info.TextSize = 14
+        info.TextXAlignment = Enum.TextXAlignment.Left
+        info.TextColor3 = TEXT
+        info.Text = "📡 PING: 0ms   ⚡ CPU: 0ms"
+        info.ZIndex = 50
+
+        -- drag
+        local UIS = game:GetService("UserInputService")
+        local dragging = false
+        local startPos, startCard
+
+        header.InputBegan:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = true
+                startPos = input.Position
+                startCard = card.Position
+            end
+        end)
+
+        UIS.InputChanged:Connect(function(input)
+            if not dragging then return end
+            if input.UserInputType == Enum.UserInputType.MouseMovement
+            or input.UserInputType == Enum.UserInputType.Touch then
+                local delta = input.Position - startPos
+                card.Position = UDim2.new(
+                    startCard.X.Scale, startCard.X.Offset + delta.X,
+                    startCard.Y.Scale, startCard.Y.Offset + delta.Y
+                )
+            end
+        end)
+
+        UIS.InputEnded:Connect(function(input)
+            if input.UserInputType == Enum.UserInputType.MouseButton1
+            or input.UserInputType == Enum.UserInputType.Touch then
+                dragging = false
+            end
+        end)
+
+        closeBtn.MouseButton1Click:Connect(function()
+            enabled = false
+            refresh()
+            DestroyPingCard()
+        end)
+
+        -- update F3-style
+        task.spawn(function()
+            while card.Parent do
+                local ping = GetPingMs_F3()
+                local cpu  = GetCpuMs()
+                info.Text  = string.format("📡 PING: %dms   ⚡ CPU: %dms", ping, cpu)
+                task.wait(1)
+            end
+        end)
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        if enabled then
+            SpawnPingCard()
+        else
+            DestroyPingCard()
+        end
+        refresh()
     end)
+
+    refresh()
 end
 
 
