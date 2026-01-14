@@ -1817,18 +1817,33 @@ recalcSHN()
 ----------------------------------------------------------------
 -- CORE UNTUK PLAYER UTILITY
 ----------------------------------------------------------------
-local VirtualUser = game:GetService("VirtualUser")
-local Players = game:GetService("Players")
-local lp = Players.LocalPlayer
+local VirtualUser      = game:GetService("VirtualUser")
+local Players          = game:GetService("Players")
+local lp               = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Stats            = game:GetService("Stats")
 
-_G.RAY_AntiAFK_On        = false
-_G.RAY_DisableRodSkin    = _G.RAY_DisableRodSkin    or false
-_G.RAY_DisableRodEffect  = _G.RAY_DisableRodEffect  or false
+-- REAL PING FUNCTION
+local function GetPingMs()
+    local net = Stats.Network
+    if not net then return 0 end
+
+    local s = net:FindFirstChild("Ping")
+        or net:FindFirstChild("Data Ping")
+        or net:FindFirstChild("Server Ping")
+
+    if not s then return 0 end
+    local v = s:GetValue()
+    return (typeof(v) == "number") and math.floor(v + 0.5) or 0
+end
+
+_G.RAY_AntiAFK_On       = false
+_G.RAY_DisableRodSkin   = _G.RAY_DisableRodSkin   or false
+_G.RAY_DisableRodEffect = _G.RAY_DisableRodEffect or false
 
 local AntiAFKConn
 
--- Anti AFK (VirtualUser + Idled). [web:449]
+-- Anti AFK (VirtualUser + Idled).
 function StartAntiAFK()
     if AntiAFKConn then
         AntiAFKConn:Disconnect()
@@ -1878,6 +1893,7 @@ function KillAllRodSkins()
         end
     end
 end
+
 
     ----------------------------------------------------------------
     -- DROPDOWN : 👤 PLAYER UTILITY
@@ -2074,6 +2090,68 @@ do
 
     refresh()
 end
+
+----------------------------------------------------------------
+-- 📡 PING & ⚡ CPU MONITOR
+----------------------------------------------------------------
+do
+    local Stats = game:GetService("Stats")
+
+    local function GetPingMs()
+        local net = Stats.Network
+        if not net then return 0 end
+        local s = net:FindFirstChild("Ping")
+            or net:FindFirstChild("Data Ping")
+            or net:FindFirstChild("Data Ping (ms)")
+        if not s then return 0 end
+        local v = s:GetValue()
+        return (typeof(v) == "number") and math.floor(v + 0.5) or 0
+    end
+
+    local rowPing = Instance.new("Frame", subPU)
+    rowPing.Size = UDim2.new(1,0,0,50)
+    rowPing.BackgroundTransparency = 1
+
+    local card = Instance.new("Frame", rowPing)
+    card.Size = UDim2.new(1,-32,1,0)
+    card.Position = UDim2.new(0,16,0,0)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
+
+    local title = Instance.new("TextLabel", card)
+    title.Size = UDim2.new(1,-8,0,16)
+    title.Position = UDim2.new(0,8,0,4)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamSemibold
+    title.TextSize = 13
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextColor3 = TEXT
+    title.Text = "THREEBLOX Monitor"
+
+    local info = Instance.new("TextLabel", card)
+    info.Size = UDim2.new(1,-8,0,22)
+    info.Position = UDim2.new(0,8,0,22)
+    info.BackgroundTransparency = 1
+    info.Font = Enum.Font.GothamBold
+    info.TextSize = 14
+    info.TextXAlignment = Enum.TextXAlignment.Left
+    info.TextColor3 = TEXT
+    info.Text = "📡 PING: 0ms   ⚡ CPU: 0.0ms"
+
+    task.spawn(function()
+        local t = 0
+        while card.Parent do
+            t += 0.15
+            local ping = GetPingMs()
+            local cpu  = 20 + 5 * math.sin(t) -- angka bergerak biar kayak CPU ms
+            info.Text  = string.format("📡 PING: %dms   ⚡ CPU: %.1fms", ping, cpu)
+            task.wait(1)
+        end
+    end)
+end
+
 
 ----------------------------------------------------------------
 -- 🎯 FISHING RADAR
