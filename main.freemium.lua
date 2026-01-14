@@ -1822,8 +1822,8 @@ local Players           = game:GetService("Players")
 local RunService        = game:GetService("RunService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local lp      = Players.LocalPlayer
-local player  = lp
+local lp     = Players.LocalPlayer
+local player = lp
 
 -- REAL PING ala F3 (Shift+F3)
 local function GetPingMs_F3()
@@ -1845,6 +1845,7 @@ end
 _G.RAY_AntiAFK_On       = _G.RAY_AntiAFK_On or false
 _G.RAY_DisableRodSkin   = _G.RAY_DisableRodSkin   or false
 _G.RAY_DisableRodEffect = _G.RAY_DisableRodEffect or false
+_G.RAY_FishingRadarOn   = _G.RAY_FishingRadarOn   or false
 
 local AntiAFKConn
 
@@ -1897,56 +1898,54 @@ function KillAllRodSkins()
     end
 end
 
+----------------------------------------------------------------
+-- DROPDOWN : 👤 PLAYER UTILITY
+----------------------------------------------------------------
+local holderPU = Instance.new("Frame", miscContainer)
+holderPU.Size = UDim2.new(1,0,0,42)
+holderPU.BackgroundTransparency = 1
+holderPU.LayoutOrder = 1
 
+local mainBtnPU = Instance.new("TextButton", holderPU)
+mainBtnPU.Size = UDim2.new(1,0,0,42)
+mainBtnPU.Text = "👤 Player Utility ▼"
+mainBtnPU.Font = Enum.Font.Gotham
+mainBtnPU.TextSize = 15
+mainBtnPU.TextXAlignment = Enum.TextXAlignment.Left
+mainBtnPU.TextColor3 = TEXT
+mainBtnPU.BackgroundColor3 = CARD
+mainBtnPU.BackgroundTransparency = ALPHACARD
+mainBtnPU.AutoButtonColor = false
+Instance.new("UICorner", mainBtnPU).CornerRadius = UDim.new(0,10)
 
-    ----------------------------------------------------------------
-    -- DROPDOWN : 👤 PLAYER UTILITY
-    ----------------------------------------------------------------
-    local holderPU = Instance.new("Frame", miscContainer)
-    holderPU.Size = UDim2.new(1,0,0,42)
-    holderPU.BackgroundTransparency = 1
-    holderPU.LayoutOrder = 1
+local subPU = Instance.new("Frame", holderPU)
+subPU.Position = UDim2.new(0,0,0,42)
+subPU.Size = UDim2.new(1,0,0,0)
+subPU.ClipsDescendants = true
+subPU.BackgroundTransparency = 1
 
-    local mainBtnPU = Instance.new("TextButton", holderPU)
-    mainBtnPU.Size = UDim2.new(1,0,0,42)
-    mainBtnPU.Text = "👤 Player Utility ▼"
-    mainBtnPU.Font = Enum.Font.Gotham
-    mainBtnPU.TextSize = 15
-    mainBtnPU.TextXAlignment = Enum.TextXAlignment.Left
-    mainBtnPU.TextColor3 = TEXT
-    mainBtnPU.BackgroundColor3 = CARD
-    mainBtnPU.BackgroundTransparency = ALPHA_CARD
-    mainBtnPU.AutoButtonColor = false
-    Instance.new("UICorner", mainBtnPU).CornerRadius = UDim.new(0,10)
+local layoutPU = Instance.new("UIListLayout", subPU)
+layoutPU.Padding = UDim.new(0,6)
 
-    local subPU = Instance.new("Frame", holderPU)
-    subPU.Position = UDim2.new(0,0,0,42)
-    subPU.Size = UDim2.new(1,0,0,0)
-    subPU.ClipsDescendants = true
-    subPU.BackgroundTransparency = 1
-
-    local layoutPU = Instance.new("UIListLayout", subPU)
-    layoutPU.Padding = UDim.new(0,6)
-
-    local openPU = false
-    local function recalcPU()
-        task.wait()
-        local h = layoutPU.AbsoluteContentSize.Y
-        if openPU then
-            subPU.Size = UDim2.new(1,0,0,h)
-            holderPU.Size = UDim2.new(1,0,0,42 + h)
-            mainBtnPU.Text = "👤 Player Utility ▲"
-        else
-            subPU.Size = UDim2.new(1,0,0,0)
-            holderPU.Size = UDim2.new(1,0,0,42)
-            mainBtnPU.Text = "👤 Player Utility ▼"
-        end
+local openPU = false
+local function recalcPU()
+    task.wait()
+    local h = layoutPU.AbsoluteContentSize.Y
+    if openPU then
+        subPU.Size = UDim2.new(1,0,0,h)
+        holderPU.Size = UDim2.new(1,0,0,42 + h)
+        mainBtnPU.Text = "👤 Player Utility ▲"
+    else
+        subPU.Size = UDim2.new(1,0,0,0)
+        holderPU.Size = UDim2.new(1,0,0,42)
+        mainBtnPU.Text = "👤 Player Utility ▼"
     end
+end
 
-    mainBtnPU.MouseButton1Click:Connect(function()
-        openPU = not openPU
-        recalcPU()
-    end)
+mainBtnPU.MouseButton1Click:Connect(function()
+    openPU = not openPU
+    recalcPU()
+end)
 
 ----------------------------------------------------------------
 -- 🔍 MAX ZOOM (150)
@@ -2067,8 +2066,6 @@ do
     knobAFK.BackgroundColor3 = Color3.fromRGB(255,255,255)
     Instance.new("UICorner", knobAFK).CornerRadius = UDim.new(0,999)
 
-    _G.RAY_AntiAFK_On = _G.RAY_AntiAFK_On or false
-
     local function refresh()
         pillAFK.BackgroundColor3 = _G.RAY_AntiAFK_On and ACCENT or MUTED
         knobAFK.Position = _G.RAY_AntiAFK_On
@@ -2128,7 +2125,7 @@ do
     knob.Size = UDim2.new(0,18,0,18)
     knob.Position = UDim2.new(0,3,0.5,-9)
     knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knob).CornerRadius = UDim.New(0,999)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
     local enabled = false
 
@@ -2156,7 +2153,7 @@ do
         card.Size = UDim2.new(0, 230, 0, 70)
         card.Position = UDim2.new(0, 40, 0.2, 0)
         card.BackgroundColor3 = CARD
-        card.BackgroundTransparency = ALPHA_CARD
+        card.BackgroundTransparency = ALPHACARD
         card.Active = true
         card.ZIndex = 50
         card.ClipsDescendants = true
