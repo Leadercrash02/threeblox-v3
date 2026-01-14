@@ -1998,10 +1998,8 @@ end
 
 recalcSHN()
 
-
-
 ----------------------------------------------------------------
--- CORE UNTUK PLAYER UTILITY + F3 PING  (GLOBAL, DI ATAS FUNGSI)
+-- CORE UNTUK PLAYER UTILITY + F3 PING (GLOBAL)
 ----------------------------------------------------------------
 local VirtualUser       = game:GetService("VirtualUser")
 local Players           = game:GetService("Players")
@@ -2084,14 +2082,162 @@ function KillAllRodSkins()
     end
 end
 
+
 ----------------------------------------------------------------
--- FUNGSI BUILD MISC (HANYA BAGIAN PLAYER UTILITY + RADAR)
--- TEMPATKAN DI DALAM BuildMisc() DI SCRIPT ASLI LU
+-- DROPDOWN : 🎥 STREAMER HIDE NAME
 ----------------------------------------------------------------
--- contoh:
--- local function BuildMisc(miscContainer)
---     ... (bagian lain)
---     >>> tempel mulai sini
+local holderSHN = Instance.new("Frame", miscContainer)
+holderSHN.Size = UDim2.new(1,0,0,42)
+holderSHN.BackgroundTransparency = 1
+holderSHN.LayoutOrder = 1
+
+local mainBtnSHN = Instance.new("TextButton", holderSHN)
+mainBtnSHN.Size = UDim2.new(1,0,0,42)
+mainBtnSHN.Text = "🎥 Streamer Hide Name ▼"
+mainBtnSHN.Font = Enum.Font.Gotham
+mainBtnSHN.TextSize = 15
+mainBtnSHN.TextXAlignment = Enum.TextXAlignment.Left
+mainBtnSHN.TextColor3 = TEXT
+mainBtnSHN.BackgroundColor3 = CARD
+mainBtnSHN.BackgroundTransparency = ALPHA_CARD
+mainBtnSHN.AutoButtonColor = false
+Instance.new("UICorner", mainBtnSHN).CornerRadius = UDim.new(0,10)
+
+local subSHN = Instance.new("Frame", holderSHN)
+subSHN.Position = UDim2.new(0,0,0,42)
+subSHN.Size = UDim2.new(1,0,0,0)
+subSHN.ClipsDescendants = true
+subSHN.BackgroundTransparency = 1
+
+local layoutSHN = Instance.new("UIListLayout", subSHN)
+layoutSHN.Padding = UDim.new(0,6)
+
+local openSHN = false
+local function recalcSHN()
+    task.wait()
+    local h = layoutSHN.AbsoluteContentSize.Y
+    if openSHN then
+        subSHN.Size = UDim2.new(1,0,0,h)
+        holderSHN.Size = UDim2.new(1,0,0,42 + h)
+        mainBtnSHN.Text = "🎥 Streamer Hide Name ▲"
+    else
+        subSHN.Size = UDim2.new(1,0,0,0)
+        holderSHN.Size = UDim2.new(1,0,0,42)
+        mainBtnSHN.Text = "🎥 Streamer Hide Name ▼"
+    end
+end
+
+mainBtnSHN.MouseButton1Click:Connect(function()
+    openSHN = not openSHN
+    recalcSHN()
+end)
+
+----------------------------------------------------------------
+-- PREDECLARE TEXTBOX (buat dipakai di toggle)
+----------------------------------------------------------------
+local nameBox
+
+----------------------------------------------------------------
+-- ROW 1: TOGGLE ON/OFF
+----------------------------------------------------------------
+do
+    local rowToggle = Instance.new("Frame", subSHN)
+    rowToggle.Size = UDim2.new(1,0,0,36)
+    rowToggle.BackgroundTransparency = 1
+
+    local labelT = Instance.new("TextLabel", rowToggle)
+    labelT.Size = UDim2.new(1,-100,1,0)
+    labelT.Position = UDim2.new(0,16,0,0)
+    labelT.BackgroundTransparency = 1
+    labelT.Font = Enum.Font.Gotham
+    labelT.TextSize = 13
+    labelT.TextXAlignment = Enum.TextXAlignment.Left
+    labelT.TextColor3 = TEXT
+    labelT.Text = "Enable Custom Name"
+
+    local pill = Instance.new("TextButton", rowToggle)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    local function refreshToggle()
+        local on = _G.RAY_StreamerOn
+        pill.BackgroundColor3 = on and ACCENT or MUTED
+        knob.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        _G.RAY_StreamerOn = not _G.RAY_StreamerOn
+
+        if _G.RAY_StreamerOn and nameBox then
+            _G.RAY_CustomName = nameBox.Text ~= "" and nameBox.Text or "discord.gg/Threeblox"
+            nameBox.Text = _G.RAY_CustomName
+        end
+
+        applyStreamerState()
+        refreshToggle()
+    end)
+
+    refreshToggle()
+end
+
+----------------------------------------------------------------
+-- ROW 2: CUSTOM NAME
+----------------------------------------------------------------
+do
+    local rowName = Instance.new("Frame", subSHN)
+    rowName.Size = UDim2.new(1,0,0,36)
+    rowName.BackgroundTransparency = 1
+
+    local labelName = Instance.new("TextLabel", rowName)
+    labelName.Size = UDim2.new(1,-140,1,0)
+    labelName.Position = UDim2.new(0,16,0,0)
+    labelName.BackgroundTransparency = 1
+    labelName.Font = Enum.Font.Gotham
+    labelName.TextSize = 13
+    labelName.TextXAlignment = Enum.TextXAlignment.Left
+    labelName.TextColor3 = TEXT
+    labelName.Text = "Custom Name"
+
+    nameBox = Instance.new("TextBox", rowName)
+    nameBox.Size = UDim2.new(0,220,0,28)
+    nameBox.Position = UDim2.new(1,-236,0.5,-14)
+    nameBox.Text = _G.RAY_CustomName
+    nameBox.Font = Enum.Font.Gotham
+    nameBox.TextSize = 13
+    nameBox.TextXAlignment = Enum.TextXAlignment.Center
+    nameBox.TextColor3 = TEXT
+    nameBox.ClearTextOnFocus = false
+    nameBox.BackgroundColor3 = CARD
+    nameBox.BackgroundTransparency = 0.12
+    Instance.new("UICorner", nameBox).CornerRadius = UDim.new(0,8)
+
+    nameBox.FocusLost:Connect(function(enter)
+        if not enter then return end
+        if nameBox.Text == "" then
+            _G.RAY_CustomName = "discord.gg/Threeblox"
+            nameBox.Text = _G.RAY_CustomName
+        else
+            _G.RAY_CustomName = nameBox.Text
+        end
+        if _G.RAY_StreamerOn then
+            applyStreamerState()
+        end
+    end)
+end
+
+recalcSHN()
+
 ----------------------------------------------------------------
 -- DROPDOWN : 👤 PLAYER UTILITY
 ----------------------------------------------------------------
@@ -2108,7 +2254,7 @@ mainBtnPU.TextSize = 15
 mainBtnPU.TextXAlignment = Enum.TextXAlignment.Left
 mainBtnPU.TextColor3 = TEXT
 mainBtnPU.BackgroundColor3 = CARD
-mainBtnPU.BackgroundTransparency = ALPHACARD
+mainBtnPU.BackgroundTransparency = ALPHA_CARD
 mainBtnPU.AutoButtonColor = false
 Instance.new("UICorner", mainBtnPU).CornerRadius = UDim.new(0,10)
 
@@ -2347,7 +2493,7 @@ do
         card.Size = UDim2.new(0, 230, 0, 70)
         card.Position = UDim2.new(0, 40, 0.2, 0)
         card.BackgroundColor3 = CARD
-        card.BackgroundTransparency = ALPHACARD
+        card.BackgroundTransparency = ALPHA_CARD
         card.Active = true
         card.ZIndex = 50
         card.ClipsDescendants = true
@@ -2449,7 +2595,6 @@ do
     refresh()
 end
 
-
 ----------------------------------------------------------------
 -- 🎯 FISHING RADAR
 ----------------------------------------------------------------
@@ -2542,6 +2687,9 @@ do
 
     refresh()
 end
+
+-- lanjut: WalkSpeed / fitur lain lu di bawah sini
+
 
 
 
