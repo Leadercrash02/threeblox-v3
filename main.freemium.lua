@@ -1815,7 +1815,7 @@ recalcSHN()
 
 
 ----------------------------------------------------------------
--- CORE UNTUK PLAYER UTILITY + F3 PING
+-- CORE UNTUK PLAYER UTILITY + F3 PING  (GLOBAL, DI ATAS FUNGSI)
 ----------------------------------------------------------------
 local VirtualUser       = game:GetService("VirtualUser")
 local Players           = game:GetService("Players")
@@ -1898,6 +1898,14 @@ function KillAllRodSkins()
     end
 end
 
+----------------------------------------------------------------
+-- FUNGSI BUILD MISC (HANYA BAGIAN PLAYER UTILITY + RADAR)
+-- TEMPATKAN DI DALAM BuildMisc() DI SCRIPT ASLI LU
+----------------------------------------------------------------
+-- contoh:
+-- local function BuildMisc(miscContainer)
+--     ... (bagian lain)
+--     >>> tempel mulai sini
 ----------------------------------------------------------------
 -- DROPDOWN : 👤 PLAYER UTILITY
 ----------------------------------------------------------------
