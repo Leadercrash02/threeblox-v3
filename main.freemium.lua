@@ -1999,199 +1999,6 @@ end
 recalcSHN()
 
 ----------------------------------------------------------------
--- CORE UNTUK PLAYER UTILITY + F3 PING (GLOBAL)
-----------------------------------------------------------------
-local VirtualUser       = game:GetService("VirtualUser")
-local Players           = game:GetService("Players")
-local RunService        = game:GetService("RunService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local lp     = Players.LocalPlayer
-local player = lp
-
--- REAL PING ala F3 (Shift+F3)
-local function GetPingMs_F3()
-    local ok, value = pcall(function()
-        return player:GetNetworkPing()   -- detik
-    end)
-    if not ok or type(value) ~= "number" then
-        return 0
-    end
-    return math.floor(value * 1000 + 0.5) -- ms
-end
-
--- CPU pseudo ms (frame time)
-local function GetCpuMs()
-    local dt = RunService.Heartbeat:Wait()  -- detik per frame
-    return math.floor(dt * 1000 + 0.5)
-end
-
-_G.RAY_AntiAFK_On       = _G.RAY_AntiAFK_On or false
-_G.RAY_DisableRodSkin   = _G.RAY_DisableRodSkin   or false
-_G.RAY_DisableRodEffect = _G.RAY_DisableRodEffect or false
-_G.RAY_FishingRadarOn   = _G.RAY_FishingRadarOn   or false
-
-local AntiAFKConn
-
-function StartAntiAFK()
-    if AntiAFKConn then
-        AntiAFKConn:Disconnect()
-    end
-    AntiAFKConn = lp.Idled:Connect(function()
-        pcall(function()
-            VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-            task.wait(1)
-            VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
-        end)
-    end)
-end
-
-function StopAntiAFK()
-    if AntiAFKConn then
-        AntiAFKConn:Disconnect()
-        AntiAFKConn = nil
-    end
-end
-
-local ROD_VFX_NAMES = {
-    "1x1x1x1 Ban Hammer Dive",
-    "Abyssal Chroma Dive",
-    "Abyssfire Dive",
-    "Amber Dive",
-    "Amethyst Dive",
-    "BanHammerThrow",
-    "Xmas Tree Rod Dive",
-    "The Vanquisher Dive",
-    "Ornament Axe Dive",
-    "Frozen Krampus Scythe Dive",
-    "Electric Guitar Dive",
-    "Eclipse Katana Dive",
-    "Divine Blade Dive",
-}
-
-function KillAllRodSkins()
-    local vfxRoot = ReplicatedStorage:FindFirstChild("VFX")
-    if not vfxRoot then return end
-    for _, name in ipairs(ROD_VFX_NAMES) do
-        local obj = vfxRoot:FindFirstChild(name, true)
-        if obj then
-            pcall(function()
-                obj:Destroy()
-            end)
-        end
-    end
-end
-
-
-----------------------------------------------------------------
--- DROPDOWN : 🎥 STREAMER HIDE NAME
-----------------------------------------------------------------
-local holderSHN = Instance.new("Frame", miscContainer)
-holderSHN.Size = UDim2.new(1,0,0,42)
-holderSHN.BackgroundTransparency = 1
-holderSHN.LayoutOrder = 1
-
-local mainBtnSHN = Instance.new("TextButton", holderSHN)
-mainBtnSHN.Size = UDim2.new(1,0,0,42)
-mainBtnSHN.Text = "🎥 Streamer Hide Name ▼"
-mainBtnSHN.Font = Enum.Font.Gotham
-mainBtnSHN.TextSize = 15
-mainBtnSHN.TextXAlignment = Enum.TextXAlignment.Left
-mainBtnSHN.TextColor3 = TEXT
-mainBtnSHN.BackgroundColor3 = CARD
-mainBtnSHN.BackgroundTransparency = ALPHA_CARD
-mainBtnSHN.AutoButtonColor = false
-Instance.new("UICorner", mainBtnSHN).CornerRadius = UDim.new(0,10)
-
-local subSHN = Instance.new("Frame", holderSHN)
-subSHN.Position = UDim2.new(0,0,0,42)
-subSHN.Size = UDim2.new(1,0,0,0)
-subSHN.ClipsDescendants = true
-subSHN.BackgroundTransparency = 1
-
-local layoutSHN = Instance.new("UIListLayout", subSHN)
-layoutSHN.Padding = UDim.new(0,6)
-
-local openSHN = false
-local function recalcSHN()
-    task.wait()
-    local h = layoutSHN.AbsoluteContentSize.Y
-    if openSHN then
-        subSHN.Size = UDim2.new(1,0,0,h)
-        holderSHN.Size = UDim2.new(1,0,0,42 + h)
-        mainBtnSHN.Text = "🎥 Streamer Hide Name ▲"
-    else
-        subSHN.Size = UDim2.new(1,0,0,0)
-        holderSHN.Size = UDim2.new(1,0,0,42)
-        mainBtnSHN.Text = "🎥 Streamer Hide Name ▼"
-    end
-end
-
-mainBtnSHN.MouseButton1Click:Connect(function()
-    openSHN = not openSHN
-    recalcSHN()
-end)
-
-----------------------------------------------------------------
--- PREDECLARE TEXTBOX (buat dipakai di toggle)
-----------------------------------------------------------------
-local nameBox
-
-----------------------------------------------------------------
--- ROW 1: TOGGLE ON/OFF
-----------------------------------------------------------------
-do
-    local rowToggle = Instance.new("Frame", subSHN)
-    rowToggle.Size = UDim2.new(1,0,0,36)
-    rowToggle.BackgroundTransparency = 1
-
-    local labelT = Instance.new("TextLabel", rowToggle)
-    labelT.Size = UDim2.new(1,-100,1,0)
-    labelT.Position = UDim2.new(0,16,0,0)
-    labelT.BackgroundTransparency = 1
-    labelT.Font = Enum.Font.Gotham
-    labelT.TextSize = 13
-    labelT.TextXAlignment = Enum.TextXAlignment.Left
-    labelT.TextColor3 = TEXT
-    labelT.Text = "Enable Custom Name"
-
-    local pill = Instance.new("TextButton", rowToggle)
-    pill.Size = UDim2.new(0,50,0,24)
-    pill.Position = UDim2.new(1,-80,0.5,-12)
-    pill.BackgroundColor3 = MUTED
-    pill.BackgroundTransparency = 0.1
-    pill.Text = ""
-    pill.AutoButtonColor = false
-    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
-
-    local knob = Instance.new("Frame", pill)
-    knob.Size = UDim2.new(0,18,0,18)
-    knob.Position = UDim2.new(0,3,0.5,-9)
-    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
-
-    local function refreshToggle()
-        local on = _G.RAY_StreamerOn
-        pill.BackgroundColor3 = on and ACCENT or MUTED
-        knob.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
-    end
-
-    pill.MouseButton1Click:Connect(function()
-        _G.RAY_StreamerOn = not _G.RAY_StreamerOn
-
-        if _G.RAY_StreamerOn and nameBox then
-            _G.RAY_CustomName = nameBox.Text ~= "" and nameBox.Text or "discord.gg/Threeblox"
-            nameBox.Text = _G.RAY_CustomName
-        end
-
-        applyStreamerState()
-        refreshToggle()
-    end)
-
-    refreshToggle()
-end
-
-----------------------------------------------------------------
 -- ROW 2: CUSTOM NAME
 ----------------------------------------------------------------
 do
@@ -2239,53 +2046,117 @@ end
 recalcSHN()
 
 ----------------------------------------------------------------
--- DROPDOWN : 👤 PLAYER UTILITY
+-- CORE UNTUK PLAYER UTILITY
 ----------------------------------------------------------------
-local holderPU = Instance.new("Frame", miscContainer)
-holderPU.Size = UDim2.new(1,0,0,42)
-holderPU.BackgroundTransparency = 1
-holderPU.LayoutOrder = 1
+local VirtualUser = game:GetService("VirtualUser")
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local mainBtnPU = Instance.new("TextButton", holderPU)
-mainBtnPU.Size = UDim2.new(1,0,0,42)
-mainBtnPU.Text = "👤 Player Utility ▼"
-mainBtnPU.Font = Enum.Font.Gotham
-mainBtnPU.TextSize = 15
-mainBtnPU.TextXAlignment = Enum.TextXAlignment.Left
-mainBtnPU.TextColor3 = TEXT
-mainBtnPU.BackgroundColor3 = CARD
-mainBtnPU.BackgroundTransparency = ALPHA_CARD
-mainBtnPU.AutoButtonColor = false
-Instance.new("UICorner", mainBtnPU).CornerRadius = UDim.new(0,10)
+_G.RAY_AntiAFK_On        = false
+_G.RAY_DisableRodSkin    = _G.RAY_DisableRodSkin    or false
+_G.RAY_DisableRodEffect  = _G.RAY_DisableRodEffect  or false
 
-local subPU = Instance.new("Frame", holderPU)
-subPU.Position = UDim2.new(0,0,0,42)
-subPU.Size = UDim2.new(1,0,0,0)
-subPU.ClipsDescendants = true
-subPU.BackgroundTransparency = 1
+local AntiAFKConn
 
-local layoutPU = Instance.new("UIListLayout", subPU)
-layoutPU.Padding = UDim.new(0,6)
+-- Anti AFK (VirtualUser + Idled). [web:449]
+function StartAntiAFK()
+    if AntiAFKConn then
+        AntiAFKConn:Disconnect()
+    end
+    AntiAFKConn = lp.Idled:Connect(function()
+        pcall(function()
+            VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            task.wait(1)
+            VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+        end)
+    end)
+end
 
-local openPU = false
-local function recalcPU()
-    task.wait()
-    local h = layoutPU.AbsoluteContentSize.Y
-    if openPU then
-        subPU.Size = UDim2.new(1,0,0,h)
-        holderPU.Size = UDim2.new(1,0,0,42 + h)
-        mainBtnPU.Text = "👤 Player Utility ▲"
-    else
-        subPU.Size = UDim2.new(1,0,0,0)
-        holderPU.Size = UDim2.new(1,0,0,42)
-        mainBtnPU.Text = "👤 Player Utility ▼"
+function StopAntiAFK()
+    if AntiAFKConn then
+        AntiAFKConn:Disconnect()
+        AntiAFKConn = nil
     end
 end
 
-mainBtnPU.MouseButton1Click:Connect(function()
-    openPU = not openPU
-    recalcPU()
-end)
+local ROD_VFX_NAMES = {
+    "1x1x1x1 Ban Hammer Dive",
+    "Abyssal Chroma Dive",
+    "Abyssfire Dive",
+    "Amber Dive",
+    "Amethyst Dive",
+    "BanHammerThrow",
+    "Xmas Tree Rod Dive",
+    "The Vanquisher Dive",
+    "Ornament Axe Dive",
+    "Frozen Krampus Scythe Dive",
+    "Electric Guitar Dive",
+    "Eclipse Katana Dive",
+    "Divine Blade Dive",
+}
+
+function KillAllRodSkins()
+    local vfxRoot = ReplicatedStorage:FindFirstChild("VFX")
+    if not vfxRoot then return end
+
+    for _, name in ipairs(ROD_VFX_NAMES) do
+        local obj = vfxRoot:FindFirstChild(name, true)
+        if obj then
+            pcall(function()
+                obj:Destroy()
+            end)
+        end
+    end
+
+    ----------------------------------------------------------------
+    -- DROPDOWN : 👤 PLAYER UTILITY
+    ----------------------------------------------------------------
+    local holderPU = Instance.new("Frame", miscContainer)
+    holderPU.Size = UDim2.new(1,0,0,42)
+    holderPU.BackgroundTransparency = 1
+    holderPU.LayoutOrder = 1
+
+    local mainBtnPU = Instance.new("TextButton", holderPU)
+    mainBtnPU.Size = UDim2.new(1,0,0,42)
+    mainBtnPU.Text = "👤 Player Utility ▼"
+    mainBtnPU.Font = Enum.Font.Gotham
+    mainBtnPU.TextSize = 15
+    mainBtnPU.TextXAlignment = Enum.TextXAlignment.Left
+    mainBtnPU.TextColor3 = TEXT
+    mainBtnPU.BackgroundColor3 = CARD
+    mainBtnPU.BackgroundTransparency = ALPHA_CARD
+    mainBtnPU.AutoButtonColor = false
+    Instance.new("UICorner", mainBtnPU).CornerRadius = UDim.new(0,10)
+
+    local subPU = Instance.new("Frame", holderPU)
+    subPU.Position = UDim2.new(0,0,0,42)
+    subPU.Size = UDim2.new(1,0,0,0)
+    subPU.ClipsDescendants = true
+    subPU.BackgroundTransparency = 1
+
+    local layoutPU = Instance.new("UIListLayout", subPU)
+    layoutPU.Padding = UDim.new(0,6)
+
+    local openPU = false
+    local function recalcPU()
+        task.wait()
+        local h = layoutPU.AbsoluteContentSize.Y
+        if openPU then
+            subPU.Size = UDim2.new(1,0,0,h)
+            holderPU.Size = UDim2.new(1,0,0,42 + h)
+            mainBtnPU.Text = "👤 Player Utility ▲"
+        else
+            subPU.Size = UDim2.new(1,0,0,0)
+            holderPU.Size = UDim2.new(1,0,0,42)
+            mainBtnPU.Text = "👤 Player Utility ▼"
+        end
+    end
+
+    mainBtnPU.MouseButton1Click:Connect(function()
+        openPU = not openPU
+        recalcPU()
+    end)
 
 ----------------------------------------------------------------
 -- 🔍 MAX ZOOM (150)
@@ -2427,169 +2298,6 @@ do
         if _G.RAY_AntiAFK_On then
             StartAntiAFK()
         end
-    end)
-
-    refresh()
-end
-
-----------------------------------------------------------------
--- 📡 PING MONITOR TOGGLE → SPAWN CARD DRAG/CLOSE
-----------------------------------------------------------------
-local PingMonitorCard
-
-do
-    local rowPingToggle = Instance.new("Frame", subPU)
-    rowPingToggle.Size = UDim2.new(1,0,0,36)
-    rowPingToggle.BackgroundTransparency = 1
-
-    local labelPing = Instance.new("TextLabel", rowPingToggle)
-    labelPing.Size = UDim2.new(1,-100,1,0)
-    labelPing.Position = UDim2.new(0,16,0,0)
-    labelPing.BackgroundTransparency = 1
-    labelPing.Font = Enum.Font.Gotham
-    labelPing.TextSize = 13
-    labelPing.TextXAlignment = Enum.TextXAlignment.Left
-    labelPing.TextColor3 = TEXT
-    labelPing.Text = "📡 Ping Monitor (F3 style)"
-
-    local pill = Instance.new("TextButton", rowPingToggle)
-    pill.Size = UDim2.new(0,50,0,24)
-    pill.Position = UDim2.new(1,-80,0.5,-12)
-    pill.BackgroundColor3 = MUTED
-    pill.BackgroundTransparency = 0.1
-    pill.Text = ""
-    pill.AutoButtonColor = false
-    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
-
-    local knob = Instance.new("Frame", pill)
-    knob.Size = UDim2.new(0,18,0,18)
-    knob.Position = UDim2.new(0,3,0.5,-9)
-    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
-
-    local enabled = false
-
-    local function refresh()
-        pill.BackgroundColor3 = enabled and ACCENT or MUTED
-        knob.Position = enabled and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
-    end
-
-    local function DestroyPingCard()
-        if PingMonitorCard then
-            PingMonitorCard:Destroy()
-            PingMonitorCard = nil
-        end
-    end
-
-    local function SpawnPingCard()
-        if PingMonitorCard and PingMonitorCard.Parent then return end
-
-        local guiRoot = lp:WaitForChild("PlayerGui")
-        local card = Instance.new("Frame")
-        PingMonitorCard = card
-
-        card.Name = "ThreebloxPingMonitor"
-        card.Parent = guiRoot
-        card.Size = UDim2.new(0, 230, 0, 70)
-        card.Position = UDim2.new(0, 40, 0.2, 0)
-        card.BackgroundColor3 = CARD
-        card.BackgroundTransparency = ALPHA_CARD
-        card.Active = true
-        card.ZIndex = 50
-        card.ClipsDescendants = true
-        Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
-
-        local header = Instance.new("TextLabel", card)
-        header.Size = UDim2.new(1,-28,0,22)
-        header.Position = UDim2.new(0,8,0,2)
-        header.BackgroundTransparency = 1
-        header.Font = Enum.Font.GothamSemibold
-        header.TextSize = 13
-        header.TextXAlignment = Enum.TextXAlignment.Left
-        header.TextColor3 = TEXT
-        header.Text = "THREEBLOX Monitor"
-
-        local closeBtn = Instance.new("TextButton", card)
-        closeBtn.Size = UDim2.new(0,22,0,22)
-        closeBtn.Position = UDim2.new(1,-24,0,4)
-        closeBtn.BackgroundColor3 = CARD
-        closeBtn.BackgroundTransparency = 0.2
-        closeBtn.Font = Enum.Font.GothamBold
-        closeBtn.TextSize = 16
-        closeBtn.Text = "X"
-        closeBtn.TextColor3 = TEXT
-        closeBtn.ZIndex = 51
-        Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(1,0)
-
-        local info = Instance.new("TextLabel", card)
-        info.Size = UDim2.new(1,-16,0,32)
-        info.Position = UDim2.new(0,8,0,30)
-        info.BackgroundTransparency = 1
-        info.Font = Enum.Font.GothamBold
-        info.TextSize = 14
-        info.TextXAlignment = Enum.TextXAlignment.Left
-        info.TextColor3 = TEXT
-        info.Text = "📡 PING: 0ms   ⚡ CPU: 0ms"
-        info.ZIndex = 50
-
-        -- drag
-        local UIS = game:GetService("UserInputService")
-        local dragging = false
-        local startPos, startCard
-
-        header.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1
-            or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = true
-                startPos = input.Position
-                startCard = card.Position
-            end
-        end)
-
-        UIS.InputChanged:Connect(function(input)
-            if not dragging then return end
-            if input.UserInputType == Enum.UserInputType.MouseMovement
-            or input.UserInputType == Enum.UserInputType.Touch then
-                local delta = input.Position - startPos
-                card.Position = UDim2.new(
-                    startCard.X.Scale, startCard.X.Offset + delta.X,
-                    startCard.Y.Scale, startCard.Y.Offset + delta.Y
-                )
-            end
-        end)
-
-        UIS.InputEnded:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1
-            or input.UserInputType == Enum.UserInputType.Touch then
-                dragging = false
-            end
-        end)
-
-        closeBtn.MouseButton1Click:Connect(function()
-            enabled = false
-            refresh()
-            DestroyPingCard()
-        end)
-
-        -- update F3-style
-        task.spawn(function()
-            while card.Parent do
-                local ping = GetPingMs_F3()
-                local cpu  = GetCpuMs()
-                info.Text  = string.format("📡 PING: %dms   ⚡ CPU: %dms", ping, cpu)
-                task.wait(1)
-            end
-        end)
-    end
-
-    pill.MouseButton1Click:Connect(function()
-        enabled = not enabled
-        if enabled then
-            SpawnPingCard()
-        else
-            DestroyPingCard()
-        end
-        refresh()
     end)
 
     refresh()
