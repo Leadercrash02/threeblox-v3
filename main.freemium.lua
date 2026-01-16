@@ -2012,7 +2012,6 @@ _G.RAY_DisableRodEffect  = _G.RAY_DisableRodEffect  or false
 
 local AntiAFKConn
 
--- Anti AFK (VirtualUser + Idled). [web:449]
 function StartAntiAFK()
     if AntiAFKConn then
         AntiAFKConn:Disconnect()
@@ -2063,54 +2062,64 @@ function KillAllRodSkins()
     end
 end
 
-    ----------------------------------------------------------------
-    -- DROPDOWN : 👤 PLAYER UTILITY
-    ----------------------------------------------------------------
-    local holderPU = Instance.new("Frame", miscContainer)
-    holderPU.Size = UDim2.new(1,0,0,42)
-    holderPU.BackgroundTransparency = 1
-    holderPU.LayoutOrder = 1
+local Players        = game:GetService("Players")
+local UIS            = game:GetService("UserInputService")
+local CoreGui        = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-    local mainBtnPU = Instance.new("TextButton", holderPU)
-    mainBtnPU.Size = UDim2.new(1,0,0,42)
-    mainBtnPU.Text = "👤 Player Utility ▼"
-    mainBtnPU.Font = Enum.Font.Gotham
-    mainBtnPU.TextSize = 15
-    mainBtnPU.TextXAlignment = Enum.TextXAlignment.Left
-    mainBtnPU.TextColor3 = TEXT
-    mainBtnPU.BackgroundColor3 = CARD
-    mainBtnPU.BackgroundTransparency = ALPHA_CARD
-    mainBtnPU.AutoButtonColor = false
-    Instance.new("UICorner", mainBtnPU).CornerRadius = UDim.new(0,10)
+-- TAMBAHAN GLOBAL
+local RunService     = game:GetService("RunService")
+local Stats          = game:GetService("Stats")
 
-    local subPU = Instance.new("Frame", holderPU)
-    subPU.Position = UDim2.new(0,0,0,42)
-    subPU.Size = UDim2.new(1,0,0,0)
-    subPU.ClipsDescendants = true
-    subPU.BackgroundTransparency = 1
 
-    local layoutPU = Instance.new("UIListLayout", subPU)
-    layoutPU.Padding = UDim.new(0,6)
+----------------------------------------------------------------
+-- DROPDOWN : 👤 PLAYER UTILITY
+----------------------------------------------------------------
+local holderPU = Instance.new("Frame", miscContainer)
+holderPU.Size = UDim2.new(1,0,0,42)
+holderPU.BackgroundTransparency = 1
+holderPU.LayoutOrder = 1
 
-    local openPU = false
-    local function recalcPU()
-        task.wait()
-        local h = layoutPU.AbsoluteContentSize.Y
-        if openPU then
-            subPU.Size = UDim2.new(1,0,0,h)
-            holderPU.Size = UDim2.new(1,0,0,42 + h)
-            mainBtnPU.Text = "👤 Player Utility ▲"
-        else
-            subPU.Size = UDim2.new(1,0,0,0)
-            holderPU.Size = UDim2.new(1,0,0,42)
-            mainBtnPU.Text = "👤 Player Utility ▼"
-        end
+local mainBtnPU = Instance.new("TextButton", holderPU)
+mainBtnPU.Size = UDim2.new(1,0,0,42)
+mainBtnPU.Text = "👤 Player Utility ▼"
+mainBtnPU.Font = Enum.Font.Gotham
+mainBtnPU.TextSize = 15
+mainBtnPU.TextXAlignment = Enum.TextXAlignment.Left
+mainBtnPU.TextColor3 = TEXT
+mainBtnPU.BackgroundColor3 = CARD
+mainBtnPU.BackgroundTransparency = ALPHA_CARD
+mainBtnPU.AutoButtonColor = false
+Instance.new("UICorner", mainBtnPU).CornerRadius = UDim.new(0,10)
+
+local subPU = Instance.new("Frame", holderPU)
+subPU.Position = UDim2.new(0,0,0,42)
+subPU.Size = UDim2.new(1,0,0,0)
+subPU.ClipsDescendants = true
+subPU.BackgroundTransparency = 1
+
+local layoutPU = Instance.new("UIListLayout", subPU)
+layoutPU.Padding = UDim.new(0,6)
+
+local openPU = false
+local function recalcPU()
+    task.wait()
+    local h = layoutPU.AbsoluteContentSize.Y
+    if openPU then
+        subPU.Size = UDim2.new(1,0,0,h)
+        holderPU.Size = UDim2.new(1,0,0,42 + h)
+        mainBtnPU.Text = "👤 Player Utility ▲"
+    else
+        subPU.Size = UDim2.new(1,0,0,0)
+        holderPU.Size = UDim2.new(1,0,0,42)
+        mainBtnPU.Text = "👤 Player Utility ▼"
     end
+end
 
-    mainBtnPU.MouseButton1Click:Connect(function()
-        openPU = not openPU
-        recalcPU()
-    end)
+mainBtnPU.MouseButton1Click:Connect(function()
+    openPU = not openPU
+    recalcPU()
+end)
 
 ----------------------------------------------------------------
 -- 🔍 MAX ZOOM (150)
@@ -2197,6 +2206,290 @@ do
 
     refresh()
 end
+
+----------------------------------------------------------------
+-- 🌐 SHOW PING REAL (NET OVERLAY)
+----------------------------------------------------------------
+do
+    -- REAL PING VIA STATS.NETWORK
+    local function GetDataPingMs()
+        local net  = Stats:FindFirstChild("Network")
+        if not net then return 0 end
+
+        local item = net:FindFirstChild("ServerStatsItem")
+        if not item then return 0 end
+
+        local ping = item:FindFirstChild("Data Ping")
+        if not ping then return 0 end
+
+        return math.floor(tonumber(ping:GetValue()) or 0)
+    end
+
+    -- FPS + APPROX CPU LOAD (SMOOTH, PAKAI RunService GLOBAL)
+    local lastDt      = 1/60
+    local smoothAlpha = 0.2
+
+    RunService.Heartbeat:Connect(function(dt)
+        lastDt = lastDt + (dt - lastDt) * smoothAlpha
+    end)
+
+    local TARGET_FPS = 60
+
+    local function GetFps()
+        return math.floor(1 / math.max(lastDt, 1/1000) + 0.5)
+    end
+
+    local function GetCpuLoadPercent()
+        local fps = GetFps()
+        local ratio = math.clamp(fps / TARGET_FPS, 0, 1)
+        local load = (1 - ratio) * 100
+        return math.floor(load + 0.5), fps
+    end
+
+    ----------------------------------------------------------------
+    -- ROW TOGGLE DI PLAYER UTILITY (subPU)
+    ----------------------------------------------------------------
+    local rowNet = Instance.new("Frame", subPU)
+    rowNet.Size = UDim2.new(1,0,0,36)
+    rowNet.BackgroundTransparency = 1
+
+    local labelNet = Instance.new("TextLabel", rowNet)
+    labelNet.Size = UDim2.new(1,-100,1,0)
+    labelNet.Position = UDim2.new(0,16,0,0)
+    labelNet.BackgroundTransparency = 1
+    labelNet.Font = Enum.Font.Gotham
+    labelNet.TextSize = 13
+    labelNet.TextXAlignment = Enum.TextXAlignment.Left
+    labelNet.TextColor3 = TEXT
+    labelNet.Text = "🌐 Show Ping Real"
+
+    local pillNet = Instance.new("TextButton", rowNet)
+    pillNet.Size = UDim2.new(0,50,0,24)
+    pillNet.Position = UDim2.new(1,-80,0.5,-12)
+    pillNet.BackgroundColor3 = MUTED
+    pillNet.BackgroundTransparency = 0.1
+    pillNet.Text = ""
+    pillNet.AutoButtonColor = false
+    Instance.new("UICorner", pillNet).CornerRadius = UDim.new(0,999)
+
+    local knobNet = Instance.new("Frame", pillNet)
+    knobNet.Size = UDim2.new(0,18,0,18)
+    knobNet.Position = UDim2.new(0,3,0.5,-9)
+    knobNet.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knobNet).CornerRadius = UDim.new(0,999)
+
+    ----------------------------------------------------------------
+    -- START / STOP PING GUI
+    ----------------------------------------------------------------
+    local netOn   = false
+    local netGui  = nil
+    local netConn = nil
+    local lastUpdate = 0
+
+    local function refreshNet()
+        pillNet.BackgroundColor3 = netOn and ACCENT or MUTED
+        knobNet.Position = netOn
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    local function stopNet()
+        netOn = false
+        if netConn then
+            netConn:Disconnect()
+            netConn = nil
+        end
+        if netGui then
+            netGui:Destroy()
+            netGui = nil
+        end
+    end
+
+    local function startNet()
+        if netGui then return end
+        netOn = true
+
+        netGui = Instance.new("ScreenGui")
+        netGui.Name = "ThreebloxNetOverlay"
+        netGui.ResetOnSpawn = false
+        netGui.IgnoreGuiInset = true
+        netGui.Parent = gethui and gethui() or game.CoreGui
+
+        local main = Instance.new("Frame", netGui)
+        main.Name = "NetPanel"
+        main.Size = UDim2.new(0, 260, 0, 90)
+        main.Position = UDim2.new(0.5, -130, 0, 20)
+        main.BackgroundColor3 = Color3.fromRGB(15,17,25)
+        main.BorderSizePixel = 0
+        main.Active = true
+
+        Instance.new("UICorner", main).CornerRadius = UDim.new(0,8)
+
+        local stroke = Instance.new("UIStroke", main)
+        stroke.Thickness = 1
+        stroke.Color = Color3.fromRGB(60,60,80)
+
+        local titleBar = Instance.new("Frame", main)
+        titleBar.Size = UDim2.new(1, 0, 0, 22)
+        titleBar.BackgroundColor3 = Color3.fromRGB(20,22,32)
+        titleBar.BorderSizePixel = 0
+
+        local titleCorner = Instance.new("UICorner", titleBar)
+        titleCorner.CornerRadius = UDim.new(0,8)
+
+        local titleMask = Instance.new("Frame", titleBar)
+        titleMask.Size = UDim2.new(1,0,0,8)
+        titleMask.Position = UDim2.new(0,0,1,-8)
+        titleMask.BackgroundColor3 = titleBar.BackgroundColor3
+        titleMask.BorderSizePixel = 0
+
+        local title = Instance.new("TextLabel", titleBar)
+        title.BackgroundTransparency = 1
+        title.Size = UDim2.new(1,-40,1,0)
+        title.Position = UDim2.new(0,8,0,0)
+        title.Font = Enum.Font.GothamBold
+        title.TextSize = 13
+        title.TextXAlignment = Enum.TextXAlignment.Left
+        title.TextColor3 = Color3.fromRGB(230,230,240)
+        title.Text = "Threeblox Panel"
+
+        local closeBtn = Instance.new("TextButton", titleBar)
+        closeBtn.Size = UDim2.new(0,26,1,0)
+        closeBtn.Position = UDim2.new(1,-28,0,0)
+        closeBtn.BackgroundTransparency = 1
+        closeBtn.Font = Enum.Font.GothamBold
+        closeBtn.TextSize = 16
+        closeBtn.TextColor3 = Color3.fromRGB(230,80,80)
+        closeBtn.Text = "✖"
+
+        closeBtn.MouseButton1Click:Connect(function()
+            stopNet()
+            refreshNet()
+        end)
+
+        -- drag title bar
+        do
+            local dragging = false
+            local dragStart, startPos
+            local function update(input)
+                local delta = input.Position - dragStart
+                main.Position = UDim2.new(
+                    startPos.X.Scale,
+                    startPos.X.Offset + delta.X,
+                    startPos.Y.Scale,
+                    startPos.Y.Offset + delta.Y
+                )
+            end
+
+            titleBar.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1
+                or input.UserInputType == Enum.UserInputType.Touch then
+                    dragging = true
+                    dragStart = input.Position
+                    startPos = main.Position
+                    input.Changed:Connect(function()
+                        if input.UserInputState == Enum.UserInputState.End then
+                            dragging = false
+                        end
+                    end)
+                end
+            end)
+
+            titleBar.InputChanged:Connect(function(input)
+                if (input.UserInputType == Enum.UserInputType.MouseMovement
+                or input.UserInputType == Enum.UserInputType.Touch) and dragging then
+                    update(input)
+                end
+            end)
+        end
+
+        local pingLabel = Instance.new("TextLabel", main)
+        pingLabel.BackgroundTransparency = 1
+        pingLabel.Size = UDim2.new(1,-16,0,24)
+        pingLabel.Position = UDim2.new(0,8,0,26)
+        pingLabel.Font = Enum.Font.Gotham
+        pingLabel.TextSize = 16
+        pingLabel.TextXAlignment = Enum.TextXAlignment.Left
+        pingLabel.TextColor3 = Color3.fromRGB(220,220,230)
+        pingLabel.Text = "Ping: ... ms"
+
+        local cpuLabel = Instance.new("TextLabel", main)
+        cpuLabel.BackgroundTransparency = 1
+        cpuLabel.Size = UDim2.new(1,-16,0,20)
+        cpuLabel.Position = UDim2.new(0,8,0,50)
+        cpuLabel.Font = Enum.Font.Gotham
+        cpuLabel.TextSize = 14
+        cpuLabel.TextXAlignment = Enum.TextXAlignment.Left
+        cpuLabel.TextColor3 = Color3.fromRGB(220,220,230)
+        cpuLabel.Text = "CPU: ...%"
+
+        local detailLabel = Instance.new("TextLabel", main)
+        detailLabel.BackgroundTransparency = 1
+        detailLabel.Size = UDim2.new(1,-16,0,16)
+        detailLabel.Position = UDim2.new(0,8,0,70)
+        detailLabel.Font = Enum.Font.Gotham
+        detailLabel.TextSize = 11
+        detailLabel.TextXAlignment = Enum.TextXAlignment.Left
+        detailLabel.TextColor3 = Color3.fromRGB(150,150,170)
+        detailLabel.Text = "Stats.Network Data Ping + FPS-based CPU"
+
+        netConn = RunService.Heartbeat:Connect(function()
+            if not netGui or not netGui.Parent then
+                stopNet()
+                return
+            end
+
+            local now = tick()
+            if now - lastUpdate < 0.5 then return end
+            lastUpdate = now
+
+            local ping = GetDataPingMs()
+            local cpuLoad, fps = GetCpuLoadPercent()
+
+            local pingEmoji, pingStatus, pingColor
+            if ping <= 0 then
+                pingEmoji, pingStatus, pingColor = "❔","unknown", Color3.fromRGB(200,200,200)
+            elseif ping <= 60 then
+                pingEmoji, pingStatus, pingColor = "😄","very good", Color3.fromRGB(120,230,120)
+            elseif ping <= 120 then
+                pingEmoji, pingStatus, pingColor = "😐","ok", Color3.fromRGB(230,210,120)
+            elseif ping <= 200 then
+                pingEmoji, pingStatus, pingColor = "😣","laggy", Color3.fromRGB(230,160,100)
+            else
+                pingEmoji, pingStatus, pingColor = "🤬","very bad", Color3.fromRGB(230,80,80)
+            end
+
+            local cpuEmoji, cpuStatus, cpuColor
+            if cpuLoad <= 10 then
+                cpuEmoji, cpuStatus, cpuColor = "🧊","cool", Color3.fromRGB(120,230,120)
+            elseif cpuLoad <= 40 then
+                cpuEmoji, cpuStatus, cpuColor = "🙂","normal", Color3.fromRGB(200,220,140)
+            elseif cpuLoad <= 70 then
+                cpuEmoji, cpuStatus, cpuColor = "😓","high", Color3.fromRGB(230,170,100)
+            else
+                cpuEmoji, cpuStatus, cpuColor = "🔥","maxed", Color3.fromRGB(230,80,80)
+            end
+
+            pingLabel.Text = string.format("%s Ping: %d ms  (%s)", pingEmoji, ping, pingStatus)
+            pingLabel.TextColor3 = pingColor
+
+            cpuLabel.Text = string.format("%s CPU: %d%%  |  FPS: %d", cpuEmoji, cpuLoad, fps)
+            cpuLabel.TextColor3 = cpuColor
+        end)
+    end
+
+    pillNet.MouseButton1Click:Connect(function()
+        if netOn then
+            stopNet()
+        else
+            startNet()
+        end
+        refreshNet()
+    end)
+
+    refreshNet()
+end
+
 
 ----------------------------------------------------------------
 -- ⏱️ ANTI AFK
@@ -2351,7 +2644,6 @@ do
 
     refresh()
 end
-
 
 
 ----------------------------------------------------------------
@@ -3068,8 +3360,8 @@ do
     refresh()
 end
 
-    ----------------------------------------------------------------
--- 🎣 DISABLE ROD EFFECT
+----------------------------------------------------------------
+-- 🎣 DISABLE ROD EFFECT (HARD FREEZE)
 ----------------------------------------------------------------
 do
     local row = Instance.new("Frame", sub)
@@ -3103,25 +3395,7 @@ do
 
     local enabled = _G.RAY_DisableRodEffect or false
     local killing = false
-
-    local function HardKillAnims()
-        if killing then return end
-        killing = true
-
-        local char = lp.Character or lp.CharacterAdded:Wait()
-        local hum  = char:WaitForChild("Humanoid")
-        local animator = hum:WaitForChild("Animator")
-
-        task.spawn(function()
-            while enabled do
-                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
-                    track:Stop(0)
-                end
-                task.wait(0.05)
-            end
-            killing = false
-        end)
-    end
+    local loopConn
 
     local function refresh()
         pill.BackgroundColor3 = enabled and ACCENT or MUTED
@@ -3130,12 +3404,77 @@ do
             or  UDim2.new(0,3,0.5,-9)
     end
 
+    -- HARD FREEZE: stop anim humanoid + kunci Motor6D rod
+    local function HardFreezeRod()
+        if killing then return end
+        killing = true
+
+        if loopConn then
+            loopConn:Disconnect()
+            loopConn = nil
+        end
+
+        loopConn = game:GetService("RunService").Heartbeat:Connect(function()
+            if not enabled then
+                if loopConn then
+                    loopConn:Disconnect()
+                    loopConn = nil
+                end
+                killing = false
+                return
+            end
+
+            local char = lp.Character
+            if not char or not char.Parent then
+                return
+            end
+
+            -- stop semua anim di humanoid
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local animator = hum and hum:FindFirstChildOfClass("Animator")
+            if animator then
+                for _, track in ipairs(animator:GetPlayingAnimationTracks()) do
+                    track:Stop(0)
+                end
+            end
+
+            -- kunci semua Motor6D di tool rod ("Diamond Rod", "Element Rod", dll.)
+            for _, tool in ipairs(char:GetChildren()) do
+                if tool:IsA("Tool") or tool:IsA("Model") then
+                    local name = tostring(tool.Name):lower()
+                    if name:find(" rod") then -- cocok "diamond rod", "bamboo rod", dst.
+                        for _, m in ipairs(tool:GetDescendants()) do
+                            if m:IsA("Motor6D") then
+                                m.Transform = CFrame.new()
+                                pcall(function()
+                                    m.Enabled = false
+                                end)
+                            end
+                        end
+                    end
+                end
+            end
+        end)
+    end
+
+    local function StopFreeze()
+        enabled = false
+        _G.RAY_DisableRodEffect = false
+        if loopConn then
+            loopConn:Disconnect()
+            loopConn = nil
+        end
+        killing = false
+    end
+
     pill.MouseButton1Click:Connect(function()
         enabled = not enabled
         _G.RAY_DisableRodEffect = enabled
 
         if enabled then
-            HardKillAnims()
+            HardFreezeRod()
+        else
+            StopFreeze()
         end
 
         refresh()
@@ -3143,12 +3482,13 @@ do
 
     lp.CharacterAdded:Connect(function()
         if enabled then
-            task.delay(0.3, HardKillAnims)
+            task.delay(0.3, HardFreezeRod)
         end
     end)
 
     refresh()
 end
+
 
 ----------------------------------------------------------------
 -- 🧪 DISABLE ROD SKIN
