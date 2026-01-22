@@ -1286,6 +1286,313 @@ end
 BuildQuestDiamond()
 
 ----------------------------------------------------------------
+-- SHOP & TRADE : TRAVELING MERCHANT (EXACT LIKE WEATHER)
+----------------------------------------------------------------
+local function BuildShopTraveling()
+    local shopPage = pages["Shop & Trade"]
+    
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local MarketItemData = require(ReplicatedStorage.Shared.MarketItemData)
+    local merchant = Replion.Client:WaitReplion("Merchant")
+    
+    local AutoMerchantOn = false
+    local selectedIds = {}
+    
+    ----------------------------------------------------------------
+    -- HELPER FUNCTIONS
+    ----------------------------------------------------------------
+    local function GetCurrentMerchantStock()
+        local ids = merchant:GetExpect("Items") or {}
+        local list = {}
+        
+        for _, id in ipairs(ids) do
+            for _, def in ipairs(MarketItemData) do
+                if def.Id == id then
+                    table.insert(list, def)
+                    break
+                end
+            end
+        end
+        
+        return list
+    end
+    
+    local function BuyMerchantId(id)
+        task.spawn(function()
+            pcall(function()
+                local rf = ReplicatedStorage
+                    :WaitForChild("Packages")
+                    :WaitForChild("_Index")
+                    :WaitForChild("sleitnick_net@0.2.0")
+                    :WaitForChild("net")
+                    :WaitForChild("RF/PurchaseMarketItem")
+                
+                rf:InvokeServer(id)
+            end)
+        end)
+    end
+    
+    task.spawn(function()
+        while true do
+            if AutoMerchantOn then
+                local stock = GetCurrentMerchantStock()
+                for _, def in ipairs(stock) do
+                    if selectedIds[def.Id] then
+                        BuyMerchantId(def.Id)
+                        task.wait(0.1)
+                    end
+                end
+            end
+            task.wait(0.5)
+        end
+    end)
+    
+    ----------------------------------------------------------------
+    -- 1) CARD HEADER (TRAVELING MERCHANT)
+    ----------------------------------------------------------------
+    local card = Instance.new("Frame", shopPage)
+    card.Name = "TravelingMerchantCard"
+    card.Size = UDim2.new(1, -32, 0, 48)
+    card.Position = UDim2.new(0, 16, 0, 0)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    card.LayoutOrder = 2
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
+    
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1, -40, 0, 22)
+    cardTitle.Position = UDim2.new(0, 16, 0, 4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "🛍️ Traveling Merchant"
+    
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0, 24, 0, 24)
+    arrow.Position = UDim2.new(1, -28, 0, 10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+    
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1, 0, 1, 0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+    
+    ----------------------------------------------------------------
+    -- 2) OVERLAY + PANEL KANAN (ITEM LIST + CHECKBOX + AUTO BUY)
+    ----------------------------------------------------------------
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "TravelingOverlay"
+    overlay.Parent = shopPage
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.Position = UDim2.new(0, 0, 0, 0)
+    overlay.BackgroundTransparency = 1
+    overlay.Text = ""
+    overlay.Visible = false
+    overlay.ZIndex = 4
+    overlay.AutoButtonColor = false
+    
+    local travelPanel = Instance.new("Frame")
+    travelPanel.Name = "TravelingPanel"
+    travelPanel.Parent = overlay
+    travelPanel.Size = UDim2.new(0, 300, 0, 280)
+    travelPanel.AnchorPoint = Vector2.new(1, 0)
+    travelPanel.Position = UDim2.new(1, -24, 0.18, 0)
+    travelPanel.BackgroundColor3 = CARD
+    travelPanel.BackgroundTransparency = 0.04
+    travelPanel.Visible = false
+    travelPanel.ZIndex = 5
+    travelPanel.Active = true
+    Instance.new("UICorner", travelPanel).CornerRadius = UDim.new(0, 12)
+    
+    local tPad = Instance.new("UIPadding", travelPanel)
+    tPad.PaddingTop    = UDim.new(0, 8)
+    tPad.PaddingLeft   = UDim.new(0, 8)
+    tPad.PaddingRight  = UDim.new(0, 8)
+    tPad.PaddingBottom = UDim.new(0, 8)
+    
+    local travelLayout = Instance.new("UIListLayout", travelPanel)
+    travelLayout.Padding = UDim.new(0, 8)
+    travelLayout.FillDirection = Enum.FillDirection.Vertical
+    travelLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    
+    ----------------------------------------------------------------
+    -- 3) STOCK TITLE + LIST
+    ----------------------------------------------------------------
+    local stockHeader = Instance.new("Frame", travelPanel)
+    stockHeader.Size = UDim2.new(1, 0, 0, 32)
+    stockHeader.BackgroundTransparency = 1
+    
+    local stockTitle = Instance.new("TextLabel", stockHeader)
+    stockTitle.Size = UDim2.new(1, 0, 0, 16)
+    stockTitle.BackgroundTransparency = 1
+    stockTitle.Font = Enum.Font.GothamBold
+    stockTitle.TextSize = 12
+    stockTitle.TextXAlignment = Enum.TextXAlignment.Left
+    stockTitle.TextColor3 = TEXT
+    stockTitle.Text = "Current Stock"
+    
+    local stockSub = Instance.new("TextLabel", stockHeader)
+    stockSub.Size = UDim2.new(1, 0, 0, 14)
+    stockSub.Position = UDim2.new(0, 0, 0, 16)
+    stockSub.BackgroundTransparency = 1
+    stockSub.Font = Enum.Font.Gotham
+    stockSub.TextSize = 11
+    stockSub.TextXAlignment = Enum.TextXAlignment.Left
+    stockSub.TextColor3 = MUTED
+    stockSub.Text = "Available Items (0)"
+    
+    local scrollingFrame = Instance.new("ScrollingFrame", travelPanel)
+    scrollingFrame.Size = UDim2.new(1, 0, 0, 120)
+    scrollingFrame.BackgroundColor3 = CARD
+    scrollingFrame.BackgroundTransparency = 0.3
+    scrollingFrame.BorderSizePixel = 0
+    scrollingFrame.ScrollBarThickness = 5
+    scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Instance.new("UICorner", scrollingFrame).CornerRadius = UDim.new(0, 8)
+    
+    local listLayout = Instance.new("UIListLayout", scrollingFrame)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 2)
+    
+    local listPad = Instance.new("UIPadding", scrollingFrame)
+    listPad.PaddingLeft = UDim.new(0, 4)
+    listPad.PaddingRight = UDim.new(0, 4)
+    listPad.PaddingTop = UDim.new(0, 2)
+    listPad.PaddingBottom = UDim.new(0, 2)
+    
+    ----------------------------------------------------------------
+    -- 4) AUTO BUY TOGGLE
+    ----------------------------------------------------------------
+    local toggleRow = Instance.new("Frame", travelPanel)
+    toggleRow.Size = UDim2.new(1, 0, 0, 28)
+    toggleRow.BackgroundTransparency = 1
+    
+    local toggleLabel = Instance.new("TextLabel", toggleRow)
+    toggleLabel.Size = UDim2.new(0.7, 0, 1, 0)
+    toggleLabel.Position = UDim2.new(0, 0, 0, 0)
+    toggleLabel.BackgroundTransparency = 1
+    toggleLabel.Font = Enum.Font.Gotham
+    toggleLabel.TextSize = 12
+    toggleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    toggleLabel.TextColor3 = TEXT
+    toggleLabel.Text = "Auto Buy Selected"
+    
+    local pill = Instance.new("TextButton", toggleRow)
+    pill.Size = UDim2.new(0, 60, 0, 22)
+    pill.Position = UDim2.new(1, -70, 0.5, -11)
+    pill.BackgroundColor3 = MUTED
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    pill.BackgroundTransparency = 0
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0, 999)
+    
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0, 16, 0, 16)
+    knob.Position = UDim2.new(0, 3, 0.5, -8)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.BackgroundTransparency = 0
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 999)
+    
+    local function refreshToggle()
+        pill.BackgroundColor3 = AutoMerchantOn and ACCENT or MUTED
+        knob.Position = AutoMerchantOn and UDim2.new(1, -19, 0.5, -8) or UDim2.new(0, 3, 0.5, -8)
+    end
+    
+    pill.MouseButton1Click:Connect(function()
+        AutoMerchantOn = not AutoMerchantOn
+        refreshToggle()
+    end)
+    
+    refreshToggle()
+    
+    ----------------------------------------------------------------
+    -- 5) REFRESH STOCK LIST
+    ----------------------------------------------------------------
+    local function RefreshStockList()
+        local stock = GetCurrentMerchantStock()
+        stockSub.Text = string.format("Available Items (%d)", #stock)
+        
+        for _, child in ipairs(scrollingFrame:GetChildren()) do
+            if child:IsA("TextButton") or child:IsA("TextLabel") then
+                child:Destroy()
+            end
+        end
+        
+        if #stock == 0 then
+            local noItem = Instance.new("TextLabel", scrollingFrame)
+            noItem.Size = UDim2.new(1, 0, 0, 20)
+            noItem.BackgroundTransparency = 1
+            noItem.Font = Enum.Font.Code
+            noItem.TextSize = 11
+            noItem.TextColor3 = MUTED
+            noItem.Text = "No items available"
+            scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 20)
+            selectedIds = {}
+        else
+            for i, def in ipairs(stock) do
+                local price = def.Price or 0
+                local cur = def.Currency or "Coins"
+                
+                local itemBtn = Instance.new("TextButton", scrollingFrame)
+                itemBtn.Size = UDim2.new(1, -8, 0, 22)
+                itemBtn.BackgroundColor3 = CARD
+                itemBtn.BackgroundTransparency = 0.3
+                itemBtn.Font = Enum.Font.Code
+                itemBtn.TextSize = 11
+                itemBtn.TextColor3 = TEXT
+                itemBtn.Text = string.format("[ ] %s (%d %s)", def.Identifier, price, cur)
+                itemBtn.AutoButtonColor = false
+                itemBtn.BorderSizePixel = 0
+                Instance.new("UICorner", itemBtn).CornerRadius = UDim.new(0, 6)
+                
+                itemBtn.MouseButton1Click:Connect(function()
+                    selectedIds[def.Id] = not selectedIds[def.Id]
+                    local checked = selectedIds[def.Id]
+                    itemBtn.Text = string.format("[%s] %s (%d %s)", checked and "X" or " ", def.Identifier, price, cur)
+                    itemBtn.BackgroundColor3 = checked and ACCENT or Color3.fromRGB(28, 30, 42)
+                end)
+            end
+            
+            task.wait(0.05)
+            scrollingFrame.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 4)
+        end
+    end
+    
+    RefreshStockList()
+    merchant:OnChange("Items", RefreshStockList)
+    
+    ----------------------------------------------------------------
+    -- 6) DROPDOWN TOGGLE
+    ----------------------------------------------------------------
+    local panelOpen = false
+    local function setPanelOpen(state)
+        panelOpen = state
+        overlay.Visible = panelOpen
+        travelPanel.Visible = panelOpen
+        arrow.Text = panelOpen and "▲" or "▼"
+    end
+    
+    cardBtn.MouseButton1Click:Connect(function()
+        setPanelOpen(not panelOpen)
+    end)
+    
+    overlay.MouseButton1Click:Connect(function()
+        setPanelOpen(false)
+    end)
+end
+
+BuildShopTraveling()
+
+
+----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
 ----------------------------------------------------------------
 local function BuildShopWeather()
