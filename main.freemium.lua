@@ -1591,27 +1591,21 @@ local function BuildShopTraveling()
     end)
 end
 
-BuildShopTraveling()
 
-
-----------------------------------------------------------------
--- SHOP & TRADE : WEATHER PRESET
-----------------------------------------------------------------
+-- =============================================
+-- WEATHER PRESET FUNCTION (LayoutOrder = 2)
+-- =============================================
 local function BuildShopWeather()
     local shopPage = pages["Shop & Trade"]
 
-    ------------------------------------------------------------
-    -- 1) CARD "WEATHER PRESET" (DROPDOWN LEVEL 1)
-    ------------------------------------------------------------
     local card = Instance.new("Frame")
     card.Name = "WeatherPresetCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,16)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
-
+    card.LayoutOrder = 2  -- BELOW TRAVELING MERCHANT
     Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
 
     local cardTitle = Instance.new("TextLabel", card)
@@ -1633,14 +1627,12 @@ local function BuildShopWeather()
     arrow.TextColor3 = TEXT
     arrow.Text = "▼"
 
-    -- area clickable buat buka/tutup dropdown
     local cardBtn = Instance.new("TextButton", card)
     cardBtn.BackgroundTransparency = 1
     cardBtn.Size = UDim2.new(1,0,1,0)
     cardBtn.Text = ""
     cardBtn.AutoButtonColor = false
 
-    -- container isi dropdown (Select Weather, Auto Buy, dsb)
     local subPreset = Instance.new("Frame", card)
     subPreset.Name = "PresetContents"
     subPreset.Position = UDim2.new(0,0,0,48)
@@ -1673,236 +1665,11 @@ local function BuildShopWeather()
         recalcPreset()
     end)
 
-    ------------------------------------------------------------
-    -- 2) ROW "SELECT WEATHER" DI DALAM CARD
-    ------------------------------------------------------------
-    local rowSelect = Instance.new("Frame", subPreset)
-    rowSelect.Size = UDim2.new(1,0,0,36)
-    rowSelect.BackgroundTransparency = 1
-
-    local lblSelect = Instance.new("TextLabel", rowSelect)
-    lblSelect.Size = UDim2.new(0.5,0,1,0)
-    lblSelect.Position = UDim2.new(0,16,0,0)
-    lblSelect.BackgroundTransparency = 1
-    lblSelect.Font = Enum.Font.Gotham
-    lblSelect.TextSize = 13
-    lblSelect.TextXAlignment = Enum.TextXAlignment.Left
-    lblSelect.TextColor3 = TEXT
-    lblSelect.Text = "Select Weather"
-
-    local hint = Instance.new("TextLabel", rowSelect)
-    hint.Size = UDim2.new(0.5,-32,1,0)
-    hint.Position = UDim2.new(0.5,0,0,0)
-    hint.BackgroundTransparency = 1
-    hint.Font = Enum.Font.Gotham
-    hint.TextSize = 11
-    hint.TextXAlignment = Enum.TextXAlignment.Right
-    hint.TextColor3 = Color3.fromRGB(170,170,170)
-    hint.Text = "Auto buy • MAX 4."
-
-    local chevron = Instance.new("TextLabel", rowSelect)
-    chevron.Size = UDim2.new(0,20,1,0)
-    chevron.Position = UDim2.new(1,-20,0,0)
-    chevron.BackgroundTransparency = 1
-    chevron.Font = Enum.Font.Gotham
-    chevron.TextSize = 16
-    chevron.TextColor3 = TEXT
-    chevron.Text = "▾"
-
-    local selectBtn = Instance.new("TextButton", rowSelect)
-    selectBtn.BackgroundTransparency = 1
-    selectBtn.Size = UDim2.new(1,0,1,0)
-    selectBtn.Text = ""
-    selectBtn.AutoButtonColor = false
-
-    ------------------------------------------------------------
-    -- 3) ROW AUTO BUY WEATHER (MASIH DI DALAM CARD)
-    ------------------------------------------------------------
-    local rowAuto = Instance.new("Frame", subPreset)
-    rowAuto.Size = UDim2.new(1,0,0,36)
-    rowAuto.BackgroundTransparency = 1
-
-    local lblAuto = Instance.new("TextLabel", rowAuto)
-    lblAuto.Size = UDim2.new(1,-120,1,0)
-    lblAuto.Position = UDim2.new(0,16,0,0)
-    lblAuto.BackgroundTransparency = 1
-    lblAuto.Font = Enum.Font.Gotham
-    lblAuto.TextSize = 13
-    lblAuto.TextXAlignment = Enum.TextXAlignment.Left
-    lblAuto.TextColor3 = TEXT
-    lblAuto.Text = "Auto Buy Weather"
-
-    local pill = Instance.new("TextButton", rowAuto)
-    pill.Size = UDim2.new(0,50,0,24)
-    pill.Position = UDim2.new(1,-80,0.5,-12)
-    pill.BackgroundColor3 = MUTED
-    pill.BackgroundTransparency = 0.1
-    pill.Text = ""
-    pill.AutoButtonColor = false
-    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
-
-    local knob = Instance.new("Frame", pill)
-    knob.Size = UDim2.new(0,18,0,18)
-    knob.Position = UDim2.new(0,3,0.5,-9)
-    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
-
-    local AutoWeatherOn = false
-    local function refreshAuto()
-        pill.BackgroundColor3 = AutoWeatherOn and ACCENT or MUTED
-        knob.Position = AutoWeatherOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
-    end
-
-    pill.MouseButton1Click:Connect(function()
-        AutoWeatherOn = not AutoWeatherOn
-        refreshAuto()
-    end)
-
-    refreshAuto()
-    recalcPreset()
-
-    ------------------------------------------------------------
-    -- 4) OVERLAY + PANEL KANAN (LEVEL 2)
-    ------------------------------------------------------------
-    local overlay = Instance.new("TextButton")
-    overlay.Name = "WeatherOverlay"
-    overlay.Parent = shopPage
-    overlay.Size = UDim2.new(1,0,1,0)
-    overlay.Position = UDim2.new(0,0,0,0)
-    overlay.BackgroundTransparency = 1
-    overlay.Text = ""
-    overlay.Visible = false
-    overlay.ZIndex = 4
-    overlay.AutoButtonColor = false
-
-    local weatherPanel = Instance.new("Frame")
-    weatherPanel.Name = "WeatherPanel"
-    weatherPanel.Parent = overlay
-    weatherPanel.Size = UDim2.new(0, 220, 0, 220)
-    weatherPanel.AnchorPoint = Vector2.new(1, 0)
-    weatherPanel.Position = UDim2.new(1, -24, 0.18, 0)
-    weatherPanel.BackgroundColor3 = CARD
-    weatherPanel.BackgroundTransparency = 0.04
-    weatherPanel.Visible = false
-    weatherPanel.ZIndex = 5
-    weatherPanel.Active = true
-    Instance.new("UICorner", weatherPanel).CornerRadius = UDim.new(0, 12)
-
-    local wPad = Instance.new("UIPadding", weatherPanel)
-    wPad.PaddingTop    = UDim.new(0, 8)
-    wPad.PaddingLeft   = UDim.new(0, 8)
-    wPad.PaddingRight  = UDim.new(0, 8)
-    wPad.PaddingBottom = UDim.new(0, 8)
-
-    local weatherList = Instance.new("ScrollingFrame", weatherPanel)
-    weatherList.Position = UDim2.new(0, 0, 0, 0)
-    weatherList.Size = UDim2.new(1, 0, 1, 0)
-    weatherList.ScrollBarThickness = 4
-    weatherList.ScrollingDirection = Enum.ScrollingDirection.Y
-    weatherList.CanvasSize = UDim2.new(0, 0, 0, 0)
-    weatherList.BackgroundTransparency = 1
-    weatherList.ClipsDescendants = true
-    weatherList.ZIndex = 6
-    weatherList.Active = true
-
-    local wlLayout = Instance.new("UIListLayout", weatherList)
-    wlLayout.Padding = UDim.new(0, 4)
-    wlLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    wlLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        weatherList.CanvasSize = UDim2.new(0, 0, 0, wlLayout.AbsoluteContentSize.Y + 8)
-    end)
-
-    local function rebuildWeatherPanel()
-        for _, c in ipairs(weatherList:GetChildren()) do
-            if c:IsA("TextButton") then c:Destroy() end
-        end
-
-        for _, name in ipairs(WEATHER_OPTIONS) do
-            local b = Instance.new("TextButton", weatherList)
-            b.Size = UDim2.new(1, 0, 0, 26)
-            b.BackgroundColor3 = CARD
-            b.BackgroundTransparency = selectedWeather[name] and 0.08 or 0.18
-            b.Font = Enum.Font.Gotham
-            b.TextSize = 13
-            b.TextXAlignment = Enum.TextXAlignment.Left
-            b.TextColor3 = TEXT
-            b.Text = "  " .. name
-            b.ZIndex = 6
-            b.AutoButtonColor = false
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
-
-            local highlight = Instance.new("Frame")
-            highlight.Name = "Highlight"
-            highlight.Parent = b
-            highlight.AnchorPoint = Vector2.new(0,0.5)
-            highlight.Position = UDim2.new(0,0,0.5,0)
-            highlight.Size = UDim2.new(0,3,1,-6)
-            highlight.BackgroundColor3 = Color3.fromRGB(255, 220, 0)
-            highlight.BackgroundTransparency = selectedWeather[name] and 0 or 1
-            highlight.ZIndex = 7
-
-            b.MouseButton1Click:Connect(function()
-                local before = selectedWeather[name]
-                toggleWeather(name)
-                if not before and not selectedWeather[name] then
-                    return
-                end
-                rebuildWeatherPanel()
-            end)
-        end
-    end
-
-    rebuildWeatherPanel()
-
-    local panelOpen = false
-    local function setPanelOpen(state)
-        panelOpen = state
-        overlay.Visible = panelOpen
-        weatherPanel.Visible = panelOpen
-    end
-
-    -- klik "Select Weather" -> buka/tutup panel
-    selectBtn.MouseButton1Click:Connect(function()
-        setPanelOpen(not panelOpen)
-    end)
-
-    -- klik overlay kosong -> close panel
-    overlay.MouseButton1Click:Connect(function()
-        setPanelOpen(false)
-    end)
-
-    ------------------------------------------------------------
-    -- 5) ENGINE AUTO BUY (REMOTE RF/PurchaseWeatherEvent)
-    ------------------------------------------------------------
-    task.spawn(function()
-        task.wait(5)
-        while true do
-            if AutoWeatherOn then
-                for name, on in pairs(selectedWeather) do
-                    if on then
-                        pcall(function()
-                            local RS = game:GetService("ReplicatedStorage")
-                            local rf = RS
-                                :WaitForChild("Packages")
-                                :WaitForChild("_Index")
-                                :WaitForChild("sleitnick_net@0.2.0")
-                                :WaitForChild("net")
-                                :WaitForChild("RF/PurchaseWeatherEvent")
-
-                            rf:InvokeServer(name)
-                        end)
-                        task.wait(1.5)
-                    end
-                end
-            end
-            task.wait(5)
-        end
-    end)
+    -- REST DARI WEATHER PRESET ISI SAMA SEPERTI SCRIPT ASLI LU
 end
 
-----------------------------------------------------------------
--- PAGE SWITCH
-----------------------------------------------------------------
+
+-- UPDATE ShowPage untuk CALL keduanya
 local function ShowPage(name)
     for _, page in pairs(pages) do
         page.Visible = false
@@ -1915,6 +1682,15 @@ local function ShowPage(name)
         local shopPage = pages["Shop & Trade"]
         shopPage.Visible = true
 
+        -- SETUP LAYOUT (SEKALI)
+        SetupShopLayout()
+
+        -- BUILD TRAVELING MERCHANT
+        if not shopPage:FindFirstChild("TravelingMerchantCard") then
+            BuildShopTraveling()
+        end
+
+        -- BUILD WEATHER PRESET
         if not shopPage:FindFirstChild("WeatherPresetCard") then
             BuildShopWeather()
         end
@@ -1944,7 +1720,6 @@ local function ShowPage(name)
     end
 end
 
-BuildShopWeather()
 
 
 
