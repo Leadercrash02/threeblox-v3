@@ -1285,6 +1285,334 @@ end
 
 BuildQuestDiamond()
 
+===============================================================
+-- SECTION 1: TRAVELING MERCHANT VARIABLES & SETUP
+================================================================
+
+-- Merchant options list (CUSTOMIZE SESUAI GAME)
+local MERCHANT_OPTIONS = {
+    "🧙 Wizard Merchant",
+    "⚔️ Warrior Merchant",
+    "🏹 Archer Merchant",
+    "🧪 Alchemist Merchant",
+}
+
+-- State dictionary untuk selected merchant
+local selectedMerchant = {}
+
+-- Initialize all merchant options ke false
+for _, name in ipairs(MERCHANT_OPTIONS) do
+    selectedMerchant[name] = false
+end
+
+-- Toggle function untuk merchant
+local function toggleMerchant(name, max_count)
+    max_count = max_count or 3  -- Default MAX 3
+    local current_count = 0
+    
+    for _, v in pairs(selectedMerchant) do
+        if v then current_count += 1 end
+    end
+    
+    if selectedMerchant[name] then
+        selectedMerchant[name] = false
+        return true
+    elseif current_count < max_count then
+        selectedMerchant[name] = true
+        return true
+    else
+        print("⚠️ Max " .. max_count .. " merchant selections reached")
+        return false
+    end
+end
+
+
+================================================================
+-- SECTION 2: BUILD TRAVELING MERCHANT FUNCTION
+================================================================
+
+local function BuildShopTravelingMerchant()
+    local shopPage = pages["Shop & Trade"]
+
+    local card = Instance.new("Frame")
+    card.Name = "TravelingMerchantCard"
+    card.Parent = shopPage
+    card.Size = UDim2.new(1,-32,0,48)
+    card.Position = UDim2.new(0,16,0,80)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
+
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1,-40,0,22)
+    cardTitle.Position = UDim2.new(0,16,0,4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "🧑‍🤝‍🧑 Traveling Merchant"
+
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0,24,0,24)
+    arrow.Position = UDim2.new(1,-28,0,10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1,0,1,0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+
+    local subMerchant = Instance.new("Frame", card)
+    subMerchant.Name = "MerchantContents"
+    subMerchant.Position = UDim2.new(0,0,0,48)
+    subMerchant.Size = UDim2.new(1,0,0,0)
+    subMerchant.BackgroundTransparency = 1
+    subMerchant.ClipsDescendants = true
+
+    local merchantLayout = Instance.new("UIListLayout", subMerchant)
+    merchantLayout.Padding = UDim.new(0,6)
+    merchantLayout.FillDirection = Enum.FillDirection.Vertical
+    merchantLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    merchantLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local merchantOpen = false
+    local function recalcMerchant()
+        local h = merchantLayout.AbsoluteContentSize.Y
+        if merchantOpen then
+            subMerchant.Size = UDim2.new(1,0,0,h + 8)
+            card.Size = UDim2.new(1,-32,0,48 + h + 8)
+            arrow.Text = "▲"
+        else
+            subMerchant.Size = UDim2.new(1,0,0,0)
+            card.Size = UDim2.new(1,-32,0,48)
+            arrow.Text = "▼"
+        end
+    end
+
+    cardBtn.MouseButton1Click:Connect(function()
+        merchantOpen = not merchantOpen
+        recalcMerchant()
+    end)
+
+    local rowSelect = Instance.new("Frame", subMerchant)
+    rowSelect.Size = UDim2.new(1,0,0,36)
+    rowSelect.BackgroundTransparency = 1
+
+    local lblSelect = Instance.new("TextLabel", rowSelect)
+    lblSelect.Size = UDim2.new(0.5,0,1,0)
+    lblSelect.Position = UDim2.new(0,16,0,0)
+    lblSelect.BackgroundTransparency = 1
+    lblSelect.Font = Enum.Font.Gotham
+    lblSelect.TextSize = 13
+    lblSelect.TextXAlignment = Enum.TextXAlignment.Left
+    lblSelect.TextColor3 = TEXT
+    lblSelect.Text = "Select Merchant"
+
+    local hint = Instance.new("TextLabel", rowSelect)
+    hint.Size = UDim2.new(0.5,-32,1,0)
+    hint.Position = UDim2.new(0.5,0,0,0)
+    hint.BackgroundTransparency = 1
+    hint.Font = Enum.Font.Gotham
+    hint.TextSize = 11
+    hint.TextXAlignment = Enum.TextXAlignment.Right
+    hint.TextColor3 = Color3.fromRGB(170,170,170)
+    hint.Text = "Auto buy • MAX 3."
+
+    local chevron = Instance.new("TextLabel", rowSelect)
+    chevron.Size = UDim2.new(0,20,1,0)
+    chevron.Position = UDim2.new(1,-20,0,0)
+    chevron.BackgroundTransparency = 1
+    chevron.Font = Enum.Font.Gotham
+    chevron.TextSize = 16
+    chevron.TextColor3 = TEXT
+    chevron.Text = "▾"
+
+    local selectBtn = Instance.new("TextButton", rowSelect)
+    selectBtn.BackgroundTransparency = 1
+    selectBtn.Size = UDim2.new(1,0,1,0)
+    selectBtn.Text = ""
+    selectBtn.AutoButtonColor = false
+
+    local rowAuto = Instance.new("Frame", subMerchant)
+    rowAuto.Size = UDim2.new(1,0,0,36)
+    rowAuto.BackgroundTransparency = 1
+
+    local lblAuto = Instance.new("TextLabel", rowAuto)
+    lblAuto.Size = UDim2.new(1,-120,1,0)
+    lblAuto.Position = UDim2.new(0,16,0,0)
+    lblAuto.BackgroundTransparency = 1
+    lblAuto.Font = Enum.Font.Gotham
+    lblAuto.TextSize = 13
+    lblAuto.TextXAlignment = Enum.TextXAlignment.Left
+    lblAuto.TextColor3 = TEXT
+    lblAuto.Text = "Auto Buy Merchant"
+
+    local pill = Instance.new("TextButton", rowAuto)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    local AutoMerchantOn = false
+    local function refreshAuto()
+        pill.BackgroundColor3 = AutoMerchantOn and ACCENT or MUTED
+        knob.Position = AutoMerchantOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        AutoMerchantOn = not AutoMerchantOn
+        refreshAuto()
+    end)
+
+    refreshAuto()
+    recalcMerchant()
+
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "MerchantOverlay"
+    overlay.Parent = shopPage
+    overlay.Size = UDim2.new(1,0,1,0)
+    overlay.Position = UDim2.new(0,0,0,0)
+    overlay.BackgroundTransparency = 1
+    overlay.Text = ""
+    overlay.Visible = false
+    overlay.ZIndex = 4
+    overlay.AutoButtonColor = false
+
+    local merchantPanel = Instance.new("Frame")
+    merchantPanel.Name = "MerchantPanel"
+    merchantPanel.Parent = overlay
+    merchantPanel.Size = UDim2.new(0, 220, 0, 220)
+    merchantPanel.AnchorPoint = Vector2.new(1, 0)
+    merchantPanel.Position = UDim2.new(1, -24, 0.35, 0)
+    merchantPanel.BackgroundColor3 = CARD
+    merchantPanel.BackgroundTransparency = 0.04
+    merchantPanel.Visible = false
+    merchantPanel.ZIndex = 5
+    merchantPanel.Active = true
+    Instance.new("UICorner", merchantPanel).CornerRadius = UDim.new(0, 12)
+
+    local mPad = Instance.new("UIPadding", merchantPanel)
+    mPad.PaddingTop    = UDim.new(0, 8)
+    mPad.PaddingLeft   = UDim.new(0, 8)
+    mPad.PaddingRight  = UDim.new(0, 8)
+    mPad.PaddingBottom = UDim.new(0, 8)
+
+    local merchantList = Instance.new("ScrollingFrame", merchantPanel)
+    merchantList.Position = UDim2.new(0, 0, 0, 0)
+    merchantList.Size = UDim2.new(1, 0, 1, 0)
+    merchantList.ScrollBarThickness = 4
+    merchantList.ScrollingDirection = Enum.ScrollingDirection.Y
+    merchantList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    merchantList.BackgroundTransparency = 1
+    merchantList.ClipsDescendants = true
+    merchantList.ZIndex = 6
+    merchantList.Active = true
+
+    local mlLayout = Instance.new("UIListLayout", merchantList)
+    mlLayout.Padding = UDim.new(0, 4)
+    mlLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    mlLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        merchantList.CanvasSize = UDim2.new(0, 0, 0, mlLayout.AbsoluteContentSize.Y + 8)
+    end)
+
+    local function rebuildMerchantPanel()
+        for _, c in ipairs(merchantList:GetChildren()) do
+            if c:IsA("TextButton") then c:Destroy() end
+        end
+
+        for _, name in ipairs(MERCHANT_OPTIONS) do
+            local b = Instance.new("TextButton", merchantList)
+            b.Size = UDim2.new(1, 0, 0, 26)
+            b.BackgroundColor3 = CARD
+            b.BackgroundTransparency = selectedMerchant[name] and 0.08 or 0.18
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 13
+            b.TextXAlignment = Enum.TextXAlignment.Left
+            b.TextColor3 = TEXT
+            b.Text = "  " .. name
+            b.ZIndex = 6
+            b.AutoButtonColor = false
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+
+            local highlight = Instance.new("Frame")
+            highlight.Name = "Highlight"
+            highlight.Parent = b
+            highlight.AnchorPoint = Vector2.new(0,0.5)
+            highlight.Position = UDim2.new(0,0,0.5,0)
+            highlight.Size = UDim2.new(0,3,1,-6)
+            highlight.BackgroundColor3 = Color3.fromRGB(255, 220, 0)
+            highlight.BackgroundTransparency = selectedMerchant[name] and 0 or 1
+            highlight.ZIndex = 7
+
+            b.MouseButton1Click:Connect(function()
+                toggleMerchant(name)
+                rebuildMerchantPanel()
+            end)
+        end
+    end
+
+    rebuildMerchantPanel()
+
+    local panelOpen = false
+    local function setPanelOpen(state)
+        panelOpen = state
+        overlay.Visible = panelOpen
+        merchantPanel.Visible = panelOpen
+    end
+
+    selectBtn.MouseButton1Click:Connect(function()
+        setPanelOpen(not panelOpen)
+    end)
+
+    overlay.MouseButton1Click:Connect(function()
+        setPanelOpen(false)
+    end)
+
+    task.spawn(function()
+        task.wait(5)
+        while true do
+            if AutoMerchantOn then
+                for name, on in pairs(selectedMerchant) do
+                    if on then
+                        pcall(function()
+                            local RS = game:GetService("ReplicatedStorage")
+                            local rf = RS
+                                :WaitForChild("Packages")
+                                :WaitForChild("_Index")
+                                :WaitForChild("sleitnick_net@0.2.0")
+                                :WaitForChild("net")
+                                :WaitForChild("RF/PurchaseMerchantEvent")
+
+                            rf:InvokeServer(name)
+                        end)
+                        task.wait(1.5)
+                    end
+                end
+            end
+            task.wait(5)
+        end
+    end)
+end
+
+BuildShopTravelingMerchant()
+
 ----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
 ----------------------------------------------------------------
