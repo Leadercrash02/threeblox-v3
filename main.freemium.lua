@@ -140,11 +140,13 @@ local ISLAND_SPOTS = {
     ["Pirate Treasure Room"]       = CFrame.new(3291.126465, -299.092438, 3068.046387),
     ["Maze Room"]                  = CFrame.new(3439.706787, -287.844818, 3390.595459),
     ["Pirate Cove"]                = CFrame.new(3408.831787, 3.759813, 3444.318115),
+    ["Pirate Cove Laviatant"]      = CFrame.new(3471.531250, -287.843170, 3474.382568),  -- baru ditambah
     ["Hourglass Diamond Artifact"] = CFrame.new(1500.734131, 6.376950, -849.561951),
     ["Diamond Artifact"]           = CFrame.new(1833.328003, 5.230289, -322.866364),
     ["Crescent Artifact"]          = CFrame.new(1380.416626, 0.845884, 118.727592),
     ["Arrow Artifact"]             = CFrame.new(879.857178, 4.921622, -339.661469),
     ["Crystalline Passage"]        = CFrame.new(6052.331055, -538.900208, 4374.166016),
+    ["Crystal Depths"]             = CFrame.new(5747.040039, -904.802124, 15396.442383),
 }
 
 local DEFAULT_SPOT_ORDER = {
@@ -170,13 +172,14 @@ local DEFAULT_SPOT_ORDER = {
     "Pirate Treasure Room",
     "Maze Room",
     "Pirate Cove",
+    "Pirate Cove Laviatant",  -- ditambah di sini
     "Hourglass Diamond Artifact",
     "Diamond Artifact",
     "Crescent Artifact",
     "Arrow Artifact",
     "Crystalline Passage",
+    "Crystal Depths",
 }
-
 -- ROOT
 local gui = Instance.new("ScreenGui", CoreGui)
 gui.Name = "Threeblox Freemuim"
