@@ -1588,6 +1588,8 @@ local function BuildShopTraveling()
     end)
 end
 
+BuildShopTraveling()
+
 
 -- =====================================================
 -- WEATHER PRESET (LayoutOrder = 2)
@@ -1693,7 +1695,7 @@ local function ShowPage(name)
     end
 end
 
-
+BuildShopWeather()
 
 
 
