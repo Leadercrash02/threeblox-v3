@@ -1286,26 +1286,22 @@ end
 BuildQuestDiamond()
 
 -- =====================================================
--- SHOP & TRADE PAGES: TRAVELING MERCHANT + WEATHER PRESET
--- NO OVERLAP, NO NABRAK - FINAL VERSION
+-- SETUP SHOP LAYOUT
 -- =====================================================
-
--- SETUP UIListLayout (sekali saja)
 local function SetupShopLayout()
     local shopPage = pages["Shop & Trade"]
-    if shopPage:FindFirstChildOfClass("UIListLayout") then
-        return  -- sudah ada, skip
+    local existingLayout = shopPage:FindFirstChildOfClass("UIListLayout")
+    if not existingLayout then
+        local shopLayout = Instance.new("UIListLayout", shopPage)
+        shopLayout.Padding = UDim.new(0, 12)
+        shopLayout.FillDirection = Enum.FillDirection.Vertical
+        shopLayout.SortOrder = Enum.SortOrder.LayoutOrder
     end
-    local layout = Instance.new("UIListLayout", shopPage)
-    layout.Padding = UDim.new(0, 12)
-    layout.FillDirection = Enum.FillDirection.Vertical
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
 end
 
 
 -- =====================================================
--- TRAVELING MERCHANT FULL
+-- TRAVELING MERCHANT
 -- =====================================================
 local function BuildShopTraveling()
     local shopPage = pages["Shop & Trade"]
@@ -1358,7 +1354,6 @@ local function BuildShopTraveling()
         end
     end)
     
-    -- CARD
     local card = Instance.new("Frame", shopPage)
     card.Name = "TravelingMerchantCard"
     card.Size = UDim2.new(1, -32, 0, 48)
@@ -1393,7 +1388,6 @@ local function BuildShopTraveling()
     cardBtn.Text = ""
     cardBtn.AutoButtonColor = false
     
-    -- OVERLAY (FIXED ZIndex)
     local overlay = Instance.new("TextButton")
     overlay.Name = "TravelingOverlay"
     overlay.Parent = shopPage
@@ -1402,7 +1396,7 @@ local function BuildShopTraveling()
     overlay.BackgroundTransparency = 1
     overlay.Text = ""
     overlay.Visible = false
-    overlay.ZIndex = 100  -- HIGH ZIndex
+    overlay.ZIndex = 100
     overlay.AutoButtonColor = false
     
     local travelPanel = Instance.new("Frame")
@@ -1419,9 +1413,9 @@ local function BuildShopTraveling()
     Instance.new("UICorner", travelPanel).CornerRadius = UDim.new(0, 12)
     
     local tPad = Instance.new("UIPadding", travelPanel)
-    tPad.PaddingTop    = UDim.new(0, 8)
-    tPad.PaddingLeft   = UDim.new(0, 8)
-    tPad.PaddingRight  = UDim.new(0, 8)
+    tPad.PaddingTop = UDim.new(0, 8)
+    tPad.PaddingLeft = UDim.new(0, 8)
+    tPad.PaddingRight = UDim.new(0, 8)
     tPad.PaddingBottom = UDim.new(0, 8)
     
     local travelLayout = Instance.new("UIListLayout", travelPanel)
@@ -1429,7 +1423,6 @@ local function BuildShopTraveling()
     travelLayout.FillDirection = Enum.FillDirection.Vertical
     travelLayout.SortOrder = Enum.SortOrder.LayoutOrder
     
-    -- STOCK HEADER
     local stockHeader = Instance.new("Frame", travelPanel)
     stockHeader.Size = UDim2.new(1, 0, 0, 32)
     stockHeader.BackgroundTransparency = 1
@@ -1453,7 +1446,6 @@ local function BuildShopTraveling()
     stockSub.TextColor3 = MUTED
     stockSub.Text = "Available Items (0)"
     
-    -- SCROLLING LIST
     local scrollingFrame = Instance.new("ScrollingFrame", travelPanel)
     scrollingFrame.Size = UDim2.new(1, 0, 0, 120)
     scrollingFrame.BackgroundColor3 = CARD
@@ -1473,7 +1465,6 @@ local function BuildShopTraveling()
     listPad.PaddingTop = UDim.new(0, 2)
     listPad.PaddingBottom = UDim.new(0, 2)
     
-    -- AUTO BUY TOGGLE
     local toggleRow = Instance.new("Frame", travelPanel)
     toggleRow.Size = UDim2.new(1, 0, 0, 28)
     toggleRow.BackgroundTransparency = 1
@@ -1516,7 +1507,6 @@ local function BuildShopTraveling()
     
     refreshToggle()
     
-    -- REFRESH STOCK
     local function RefreshStockList()
         local stock = GetCurrentMerchantStock()
         stockSub.Text = string.format("Available Items (%d)", #stock)
@@ -1570,7 +1560,6 @@ local function BuildShopTraveling()
     RefreshStockList()
     merchant:OnChange("Items", RefreshStockList)
     
-    -- DROPDOWN
     local panelOpen = false
     local function setPanelOpen(state)
         panelOpen = state
@@ -1588,11 +1577,9 @@ local function BuildShopTraveling()
     end)
 end
 
-BuildShopTraveling()
-
 
 -- =====================================================
--- WEATHER PRESET (LayoutOrder = 2)
+-- WEATHER PRESET - GANTI LAYOUTORDER DI SINI
 -- =====================================================
 local function BuildShopWeather()
     local shopPage = pages["Shop & Trade"]
@@ -1642,6 +1629,7 @@ local function BuildShopWeather()
     local presetLayout = Instance.new("UIListLayout", subPreset)
     presetLayout.Padding = UDim.new(0,6)
     presetLayout.FillDirection = Enum.FillDirection.Vertical
+    presetLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     presetLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
     local presetOpen = false
@@ -1668,21 +1656,22 @@ end
 
 
 -- =====================================================
--- SHOW PAGE (UPDATED)
+-- UPDATED ShowPage FUNCTION - COPY INI GANTI YANG ASLI
 -- =====================================================
 local function ShowPage(name)
     for _, page in pairs(pages) do
         page.Visible = false
     end
 
-    if name == "Shop & Trade" then
+    if name == "Auto Option" then
+        pages["Auto Option"].Visible = true
+
+    elseif name == "Shop & Trade" then
         local shopPage = pages["Shop & Trade"]
         shopPage.Visible = true
-        
-        -- Setup layout FIRST
+
         SetupShopLayout()
 
-        -- Build if not exists
         if not shopPage:FindFirstChild("TravelingMerchantCard") then
             BuildShopTraveling()
         end
@@ -1690,12 +1679,32 @@ local function ShowPage(name)
         if not shopPage:FindFirstChild("WeatherPresetCard") then
             BuildShopWeather()
         end
-    else
-        pages[name].Visible = true
+
+    elseif name == "Misc" then
+        pages["Misc"].Visible = true
+
+    elseif name == "Information" then
+        pages["Information"].Visible = true
+
+    elseif name == "Teleport" then
+        pages["Teleport"].Visible = true
+
+    elseif name == "Quest" then
+        local questPage = pages["Quest"]
+        questPage.Visible = true
+
+        if not questPage:FindFirstChild("QuestDeepseaCard") then
+            BuildQuestDeepsea()
+        end
+        if not questPage:FindFirstChild("QuestElementCard") then
+            BuildQuestElement()
+        end
+        if not questPage:FindFirstChild("QuestDiamondCard") then
+            BuildQuestDiamond()
+        end
     end
 end
 
-BuildShopWeather()
 
 
 
