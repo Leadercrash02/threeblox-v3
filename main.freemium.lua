@@ -1285,9 +1285,22 @@ end
 
 BuildQuestDiamond()
 
-----------------------------------------------------------------
--- SHOP & TRADE : TRAVELING MERCHANT (EXACT LIKE WEATHER)
-----------------------------------------------------------------
+-- SETUP SHOP LAYOUT (CALL ONCE)
+local function SetupShopLayout()
+    local shopPage = pages["Shop & Trade"]
+    local existingLayout = shopPage:FindFirstChildOfClass("UIListLayout")
+    if not existingLayout then
+        local shopLayout = Instance.new("UIListLayout", shopPage)
+        shopLayout.Padding = UDim.new(0, 12)
+        shopLayout.FillDirection = Enum.FillDirection.Vertical
+        shopLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    end
+end
+
+
+-- =============================================
+-- TRAVELING MERCHANT FUNCTION
+-- =============================================
 local function BuildShopTraveling()
     local shopPage = pages["Shop & Trade"]
     
@@ -1298,13 +1311,10 @@ local function BuildShopTraveling()
     local AutoMerchantOn = false
     local selectedIds = {}
     
-    ----------------------------------------------------------------
-    -- HELPER FUNCTIONS
-    ----------------------------------------------------------------
+    -- HELPER: Get current merchant stock
     local function GetCurrentMerchantStock()
         local ids = merchant:GetExpect("Items") or {}
         local list = {}
-        
         for _, id in ipairs(ids) do
             for _, def in ipairs(MarketItemData) do
                 if def.Id == id then
@@ -1313,10 +1323,10 @@ local function BuildShopTraveling()
                 end
             end
         end
-        
         return list
     end
     
+    -- HELPER: Buy item by ID
     local function BuyMerchantId(id)
         task.spawn(function()
             pcall(function()
@@ -1326,12 +1336,12 @@ local function BuildShopTraveling()
                     :WaitForChild("sleitnick_net@0.2.0")
                     :WaitForChild("net")
                     :WaitForChild("RF/PurchaseMarketItem")
-                
                 rf:InvokeServer(id)
             end)
         end)
     end
     
+    -- AUTO BUY LOOP
     task.spawn(function()
         while true do
             if AutoMerchantOn then
@@ -1347,22 +1357,23 @@ local function BuildShopTraveling()
         end
     end)
     
-    ----------------------------------------------------------------
-    -- 1) CARD HEADER (TRAVELING MERCHANT)
-    ----------------------------------------------------------------
+    ---- CARD HEADER
     local card = Instance.new("Frame", shopPage)
     card.Name = "TravelingMerchantCard"
     card.Size = UDim2.new(1, -32, 0, 48)
-    card.Position = UDim2.new(0, 16, 0, 0)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
-    card.LayoutOrder = 2
+    card.LayoutOrder = 1  -- ABOVE WEATHER
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
+    
+    local cardPad = Instance.new("UIPadding", card)
+    cardPad.PaddingLeft = UDim.new(0, 16)
+    cardPad.PaddingRight = UDim.new(0, 16)
     
     local cardTitle = Instance.new("TextLabel", card)
     cardTitle.Size = UDim2.new(1, -40, 0, 22)
-    cardTitle.Position = UDim2.new(0, 16, 0, 4)
+    cardTitle.Position = UDim2.new(0, 0, 0, 4)
     cardTitle.BackgroundTransparency = 1
     cardTitle.Font = Enum.Font.GothamSemibold
     cardTitle.TextSize = 14
@@ -1385,9 +1396,7 @@ local function BuildShopTraveling()
     cardBtn.Text = ""
     cardBtn.AutoButtonColor = false
     
-    ----------------------------------------------------------------
-    -- 2) OVERLAY + PANEL KANAN (ITEM LIST + CHECKBOX + AUTO BUY)
-    ----------------------------------------------------------------
+    ---- OVERLAY + PANEL
     local overlay = Instance.new("TextButton")
     overlay.Name = "TravelingOverlay"
     overlay.Parent = shopPage
@@ -1423,9 +1432,7 @@ local function BuildShopTraveling()
     travelLayout.FillDirection = Enum.FillDirection.Vertical
     travelLayout.SortOrder = Enum.SortOrder.LayoutOrder
     
-    ----------------------------------------------------------------
-    -- 3) STOCK TITLE + LIST
-    ----------------------------------------------------------------
+    ---- STOCK HEADER
     local stockHeader = Instance.new("Frame", travelPanel)
     stockHeader.Size = UDim2.new(1, 0, 0, 32)
     stockHeader.BackgroundTransparency = 1
@@ -1449,6 +1456,7 @@ local function BuildShopTraveling()
     stockSub.TextColor3 = MUTED
     stockSub.Text = "Available Items (0)"
     
+    ---- SCROLLING LIST
     local scrollingFrame = Instance.new("ScrollingFrame", travelPanel)
     scrollingFrame.Size = UDim2.new(1, 0, 0, 120)
     scrollingFrame.BackgroundColor3 = CARD
@@ -1468,9 +1476,7 @@ local function BuildShopTraveling()
     listPad.PaddingTop = UDim.new(0, 2)
     listPad.PaddingBottom = UDim.new(0, 2)
     
-    ----------------------------------------------------------------
-    -- 4) AUTO BUY TOGGLE
-    ----------------------------------------------------------------
+    ---- AUTO BUY TOGGLE
     local toggleRow = Instance.new("Frame", travelPanel)
     toggleRow.Size = UDim2.new(1, 0, 0, 28)
     toggleRow.BackgroundTransparency = 1
@@ -1513,9 +1519,7 @@ local function BuildShopTraveling()
     
     refreshToggle()
     
-    ----------------------------------------------------------------
-    -- 5) REFRESH STOCK LIST
-    ----------------------------------------------------------------
+    ---- REFRESH STOCK LIST
     local function RefreshStockList()
         local stock = GetCurrentMerchantStock()
         stockSub.Text = string.format("Available Items (%d)", #stock)
@@ -1569,9 +1573,7 @@ local function BuildShopTraveling()
     RefreshStockList()
     merchant:OnChange("Items", RefreshStockList)
     
-    ----------------------------------------------------------------
-    -- 6) DROPDOWN TOGGLE
-    ----------------------------------------------------------------
+    ---- DROPDOWN TOGGLE
     local panelOpen = false
     local function setPanelOpen(state)
         panelOpen = state
