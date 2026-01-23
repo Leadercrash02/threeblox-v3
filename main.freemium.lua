@@ -1388,7 +1388,7 @@ BuildShopBait()
 local function BuildShopMerchant()
     local shopPage = pages["Shop & Trade"]
 
-    -- DYNAMIC POSITION - BAIT ATAU ROD
+    -- DYNAMIC POSITION - CHECK BAIT/ROD
     local prevCard = shopPage:FindFirstChild("BaitSelectorCard") or shopPage:FindFirstChild("RodSelectorCard")
     local baseY = prevCard and (prevCard.Position.Y.Offset + prevCard.Size.Y.Offset + 12) or 180
 
@@ -1396,8 +1396,10 @@ local function BuildShopMerchant()
     local MarketItemData = require(ReplicatedStorage.Shared.MarketItemData)
     local merchant = Replion.Client:WaitReplion("Merchant")
 
+    local selectedMerchant = nil
+    local selectedMerchantName = "None"
+    local selectedMerchantPrice = 0
     local AutoMerchantOn = false
-    local selectedMerchantIds = {}
 
     local card = Instance.new("Frame")
     card.Name = "MerchantSelectorCard"
@@ -1409,6 +1411,22 @@ local function BuildShopMerchant()
     card.ClipsDescendants = true
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
 
+    -- LISTEN PREV CARD CHANGES & REPOSITION
+    local function updateMerchantPosition()
+        local prevCard = shopPage:FindFirstChild("BaitSelectorCard") or shopPage:FindFirstChild("RodSelectorCard")
+        if prevCard then
+            local newY = prevCard.Position.Y.Offset + prevCard.Size.Y.Offset + 12
+            card.Position = UDim2.new(0, 16, 0, newY)
+        end
+    end
+
+    local prevConn
+    local prevCardCheck = shopPage:FindFirstChild("BaitSelectorCard") or shopPage:FindFirstChild("RodSelectorCard")
+    if prevCardCheck then
+        prevConn = prevCardCheck:GetPropertyChangedSignal("Size"):Connect(updateMerchantPosition)
+        prevCardCheck:GetPropertyChangedSignal("Position"):Connect(updateMerchantPosition)
+    end
+
     local cardTitle = Instance.new("TextLabel", card)
     cardTitle.Size = UDim2.new(1, -40, 0, 22)
     cardTitle.Position = UDim2.new(0, 16, 0, 4)
@@ -1417,7 +1435,7 @@ local function BuildShopMerchant()
     cardTitle.TextSize = 14
     cardTitle.TextXAlignment = Enum.TextXAlignment.Left
     cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "🛒 Merchant Stock"
+    cardTitle.Text = "🛒 Merchant Selector"
 
     local arrow = Instance.new("TextLabel", card)
     arrow.Size = UDim2.new(0, 24, 0, 24)
@@ -1466,20 +1484,58 @@ local function BuildShopMerchant()
         recalcMerchant()
     end)
 
-    -- STOCK DISPLAY
-    local rowStock = Instance.new("Frame", subMerchant)
-    rowStock.Size = UDim2.new(1, 0, 0, 36)
-    rowStock.BackgroundTransparency = 1
+    local rowSelect = Instance.new("Frame", subMerchant)
+    rowSelect.Size = UDim2.new(1, 0, 0, 36)
+    rowSelect.BackgroundTransparency = 1
 
-    local lblStock = Instance.new("TextLabel", rowStock)
-    lblStock.Size = UDim2.new(1, 0, 1, 0)
-    lblStock.Position = UDim2.new(0, 16, 0, 0)
-    lblStock.BackgroundTransparency = 1
-    lblStock.Font = Enum.Font.Gotham
-    lblStock.TextSize = 13
-    lblStock.TextXAlignment = Enum.TextXAlignment.Left
-    lblStock.TextColor3 = TEXT
-    lblStock.Text = "Live Stock: Loading..."
+    local lblSelect = Instance.new("TextLabel", rowSelect)
+    lblSelect.Size = UDim2.new(0.5, 0, 1, 0)
+    lblSelect.Position = UDim2.new(0, 16, 0, 0)
+    lblSelect.BackgroundTransparency = 1
+    lblSelect.Font = Enum.Font.Gotham
+    lblSelect.TextSize = 13
+    lblSelect.TextXAlignment = Enum.TextXAlignment.Left
+    lblSelect.TextColor3 = TEXT
+    lblSelect.Text = "Select Merchant Item"
+
+    local hint = Instance.new("TextLabel", rowSelect)
+    hint.Size = UDim2.new(0.5, -32, 1, 0)
+    hint.Position = UDim2.new(0.5, 0, 0, 0)
+    hint.BackgroundTransparency = 1
+    hint.Font = Enum.Font.Gotham
+    hint.TextSize = 11
+    hint.TextXAlignment = Enum.TextXAlignment.Right
+    hint.TextColor3 = TEXT
+    hint.Text = "None"
+
+    local chevron = Instance.new("TextLabel", rowSelect)
+    chevron.Size = UDim2.new(0, 20, 1, 0)
+    chevron.Position = UDim2.new(1, -20, 0, 0)
+    chevron.BackgroundTransparency = 1
+    chevron.Font = Enum.Font.Gotham
+    chevron.TextSize = 16
+    chevron.TextColor3 = TEXT
+    chevron.Text = "▾"
+
+    local selectBtn = Instance.new("TextButton", rowSelect)
+    selectBtn.BackgroundTransparency = 1
+    selectBtn.Size = UDim2.new(1, 0, 1, 0)
+    selectBtn.Text = ""
+    selectBtn.AutoButtonColor = false
+
+    local rowPrice = Instance.new("Frame", subMerchant)
+    rowPrice.Size = UDim2.new(1, 0, 0, 28)
+    rowPrice.BackgroundTransparency = 1
+
+    local priceLabel = Instance.new("TextLabel", rowPrice)
+    priceLabel.Size = UDim2.new(1, -32, 1, 0)
+    priceLabel.Position = UDim2.new(0, 16, 0, 0)
+    priceLabel.BackgroundTransparency = 1
+    priceLabel.Font = Enum.Font.Gotham
+    priceLabel.TextSize = 12
+    priceLabel.TextXAlignment = Enum.TextXAlignment.Left
+    priceLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+    priceLabel.Text = "💰 None"
 
     local rowAuto = Instance.new("Frame", subMerchant)
     rowAuto.Size = UDim2.new(1, 0, 0, 36)
@@ -1524,7 +1580,55 @@ local function BuildShopMerchant()
     refreshAuto()
     recalcMerchant()
 
-    -- LIVE STOCK REFRESH
+    -- MERCHANT PANEL (IDENTICAL ROD/BAIT)
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "MerchantOverlay"
+    overlay.Parent = shopPage
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.Position = UDim2.new(0, 0, 0, 0)
+    overlay.BackgroundTransparency = 1
+    overlay.Text = ""
+    overlay.Visible = false
+    overlay.ZIndex = 4
+    overlay.AutoButtonColor = false
+
+    local merchantPanel = Instance.new("Frame")
+    merchantPanel.Name = "MerchantPanel"
+    merchantPanel.Parent = overlay
+    merchantPanel.Size = UDim2.new(0, 240, 0, 320)
+    merchantPanel.AnchorPoint = Vector2.new(1, 0)
+    merchantPanel.Position = UDim2.new(1, -24, 0.38, 0)
+    merchantPanel.BackgroundColor3 = CARD
+    merchantPanel.BackgroundTransparency = 0.04
+    merchantPanel.Visible = false
+    merchantPanel.ZIndex = 5
+    merchantPanel.Active = true
+    Instance.new("UICorner", merchantPanel).CornerRadius = UDim.new(0, 12)
+
+    local mPad = Instance.new("UIPadding", merchantPanel)
+    mPad.PaddingTop = UDim.new(0, 8)
+    mPad.PaddingLeft = UDim.new(0, 8)
+    mPad.PaddingRight = UDim.new(0, 8)
+    mPad.PaddingBottom = UDim.new(0, 8)
+
+    local merchantList = Instance.new("ScrollingFrame", merchantPanel)
+    merchantList.Position = UDim2.new(0, 0, 0, 0)
+    merchantList.Size = UDim2.new(1, 0, 1, 0)
+    merchantList.ScrollBarThickness = 4
+    merchantList.ScrollingDirection = Enum.ScrollingDirection.Y
+    merchantList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    merchantList.BackgroundTransparency = 1
+    merchantList.ClipsDescendants = true
+    merchantList.ZIndex = 6
+    merchantList.Active = true
+
+    local mlLayout = Instance.new("UIListLayout", merchantList)
+    mlLayout.Padding = UDim.new(0, 4)
+    mlLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    mlLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        merchantList.CanvasSize = UDim2.new(0, 0, 0, mlLayout.AbsoluteContentSize.Y + 8)
+    end)
+
     local function GetCurrentMerchantStock()
         local ids = merchant:GetExpect("Items") or {}
         local list = {}
@@ -1539,28 +1643,92 @@ local function BuildShopMerchant()
         return list
     end
 
-    local function RefreshMerchantStock()
+    local function rebuildMerchantPanel()
+        for _, c in ipairs(merchantList:GetChildren()) do
+            if c:IsA("TextButton") then c:Destroy() end
+        end
+
         local stock = GetCurrentMerchantStock()
-        local count = #stock
-        lblStock.Text = ("Live Stock: %d items"):format(count)
-        
-        -- Auto buy logic
-        if AutoMerchantOn and count > 0 then
-            task.spawn(function()
-                for _, def in ipairs(stock) do
-                    pcall(function()
-                        Events.purchaseMarket:InvokeServer(def.Id)
-                    end)
-                    task.wait(1.5)
-                end
+        if #stock == 0 then
+            local empty = Instance.new("TextLabel", merchantList)
+            empty.Size = UDim2.new(1, 0, 0, 40)
+            empty.BackgroundTransparency = 1
+            empty.Font = Enum.Font.Gotham
+            empty.TextSize = 13
+            empty.TextColor3 = MUTED
+            empty.Text = "No merchant stock"
+            return
+        end
+
+        for _, def in ipairs(stock) do
+            local id = def.Id
+            local name = def.Data.Name or def.Identifier or "Unknown"
+            local price = def.Price or 0
+            
+            local m = Instance.new("TextButton", merchantList)
+            m.Size = UDim2.new(1, 0, 0, 28)
+            m.BackgroundColor3 = CARD
+            m.BackgroundTransparency = selectedMerchant == id and 0.08 or 0.18
+            m.Font = Enum.Font.Gotham
+            m.TextSize = 12
+            m.TextXAlignment = Enum.TextXAlignment.Left
+            m.TextColor3 = TEXT
+            m.Text = "  " .. name
+            m.ZIndex = 6
+            m.AutoButtonColor = false
+            Instance.new("UICorner", m).CornerRadius = UDim.new(0, 6)
+
+            local highlight = Instance.new("Frame")
+            highlight.Name = "Highlight"
+            highlight.Parent = m
+            highlight.AnchorPoint = Vector2.new(0, 0.5)
+            highlight.Position = UDim2.new(0, 0, 0.5, 0)
+            highlight.Size = UDim2.new(0, 3, 1, -6)
+            highlight.BackgroundColor3 = Color3.fromRGB(170, 80, 255)
+            highlight.BackgroundTransparency = selectedMerchant == id and 0 or 1
+            highlight.ZIndex = 7
+
+            m.MouseButton1Click:Connect(function()
+                selectedMerchant = id
+                selectedMerchantName = name
+                selectedMerchantPrice = price
+                local displayPrice = string.format("%d", price)
+                hint.Text = "🛒 " .. selectedMerchantName
+                priceLabel.Text = "💰 $" .. displayPrice
+                _G.RAY_SelectedMerchant = selectedMerchant
+                rebuildMerchantPanel()
             end)
         end
     end
 
-    RefreshMerchantStock()
-    merchant:OnChange("Items", RefreshMerchantStock)
+    rebuildMerchantPanel()
+
+    local panelOpen = false
+    local function setPanelOpen(state)
+        panelOpen = state
+        overlay.Visible = panelOpen
+        merchantPanel.Visible = panelOpen
+    end
+
+    selectBtn.MouseButton1Click:Connect(function()
+        rebuildMerchantPanel()
+        setPanelOpen(not panelOpen)
+    end)
+
+    overlay.MouseButton1Click:Connect(function()
+        setPanelOpen(false)
+    end)
+
+    -- CLEANUP
+    card.AncestryChanged:Connect(function()
+        if not card.Parent then
+            if prevConn then prevConn:Disconnect() end
+        end
+    end)
 end
 
+
+BuildShopMerchant()
 
     local function ShowPage(name)
     for _, page in pairs(pages) do
