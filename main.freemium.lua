@@ -799,7 +799,7 @@ local function BuildShopRods()
     cardTitle.TextSize = 14
     cardTitle.TextXAlignment = Enum.TextXAlignment.Left
     cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "🛒 Buy Rod Preset"
+    cardTitle.Text = "🎣 Rod Selector"
 
     local arrow = Instance.new("TextLabel", card)
     arrow.Size = UDim2.new(0, 24, 0, 24)
@@ -898,8 +898,8 @@ local function BuildShopRods()
     priceLabel.Font = Enum.Font.Gotham
     priceLabel.TextSize = 12
     priceLabel.TextXAlignment = Enum.TextXAlignment.Left
-    priceLabel.TextColor3 = Color3.fromRGB(255, 220, 0)
-    priceLabel.Text = "🛍️ None"
+    priceLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+    priceLabel.Text = "💰 None"
 
     local rowAuto = Instance.new("Frame", subRod)
     rowAuto.Size = UDim2.new(1, 0, 0, 36)
@@ -944,7 +944,7 @@ local function BuildShopRods()
     refreshAuto()
     recalcRod()
 
-    -- ROD PANEL (sama kayak sebelumnya)
+    -- ROD PANEL (SAMA PERSIS BAIT - PERFECT SCROLL)
     local overlay = Instance.new("TextButton")
     overlay.Name = "RodOverlay"
     overlay.Parent = shopPage
@@ -959,9 +959,9 @@ local function BuildShopRods()
     local rodPanel = Instance.new("Frame")
     rodPanel.Name = "RodPanel"
     rodPanel.Parent = overlay
-    rodPanel.Size = UDim2.new(0, 240, 0, 320)
+    rodPanel.Size = UDim2.new(0, 220, 0, 280)  -- KECIL SAMPE BAIT
     rodPanel.AnchorPoint = Vector2.new(1, 0)
-    rodPanel.Position = UDim2.new(1, -24, 0.28, 0)
+    rodPanel.Position = UDim2.new(1, -24, 0.38, 0)
     rodPanel.BackgroundColor3 = CARD
     rodPanel.BackgroundTransparency = 0.04
     rodPanel.Visible = false
@@ -978,22 +978,40 @@ local function BuildShopRods()
     local rodList = Instance.new("ScrollingFrame", rodPanel)
     rodList.Position = UDim2.new(0, 0, 0, 0)
     rodList.Size = UDim2.new(1, 0, 1, 0)
-    rodList.ScrollBarThickness = 4
+    rodList.ScrollBarThickness = 6  -- SAMPE BAIT
     rodList.ScrollingDirection = Enum.ScrollingDirection.Y
-    rodList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    rodList.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 120)
     rodList.BackgroundTransparency = 1
     rodList.ClipsDescendants = true
     rodList.ZIndex = 6
     rodList.Active = true
+    rodList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    rodList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    rodList.ScrollingEnabled = true
 
     local rlLayout = Instance.new("UIListLayout", rodList)
-    rlLayout.Padding = UDim.new(0, 4)
+    rlLayout.Padding = UDim.new(0, 5)  -- SAMPE BAIT
     rlLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    rlLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        rodList.CanvasSize = UDim2.new(0, 0, 0, rlLayout.AbsoluteContentSize.Y + 8)
+    rlLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    rlLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+
+    -- SCROLL LOCK SYSTEM (SAMPE BAIT)
+    local scrollLock = false
+    local lastScrollPos = 0
+
+    rodList:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+        if not scrollLock then
+            lastScrollPos = rodList.CanvasPosition.Y
+        end
     end)
 
+    local function updateCanvas()
+        rodList.CanvasSize = UDim2.new(0, 0, 0, rlLayout.AbsoluteContentSize.Y + 16)
+    end
+    rlLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+
     local function rebuildRodPanel()
+        scrollLock = true
         for _, c in ipairs(rodList:GetChildren()) do
             if c:IsA("TextButton") then c:Destroy() end
         end
@@ -1001,40 +1019,46 @@ local function BuildShopRods()
         for _, rodData in ipairs(FISHING_RODS) do
             local id, name, price = rodData[1], rodData[2], rodData[3]
             
-            local b = Instance.new("TextButton", rodList)
-            b.Size = UDim2.new(1, 0, 0, 28)
-            b.BackgroundColor3 = CARD
-            b.BackgroundTransparency = selectedRod == id and 0.08 or 0.18
-            b.Font = Enum.Font.Gotham
-            b.TextSize = 12
-            b.TextXAlignment = Enum.TextXAlignment.Left
-            b.TextColor3 = TEXT
-            b.Text = "  " .. name
-            b.ZIndex = 6
-            b.AutoButtonColor = false
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+            local r = Instance.new("TextButton", rodList)
+            r.Size = UDim2.new(1, 0, 0, 28)
+            r.BackgroundColor3 = CARD
+            r.BackgroundTransparency = selectedRod == id and 0.08 or 0.18
+            r.Font = Enum.Font.Gotham
+            r.TextSize = 12
+            r.TextXAlignment = Enum.TextXAlignment.Left
+            r.TextColor3 = TEXT
+            r.Text = "  " .. name
+            r.ZIndex = 6
+            r.AutoButtonColor = false
+            Instance.new("UICorner", r).CornerRadius = UDim.new(0, 6)
 
             local highlight = Instance.new("Frame")
             highlight.Name = "Highlight"
-            highlight.Parent = b
+            highlight.Parent = r
             highlight.AnchorPoint = Vector2.new(0, 0.5)
             highlight.Position = UDim2.new(0, 0, 0.5, 0)
             highlight.Size = UDim2.new(0, 3, 1, -6)
-            highlight.BackgroundColor3 = Color3.fromRGB(255, 220, 0)
+            highlight.BackgroundColor3 = Color3.fromRGB(255, 200, 100)
             highlight.BackgroundTransparency = selectedRod == id and 0 or 1
             highlight.ZIndex = 7
 
-            b.MouseButton1Click:Connect(function()
+            r.MouseButton1Click:Connect(function()
                 selectedRod = id
                 selectedRodName = name
                 selectedRodPrice = price
                 local displayPrice = string.format("%d", price)
-                hint.Text = "🛒" .. selectedRodName
-                priceLabel.Text = "🛍️ $" .. displayPrice
+                hint.Text = "🎣 " .. selectedRodName
+                priceLabel.Text = "💰 $" .. displayPrice
                 _G.RAY_SelectedRod = selectedRod
                 rebuildRodPanel()
             end)
         end
+        
+        task.wait(0.05)
+        local maxScroll = math.max(0, rlLayout.AbsoluteContentSize.Y - rodList.AbsoluteSize.Y)
+        rodList.CanvasPosition = Vector2.new(0, math.min(lastScrollPos, maxScroll))
+        scrollLock = false
+        updateCanvas()
     end
 
     rebuildRodPanel()
@@ -1054,15 +1078,18 @@ local function BuildShopRods()
         setPanelOpen(false)
     end)
 
-    -- CLEANUP CONNECTIONS ON DESTROY
+    -- CLEANUP
     card.AncestryChanged:Connect(function()
         if not card.Parent then
             if weatherConn then weatherConn:Disconnect() end
+            overlay:Destroy()
         end
     end)
 end
 
 BuildShopRods()
+
+
 
 local function BuildShopBait()
     local shopPage = pages["Shop & Trade"]
@@ -1265,7 +1292,7 @@ local function BuildShopBait()
     refreshAuto()
     recalcBait()
 
-    -- BAIT PANEL (IDENTICAL TO ROD PANEL)
+    -- SCROLL PERFECT BAIT PANEL (KECIL + NO MENTAL)
     local overlay = Instance.new("TextButton")
     overlay.Name = "BaitOverlay"
     overlay.Parent = shopPage
@@ -1280,7 +1307,7 @@ local function BuildShopBait()
     local baitPanel = Instance.new("Frame")
     baitPanel.Name = "BaitPanel"
     baitPanel.Parent = overlay
-    baitPanel.Size = UDim2.new(0, 240, 0, 320)
+    baitPanel.Size = UDim2.new(0, 220, 0, 280)
     baitPanel.AnchorPoint = Vector2.new(1, 0)
     baitPanel.Position = UDim2.new(1, -24, 0.38, 0)
     baitPanel.BackgroundColor3 = CARD
@@ -1299,22 +1326,40 @@ local function BuildShopBait()
     local baitList = Instance.new("ScrollingFrame", baitPanel)
     baitList.Position = UDim2.new(0, 0, 0, 0)
     baitList.Size = UDim2.new(1, 0, 1, 0)
-    baitList.ScrollBarThickness = 4
+    baitList.ScrollBarThickness = 6
     baitList.ScrollingDirection = Enum.ScrollingDirection.Y
-    baitList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    baitList.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 120)
     baitList.BackgroundTransparency = 1
     baitList.ClipsDescendants = true
     baitList.ZIndex = 6
     baitList.Active = true
+    baitList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    baitList.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    baitList.ScrollingEnabled = true
 
     local blLayout = Instance.new("UIListLayout", baitList)
-    blLayout.Padding = UDim.new(0, 4)
+    blLayout.Padding = UDim.new(0, 5)
     blLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    blLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        baitList.CanvasSize = UDim2.new(0, 0, 0, blLayout.AbsoluteContentSize.Y + 8)
+    blLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    blLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+
+    -- SCROLL LOCK SYSTEM
+    local scrollLock = false
+    local lastScrollPos = 0
+
+    baitList:GetPropertyChangedSignal("CanvasPosition"):Connect(function()
+        if not scrollLock then
+            lastScrollPos = baitList.CanvasPosition.Y
+        end
     end)
 
+    local function updateCanvas()
+        baitList.CanvasSize = UDim2.new(0, 0, 0, blLayout.AbsoluteContentSize.Y + 16)
+    end
+    blLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+
     local function rebuildBaitPanel()
+        scrollLock = true
         for _, c in ipairs(baitList:GetChildren()) do
             if c:IsA("TextButton") then c:Destroy() end
         end
@@ -1356,6 +1401,12 @@ local function BuildShopBait()
                 rebuildBaitPanel()
             end)
         end
+        
+        task.wait(0.05)
+        local maxScroll = math.max(0, blLayout.AbsoluteContentSize.Y - baitList.AbsoluteSize.Y)
+        baitList.CanvasPosition = Vector2.new(0, math.min(lastScrollPos, maxScroll))
+        scrollLock = false
+        updateCanvas()
     end
 
     rebuildBaitPanel()
@@ -1375,17 +1426,16 @@ local function BuildShopBait()
         setPanelOpen(false)
     end)
 
-    -- CLEANUP CONNECTIONS
+    -- CLEANUP
     card.AncestryChanged:Connect(function()
         if not card.Parent then
             if rodConn then rodConn:Disconnect() end
+            overlay:Destroy()
         end
     end)
 end
 
 BuildShopBait()
-
-
 
 
 --- PAGE SWICTH ---
@@ -1424,6 +1474,7 @@ local function ShowPage(name)
         pages["Teleport"].Visible = true
     end
 end
+
 
 
 ----------------------------------------------------------------
@@ -3985,6 +4036,12 @@ end)
 
 -- REMOTES --
 
+local Net = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+
 local Events = {
     fishing  = Net:WaitForChild("RE/FishingCompleted"),
     sell     = Net:WaitForChild("RF/SellAllItems"),
@@ -3993,16 +4050,11 @@ local Events = {
     cancel   = Net:WaitForChild("RF/CancelFishingInputs"),
     equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
     unequip  = Net:WaitForChild("RE/UnequipToolFromHotbar"),
-    
-    -- WEATHER
     purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
-    
-    -- FISHING RODS
     purchaseRod = Net:WaitForChild("RF/PurchaseFishingRod"),
-    
-    -- BAIT (NEW!)
     purchaseBait = Net:WaitForChild("RF/PurchaseBait"),
 }
+
 
 
 ----------------------------------------------------------------
