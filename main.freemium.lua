@@ -1728,8 +1728,6 @@ local function BuildShopMerchant()
 end
 
 
-BuildShopMerchant()
-
     local function ShowPage(name)
     for _, page in pairs(pages) do
         page.Visible = false
