@@ -180,6 +180,8 @@ local DEFAULT_SPOT_ORDER = {
     "Crystalline Passage",
     "Crystal Depths",
 }
+
+
 -- ROOT
 local gui = Instance.new("ScreenGui", CoreGui)
 gui.Name = "Threeblox Freemuim"
@@ -427,863 +429,6 @@ newPage("Teleport")
 newPage("Quest")
 newPage("Shop & Trade")
 newPage("Misc")
-
--- layout untuk halaman Quest (biar card tidak nabrak)
-local questLayout = Instance.new("UIListLayout", pages["Quest"])
-questLayout.Padding = UDim.new(0,8)
-questLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-----------------------------------------------------------------
--- QUEST : DEEPSEA (GHOSTFINN)
-----------------------------------------------------------------
-local function BuildQuestDeepsea()
-    local questPage = pages["Quest"]
-
-    -- CARD UTAMA
-    local card = Instance.new("Frame")
-    card.Name = "QuestDeepseaCard"
-    card.Parent = questPage
-    card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,16)
-    card.BackgroundColor3 = CARD
-    card.BackgroundTransparency = ALPHA_CARD
-    card.ClipsDescendants = true
-    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
-
-    local cardTitle = Instance.new("TextLabel", card)
-    cardTitle.Size = UDim2.new(1,-40,0,22)
-    cardTitle.Position = UDim2.new(0,16,0,4)
-    cardTitle.BackgroundTransparency = 1
-    cardTitle.Font = Enum.Font.GothamSemibold
-    cardTitle.TextSize = 14
-    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
-    cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "🌊 Quest Deepsea (Ghostfinn)"
-
-    local arrow = Instance.new("TextLabel", card)
-    arrow.Size = UDim2.new(0,24,0,24)
-    arrow.Position = UDim2.new(1,-28,0,10)
-    arrow.BackgroundTransparency = 1
-    arrow.Font = Enum.Font.Gotham
-    arrow.TextSize = 18
-    arrow.TextColor3 = TEXT
-    arrow.Text = "▼"
-
-    local cardBtn = Instance.new("TextButton", card)
-    cardBtn.BackgroundTransparency = 1
-    cardBtn.Size = UDim2.new(1,0,1,0)
-    cardBtn.Text = ""
-    cardBtn.AutoButtonColor = false
-
-    ----------------------------------------------------------------
-    -- ISI DROPDOWN (TEXT PROGRESS + TELEPORT)
-    ----------------------------------------------------------------
-    local subDeep = Instance.new("Frame", card)
-    subDeep.Name = "DeepseaContents"
-    subDeep.Position = UDim2.new(0,0,0,48)
-    subDeep.Size = UDim2.new(1,0,0,0)
-    subDeep.BackgroundTransparency = 1
-    subDeep.ClipsDescendants = true
-
-    local deepLayout = Instance.new("UIListLayout", subDeep)
-    deepLayout.Padding = UDim.new(0,6)
-    deepLayout.FillDirection = Enum.FillDirection.Vertical
-    deepLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    deepLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    -- ROW 1: TEXT PROGRESS (TINGGI DINAMIS / MODE SINGKAT)
-    local deepRow = Instance.new("Frame", subDeep)
-    deepRow.Size = UDim2.new(1,0,0,0)
-    deepRow.BackgroundTransparency = 1
-
-    local deepText = Instance.new("TextLabel", deepRow)
-    deepText.Name = "DeepseaText"
-    deepText.Size = UDim2.new(1,-8,1,-8)
-    deepText.Position = UDim2.new(0,4,0,4)
-    deepText.BackgroundTransparency = 1
-    deepText.Font = Enum.Font.Code
-    deepText.TextSize = 13
-    deepText.TextXAlignment = Enum.TextXAlignment.Left
-    deepText.TextYAlignment = Enum.TextYAlignment.Top
-    deepText.TextWrapped = false
-    deepText.TextColor3 = TEXT
-    deepText.Text = "Loading Deepsea quest..."
-
-    -- ROW 2: TELEPORT SYSphus / TREASURE ROOM
-    local tpRow = Instance.new("Frame", subDeep)
-    tpRow.Size = UDim2.new(1,0,0,36)
-    tpRow.BackgroundTransparency = 1
-
-    local tpSys = Instance.new("TextButton", tpRow)
-    tpSys.Size = UDim2.new(0.5,-10,1,0)
-    tpSys.Position = UDim2.new(0,0,0,0)
-    tpSys.BackgroundColor3 = CARD
-    tpSys.BackgroundTransparency = 0.4
-    tpSys.BorderSizePixel = 0
-    tpSys.Font = Enum.Font.Gotham
-    tpSys.TextSize = 13
-    tpSys.TextColor3 = TEXT
-    tpSys.Text = "⛰ Sysphus State"
-    tpSys.AutoButtonColor = false
-    Instance.new("UICorner", tpSys).CornerRadius = UDim.new(0,8)
-
-    local tpTreasure = Instance.new("TextButton", tpRow)
-    tpTreasure.Size = UDim2.new(0.5,-10,1,0)
-    tpTreasure.Position = UDim2.new(0.5,10,0,0)
-    tpTreasure.BackgroundColor3 = CARD
-    tpTreasure.BackgroundTransparency = 0.4
-    tpTreasure.BorderSizePixel = 0
-    tpTreasure.Font = Enum.Font.Gotham
-    tpTreasure.TextSize = 13
-    tpTreasure.TextColor3 = TEXT
-    tpTreasure.Text = "💎 Treasure Room"
-    tpTreasure.AutoButtonColor = false
-    Instance.new("UICorner", tpTreasure).CornerRadius = UDim.new(0,8)
-
-    ----------------------------------------------------------------
-    -- DROPDOWN BEHAVIOUR
-    ----------------------------------------------------------------
-    local deepOpen = false
-    local function recalcDeep()
-        local h = deepLayout.AbsoluteContentSize.Y
-        if deepOpen then
-            subDeep.Size = UDim2.new(1,0,0,h + 8)
-            card.Size   = UDim2.new(1,-32,0,48 + h + 8)
-            arrow.Text  = "▲"
-        else
-            subDeep.Size = UDim2.new(1,0,0,0)
-            card.Size   = UDim2.new(1,-32,0,48)
-            arrow.Text  = "▼"
-        end
-    end
-
-    deepLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcDeep)
-
-    cardBtn.MouseButton1Click:Connect(function()
-        deepOpen = not deepOpen
-        recalcDeep()
-    end)
-
-    ----------------------------------------------------------------
-    -- TELEPORT HANDLER (PAKAI ISLAND_SPOTS)
-    ----------------------------------------------------------------
-    local function tpTo(name)
-        local cf = ISLAND_SPOTS[name]
-        if not cf then return end
-        local char = lp.Character or lp.CharacterAdded:Wait()
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-        hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
-        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
-        hrp.CFrame = cf
-    end
-
-    tpSys.MouseButton1Click:Connect(function()
-        tpTo("Sysphus State")
-    end)
-
-    tpTreasure.MouseButton1Click:Connect(function()
-        tpTo("Treasure Room")
-    end)
-
-    ----------------------------------------------------------------
-    -- LOGIC QUEST (VERSI GUI TEST + FLAG COMPLETED)
-    ----------------------------------------------------------------
-    -- PENTING: sesuaikan path require jika di game beda
-    local Replion = require(ReplicatedStorage.Packages.Replion)
-    local Quests  = require(ReplicatedStorage.Modules.Quests)
-    local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
-
-    local DataReplion = Replion.Client:WaitReplion("Data")
-
-    local function getQuestType(name)
-        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, name)
-        return ok and qType or nil
-    end
-
-    local function calcTotalPercent(questDef, questState)
-        if not questDef or not questDef.Objectives then return 0 end
-        local acc = 0
-        for i,obj in ipairs(questDef.Objectives) do
-            local st = questState and questState.Objectives and questState.Objectives[i]
-            local cur = (st and st.Progress) or 0
-            local goal = obj.Goal or 1
-            if cur >= goal then
-                acc += 1
-            else
-                acc += math.clamp(cur/goal,0,1)
-            end
-        end
-        return acc/#questDef.Objectives*100
-    end
-
-    local function isCompleted(name)
-        local completed = DataReplion:GetExpect("CompletedQuests") or {}
-        for _,q in ipairs(completed) do
-            if q == name then return true end
-        end
-        return false
-    end
-
-    -- return: text, isDone
-    local function dumpDeepsea()
-        local name = "Deep Sea Quest"
-
-        local completedFlag = isCompleted(name)
-        local qType = getQuestType(name)
-        local def = qType and Quests[qType] and Quests[qType][name] or nil
-
-        local all = DataReplion:GetExpect("Quests")
-        local state = qType and all[qType] and all[qType][name] or nil
-
-        if completedFlag and not state then
-            return string.format("%s (%s) – 100%% (COMPLETED)", name, qType or "Mainline"), true
-        end
-
-        if not qType or not def then
-            return name.." – data not found", false
-        end
-
-        if not state then
-            return name.." – not active", false
-        end
-
-        local total = calcTotalPercent(def,state)
-        local doneFlag = MainlineQuestController.DidCompleteAll(qType,name,state) or completedFlag
-        if doneFlag then total = 100 end
-        local totalRounded = math.floor(total+0.5)
-
-        local lines = {}
-        table.insert(lines, string.format("%s (%s) – %d%%%s",
-            name, qType, totalRounded, doneFlag and " (COMPLETED)" or ""))
-
-        for i,obj in ipairs(def.Objectives) do
-            local st = state.Objectives and state.Objectives[i]
-            local cur = (st and st.Progress) or 0
-            local goal = obj.Goal or 1
-            local pct = math.floor(math.clamp(cur/goal,0,1)*100+0.5)
-            table.insert(lines, string.format("  [%d] %s", i, obj.Name))
-            table.insert(lines, string.format("      %d/%d (%d%%)", cur, goal, pct))
-        end
-
-        return table.concat(lines,"\n"), doneFlag
-    end
-
-    local function refreshDeep()
-        local text, done = dumpDeepsea()
-        deepText.Text = text
-
-        if done then
-            -- MODE SINGKAT: quest selesai → teks pendek
-            deepRow.Size = UDim2.new(1,0,0,32)
-        else
-            -- MODE NORMAL: tinggi ikut jumlah baris
-            local lines = 0
-            for _ in string.gmatch(text, "\n") do
-                lines += 1
-            end
-            lines = lines + 1
-
-            local lineHeight = 16
-            local basePadding = 12
-            local h = basePadding + lines * lineHeight
-            h = math.clamp(h, 48, 160)
-
-            deepRow.Size = UDim2.new(1,0,0,h)
-        end
-
-        recalcDeep()
-    end
-
-    DataReplion:OnChange({"Quests","Mainline"}, refreshDeep)
-    DataReplion:OnChange({"CompletedQuests"}, refreshDeep)
-    refreshDeep()
-end
-
-BuildQuestDeepsea()
-
-----------------------------------------------------------------
--- QUEST : ELEMENT ROD
-----------------------------------------------------------------
-local function BuildQuestElement()
-    local questPage = pages["Quest"]
-    local ELEMENT_QUEST_NAME = "Element Quest" -- ganti ke nama quest aslinya
-
-    -- CARD UTAMA
-    local card = Instance.new("Frame")
-    card.Name = "QuestElementCard"
-    card.Parent = questPage
-    card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,0)      -- Y diatur UIListLayout
-    card.BackgroundColor3 = CARD
-    card.BackgroundTransparency = ALPHA_CARD
-    card.ClipsDescendants = true
-    card.LayoutOrder = 2                     -- Element di bawah Deepsea
-    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
-
-    local cardTitle = Instance.new("TextLabel", card)
-    cardTitle.Size = UDim2.new(1,-40,0,22)
-    cardTitle.Position = UDim2.new(0,16,0,4)
-    cardTitle.BackgroundTransparency = 1
-    cardTitle.Font = Enum.Font.GothamSemibold
-    cardTitle.TextSize = 14
-    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
-    cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "⚡ Quest Element Rod"
-
-    local arrow = Instance.new("TextLabel", card)
-    arrow.Size = UDim2.new(0,24,0,24)
-    arrow.Position = UDim2.new(1,-28,0,10)
-    arrow.BackgroundTransparency = 1
-    arrow.Font = Enum.Font.Gotham
-    arrow.TextSize = 18
-    arrow.TextColor3 = TEXT
-    arrow.Text = "▼"
-
-    local cardBtn = Instance.new("TextButton", card)
-    cardBtn.BackgroundTransparency = 1
-    cardBtn.Size = UDim2.new(1,0,1,0)
-    cardBtn.Text = ""
-    cardBtn.AutoButtonColor = false
-
-    ----------------------------------------------------------------
-    -- ISI DROPDOWN (TEXT PROGRESS + TELEPORT)
-    ----------------------------------------------------------------
-    local subElem = Instance.new("Frame", card)
-    subElem.Name = "ElementContents"
-    subElem.Position = UDim2.new(0,0,0,48)
-    subElem.Size = UDim2.new(1,0,0,0)
-    subElem.BackgroundTransparency = 1
-    subElem.ClipsDescendants = true
-
-    local elemLayout = Instance.new("UIListLayout", subElem)
-    elemLayout.Padding = UDim.new(0,6)
-    elemLayout.FillDirection = Enum.FillDirection.Vertical
-    elemLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    elemLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    -- ROW 1: TEXT PROGRESS (DINAMIS / MODE SINGKAT)
-    local elemRow = Instance.new("Frame", subElem)
-    elemRow.Size = UDim2.new(1,0,0,0)
-    elemRow.BackgroundTransparency = 1
-
-    local elemText = Instance.new("TextLabel", elemRow)
-    elemText.Name = "ElementText"
-    elemText.Size = UDim2.new(1,-8,1,-8)
-    elemText.Position = UDim2.new(0,4,0,4)
-    elemText.BackgroundTransparency = 1
-    elemText.Font = Enum.Font.Code
-    elemText.TextSize = 13
-    elemText.TextXAlignment = Enum.TextXAlignment.Left
-    elemText.TextYAlignment = Enum.TextYAlignment.Top
-    elemText.TextWrapped = false
-    elemText.TextColor3 = TEXT
-    elemText.Text = "Loading Element quest..."
-
-    -- ROW 2: TELEPORT ANCIENT JUNGLE / SEcred TEMPLE
-    local tpRow = Instance.new("Frame", subElem)
-    tpRow.Size = UDim2.new(1,0,0,36)
-    tpRow.BackgroundTransparency = 1
-
-    local tpAncient = Instance.new("TextButton", tpRow)
-    tpAncient.Size = UDim2.new(0.5,-10,1,0)
-    tpAncient.Position = UDim2.new(0,0,0,0)
-    tpAncient.BackgroundColor3 = CARD
-    tpAncient.BackgroundTransparency = 0.4
-    tpAncient.BorderSizePixel = 0
-    tpAncient.Font = Enum.Font.Gotham
-    tpAncient.TextSize = 13
-    tpAncient.TextColor3 = TEXT
-    tpAncient.Text = "🌿 Ancient Jungle"
-    tpAncient.AutoButtonColor = false
-    Instance.new("UICorner", tpAncient).CornerRadius = UDim.new(0,8)
-
-    local tpSecred = Instance.new("TextButton", tpRow)
-    tpSecred.Size = UDim2.new(0.5,-10,1,0)
-    tpSecred.Position = UDim2.new(0.5,10,0,0)
-    tpSecred.BackgroundColor3 = CARD
-    tpSecred.BackgroundTransparency = 0.4
-    tpSecred.BorderSizePixel = 0
-    tpSecred.Font = Enum.Font.Gotham
-    tpSecred.TextSize = 13
-    tpSecred.TextColor3 = TEXT
-    tpSecred.Text = "🏛 Secred Temple"
-    tpSecred.AutoButtonColor = false
-    Instance.new("UICorner", tpSecred).CornerRadius = UDim.new(0,8)
-
-    ----------------------------------------------------------------
-    -- DROPDOWN BEHAVIOUR
-    ----------------------------------------------------------------
-    local elemOpen = false
-    local function recalcElem()
-        local h = elemLayout.AbsoluteContentSize.Y
-        if elemOpen then
-            subElem.Size = UDim2.new(1,0,0,h + 8)
-            card.Size   = UDim2.new(1,-32,0,48 + h + 8)
-            arrow.Text  = "▲"
-        else
-            subElem.Size = UDim2.new(1,0,0,0)
-            card.Size   = UDim2.new(1,-32,0,48)
-            arrow.Text  = "▼"
-        end
-    end
-
-    elemLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcElem)
-
-    cardBtn.MouseButton1Click:Connect(function()
-        elemOpen = not elemOpen
-        recalcElem()
-    end)
-
-    ----------------------------------------------------------------
-    -- TELEPORT HANDLER
-    ----------------------------------------------------------------
-    local function tpTo(name)
-        local cf = ISLAND_SPOTS[name]
-        if not cf then return end
-        local char = lp.Character or lp.CharacterAdded:Wait()
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-        hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
-        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
-        hrp.CFrame = cf
-    end
-
-    tpAncient.MouseButton1Click:Connect(function()
-        -- Ancient Jungle -> Hutan Kuno (sama area)
-        tpTo("Hutan Kuno")
-    end)
-
-    tpSecred.MouseButton1Click:Connect(function()
-        tpTo("Secred Temple")
-    end)
-
-
-    ----------------------------------------------------------------
-    -- LOGIC QUEST (SAMA POLA DENGAN DEEPSEA)
-    ----------------------------------------------------------------
-    local Replion = require(ReplicatedStorage.Packages.Replion)
-    local Quests  = require(ReplicatedStorage.Modules.Quests)
-    local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
-
-    local DataReplion = Replion.Client:WaitReplion("Data")
-
-    local function getQuestType(name)
-        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, name)
-        return ok and qType or nil
-    end
-
-    local function calcTotalPercent(questDef, questState)
-        if not questDef or not questDef.Objectives then return 0 end
-        local acc = 0
-        for i,obj in ipairs(questDef.Objectives) do
-            local st = questState and questState.Objectives and questState.Objectives[i]
-            local cur = (st and st.Progress) or 0
-            local goal = obj.Goal or 1
-            if cur >= goal then
-                acc += 1
-            else
-                acc += math.clamp(cur/goal,0,1)
-            end
-        end
-        return acc/#questDef.Objectives*100
-    end
-
-    local function isCompleted(name)
-        local completed = DataReplion:GetExpect("CompletedQuests") or {}
-        for _,q in ipairs(completed) do
-            if q == name then return true end
-        end
-        return false
-    end
-
-    local function dumpElement()
-        local name = ELEMENT_QUEST_NAME
-
-        local completedFlag = isCompleted(name)
-        local qType = getQuestType(name)
-        local def = qType and Quests[qType] and Quests[qType][name] or nil
-
-        local all = DataReplion:GetExpect("Quests")
-        local state = qType and all[qType] and all[qType][name] or nil
-
-        if completedFlag and not state then
-            return string.format("%s (%s) – 100%% (COMPLETED)", name, qType or "Mainline"), true
-        end
-
-        if not qType or not def then
-            return name.." – data not found", false
-        end
-
-        if not state then
-            return name.." – not active", false
-        end
-
-        local total = calcTotalPercent(def,state)
-        local doneFlag = MainlineQuestController.DidCompleteAll(qType,name,state) or completedFlag
-        if doneFlag then total = 100 end
-        local totalRounded = math.floor(total+0.5)
-
-        local lines = {}
-        table.insert(lines, string.format("%s (%s) – %d%%%s",
-            name, qType, totalRounded, doneFlag and " (COMPLETED)" or ""))
-
-        for i,obj in ipairs(def.Objectives) do
-            local st = state.Objectives and state.Objectives[i]
-            local cur = (st and st.Progress) or 0
-            local goal = obj.Goal or 1
-            local pct = math.floor(math.clamp(cur/goal,0,1)*100+0.5)
-            table.insert(lines, string.format("  [%d] %s", i, obj.Name))
-            table.insert(lines, string.format("      %d/%d (%d%%)", cur, goal, pct))
-        end
-
-        return table.concat(lines,"\n"), doneFlag
-    end
-
-    local function refreshElem()
-        local text, done = dumpElement()
-        elemText.Text = text
-
-        if done then
-            elemRow.Size = UDim2.new(1,0,0,32)
-        else
-            local lines = 0
-            for _ in string.gmatch(text, "\n") do
-                lines += 1
-            end
-            lines = lines + 1
-
-            local lineHeight = 16
-            local basePadding = 12
-            local h = basePadding + lines * lineHeight
-            h = math.clamp(h, 48, 160)
-
-            elemRow.Size = UDim2.new(1,0,0,h)
-        end
-
-        recalcElem()
-    end
-
-    DataReplion:OnChange({"Quests","Mainline"}, refreshElem)
-    DataReplion:OnChange({"CompletedQuests"}, refreshElem)
-    refreshElem()
-end
-
-
-BuildQuestElement()
-
-----------------------------------------------------------------
--- QUEST : DIAMOND ROD (DIAMOND RESEARCHER)
-----------------------------------------------------------------
-local function BuildQuestDiamond()
-    local questPage = pages["Quest"]
-    local DIAMOND_QUEST_NAME = "Diamond Researcher" -- sama seperti GUI test
-
-    -- CARD UTAMA
-    local card = Instance.new("Frame")
-    card.Name = "QuestDiamondCard"
-    card.Parent = questPage
-    card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,0)
-    card.BackgroundColor3 = CARD
-    card.BackgroundTransparency = ALPHA_CARD
-    card.ClipsDescendants = true
-    card.LayoutOrder = 3 -- di bawah Element
-    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
-
-    local cardTitle = Instance.new("TextLabel", card)
-    cardTitle.Size = UDim2.new(1,-40,0,22)
-    cardTitle.Position = UDim2.new(0,16,0,4)
-    cardTitle.BackgroundTransparency = 1
-    cardTitle.Font = Enum.Font.GothamSemibold
-    cardTitle.TextSize = 14
-    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
-    cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "💎 Quest Diamond Rod"
-
-    local arrow = Instance.new("TextLabel", card)
-    arrow.Size = UDim2.new(0,24,0,24)
-    arrow.Position = UDim2.new(1,-28,0,10)
-    arrow.BackgroundTransparency = 1
-    arrow.Font = Enum.Font.Gotham
-    arrow.TextSize = 18
-    arrow.TextColor3 = TEXT
-    arrow.Text = "▼"
-
-    local cardBtn = Instance.new("TextButton", card)
-    cardBtn.BackgroundTransparency = 1
-    cardBtn.Size = UDim2.new(1,0,1,0)
-    cardBtn.Text = ""
-    cardBtn.AutoButtonColor = false
-
-    ----------------------------------------------------------------
-    -- ISI DROPDOWN (TEXT PROGRESS + 3 TELEPORT)
-    ----------------------------------------------------------------
-    local subDia = Instance.new("Frame", card)
-    subDia.Name = "DiamondContents"
-    subDia.Position = UDim2.new(0,0,0,48)
-    subDia.Size = UDim2.new(1,0,0,0)
-    subDia.BackgroundTransparency = 1
-    subDia.ClipsDescendants = true
-
-    local diaLayout = Instance.new("UIListLayout", subDia)
-    diaLayout.Padding = UDim.new(0,6)
-    diaLayout.FillDirection = Enum.FillDirection.Vertical
-    diaLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    diaLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    -- ROW 1: TEXT PROGRESS (DINAMIS / MODE SINGKAT)
-    local diaRow = Instance.new("Frame", subDia)
-    diaRow.Size = UDim2.new(1,0,0,0)
-    diaRow.BackgroundTransparency = 1
-
-    local diaText = Instance.new("TextLabel", diaRow)
-    diaText.Name = "DiamondText"
-    diaText.Size = UDim2.new(1,-8,1,-8)
-    diaText.Position = UDim2.new(0,4,0,4)
-    diaText.BackgroundTransparency = 1
-    diaText.Font = Enum.Font.Code
-    diaText.TextSize = 13
-    diaText.TextXAlignment = Enum.TextXAlignment.Left
-    diaText.TextYAlignment = Enum.TextYAlignment.Top
-    diaText.TextWrapped = false
-    diaText.TextColor3 = TEXT
-    diaText.Text = "Loading Diamond quest..."
-
-    -- ROW 2: TELEPORT CORAL / TROPIS / ANCIENT
-    local tpRow = Instance.new("Frame", subDia)
-    tpRow.Size = UDim2.new(1,0,0,36)
-    tpRow.BackgroundTransparency = 1
-
-    local tpCoral = Instance.new("TextButton", tpRow)
-    tpCoral.Size = UDim2.new(1/3,-8,1,0)
-    tpCoral.Position = UDim2.new(0,0,0,0)
-    tpCoral.BackgroundColor3 = CARD
-    tpCoral.BackgroundTransparency = 0.4
-    tpCoral.BorderSizePixel = 0
-    tpCoral.Font = Enum.Font.Gotham
-    tpCoral.TextSize = 13
-    tpCoral.TextColor3 = TEXT
-    tpCoral.Text = "🐠 Coral Reefs"
-    tpCoral.AutoButtonColor = false
-    Instance.new("UICorner", tpCoral).CornerRadius = UDim.new(0,8)
-
-    local tpTropis = Instance.new("TextButton", tpRow)
-    tpTropis.Size = UDim2.new(1/3,-8,1,0)
-    tpTropis.Position = UDim2.new(1/3+0.012,4,0,0)
-    tpTropis.BackgroundColor3 = CARD
-    tpTropis.BackgroundTransparency = 0.4
-    tpTropis.BorderSizePixel = 0
-    tpTropis.Font = Enum.Font.Gotham
-    tpTropis.TextSize = 13
-    tpTropis.TextColor3 = TEXT
-    tpTropis.Text = "🌴 Tropical Grouve"
-    tpTropis.AutoButtonColor = false
-    Instance.new("UICorner", tpTropis).CornerRadius = UDim.new(0,8)
-
-    local tpAncient = Instance.new("TextButton", tpRow)
-    tpAncient.Size = UDim2.new(1/3,-8,1,0)
-    tpAncient.Position = UDim2.new(2/3+0.024,8,0,0)
-    tpAncient.BackgroundColor3 = CARD
-    tpAncient.BackgroundTransparency = 0.4
-    tpAncient.BorderSizePixel = 0
-    tpAncient.Font = Enum.Font.Gotham
-    tpAncient.TextSize = 13
-    tpAncient.TextColor3 = TEXT
-    tpAncient.Text = "🏛 Kohana"
-    tpAncient.AutoButtonColor = false
-    Instance.new("UICorner", tpAncient).CornerRadius = UDim.new(0,8)
-
-    ----------------------------------------------------------------
-    -- DROPDOWN BEHAVIOUR
-    ----------------------------------------------------------------
-    local diaOpen = false
-    local function recalcDia()
-        local h = diaLayout.AbsoluteContentSize.Y
-        if diaOpen then
-            subDia.Size = UDim2.new(1,0,0,h + 8)
-            card.Size   = UDim2.new(1,-32,0,48 + h + 8)
-            arrow.Text  = "▲"
-        else
-            subDia.Size = UDim2.new(1,0,0,0)
-            card.Size   = UDim2.new(1,-32,0,48)
-            arrow.Text  = "▼"
-        end
-    end
-
-    diaLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcDia)
-
-    cardBtn.MouseButton1Click:Connect(function()
-        diaOpen = not diaOpen
-        recalcDia()
-    end)
-
-    ----------------------------------------------------------------
-    -- TELEPORT HANDLER (CORAL / TROPIS / ANCIENT)
-    ----------------------------------------------------------------
-    local function tpTo(name)
-        local cf = ISLAND_SPOTS[name]
-        if not cf then return end
-        local char = lp.Character or lp.CharacterAdded:Wait()
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if not hrp then return end
-        hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
-        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
-        hrp.CFrame = cf
-    end
-
-    tpCoral.MouseButton1Click:Connect(function()
-        tpTo("Coral Reefs")
-    end)
-
-    tpTropis.MouseButton1Click:Connect(function()
-        tpTo("Tropical Grouve")
-    end)
-
-    tpAncient.MouseButton1Click:Connect(function()
-        tpTo("Kohana")
-    end)
-
-    ----------------------------------------------------------------
-    -- LOGIC QUEST (MIRROR SCRIPT TESTER)
-    ----------------------------------------------------------------
-    local Replion = require(ReplicatedStorage.Packages.Replion)
-    local Quests  = require(ReplicatedStorage.Modules.Quests)
-    local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
-
-    local DataReplion = Replion.Client:WaitReplion("Data")
-
-    local function getQuestType(name)
-        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, name)
-        if ok then
-            return qType
-        end
-    end
-
-    local function calcTotalPercent(questDef, questState)
-        if not questDef or not questDef.Objectives then
-            return 0
-        end
-
-        local acc = 0
-        for i, objDef in ipairs(questDef.Objectives) do
-            local objState = questState and questState.Objectives and questState.Objectives[i]
-            local progress = (objState and objState.Progress) or 0
-            local goal = objDef.Goal or 1
-
-            if progress >= goal then
-                acc += 1
-            else
-                acc += math.clamp(progress / goal, 0, 1)
-            end
-        end
-
-        return acc / #questDef.Objectives * 100
-    end
-
-    local function isCompleted(name)
-        local completed = DataReplion:GetExpect("CompletedQuests") or {}
-        for _, qName in ipairs(completed) do
-            if qName == name then
-                return true
-            end
-        end
-        return false
-    end
-
-    -- return: text, doneFlag
-    local function dumpDiamond()
-        local name = DIAMOND_QUEST_NAME
-
-        local completedFlag = isCompleted(name)
-        local questType = getQuestType(name)
-        local questDef = questType and Quests[questType] and Quests[questType][name] or nil
-
-        local allQuests = DataReplion:GetExpect("Quests")
-        local questState = questType and allQuests[questType] and allQuests[questType][name] or nil
-
-        if completedFlag and not questState then
-            return string.format("%s (%s) – 100%% (COMPLETED)",
-                name,
-                questType or "Mainline"
-            ), true
-        end
-
-        if not questType or not questDef then
-            return name.." – data not found", false
-        end
-
-        if not questState then
-            return name.." – not active", false
-        end
-
-        local totalPct = calcTotalPercent(questDef, questState)
-        local doneFlag = MainlineQuestController.DidCompleteAll(questType, name, questState) or completedFlag
-        if doneFlag then
-            totalPct = 100
-        end
-        local totalRounded = math.floor(totalPct + 0.5)
-
-        local lines = {}
-        for i, objDef in ipairs(questDef.Objectives) do
-            local objState = questState.Objectives and questState.Objectives[i]
-            local cur = (objState and objState.Progress) or 0
-            local goal = objDef.Goal or 1
-            local pct = math.floor(math.clamp(cur / goal, 0, 1) * 100 + 0.5)
-
-            table.insert(lines, string.format(
-                "  [%d] %s",
-                i,
-                objDef.Name
-            ))
-            table.insert(lines, string.format(
-                "      %d/%d (%d%%)",
-                cur,
-                goal,
-                pct
-            ))
-        end
-
-        local header = string.format("%s (%s) – %d%%%s",
-            name,
-            questType,
-            totalRounded,
-            doneFlag and " (COMPLETED)" or ""
-        )
-
-        return header.."\n"..table.concat(lines, "\n"), doneFlag
-    end
-
-    local function refreshDia()
-        local text, done = dumpDiamond()
-        diaText.Text = text
-
-        if done then
-            diaRow.Size = UDim2.new(1,0,0,32)
-        else
-            local lines = 0
-            for _ in string.gmatch(text, "\n") do
-                lines += 1
-            end
-            lines = lines + 1
-
-            local lineHeight = 16
-            local basePadding = 12
-            local h = basePadding + lines * lineHeight
-            h = math.clamp(h, 48, 160)
-
-            diaRow.Size = UDim2.new(1,0,0,h)
-        end
-
-        recalcDia()
-    end
-
-    DataReplion:OnChange({"Quests","Mainline"}, refreshDia)
-    DataReplion:OnChange({"CompletedQuests"}, refreshDia)
-    refreshDia()
-end
-
-BuildQuestDiamond()
 
 ----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
@@ -1586,15 +731,838 @@ local function BuildShopWeather()
                     end
                 end
             end
-            task.wait(5)
+            task.wait(1)
         end
     end)
 end
 
-----------------------------------------------------------------
--- PAGE SWITCH
-----------------------------------------------------------------
-local function ShowPage(name)
+BuildShopWeather()
+
+local function BuildShopRods()
+    local shopPage = pages["Shop & Trade"]
+
+    -- DYNAMIC POSITION - CHECK WEATHER CARD
+    local weatherCard = shopPage:WaitForChild("WeatherPresetCard", 5)
+    local baseY = weatherCard and (weatherCard.Position.Y.Offset + weatherCard.Size.Y.Offset + 12) or 64
+
+    local FISHING_RODS = {
+        {76, "🟢 Carbon Rod", 750},
+        {85, "🔵 Grass Rod", 1500},
+        {77, "🔵 Damascus Rod", 3000},
+        {78, "🔵 Ice Rod", 5000},
+        {4, "🟣 Lucky Rod", 15000},
+        {80, "🟣 Midnight Rod", 50000},
+        {6, "🟠 Steampunk Rod", 215000},
+        {7, "🟠 Chrome Rod", 437000},
+        {255, "⭐ Fluorescent Rod", 715000},
+        {5, "⭐ Astral Rod", 1000000},
+        {126, "💎 Ares Rod", 3000000},
+        {168, "💎 Angler Rod", 8000000},
+        {258, "💎 Bamboo Rod", 12000000},
+    }
+
+    local selectedRod = nil
+    local selectedRodName = "None"
+    local selectedRodPrice = 0
+    local AutoRodOn = false
+
+    local card = Instance.new("Frame")
+    card.Name = "RodSelectorCard"
+    card.Parent = shopPage
+    card.Size = UDim2.new(1, -32, 0, 48)
+    card.Position = UDim2.new(0, 16, 0, baseY)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
+
+    -- LISTEN WEATHER CHANGES & REPOSITION
+    local function updateRodPosition()
+        local weatherCard = shopPage:FindFirstChild("WeatherPresetCard")
+        if weatherCard then
+            local newY = weatherCard.Position.Y.Offset + weatherCard.Size.Y.Offset + 12
+            card.Position = UDim2.new(0, 16, 0, newY)
+        end
+    end
+
+    local weatherConn
+    if weatherCard then
+        weatherConn = weatherCard:GetPropertyChangedSignal("Size"):Connect(updateRodPosition)
+        weatherCard:GetPropertyChangedSignal("Position"):Connect(updateRodPosition)
+    end
+
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1, -40, 0, 22)
+    cardTitle.Position = UDim2.new(0, 16, 0, 4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "🛒 Buy Rod Preset"
+
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0, 24, 0, 24)
+    arrow.Position = UDim2.new(1, -28, 0, 10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1, 0, 1, 0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+
+    local subRod = Instance.new("Frame", card)
+    subRod.Name = "RodContents"
+    subRod.Position = UDim2.new(0, 0, 0, 48)
+    subRod.Size = UDim2.new(1, 0, 0, 0)
+    subRod.BackgroundTransparency = 1
+    subRod.ClipsDescendants = true
+
+    local rodLayout = Instance.new("UIListLayout", subRod)
+    rodLayout.Padding = UDim.new(0, 6)
+    rodLayout.FillDirection = Enum.FillDirection.Vertical
+    rodLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    rodLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local rodOpen = false
+    local function recalcRod()
+        local h = rodLayout.AbsoluteContentSize.Y
+        if rodOpen then
+            subRod.Size = UDim2.new(1, 0, 0, h + 8)
+            card.Size = UDim2.new(1, -32, 0, 48 + h + 8)
+            arrow.Text = "▲"
+        else
+            subRod.Size = UDim2.new(1, 0, 0, 0)
+            card.Size = UDim2.new(1, -32, 0, 48)
+            arrow.Text = "▼"
+        end
+    end
+
+    cardBtn.MouseButton1Click:Connect(function()
+        rodOpen = not rodOpen
+        recalcRod()
+    end)
+
+    local rowSelect = Instance.new("Frame", subRod)
+    rowSelect.Size = UDim2.new(1, 0, 0, 36)
+    rowSelect.BackgroundTransparency = 1
+
+    local lblSelect = Instance.new("TextLabel", rowSelect)
+    lblSelect.Size = UDim2.new(0.5, 0, 1, 0)
+    lblSelect.Position = UDim2.new(0, 16, 0, 0)
+    lblSelect.BackgroundTransparency = 1
+    lblSelect.Font = Enum.Font.Gotham
+    lblSelect.TextSize = 13
+    lblSelect.TextXAlignment = Enum.TextXAlignment.Left
+    lblSelect.TextColor3 = TEXT
+    lblSelect.Text = "Select Rod"
+
+    local hint = Instance.new("TextLabel", rowSelect)
+    hint.Size = UDim2.new(0.5, -32, 1, 0)
+    hint.Position = UDim2.new(0.5, 0, 0, 0)
+    hint.BackgroundTransparency = 1
+    hint.Font = Enum.Font.Gotham
+    hint.TextSize = 11
+    hint.TextXAlignment = Enum.TextXAlignment.Right
+    hint.TextColor3 = TEXT
+    hint.Text = "None"
+
+    local chevron = Instance.new("TextLabel", rowSelect)
+    chevron.Size = UDim2.new(0, 20, 1, 0)
+    chevron.Position = UDim2.new(1, -20, 0, 0)
+    chevron.BackgroundTransparency = 1
+    chevron.Font = Enum.Font.Gotham
+    chevron.TextSize = 16
+    chevron.TextColor3 = TEXT
+    chevron.Text = "▾"
+
+    local selectBtn = Instance.new("TextButton", rowSelect)
+    selectBtn.BackgroundTransparency = 1
+    selectBtn.Size = UDim2.new(1, 0, 1, 0)
+    selectBtn.Text = ""
+    selectBtn.AutoButtonColor = false
+
+    local rowPrice = Instance.new("Frame", subRod)
+    rowPrice.Size = UDim2.new(1, 0, 0, 28)
+    rowPrice.BackgroundTransparency = 1
+
+    local priceLabel = Instance.new("TextLabel", rowPrice)
+    priceLabel.Size = UDim2.new(1, -32, 1, 0)
+    priceLabel.Position = UDim2.new(0, 16, 0, 0)
+    priceLabel.BackgroundTransparency = 1
+    priceLabel.Font = Enum.Font.Gotham
+    priceLabel.TextSize = 12
+    priceLabel.TextXAlignment = Enum.TextXAlignment.Left
+    priceLabel.TextColor3 = Color3.fromRGB(255, 220, 0)
+    priceLabel.Text = "🛍️ None"
+
+    local rowAuto = Instance.new("Frame", subRod)
+    rowAuto.Size = UDim2.new(1, 0, 0, 36)
+    rowAuto.BackgroundTransparency = 1
+
+    local lblAuto = Instance.new("TextLabel", rowAuto)
+    lblAuto.Size = UDim2.new(1, -120, 1, 0)
+    lblAuto.Position = UDim2.new(0, 16, 0, 0)
+    lblAuto.BackgroundTransparency = 1
+    lblAuto.Font = Enum.Font.Gotham
+    lblAuto.TextSize = 13
+    lblAuto.TextXAlignment = Enum.TextXAlignment.Left
+    lblAuto.TextColor3 = TEXT
+    lblAuto.Text = "Auto Buy Rod"
+
+    local pill = Instance.new("TextButton", rowAuto)
+    pill.Size = UDim2.new(0, 50, 0, 24)
+    pill.Position = UDim2.new(1, -80, 0.5, -12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0, 999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0, 18, 0, 18)
+    knob.Position = UDim2.new(0, 3, 0.5, -9)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 999)
+
+    local function refreshAuto()
+        pill.BackgroundColor3 = AutoRodOn and ACCENT or MUTED
+        knob.Position = AutoRodOn and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        AutoRodOn = not AutoRodOn
+        _G.RAY_AutoRodOn = AutoRodOn
+        refreshAuto()
+    end)
+
+    refreshAuto()
+    recalcRod()
+
+    -- ROD PANEL (sama kayak sebelumnya)
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "RodOverlay"
+    overlay.Parent = shopPage
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.Position = UDim2.new(0, 0, 0, 0)
+    overlay.BackgroundTransparency = 1
+    overlay.Text = ""
+    overlay.Visible = false
+    overlay.ZIndex = 4
+    overlay.AutoButtonColor = false
+
+    local rodPanel = Instance.new("Frame")
+    rodPanel.Name = "RodPanel"
+    rodPanel.Parent = overlay
+    rodPanel.Size = UDim2.new(0, 240, 0, 320)
+    rodPanel.AnchorPoint = Vector2.new(1, 0)
+    rodPanel.Position = UDim2.new(1, -24, 0.28, 0)
+    rodPanel.BackgroundColor3 = CARD
+    rodPanel.BackgroundTransparency = 0.04
+    rodPanel.Visible = false
+    rodPanel.ZIndex = 5
+    rodPanel.Active = true
+    Instance.new("UICorner", rodPanel).CornerRadius = UDim.new(0, 12)
+
+    local rPad = Instance.new("UIPadding", rodPanel)
+    rPad.PaddingTop = UDim.new(0, 8)
+    rPad.PaddingLeft = UDim.new(0, 8)
+    rPad.PaddingRight = UDim.new(0, 8)
+    rPad.PaddingBottom = UDim.new(0, 8)
+
+    local rodList = Instance.new("ScrollingFrame", rodPanel)
+    rodList.Position = UDim2.new(0, 0, 0, 0)
+    rodList.Size = UDim2.new(1, 0, 1, 0)
+    rodList.ScrollBarThickness = 4
+    rodList.ScrollingDirection = Enum.ScrollingDirection.Y
+    rodList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    rodList.BackgroundTransparency = 1
+    rodList.ClipsDescendants = true
+    rodList.ZIndex = 6
+    rodList.Active = true
+
+    local rlLayout = Instance.new("UIListLayout", rodList)
+    rlLayout.Padding = UDim.new(0, 4)
+    rlLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    rlLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        rodList.CanvasSize = UDim2.new(0, 0, 0, rlLayout.AbsoluteContentSize.Y + 8)
+    end)
+
+    local function rebuildRodPanel()
+        for _, c in ipairs(rodList:GetChildren()) do
+            if c:IsA("TextButton") then c:Destroy() end
+        end
+
+        for _, rodData in ipairs(FISHING_RODS) do
+            local id, name, price = rodData[1], rodData[2], rodData[3]
+            
+            local b = Instance.new("TextButton", rodList)
+            b.Size = UDim2.new(1, 0, 0, 28)
+            b.BackgroundColor3 = CARD
+            b.BackgroundTransparency = selectedRod == id and 0.08 or 0.18
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 12
+            b.TextXAlignment = Enum.TextXAlignment.Left
+            b.TextColor3 = TEXT
+            b.Text = "  " .. name
+            b.ZIndex = 6
+            b.AutoButtonColor = false
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+
+            local highlight = Instance.new("Frame")
+            highlight.Name = "Highlight"
+            highlight.Parent = b
+            highlight.AnchorPoint = Vector2.new(0, 0.5)
+            highlight.Position = UDim2.new(0, 0, 0.5, 0)
+            highlight.Size = UDim2.new(0, 3, 1, -6)
+            highlight.BackgroundColor3 = Color3.fromRGB(255, 220, 0)
+            highlight.BackgroundTransparency = selectedRod == id and 0 or 1
+            highlight.ZIndex = 7
+
+            b.MouseButton1Click:Connect(function()
+                selectedRod = id
+                selectedRodName = name
+                selectedRodPrice = price
+                local displayPrice = string.format("%d", price)
+                hint.Text = "🛒" .. selectedRodName
+                priceLabel.Text = "🛍️ $" .. displayPrice
+                _G.RAY_SelectedRod = selectedRod
+                rebuildRodPanel()
+            end)
+        end
+    end
+
+    rebuildRodPanel()
+
+    local panelOpen = false
+    local function setPanelOpen(state)
+        panelOpen = state
+        overlay.Visible = panelOpen
+        rodPanel.Visible = panelOpen
+    end
+
+    selectBtn.MouseButton1Click:Connect(function()
+        setPanelOpen(not panelOpen)
+    end)
+
+    overlay.MouseButton1Click:Connect(function()
+        setPanelOpen(false)
+    end)
+
+    -- CLEANUP CONNECTIONS ON DESTROY
+    card.AncestryChanged:Connect(function()
+        if not card.Parent then
+            if weatherConn then weatherConn:Disconnect() end
+        end
+    end)
+end
+
+BuildShopRods()
+
+local function BuildShopBait()
+    local shopPage = pages["Shop & Trade"]
+
+    -- DYNAMIC POSITION - CHECK ROD SELECTOR
+    local rodCard = shopPage:WaitForChild("RodSelectorCard", 5)
+    local baseY = rodCard and (rodCard.Position.Y.Offset + rodCard.Size.Y.Offset + 12) or 120
+
+    local BAIT_LIST = {
+        {2, "⭐ Luck Bait", 1000},
+        {3, "🌙 Midnight Bait", 3000},
+        {17, "🌿 Nature Bait", 83500},
+        {6, "🌈 Chroma Bait", 290000},
+        {8, "🖤 Dark Matter Bait", 630000},
+        {15, "☠️ Corrupt Bait", 1148484},
+        {16, "✨ Aether Bait", 3700000},
+        {20, "🌸 Floral Bait", 4000000},
+    }
+
+    local selectedBait = nil
+    local selectedBaitName = "None"
+    local selectedBaitPrice = 0
+    local AutoBaitOn = false
+
+    local card = Instance.new("Frame")
+    card.Name = "BaitSelectorCard"
+    card.Parent = shopPage
+    card.Size = UDim2.new(1, -32, 0, 48)
+    card.Position = UDim2.new(0, 16, 0, baseY)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
+
+    -- LISTEN ROD CHANGES & REPOSITION
+    local function updateBaitPosition()
+        local rodCard = shopPage:FindFirstChild("RodSelectorCard")
+        if rodCard then
+            local newY = rodCard.Position.Y.Offset + rodCard.Size.Y.Offset + 12
+            card.Position = UDim2.new(0, 16, 0, newY)
+        end
+    end
+
+    local rodConn
+    if rodCard then
+        rodConn = rodCard:GetPropertyChangedSignal("Size"):Connect(updateBaitPosition)
+        rodCard:GetPropertyChangedSignal("Position"):Connect(updateBaitPosition)
+    end
+
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1, -40, 0, 22)
+    cardTitle.Position = UDim2.new(0, 16, 0, 4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "🛒 Buy Bait Preset"
+
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0, 24, 0, 24)
+    arrow.Position = UDim2.new(1, -28, 0, 10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1, 0, 1, 0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+
+    local subBait = Instance.new("Frame", card)
+    subBait.Name = "BaitContents"
+    subBait.Position = UDim2.new(0, 0, 0, 48)
+    subBait.Size = UDim2.new(1, 0, 0, 0)
+    subBait.BackgroundTransparency = 1
+    subBait.ClipsDescendants = true
+
+    local baitLayout = Instance.new("UIListLayout", subBait)
+    baitLayout.Padding = UDim.new(0, 6)
+    baitLayout.FillDirection = Enum.FillDirection.Vertical
+    baitLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    baitLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local baitOpen = false
+    local function recalcBait()
+        local h = baitLayout.AbsoluteContentSize.Y
+        if baitOpen then
+            subBait.Size = UDim2.new(1, 0, 0, h + 8)
+            card.Size = UDim2.new(1, -32, 0, 48 + h + 8)
+            arrow.Text = "▲"
+        else
+            subBait.Size = UDim2.new(1, 0, 0, 0)
+            card.Size = UDim2.new(1, -32, 0, 48)
+            arrow.Text = "▼"
+        end
+    end
+
+    cardBtn.MouseButton1Click:Connect(function()
+        baitOpen = not baitOpen
+        recalcBait()
+    end)
+
+    local rowSelect = Instance.new("Frame", subBait)
+    rowSelect.Size = UDim2.new(1, 0, 0, 36)
+    rowSelect.BackgroundTransparency = 1
+
+    local lblSelect = Instance.new("TextLabel", rowSelect)
+    lblSelect.Size = UDim2.new(0.5, 0, 1, 0)
+    lblSelect.Position = UDim2.new(0, 16, 0, 0)
+    lblSelect.BackgroundTransparency = 1
+    lblSelect.Font = Enum.Font.Gotham
+    lblSelect.TextSize = 13
+    lblSelect.TextXAlignment = Enum.TextXAlignment.Left
+    lblSelect.TextColor3 = TEXT
+    lblSelect.Text = "Select Bait"
+
+    local hint = Instance.new("TextLabel", rowSelect)
+    hint.Size = UDim2.new(0.5, -32, 1, 0)
+    hint.Position = UDim2.new(0.5, 0, 0, 0)
+    hint.BackgroundTransparency = 1
+    hint.Font = Enum.Font.Gotham
+    hint.TextSize = 11
+    hint.TextXAlignment = Enum.TextXAlignment.Right
+    hint.TextColor3 = TEXT
+    hint.Text = "None"
+
+    local chevron = Instance.new("TextLabel", rowSelect)
+    chevron.Size = UDim2.new(0, 20, 1, 0)
+    chevron.Position = UDim2.new(1, -20, 0, 0)
+    chevron.BackgroundTransparency = 1
+    chevron.Font = Enum.Font.Gotham
+    chevron.TextSize = 16
+    chevron.TextColor3 = TEXT
+    chevron.Text = "▾"
+
+    local selectBtn = Instance.new("TextButton", rowSelect)
+    selectBtn.BackgroundTransparency = 1
+    selectBtn.Size = UDim2.new(1, 0, 1, 0)
+    selectBtn.Text = ""
+    selectBtn.AutoButtonColor = false
+
+    local rowPrice = Instance.new("Frame", subBait)
+    rowPrice.Size = UDim2.new(1, 0, 0, 28)
+    rowPrice.BackgroundTransparency = 1
+
+    local priceLabel = Instance.new("TextLabel", rowPrice)
+    priceLabel.Size = UDim2.new(1, -32, 1, 0)
+    priceLabel.Position = UDim2.new(0, 16, 0, 0)
+    priceLabel.BackgroundTransparency = 1
+    priceLabel.Font = Enum.Font.Gotham
+    priceLabel.TextSize = 12
+    priceLabel.TextXAlignment = Enum.TextXAlignment.Left
+    priceLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+    priceLabel.Text = "💰 None"
+
+    local rowAuto = Instance.new("Frame", subBait)
+    rowAuto.Size = UDim2.new(1, 0, 0, 36)
+    rowAuto.BackgroundTransparency = 1
+
+    local lblAuto = Instance.new("TextLabel", rowAuto)
+    lblAuto.Size = UDim2.new(1, -120, 1, 0)
+    lblAuto.Position = UDim2.new(0, 16, 0, 0)
+    lblAuto.BackgroundTransparency = 1
+    lblAuto.Font = Enum.Font.Gotham
+    lblAuto.TextSize = 13
+    lblAuto.TextXAlignment = Enum.TextXAlignment.Left
+    lblAuto.TextColor3 = TEXT
+    lblAuto.Text = "Auto Buy Bait"
+
+    local pill = Instance.new("TextButton", rowAuto)
+    pill.Size = UDim2.new(0, 50, 0, 24)
+    pill.Position = UDim2.new(1, -80, 0.5, -12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0, 999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0, 18, 0, 18)
+    knob.Position = UDim2.new(0, 3, 0.5, -9)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 999)
+
+    local function refreshAuto()
+        pill.BackgroundColor3 = AutoBaitOn and ACCENT or MUTED
+        knob.Position = AutoBaitOn and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        AutoBaitOn = not AutoBaitOn
+        _G.RAY_AutoBaitOn = AutoBaitOn
+        refreshAuto()
+    end)
+
+    refreshAuto()
+    recalcBait()
+
+    -- BAIT PANEL (IDENTICAL TO ROD PANEL)
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "BaitOverlay"
+    overlay.Parent = shopPage
+    overlay.Size = UDim2.new(1, 0, 1, 0)
+    overlay.Position = UDim2.new(0, 0, 0, 0)
+    overlay.BackgroundTransparency = 1
+    overlay.Text = ""
+    overlay.Visible = false
+    overlay.ZIndex = 4
+    overlay.AutoButtonColor = false
+
+    local baitPanel = Instance.new("Frame")
+    baitPanel.Name = "BaitPanel"
+    baitPanel.Parent = overlay
+    baitPanel.Size = UDim2.new(0, 240, 0, 320)
+    baitPanel.AnchorPoint = Vector2.new(1, 0)
+    baitPanel.Position = UDim2.new(1, -24, 0.38, 0)
+    baitPanel.BackgroundColor3 = CARD
+    baitPanel.BackgroundTransparency = 0.04
+    baitPanel.Visible = false
+    baitPanel.ZIndex = 5
+    baitPanel.Active = true
+    Instance.new("UICorner", baitPanel).CornerRadius = UDim.new(0, 12)
+
+    local bPad = Instance.new("UIPadding", baitPanel)
+    bPad.PaddingTop = UDim.new(0, 8)
+    bPad.PaddingLeft = UDim.new(0, 8)
+    bPad.PaddingRight = UDim.new(0, 8)
+    bPad.PaddingBottom = UDim.new(0, 8)
+
+    local baitList = Instance.new("ScrollingFrame", baitPanel)
+    baitList.Position = UDim2.new(0, 0, 0, 0)
+    baitList.Size = UDim2.new(1, 0, 1, 0)
+    baitList.ScrollBarThickness = 4
+    baitList.ScrollingDirection = Enum.ScrollingDirection.Y
+    baitList.CanvasSize = UDim2.new(0, 0, 0, 0)
+    baitList.BackgroundTransparency = 1
+    baitList.ClipsDescendants = true
+    baitList.ZIndex = 6
+    baitList.Active = true
+
+    local blLayout = Instance.new("UIListLayout", baitList)
+    blLayout.Padding = UDim.new(0, 4)
+    blLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    blLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        baitList.CanvasSize = UDim2.new(0, 0, 0, blLayout.AbsoluteContentSize.Y + 8)
+    end)
+
+    local function rebuildBaitPanel()
+        for _, c in ipairs(baitList:GetChildren()) do
+            if c:IsA("TextButton") then c:Destroy() end
+        end
+
+        for _, baitData in ipairs(BAIT_LIST) do
+            local id, name, price = baitData[1], baitData[2], baitData[3]
+            
+            local b = Instance.new("TextButton", baitList)
+            b.Size = UDim2.new(1, 0, 0, 28)
+            b.BackgroundColor3 = CARD
+            b.BackgroundTransparency = selectedBait == id and 0.08 or 0.18
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 12
+            b.TextXAlignment = Enum.TextXAlignment.Left
+            b.TextColor3 = TEXT
+            b.Text = "  " .. name
+            b.ZIndex = 6
+            b.AutoButtonColor = false
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+
+            local highlight = Instance.new("Frame")
+            highlight.Name = "Highlight"
+            highlight.Parent = b
+            highlight.AnchorPoint = Vector2.new(0, 0.5)
+            highlight.Position = UDim2.new(0, 0, 0.5, 0)
+            highlight.Size = UDim2.new(0, 3, 1, -6)
+            highlight.BackgroundColor3 = Color3.fromRGB(100, 200, 255)
+            highlight.BackgroundTransparency = selectedBait == id and 0 or 1
+            highlight.ZIndex = 7
+
+            b.MouseButton1Click:Connect(function()
+                selectedBait = id
+                selectedBaitName = name
+                selectedBaitPrice = price
+                local displayPrice = string.format("%d", price)
+                hint.Text = "🛒 " .. selectedBaitName
+                priceLabel.Text = "💰 $" .. displayPrice
+                _G.RAY_SelectedBait = selectedBait
+                rebuildBaitPanel()
+            end)
+        end
+    end
+
+    rebuildBaitPanel()
+
+    local panelOpen = false
+    local function setPanelOpen(state)
+        panelOpen = state
+        overlay.Visible = panelOpen
+        baitPanel.Visible = panelOpen
+    end
+
+    selectBtn.MouseButton1Click:Connect(function()
+        setPanelOpen(not panelOpen)
+    end)
+
+    overlay.MouseButton1Click:Connect(function()
+        setPanelOpen(false)
+    end)
+
+    -- CLEANUP CONNECTIONS
+    card.AncestryChanged:Connect(function()
+        if not card.Parent then
+            if rodConn then rodConn:Disconnect() end
+        end
+    end)
+end
+
+BuildShopBait()
+
+local function BuildShopMerchant()
+    local shopPage = pages["Shop & Trade"]
+
+    -- DYNAMIC POSITION - BAIT ATAU ROD
+    local prevCard = shopPage:FindFirstChild("BaitSelectorCard") or shopPage:FindFirstChild("RodSelectorCard")
+    local baseY = prevCard and (prevCard.Position.Y.Offset + prevCard.Size.Y.Offset + 12) or 180
+
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local MarketItemData = require(ReplicatedStorage.Shared.MarketItemData)
+    local merchant = Replion.Client:WaitReplion("Merchant")
+
+    local AutoMerchantOn = false
+    local selectedMerchantIds = {}
+
+    local card = Instance.new("Frame")
+    card.Name = "MerchantSelectorCard"
+    card.Parent = shopPage
+    card.Size = UDim2.new(1, -32, 0, 48)
+    card.Position = UDim2.new(0, 16, 0, baseY)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
+
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1, -40, 0, 22)
+    cardTitle.Position = UDim2.new(0, 16, 0, 4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "🛒 Merchant Stock"
+
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0, 24, 0, 24)
+    arrow.Position = UDim2.new(1, -28, 0, 10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1, 0, 1, 0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+
+    local subMerchant = Instance.new("Frame", card)
+    subMerchant.Name = "MerchantContents"
+    subMerchant.Position = UDim2.new(0, 0, 0, 48)
+    subMerchant.Size = UDim2.new(1, 0, 0, 0)
+    subMerchant.BackgroundTransparency = 1
+    subMerchant.ClipsDescendants = true
+
+    local merchantLayout = Instance.new("UIListLayout", subMerchant)
+    merchantLayout.Padding = UDim.new(0, 6)
+    merchantLayout.FillDirection = Enum.FillDirection.Vertical
+    merchantLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    merchantLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    local merchantOpen = false
+    local function recalcMerchant()
+        local h = merchantLayout.AbsoluteContentSize.Y
+        if merchantOpen then
+            subMerchant.Size = UDim2.new(1, 0, 0, h + 8)
+            card.Size = UDim2.new(1, -32, 0, 48 + h + 8)
+            arrow.Text = "▲"
+        else
+            subMerchant.Size = UDim2.new(1, 0, 0, 0)
+            card.Size = UDim2.new(1, -32, 0, 48)
+            arrow.Text = "▼"
+        end
+    end
+
+    cardBtn.MouseButton1Click:Connect(function()
+        merchantOpen = not merchantOpen
+        recalcMerchant()
+    end)
+
+    -- STOCK DISPLAY
+    local rowStock = Instance.new("Frame", subMerchant)
+    rowStock.Size = UDim2.new(1, 0, 0, 36)
+    rowStock.BackgroundTransparency = 1
+
+    local lblStock = Instance.new("TextLabel", rowStock)
+    lblStock.Size = UDim2.new(1, 0, 1, 0)
+    lblStock.Position = UDim2.new(0, 16, 0, 0)
+    lblStock.BackgroundTransparency = 1
+    lblStock.Font = Enum.Font.Gotham
+    lblStock.TextSize = 13
+    lblStock.TextXAlignment = Enum.TextXAlignment.Left
+    lblStock.TextColor3 = TEXT
+    lblStock.Text = "Live Stock: Loading..."
+
+    local rowAuto = Instance.new("Frame", subMerchant)
+    rowAuto.Size = UDim2.new(1, 0, 0, 36)
+    rowAuto.BackgroundTransparency = 1
+
+    local lblAuto = Instance.new("TextLabel", rowAuto)
+    lblAuto.Size = UDim2.new(1, -120, 1, 0)
+    lblAuto.Position = UDim2.new(0, 16, 0, 0)
+    lblAuto.BackgroundTransparency = 1
+    lblAuto.Font = Enum.Font.Gotham
+    lblAuto.TextSize = 13
+    lblAuto.TextXAlignment = Enum.TextXAlignment.Left
+    lblAuto.TextColor3 = TEXT
+    lblAuto.Text = "Auto Buy Merchant"
+
+    local pill = Instance.new("TextButton", rowAuto)
+    pill.Size = UDim2.new(0, 50, 0, 24)
+    pill.Position = UDim2.new(1, -80, 0.5, -12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0, 999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0, 18, 0, 18)
+    knob.Position = UDim2.new(0, 3, 0.5, -9)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0, 999)
+
+    local function refreshAuto()
+        pill.BackgroundColor3 = AutoMerchantOn and ACCENT or MUTED
+        knob.Position = AutoMerchantOn and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        AutoMerchantOn = not AutoMerchantOn
+        _G.RAY_AutoMerchantOn = AutoMerchantOn
+        refreshAuto()
+    end)
+
+    refreshAuto()
+    recalcMerchant()
+
+    -- LIVE STOCK REFRESH
+    local function GetCurrentMerchantStock()
+        local ids = merchant:GetExpect("Items") or {}
+        local list = {}
+        for _, id in ipairs(ids) do
+            for _, def in ipairs(MarketItemData) do
+                if def.Id == id then
+                    table.insert(list, def)
+                    break
+                end
+            end
+        end
+        return list
+    end
+
+    local function RefreshMerchantStock()
+        local stock = GetCurrentMerchantStock()
+        local count = #stock
+        lblStock.Text = ("Live Stock: %d items"):format(count)
+        
+        -- Auto buy logic
+        if AutoMerchantOn and count > 0 then
+            task.spawn(function()
+                for _, def in ipairs(stock) do
+                    pcall(function()
+                        Events.purchaseMarket:InvokeServer(def.Id)
+                    end)
+                    task.wait(1.5)
+                end
+            end)
+        end
+    end
+
+    RefreshMerchantStock()
+    merchant:OnChange("Items", RefreshMerchantStock)
+end
+
+
+    local function ShowPage(name)
     for _, page in pairs(pages) do
         page.Visible = false
     end
@@ -1606,8 +1574,24 @@ local function ShowPage(name)
         local shopPage = pages["Shop & Trade"]
         shopPage.Visible = true
 
+        -- BUILD WEATHER PRESET (FIRST)
         if not shopPage:FindFirstChild("WeatherPresetCard") then
             BuildShopWeather()
+        end
+
+        -- BUILD FISHING ROD SELECTOR
+        if not shopPage:FindFirstChild("RodSelectorCard") then
+            BuildShopRods()
+        end
+
+        -- BUILD BAIT SELECTOR  
+        if not shopPage:FindFirstChild("BaitSelectorCard") then
+            BuildShopBait()
+        end
+
+        -- BUILD MERCHANT SELECTOR (LAST)
+        if not shopPage:FindFirstChild("MerchantSelectorCard") then
+            BuildShopMerchant()
         end
 
     elseif name == "Misc" then
@@ -1618,24 +1602,8 @@ local function ShowPage(name)
 
     elseif name == "Teleport" then
         pages["Teleport"].Visible = true
-
-    elseif name == "Quest" then
-        local questPage = pages["Quest"]
-        questPage.Visible = true
-
-        if not questPage:FindFirstChild("QuestDeepseaCard") then
-            BuildQuestDeepsea()
-        end
-        if not questPage:FindFirstChild("QuestElementCard") then
-            BuildQuestElement()
-        end
-        if not questPage:FindFirstChild("QuestDiamondCard") then
-            BuildQuestDiamond()
-        end
     end
 end
-
-BuildShopWeather()
 
 
 
@@ -4195,14 +4163,6 @@ UIS.InputBegan:Connect(function(input, gp)
     end
 end)
 
-----------------------------------------------------------------
--- REMOTES
-----------------------------------------------------------------
-local Net = ReplicatedStorage
-    :WaitForChild("Packages")
-    :WaitForChild("_Index")
-    :WaitForChild("sleitnick_net@0.2.0")
-    :WaitForChild("net")
 
 local Events = {
     fishing  = Net:WaitForChild("RE/FishingCompleted"),
@@ -4212,10 +4172,19 @@ local Events = {
     cancel   = Net:WaitForChild("RF/CancelFishingInputs"),
     equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
     unequip  = Net:WaitForChild("RE/UnequipToolFromHotbar"),
-
+    
     -- WEATHER
     purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
+    
+    -- SHOP
+    purchaseRod = Net:WaitForChild("RF/PurchaseFishingRod"),
+    purchaseBait = Net:WaitForChild("RF/PurchaseBait"),
+    
+    -- MERCHANT (NEW!)
+    purchaseMarket = Net:WaitForChild("RF/PurchaseMarketItem"),
 }
+
+
 
 ----------------------------------------------------------------
 -- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
@@ -4605,8 +4574,6 @@ task.spawn(function()
         task.wait(0.05)
     end
 end)
-
-
 
 
 -- ====================== AUTO OPTION CONTENT ======================
@@ -5289,7 +5256,6 @@ local function autoDropdown(text)
         noteLabel.TextXAlignment = Enum.TextXAlignment.Center
         noteLabel.TextColor3 = MUTED
         noteLabel.Text = "✓ Improve Low Speed 3/4 Notip"
-
 
 elseif text == "Auto Spot Island" then
     local info = Instance.new("TextLabel", sub)
@@ -6187,6 +6153,7 @@ task.spawn(function()
 end)
 
 
+
 -- AUTO SELL ENGINE SIMPLE
 task.spawn(function()
     local Players = game:GetService("Players")
@@ -6225,66 +6192,43 @@ task.spawn(function()
     end
 end)
 
+-- AUTO BUY ROD ENGINE
 task.spawn(function()
     task.wait(5)
     while true do
-        if AutoWeatherOn then
-            warn("[WEATHER] Auto ON, selected:", selectedWeather) -- debug
-            for name, on in pairs(selectedWeather) do
-                if on then
-                    warn("[WEATHER] Buying:", name)
-                    pcall(function()
-                        local ok, res = pcall(function()
-                            return Events.purchaseWeather:InvokeServer(name)
-                        end)
-                        warn("[WEATHER] Result:", name, ok, res)
-                    end)
-                    task.wait(1.5)
-                end
-            end
-        end
-        task.wait(5)
-    end
-end)
-
-
-----------------------------------------------------------------
--- LOOP ENGINE AUTO TOTEM
-----------------------------------------------------------------
-task.spawn(function()
-    while true do
-        if _G.RAYAutoTotemOn and _G.RAYSelectedTotemType then
-            local uuid = findTotemUuidByType(_G.RAYSelectedTotemType)
-            if uuid then
-                SpawnTotemUUID(uuid)
-                task.wait(1.0) -- delay per spawn
-            end
-        end
-        task.wait(3) -- interval cek lagi
-    end
-end)
-
-----------------------------------------------------------------
--- LOOP ENGINE AUTO FAVORITE
-----------------------------------------------------------------
-task.spawn(function()
-    while true do
-        if _G.RAYFavOn then
-            pcall(AutoFavoriteOnce)
-            task.wait(5)
-        else
-            task.wait(1)
-        end
-    end
-end)
-
-task.spawn(function()
-    while true do
-        if _G.RAYFavCurrentOn then
-            pcall(AutoFavoriteCurrentOnce)
+        if _G.RAY_AutoRodOn and _G.RAY_SelectedRod then
+            pcall(function()
+                Events.purchaseRod:InvokeServer(_G.RAY_SelectedRod)
+            end)
             task.wait(2)
-        else
-            task.wait(1)
         end
+        task.wait(1)
+    end
+end)
+
+-- AUTO BUY BAIT ENGINE
+task.spawn(function()
+    task.wait(5)
+    while true do
+        if _G.RAY_AutoBaitOn and _G.RAY_SelectedBait then
+            pcall(function()
+                Events.purchaseBait:InvokeServer(_G.RAY_SelectedBait)
+            end)
+            task.wait(2)
+        end
+        task.wait(1)
+    end
+end)
+
+-- AUTO BUY MERCHANT ENGINE
+task.spawn(function()
+    task.wait(5)
+    while true do
+        if _G.RAY_AutoMerchantOn then
+            pcall(function()
+                -- Merchant auto logic handled in RefreshMerchantStock()
+            end)
+        end
+        task.wait(2)
     end
 end)
