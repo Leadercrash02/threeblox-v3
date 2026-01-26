@@ -121,35 +121,32 @@ local ISLAND_SPOTS = {
     -- ["Christmas Spot"]    = CFrame.new(1138.9039, 23.43064, 1560.8541),
 
     -- spot lama
-    ["Esoteric Depths"]          = CFrame.new(3232.9036, -1302.8549, 1401.0824),
-    ["Creater Island"]           = CFrame.new(1000.1009, 18.02404, 5093.1221),
-    ["Ancient Jungle"]           = CFrame.new(1470.9269, 4.5879965, -323.6044),
-    ["Temple Guardian"]          = CFrame.new(1486.0616, 127.62498, -590.1211),
-    ["Secred Temple"]            = CFrame.new(1496.1331, -22.125002, -639.2121),
-    ["Ancient Ruin"]             = CFrame.new(6081.9009, -585.92419, 4634.6240),
-    ["Kohana"]                   = CFrame.new(-603.82385, 17.250059, 514.24432),
-    ["Kohana Volcano"]           = CFrame.new(-617.46448, 48.560577, 189.16815),
-    ["Fisherman Spawn"]          = CFrame.new(90.31225, 17.033522, 2839.8655),
-    ["Sysphus State"]            = CFrame.new(-3698.2456, -135.07391, -1007.7955),
-    ["Treasure Room"]            = CFrame.new(-3595.2686, -275.74152, -1639.2794),
-    ["Weater Machine"]           = CFrame.new(-1489.2069, 3.5, 1917.9594),
-    ["Coral Reefs"]              = CFrame.new(-2755.0881, 4.0107765, 2163.7251),
-    ["Tropical Grouve"]          = CFrame.new(-2016.4812, 9.037539, 3752.3533),
+    ["Esoteric Depths"]            = CFrame.new(3232.9036, -1302.8549, 1401.0824),
+    ["Creater Island"]             = CFrame.new(1000.1009, 18.02404, 5093.1221),
+    ["Ancient Jungle"]             = CFrame.new(1470.9269, 4.5879965, -323.6044),
+    ["Temple Guardian"]            = CFrame.new(1486.0616, 127.62498, -590.1211),
+    ["Secred Temple"]              = CFrame.new(1496.1331, -22.125002, -639.2121),
+    ["Ancient Ruin"]               = CFrame.new(6081.9009, -585.92419, 4634.6240),
+    ["Kohana"]                     = CFrame.new(-603.82385, 17.250059, 514.24432),
+    ["Kohana Volcano"]             = CFrame.new(-617.46448, 48.560577, 189.16815),
+    ["Fisherman Spawn"]            = CFrame.new(90.31225, 17.033522, 2839.8655),
+    ["Sysphus State"]              = CFrame.new(-3698.2456, -135.07391, -1007.7955),
+    ["Treasure Room"]              = CFrame.new(-3595.2686, -275.74152, -1639.2794),
+    ["Weater Machine"]             = CFrame.new(-1489.2069, 3.5, 1917.9594),
+    ["Coral Reefs"]                = CFrame.new(-2755.0881, 4.0107765, 2163.7251),
+    ["Tropical Grouve"]            = CFrame.new(-2016.4812, 9.037539, 3752.3533),
 
     -- tambahan baru
-    ["Pirate Treasure Room"]     = CFrame.new(3291.126465, -299.092438, 3068.046387),
-    ["Maze Room"]                = CFrame.new(3439.706787, -287.844818, 3390.595459),
-    ["Pirate Cove"]              = CFrame.new(3408.831787, 3.759813, 3444.318115),
-    ["Pirate Cove Laviatant"]    = CFrame.new(3471.531250, -287.843170, 3474.382568),
+    ["Pirate Treasure Room"]       = CFrame.new(3291.126465, -299.092438, 3068.046387),
+    ["Maze Room"]                  = CFrame.new(3439.706787, -287.844818, 3390.595459),
+    ["Pirate Cove"]                = CFrame.new(3408.831787, 3.759813, 3444.318115),
+    ["Pirate Cove Laviatant"]      = CFrame.new(3471.531250, -287.843170, 3474.382568),  -- baru ditambah
     ["Hourglass Diamond Artifact"] = CFrame.new(1500.734131, 6.376950, -849.561951),
-    ["Diamond Artifact"]         = CFrame.new(1833.328003, 5.230289, -322.866364),
-    ["Crescent Artifact"]        = CFrame.new(1380.416626, 0.845884, 118.727592),
-    ["Arrow Artifact"]           = CFrame.new(879.857178, 4.921622, -339.661469),
-    ["Crystalline Passage"]      = CFrame.new(6052.331055, -538.900208, 4374.166016),
-    ["Crystal Depths"]           = CFrame.new(5747.040039, -904.802124, 15396.442383),
-    
-    -- TAMBAHAN BARU - Underground Cellar
-    ["Underground Cellar"]      = CFrame.new(2125.3, -91.2, -750.4),  -- koordinat lo tadi
+    ["Diamond Artifact"]           = CFrame.new(1833.328003, 5.230289, -322.866364),
+    ["Crescent Artifact"]          = CFrame.new(1380.416626, 0.845884, 118.727592),
+    ["Arrow Artifact"]             = CFrame.new(879.857178, 4.921622, -339.661469),
+    ["Crystalline Passage"]        = CFrame.new(6052.331055, -538.900208, 4374.166016),
+    ["Crystal Depths"]             = CFrame.new(5747.040039, -904.802124, 15396.442383),
 }
 
 local DEFAULT_SPOT_ORDER = {
@@ -175,20 +172,14 @@ local DEFAULT_SPOT_ORDER = {
     "Pirate Treasure Room",
     "Maze Room",
     "Pirate Cove",
-    "Pirate Cove Laviatant",
+    "Pirate Cove Laviatant",  -- ditambah di sini
     "Hourglass Diamond Artifact",
     "Diamond Artifact",
     "Crescent Artifact",
     "Arrow Artifact",
     "Crystalline Passage",
     "Crystal Depths",
-    
-    -- TAMBAHAN BARU
-    "Underground Cellar",  -- ditambah di sini
 }
-
-
-
 -- ROOT
 local gui = Instance.new("ScreenGui", CoreGui)
 gui.Name = "Threeblox Freemuim"
@@ -436,6 +427,863 @@ newPage("Teleport")
 newPage("Quest")
 newPage("Shop & Trade")
 newPage("Misc")
+
+-- layout untuk halaman Quest (biar card tidak nabrak)
+local questLayout = Instance.new("UIListLayout", pages["Quest"])
+questLayout.Padding = UDim.new(0,8)
+questLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+----------------------------------------------------------------
+-- QUEST : DEEPSEA (GHOSTFINN)
+----------------------------------------------------------------
+local function BuildQuestDeepsea()
+    local questPage = pages["Quest"]
+
+    -- CARD UTAMA
+    local card = Instance.new("Frame")
+    card.Name = "QuestDeepseaCard"
+    card.Parent = questPage
+    card.Size = UDim2.new(1,-32,0,48)
+    card.Position = UDim2.new(0,16,0,16)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
+
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1,-40,0,22)
+    cardTitle.Position = UDim2.new(0,16,0,4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "🌊 Quest Deepsea (Ghostfinn)"
+
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0,24,0,24)
+    arrow.Position = UDim2.new(1,-28,0,10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1,0,1,0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+
+    ----------------------------------------------------------------
+    -- ISI DROPDOWN (TEXT PROGRESS + TELEPORT)
+    ----------------------------------------------------------------
+    local subDeep = Instance.new("Frame", card)
+    subDeep.Name = "DeepseaContents"
+    subDeep.Position = UDim2.new(0,0,0,48)
+    subDeep.Size = UDim2.new(1,0,0,0)
+    subDeep.BackgroundTransparency = 1
+    subDeep.ClipsDescendants = true
+
+    local deepLayout = Instance.new("UIListLayout", subDeep)
+    deepLayout.Padding = UDim.new(0,6)
+    deepLayout.FillDirection = Enum.FillDirection.Vertical
+    deepLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    deepLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    -- ROW 1: TEXT PROGRESS (TINGGI DINAMIS / MODE SINGKAT)
+    local deepRow = Instance.new("Frame", subDeep)
+    deepRow.Size = UDim2.new(1,0,0,0)
+    deepRow.BackgroundTransparency = 1
+
+    local deepText = Instance.new("TextLabel", deepRow)
+    deepText.Name = "DeepseaText"
+    deepText.Size = UDim2.new(1,-8,1,-8)
+    deepText.Position = UDim2.new(0,4,0,4)
+    deepText.BackgroundTransparency = 1
+    deepText.Font = Enum.Font.Code
+    deepText.TextSize = 13
+    deepText.TextXAlignment = Enum.TextXAlignment.Left
+    deepText.TextYAlignment = Enum.TextYAlignment.Top
+    deepText.TextWrapped = false
+    deepText.TextColor3 = TEXT
+    deepText.Text = "Loading Deepsea quest..."
+
+    -- ROW 2: TELEPORT SYSphus / TREASURE ROOM
+    local tpRow = Instance.new("Frame", subDeep)
+    tpRow.Size = UDim2.new(1,0,0,36)
+    tpRow.BackgroundTransparency = 1
+
+    local tpSys = Instance.new("TextButton", tpRow)
+    tpSys.Size = UDim2.new(0.5,-10,1,0)
+    tpSys.Position = UDim2.new(0,0,0,0)
+    tpSys.BackgroundColor3 = CARD
+    tpSys.BackgroundTransparency = 0.4
+    tpSys.BorderSizePixel = 0
+    tpSys.Font = Enum.Font.Gotham
+    tpSys.TextSize = 13
+    tpSys.TextColor3 = TEXT
+    tpSys.Text = "⛰ Sysphus State"
+    tpSys.AutoButtonColor = false
+    Instance.new("UICorner", tpSys).CornerRadius = UDim.new(0,8)
+
+    local tpTreasure = Instance.new("TextButton", tpRow)
+    tpTreasure.Size = UDim2.new(0.5,-10,1,0)
+    tpTreasure.Position = UDim2.new(0.5,10,0,0)
+    tpTreasure.BackgroundColor3 = CARD
+    tpTreasure.BackgroundTransparency = 0.4
+    tpTreasure.BorderSizePixel = 0
+    tpTreasure.Font = Enum.Font.Gotham
+    tpTreasure.TextSize = 13
+    tpTreasure.TextColor3 = TEXT
+    tpTreasure.Text = "💎 Treasure Room"
+    tpTreasure.AutoButtonColor = false
+    Instance.new("UICorner", tpTreasure).CornerRadius = UDim.new(0,8)
+
+    ----------------------------------------------------------------
+    -- DROPDOWN BEHAVIOUR
+    ----------------------------------------------------------------
+    local deepOpen = false
+    local function recalcDeep()
+        local h = deepLayout.AbsoluteContentSize.Y
+        if deepOpen then
+            subDeep.Size = UDim2.new(1,0,0,h + 8)
+            card.Size   = UDim2.new(1,-32,0,48 + h + 8)
+            arrow.Text  = "▲"
+        else
+            subDeep.Size = UDim2.new(1,0,0,0)
+            card.Size   = UDim2.new(1,-32,0,48)
+            arrow.Text  = "▼"
+        end
+    end
+
+    deepLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcDeep)
+
+    cardBtn.MouseButton1Click:Connect(function()
+        deepOpen = not deepOpen
+        recalcDeep()
+    end)
+
+    ----------------------------------------------------------------
+    -- TELEPORT HANDLER (PAKAI ISLAND_SPOTS)
+    ----------------------------------------------------------------
+    local function tpTo(name)
+        local cf = ISLAND_SPOTS[name]
+        if not cf then return end
+        local char = lp.Character or lp.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        hrp.CFrame = cf
+    end
+
+    tpSys.MouseButton1Click:Connect(function()
+        tpTo("Sysphus State")
+    end)
+
+    tpTreasure.MouseButton1Click:Connect(function()
+        tpTo("Treasure Room")
+    end)
+
+    ----------------------------------------------------------------
+    -- LOGIC QUEST (VERSI GUI TEST + FLAG COMPLETED)
+    ----------------------------------------------------------------
+    -- PENTING: sesuaikan path require jika di game beda
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local Quests  = require(ReplicatedStorage.Modules.Quests)
+    local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
+
+    local DataReplion = Replion.Client:WaitReplion("Data")
+
+    local function getQuestType(name)
+        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, name)
+        return ok and qType or nil
+    end
+
+    local function calcTotalPercent(questDef, questState)
+        if not questDef or not questDef.Objectives then return 0 end
+        local acc = 0
+        for i,obj in ipairs(questDef.Objectives) do
+            local st = questState and questState.Objectives and questState.Objectives[i]
+            local cur = (st and st.Progress) or 0
+            local goal = obj.Goal or 1
+            if cur >= goal then
+                acc += 1
+            else
+                acc += math.clamp(cur/goal,0,1)
+            end
+        end
+        return acc/#questDef.Objectives*100
+    end
+
+    local function isCompleted(name)
+        local completed = DataReplion:GetExpect("CompletedQuests") or {}
+        for _,q in ipairs(completed) do
+            if q == name then return true end
+        end
+        return false
+    end
+
+    -- return: text, isDone
+    local function dumpDeepsea()
+        local name = "Deep Sea Quest"
+
+        local completedFlag = isCompleted(name)
+        local qType = getQuestType(name)
+        local def = qType and Quests[qType] and Quests[qType][name] or nil
+
+        local all = DataReplion:GetExpect("Quests")
+        local state = qType and all[qType] and all[qType][name] or nil
+
+        if completedFlag and not state then
+            return string.format("%s (%s) – 100%% (COMPLETED)", name, qType or "Mainline"), true
+        end
+
+        if not qType or not def then
+            return name.." – data not found", false
+        end
+
+        if not state then
+            return name.." – not active", false
+        end
+
+        local total = calcTotalPercent(def,state)
+        local doneFlag = MainlineQuestController.DidCompleteAll(qType,name,state) or completedFlag
+        if doneFlag then total = 100 end
+        local totalRounded = math.floor(total+0.5)
+
+        local lines = {}
+        table.insert(lines, string.format("%s (%s) – %d%%%s",
+            name, qType, totalRounded, doneFlag and " (COMPLETED)" or ""))
+
+        for i,obj in ipairs(def.Objectives) do
+            local st = state.Objectives and state.Objectives[i]
+            local cur = (st and st.Progress) or 0
+            local goal = obj.Goal or 1
+            local pct = math.floor(math.clamp(cur/goal,0,1)*100+0.5)
+            table.insert(lines, string.format("  [%d] %s", i, obj.Name))
+            table.insert(lines, string.format("      %d/%d (%d%%)", cur, goal, pct))
+        end
+
+        return table.concat(lines,"\n"), doneFlag
+    end
+
+    local function refreshDeep()
+        local text, done = dumpDeepsea()
+        deepText.Text = text
+
+        if done then
+            -- MODE SINGKAT: quest selesai → teks pendek
+            deepRow.Size = UDim2.new(1,0,0,32)
+        else
+            -- MODE NORMAL: tinggi ikut jumlah baris
+            local lines = 0
+            for _ in string.gmatch(text, "\n") do
+                lines += 1
+            end
+            lines = lines + 1
+
+            local lineHeight = 16
+            local basePadding = 12
+            local h = basePadding + lines * lineHeight
+            h = math.clamp(h, 48, 160)
+
+            deepRow.Size = UDim2.new(1,0,0,h)
+        end
+
+        recalcDeep()
+    end
+
+    DataReplion:OnChange({"Quests","Mainline"}, refreshDeep)
+    DataReplion:OnChange({"CompletedQuests"}, refreshDeep)
+    refreshDeep()
+end
+
+BuildQuestDeepsea()
+
+----------------------------------------------------------------
+-- QUEST : ELEMENT ROD
+----------------------------------------------------------------
+local function BuildQuestElement()
+    local questPage = pages["Quest"]
+    local ELEMENT_QUEST_NAME = "Element Quest" -- ganti ke nama quest aslinya
+
+    -- CARD UTAMA
+    local card = Instance.new("Frame")
+    card.Name = "QuestElementCard"
+    card.Parent = questPage
+    card.Size = UDim2.new(1,-32,0,48)
+    card.Position = UDim2.new(0,16,0,0)      -- Y diatur UIListLayout
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    card.LayoutOrder = 2                     -- Element di bawah Deepsea
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
+
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1,-40,0,22)
+    cardTitle.Position = UDim2.new(0,16,0,4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "⚡ Quest Element Rod"
+
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0,24,0,24)
+    arrow.Position = UDim2.new(1,-28,0,10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1,0,1,0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+
+    ----------------------------------------------------------------
+    -- ISI DROPDOWN (TEXT PROGRESS + TELEPORT)
+    ----------------------------------------------------------------
+    local subElem = Instance.new("Frame", card)
+    subElem.Name = "ElementContents"
+    subElem.Position = UDim2.new(0,0,0,48)
+    subElem.Size = UDim2.new(1,0,0,0)
+    subElem.BackgroundTransparency = 1
+    subElem.ClipsDescendants = true
+
+    local elemLayout = Instance.new("UIListLayout", subElem)
+    elemLayout.Padding = UDim.new(0,6)
+    elemLayout.FillDirection = Enum.FillDirection.Vertical
+    elemLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    elemLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    -- ROW 1: TEXT PROGRESS (DINAMIS / MODE SINGKAT)
+    local elemRow = Instance.new("Frame", subElem)
+    elemRow.Size = UDim2.new(1,0,0,0)
+    elemRow.BackgroundTransparency = 1
+
+    local elemText = Instance.new("TextLabel", elemRow)
+    elemText.Name = "ElementText"
+    elemText.Size = UDim2.new(1,-8,1,-8)
+    elemText.Position = UDim2.new(0,4,0,4)
+    elemText.BackgroundTransparency = 1
+    elemText.Font = Enum.Font.Code
+    elemText.TextSize = 13
+    elemText.TextXAlignment = Enum.TextXAlignment.Left
+    elemText.TextYAlignment = Enum.TextYAlignment.Top
+    elemText.TextWrapped = false
+    elemText.TextColor3 = TEXT
+    elemText.Text = "Loading Element quest..."
+
+    -- ROW 2: TELEPORT ANCIENT JUNGLE / SEcred TEMPLE
+    local tpRow = Instance.new("Frame", subElem)
+    tpRow.Size = UDim2.new(1,0,0,36)
+    tpRow.BackgroundTransparency = 1
+
+    local tpAncient = Instance.new("TextButton", tpRow)
+    tpAncient.Size = UDim2.new(0.5,-10,1,0)
+    tpAncient.Position = UDim2.new(0,0,0,0)
+    tpAncient.BackgroundColor3 = CARD
+    tpAncient.BackgroundTransparency = 0.4
+    tpAncient.BorderSizePixel = 0
+    tpAncient.Font = Enum.Font.Gotham
+    tpAncient.TextSize = 13
+    tpAncient.TextColor3 = TEXT
+    tpAncient.Text = "🌿 Ancient Jungle"
+    tpAncient.AutoButtonColor = false
+    Instance.new("UICorner", tpAncient).CornerRadius = UDim.new(0,8)
+
+    local tpSecred = Instance.new("TextButton", tpRow)
+    tpSecred.Size = UDim2.new(0.5,-10,1,0)
+    tpSecred.Position = UDim2.new(0.5,10,0,0)
+    tpSecred.BackgroundColor3 = CARD
+    tpSecred.BackgroundTransparency = 0.4
+    tpSecred.BorderSizePixel = 0
+    tpSecred.Font = Enum.Font.Gotham
+    tpSecred.TextSize = 13
+    tpSecred.TextColor3 = TEXT
+    tpSecred.Text = "🏛 Secred Temple"
+    tpSecred.AutoButtonColor = false
+    Instance.new("UICorner", tpSecred).CornerRadius = UDim.new(0,8)
+
+    ----------------------------------------------------------------
+    -- DROPDOWN BEHAVIOUR
+    ----------------------------------------------------------------
+    local elemOpen = false
+    local function recalcElem()
+        local h = elemLayout.AbsoluteContentSize.Y
+        if elemOpen then
+            subElem.Size = UDim2.new(1,0,0,h + 8)
+            card.Size   = UDim2.new(1,-32,0,48 + h + 8)
+            arrow.Text  = "▲"
+        else
+            subElem.Size = UDim2.new(1,0,0,0)
+            card.Size   = UDim2.new(1,-32,0,48)
+            arrow.Text  = "▼"
+        end
+    end
+
+    elemLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcElem)
+
+    cardBtn.MouseButton1Click:Connect(function()
+        elemOpen = not elemOpen
+        recalcElem()
+    end)
+
+    ----------------------------------------------------------------
+    -- TELEPORT HANDLER
+    ----------------------------------------------------------------
+    local function tpTo(name)
+        local cf = ISLAND_SPOTS[name]
+        if not cf then return end
+        local char = lp.Character or lp.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        hrp.CFrame = cf
+    end
+
+    tpAncient.MouseButton1Click:Connect(function()
+        -- Ancient Jungle -> Hutan Kuno (sama area)
+        tpTo("Hutan Kuno")
+    end)
+
+    tpSecred.MouseButton1Click:Connect(function()
+        tpTo("Secred Temple")
+    end)
+
+
+    ----------------------------------------------------------------
+    -- LOGIC QUEST (SAMA POLA DENGAN DEEPSEA)
+    ----------------------------------------------------------------
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local Quests  = require(ReplicatedStorage.Modules.Quests)
+    local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
+
+    local DataReplion = Replion.Client:WaitReplion("Data")
+
+    local function getQuestType(name)
+        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, name)
+        return ok and qType or nil
+    end
+
+    local function calcTotalPercent(questDef, questState)
+        if not questDef or not questDef.Objectives then return 0 end
+        local acc = 0
+        for i,obj in ipairs(questDef.Objectives) do
+            local st = questState and questState.Objectives and questState.Objectives[i]
+            local cur = (st and st.Progress) or 0
+            local goal = obj.Goal or 1
+            if cur >= goal then
+                acc += 1
+            else
+                acc += math.clamp(cur/goal,0,1)
+            end
+        end
+        return acc/#questDef.Objectives*100
+    end
+
+    local function isCompleted(name)
+        local completed = DataReplion:GetExpect("CompletedQuests") or {}
+        for _,q in ipairs(completed) do
+            if q == name then return true end
+        end
+        return false
+    end
+
+    local function dumpElement()
+        local name = ELEMENT_QUEST_NAME
+
+        local completedFlag = isCompleted(name)
+        local qType = getQuestType(name)
+        local def = qType and Quests[qType] and Quests[qType][name] or nil
+
+        local all = DataReplion:GetExpect("Quests")
+        local state = qType and all[qType] and all[qType][name] or nil
+
+        if completedFlag and not state then
+            return string.format("%s (%s) – 100%% (COMPLETED)", name, qType or "Mainline"), true
+        end
+
+        if not qType or not def then
+            return name.." – data not found", false
+        end
+
+        if not state then
+            return name.." – not active", false
+        end
+
+        local total = calcTotalPercent(def,state)
+        local doneFlag = MainlineQuestController.DidCompleteAll(qType,name,state) or completedFlag
+        if doneFlag then total = 100 end
+        local totalRounded = math.floor(total+0.5)
+
+        local lines = {}
+        table.insert(lines, string.format("%s (%s) – %d%%%s",
+            name, qType, totalRounded, doneFlag and " (COMPLETED)" or ""))
+
+        for i,obj in ipairs(def.Objectives) do
+            local st = state.Objectives and state.Objectives[i]
+            local cur = (st and st.Progress) or 0
+            local goal = obj.Goal or 1
+            local pct = math.floor(math.clamp(cur/goal,0,1)*100+0.5)
+            table.insert(lines, string.format("  [%d] %s", i, obj.Name))
+            table.insert(lines, string.format("      %d/%d (%d%%)", cur, goal, pct))
+        end
+
+        return table.concat(lines,"\n"), doneFlag
+    end
+
+    local function refreshElem()
+        local text, done = dumpElement()
+        elemText.Text = text
+
+        if done then
+            elemRow.Size = UDim2.new(1,0,0,32)
+        else
+            local lines = 0
+            for _ in string.gmatch(text, "\n") do
+                lines += 1
+            end
+            lines = lines + 1
+
+            local lineHeight = 16
+            local basePadding = 12
+            local h = basePadding + lines * lineHeight
+            h = math.clamp(h, 48, 160)
+
+            elemRow.Size = UDim2.new(1,0,0,h)
+        end
+
+        recalcElem()
+    end
+
+    DataReplion:OnChange({"Quests","Mainline"}, refreshElem)
+    DataReplion:OnChange({"CompletedQuests"}, refreshElem)
+    refreshElem()
+end
+
+
+BuildQuestElement()
+
+----------------------------------------------------------------
+-- QUEST : DIAMOND ROD (DIAMOND RESEARCHER)
+----------------------------------------------------------------
+local function BuildQuestDiamond()
+    local questPage = pages["Quest"]
+    local DIAMOND_QUEST_NAME = "Diamond Researcher" -- sama seperti GUI test
+
+    -- CARD UTAMA
+    local card = Instance.new("Frame")
+    card.Name = "QuestDiamondCard"
+    card.Parent = questPage
+    card.Size = UDim2.new(1,-32,0,48)
+    card.Position = UDim2.new(0,16,0,0)
+    card.BackgroundColor3 = CARD
+    card.BackgroundTransparency = ALPHA_CARD
+    card.ClipsDescendants = true
+    card.LayoutOrder = 3 -- di bawah Element
+    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
+
+    local cardTitle = Instance.new("TextLabel", card)
+    cardTitle.Size = UDim2.new(1,-40,0,22)
+    cardTitle.Position = UDim2.new(0,16,0,4)
+    cardTitle.BackgroundTransparency = 1
+    cardTitle.Font = Enum.Font.GothamSemibold
+    cardTitle.TextSize = 14
+    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
+    cardTitle.TextColor3 = TEXT
+    cardTitle.Text = "💎 Quest Diamond Rod"
+
+    local arrow = Instance.new("TextLabel", card)
+    arrow.Size = UDim2.new(0,24,0,24)
+    arrow.Position = UDim2.new(1,-28,0,10)
+    arrow.BackgroundTransparency = 1
+    arrow.Font = Enum.Font.Gotham
+    arrow.TextSize = 18
+    arrow.TextColor3 = TEXT
+    arrow.Text = "▼"
+
+    local cardBtn = Instance.new("TextButton", card)
+    cardBtn.BackgroundTransparency = 1
+    cardBtn.Size = UDim2.new(1,0,1,0)
+    cardBtn.Text = ""
+    cardBtn.AutoButtonColor = false
+
+    ----------------------------------------------------------------
+    -- ISI DROPDOWN (TEXT PROGRESS + 3 TELEPORT)
+    ----------------------------------------------------------------
+    local subDia = Instance.new("Frame", card)
+    subDia.Name = "DiamondContents"
+    subDia.Position = UDim2.new(0,0,0,48)
+    subDia.Size = UDim2.new(1,0,0,0)
+    subDia.BackgroundTransparency = 1
+    subDia.ClipsDescendants = true
+
+    local diaLayout = Instance.new("UIListLayout", subDia)
+    diaLayout.Padding = UDim.new(0,6)
+    diaLayout.FillDirection = Enum.FillDirection.Vertical
+    diaLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    diaLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+    -- ROW 1: TEXT PROGRESS (DINAMIS / MODE SINGKAT)
+    local diaRow = Instance.new("Frame", subDia)
+    diaRow.Size = UDim2.new(1,0,0,0)
+    diaRow.BackgroundTransparency = 1
+
+    local diaText = Instance.new("TextLabel", diaRow)
+    diaText.Name = "DiamondText"
+    diaText.Size = UDim2.new(1,-8,1,-8)
+    diaText.Position = UDim2.new(0,4,0,4)
+    diaText.BackgroundTransparency = 1
+    diaText.Font = Enum.Font.Code
+    diaText.TextSize = 13
+    diaText.TextXAlignment = Enum.TextXAlignment.Left
+    diaText.TextYAlignment = Enum.TextYAlignment.Top
+    diaText.TextWrapped = false
+    diaText.TextColor3 = TEXT
+    diaText.Text = "Loading Diamond quest..."
+
+    -- ROW 2: TELEPORT CORAL / TROPIS / ANCIENT
+    local tpRow = Instance.new("Frame", subDia)
+    tpRow.Size = UDim2.new(1,0,0,36)
+    tpRow.BackgroundTransparency = 1
+
+    local tpCoral = Instance.new("TextButton", tpRow)
+    tpCoral.Size = UDim2.new(1/3,-8,1,0)
+    tpCoral.Position = UDim2.new(0,0,0,0)
+    tpCoral.BackgroundColor3 = CARD
+    tpCoral.BackgroundTransparency = 0.4
+    tpCoral.BorderSizePixel = 0
+    tpCoral.Font = Enum.Font.Gotham
+    tpCoral.TextSize = 13
+    tpCoral.TextColor3 = TEXT
+    tpCoral.Text = "🐠 Coral Reefs"
+    tpCoral.AutoButtonColor = false
+    Instance.new("UICorner", tpCoral).CornerRadius = UDim.new(0,8)
+
+    local tpTropis = Instance.new("TextButton", tpRow)
+    tpTropis.Size = UDim2.new(1/3,-8,1,0)
+    tpTropis.Position = UDim2.new(1/3+0.012,4,0,0)
+    tpTropis.BackgroundColor3 = CARD
+    tpTropis.BackgroundTransparency = 0.4
+    tpTropis.BorderSizePixel = 0
+    tpTropis.Font = Enum.Font.Gotham
+    tpTropis.TextSize = 13
+    tpTropis.TextColor3 = TEXT
+    tpTropis.Text = "🌴 Tropical Grouve"
+    tpTropis.AutoButtonColor = false
+    Instance.new("UICorner", tpTropis).CornerRadius = UDim.new(0,8)
+
+    local tpAncient = Instance.new("TextButton", tpRow)
+    tpAncient.Size = UDim2.new(1/3,-8,1,0)
+    tpAncient.Position = UDim2.new(2/3+0.024,8,0,0)
+    tpAncient.BackgroundColor3 = CARD
+    tpAncient.BackgroundTransparency = 0.4
+    tpAncient.BorderSizePixel = 0
+    tpAncient.Font = Enum.Font.Gotham
+    tpAncient.TextSize = 13
+    tpAncient.TextColor3 = TEXT
+    tpAncient.Text = "🏛 Kohana"
+    tpAncient.AutoButtonColor = false
+    Instance.new("UICorner", tpAncient).CornerRadius = UDim.new(0,8)
+
+    ----------------------------------------------------------------
+    -- DROPDOWN BEHAVIOUR
+    ----------------------------------------------------------------
+    local diaOpen = false
+    local function recalcDia()
+        local h = diaLayout.AbsoluteContentSize.Y
+        if diaOpen then
+            subDia.Size = UDim2.new(1,0,0,h + 8)
+            card.Size   = UDim2.new(1,-32,0,48 + h + 8)
+            arrow.Text  = "▲"
+        else
+            subDia.Size = UDim2.new(1,0,0,0)
+            card.Size   = UDim2.new(1,-32,0,48)
+            arrow.Text  = "▼"
+        end
+    end
+
+    diaLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcDia)
+
+    cardBtn.MouseButton1Click:Connect(function()
+        diaOpen = not diaOpen
+        recalcDia()
+    end)
+
+    ----------------------------------------------------------------
+    -- TELEPORT HANDLER (CORAL / TROPIS / ANCIENT)
+    ----------------------------------------------------------------
+    local function tpTo(name)
+        local cf = ISLAND_SPOTS[name]
+        if not cf then return end
+        local char = lp.Character or lp.CharacterAdded:Wait()
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if not hrp then return end
+        hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
+        hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+        hrp.CFrame = cf
+    end
+
+    tpCoral.MouseButton1Click:Connect(function()
+        tpTo("Coral Reefs")
+    end)
+
+    tpTropis.MouseButton1Click:Connect(function()
+        tpTo("Tropical Grouve")
+    end)
+
+    tpAncient.MouseButton1Click:Connect(function()
+        tpTo("Kohana")
+    end)
+
+    ----------------------------------------------------------------
+    -- LOGIC QUEST (MIRROR SCRIPT TESTER)
+    ----------------------------------------------------------------
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local Quests  = require(ReplicatedStorage.Modules.Quests)
+    local MainlineQuestController = require(ReplicatedStorage.Controllers.MainlineQuestController)
+
+    local DataReplion = Replion.Client:WaitReplion("Data")
+
+    local function getQuestType(name)
+        local ok, qType = pcall(MainlineQuestController.GetQuestTypeFromName, name)
+        if ok then
+            return qType
+        end
+    end
+
+    local function calcTotalPercent(questDef, questState)
+        if not questDef or not questDef.Objectives then
+            return 0
+        end
+
+        local acc = 0
+        for i, objDef in ipairs(questDef.Objectives) do
+            local objState = questState and questState.Objectives and questState.Objectives[i]
+            local progress = (objState and objState.Progress) or 0
+            local goal = objDef.Goal or 1
+
+            if progress >= goal then
+                acc += 1
+            else
+                acc += math.clamp(progress / goal, 0, 1)
+            end
+        end
+
+        return acc / #questDef.Objectives * 100
+    end
+
+    local function isCompleted(name)
+        local completed = DataReplion:GetExpect("CompletedQuests") or {}
+        for _, qName in ipairs(completed) do
+            if qName == name then
+                return true
+            end
+        end
+        return false
+    end
+
+    -- return: text, doneFlag
+    local function dumpDiamond()
+        local name = DIAMOND_QUEST_NAME
+
+        local completedFlag = isCompleted(name)
+        local questType = getQuestType(name)
+        local questDef = questType and Quests[questType] and Quests[questType][name] or nil
+
+        local allQuests = DataReplion:GetExpect("Quests")
+        local questState = questType and allQuests[questType] and allQuests[questType][name] or nil
+
+        if completedFlag and not questState then
+            return string.format("%s (%s) – 100%% (COMPLETED)",
+                name,
+                questType or "Mainline"
+            ), true
+        end
+
+        if not questType or not questDef then
+            return name.." – data not found", false
+        end
+
+        if not questState then
+            return name.." – not active", false
+        end
+
+        local totalPct = calcTotalPercent(questDef, questState)
+        local doneFlag = MainlineQuestController.DidCompleteAll(questType, name, questState) or completedFlag
+        if doneFlag then
+            totalPct = 100
+        end
+        local totalRounded = math.floor(totalPct + 0.5)
+
+        local lines = {}
+        for i, objDef in ipairs(questDef.Objectives) do
+            local objState = questState.Objectives and questState.Objectives[i]
+            local cur = (objState and objState.Progress) or 0
+            local goal = objDef.Goal or 1
+            local pct = math.floor(math.clamp(cur / goal, 0, 1) * 100 + 0.5)
+
+            table.insert(lines, string.format(
+                "  [%d] %s",
+                i,
+                objDef.Name
+            ))
+            table.insert(lines, string.format(
+                "      %d/%d (%d%%)",
+                cur,
+                goal,
+                pct
+            ))
+        end
+
+        local header = string.format("%s (%s) – %d%%%s",
+            name,
+            questType,
+            totalRounded,
+            doneFlag and " (COMPLETED)" or ""
+        )
+
+        return header.."\n"..table.concat(lines, "\n"), doneFlag
+    end
+
+    local function refreshDia()
+        local text, done = dumpDiamond()
+        diaText.Text = text
+
+        if done then
+            diaRow.Size = UDim2.new(1,0,0,32)
+        else
+            local lines = 0
+            for _ in string.gmatch(text, "\n") do
+                lines += 1
+            end
+            lines = lines + 1
+
+            local lineHeight = 16
+            local basePadding = 12
+            local h = basePadding + lines * lineHeight
+            h = math.clamp(h, 48, 160)
+
+            diaRow.Size = UDim2.new(1,0,0,h)
+        end
+
+        recalcDia()
+    end
+
+    DataReplion:OnChange({"Quests","Mainline"}, refreshDia)
+    DataReplion:OnChange({"CompletedQuests"}, refreshDia)
+    refreshDia()
+end
+
+BuildQuestDiamond()
 
 ----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
@@ -1484,6 +2332,7 @@ end
 
 
 
+
 ----------------------------------------------------------------
 -- MISC PAGE : BUILD FUNCTION
 ----------------------------------------------------------------
@@ -1881,33 +2730,18 @@ function StopAntiAFK()
     end
 end
 
-local ROD_VFX_NAMES = {
-    "1x1x1x1 Ban Hammer Dive",
-    "Abyssal Chroma Dive",
-    "Abyssfire Dive",
-    "Amber Dive",
-    "Amethyst Dive",
-    "BanHammerThrow",
-    "Xmas Tree Rod Dive",
-    "The Vanquisher Dive",
-    "Ornament Axe Dive",
-    "Frozen Krampus Scythe Dive",
-    "Electric Guitar Dive",
-    "Eclipse Katana Dive",
-    "Divine Blade Dive",
-}
+--- kill vfx ---
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-function KillAllRodSkins()
+local function KillAllVFX()
     local vfxRoot = ReplicatedStorage:FindFirstChild("VFX")
     if not vfxRoot then return end
 
-    for _, name in ipairs(ROD_VFX_NAMES) do
-        local obj = vfxRoot:FindFirstChild(name, true)
-        if obj then
-            pcall(function()
-                obj:Destroy()
-            end)
-        end
+    -- Hapus semua descendant di dalam folder VFX
+    for _, obj in ipairs(vfxRoot:GetDescendants()) do
+        pcall(function()
+            obj:Destroy()
+        end)
     end
 end
 
@@ -3366,7 +4200,7 @@ do
     infoSkin.TextXAlignment = Enum.TextXAlignment.Left
     infoSkin.TextColor3 = MUTED
     infoSkin.TextWrapped = true
-    infoSkin.Text = "Kill skin: 1x1x1x1 Ban Hammer, Abyssal Chroma, Abyssfire, Amber, Amethyst, BanHammerThrow, Xmas Tree, Vanquisher, Ornament Axe, Frozen Krampus Scythe, Electric Guitar, Eclipse Katana, Divine Blade."
+    infoSkin.Text = "Disable All Skin Effect."
 
     local pillSkin = Instance.new("TextButton", rowSkin)
     pillSkin.Size = UDim2.new(0,50,0,24)
@@ -3397,7 +4231,7 @@ do
         _G.RAY_DisableRodSkin = enabled
 
         if enabled then
-            KillAllRodSkins()
+            KillAllVFX()
         end
 
         refreshSkin()
@@ -3405,7 +4239,7 @@ do
 
     lp.CharacterAdded:Connect(function()
         if enabled then
-            task.delay(0.5, KillAllRodSkins)
+            task.delay(0.5, KillAllVFX)
         end
     end)
 
@@ -4040,9 +4874,9 @@ UIS.InputBegan:Connect(function(input, gp)
     end
 end)
 
-
--- REMOTES --
-
+----------------------------------------------------------------
+-- REMOTES
+----------------------------------------------------------------
 local Net = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
@@ -4057,17 +4891,16 @@ local Events = {
     cancel   = Net:WaitForChild("RF/CancelFishingInputs"),
     equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
     unequip  = Net:WaitForChild("RE/UnequipToolFromHotbar"),
+
+    -- WEATHER
     purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
-    purchaseRod = Net:WaitForChild("RF/PurchaseFishingRod"),
-    purchaseBait = Net:WaitForChild("RF/PurchaseBait"),
 }
-
-
 
 ----------------------------------------------------------------
 -- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
 ----------------------------------------------------------------
 
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Replion = require(ReplicatedStorage.Packages.Replion)
 
 local SpawnTotemRemote = ReplicatedStorage
@@ -4077,15 +4910,25 @@ local SpawnTotemRemote = ReplicatedStorage
     :WaitForChild("net")
     :WaitForChild("RE/SpawnTotem")
 
--- 1 = Lucky, 2 = Mutasi, 3 = Shiny (SAMA PERSIS DENGAN GUI X1)
+-- Id dari data module:
+-- Luck Totem      -> Id = 1 [web:2]
+-- Mutation Totem  -> Id = 2 [web:2]
+-- Shiny Totem     -> Id = 3 (dari decompile kamu)
 local TotemTypeId = {
     Mutasi = 2,
     Shiny  = 3,
     Lucky  = 1,
 }
 
-_G.RAYAutoTotemOn        = _G.RAYAutoTotemOn or false
-_G.RAYSelectedTotemType  = _G.RAYSelectedTotemType or "Lucky"  -- jenis, bukan UUID
+-- Semua totem Duration = 3600 (1 jam) [web:2]
+local TOTEM_DURATION = 3600
+
+_G.RAYAutoTotemOn       = _G.RAYAutoTotemOn or false
+_G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky" -- jenis (string), bukan UUID
+
+----------------------------------------------------------------
+-- REPLION DATA HELPER
+----------------------------------------------------------------
 
 local function GetTotemDataReplion()
     local ok, data = pcall(function()
@@ -4096,7 +4939,7 @@ local function GetTotemDataReplion()
     return data
 end
 
--- Resolver UUID realtime dari jenis (logic X1 kamu)
+-- Resolver UUID realtime dari jenis (Lucky / Mutasi / Shiny)
 local function findTotemUuidByType(jenis)
     local targetId = TotemTypeId[jenis]
     if not targetId then return nil end
@@ -4119,8 +4962,9 @@ end
 function SpawnTotemUUID(uuid)
     if not uuid then return end
     pcall(function()
+        -- kalau remote minta langsung UUID:
         SpawnTotemRemote:FireServer(uuid)
-        -- kalau game butuh table:
+        -- kalau ternyata minta table, ganti ke:
         -- SpawnTotemRemote:FireServer({UUID = uuid})
     end)
 end
@@ -4297,25 +5141,26 @@ end
 ----------------------------------------------------------------
 -- ENGINE STATE
 ----------------------------------------------------------------
-local AutoFishAFK     = false
-local isFishing       = false
+local AutoFishAFK         = false
+local isFishing           = false
 
 -- delay Auto Fishing (feel V2)
-local DelayReel       = 3        -- sama kayak _G.RAY_DelayCast
-local DelayCatch      = 2        -- sama kayak _G.RAY_DelayFinish
+local DelayReel           = 3        -- sama kayak _G.RAY_DelayCast
+local DelayCatch          = 2        -- sama kayak _G.RAY_DelayFinish
 
--- Blatant LAMA state
-local BlatantOn       = false
-local BlatantReel     = 1.17
-local BlatantCatch    = 0.25
-local InnerDelayGui   = 0.0009
+-- Blatant V2 state
+local BlatantOn           = false
+local BlatantReel         = 1.17
+local BlatantCatch        = 0.25
+local InnerDelayGui       = 0.0009
 
--- Blatant V3 IMPROVE state (terpisah)
-local BlatantImproveOn = false
-local BlatantImproveReel = 1.17
+-- Blatant V3 IMPROVE state
+local BlatantImproveOn    = false
+local BlatantImproveReel  = 1.17
 local BlatantImproveCatch = 0.32
 
-_G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
+-- extra catch global: SELALU ON, TANPA TOGGLE GUI
+_G.RAY_ExtraCatchBlatant = true
 
 
 
@@ -4358,7 +5203,7 @@ end
 
 
 ----------------------------------------------------------------
--- ENGINE 1: BLATANT LAMA V2 (extracatch loop terpisah BIARIN)
+-- ENGINE 1: BLATANT V2 (NO BUILT-IN EXTRA)
 ----------------------------------------------------------------
 local CastCount        = 3
 local DelayBetweenCast = 0.03
@@ -4367,6 +5212,7 @@ local function BlatantCycle_V2()
     if isFishing or not BlatantOn then return end
     isFishing = true
 
+    -- CAST 3x
     pcall(function()
         Events.equip:FireServer(1)
         task.wait(0.01)
@@ -4380,6 +5226,7 @@ local function BlatantCycle_V2()
         end
     end)
 
+    -- HITUNG DELAY REEL UTAMA
     local baseReel = 0.52
     local offset   = (BlatantReel - 1.17)
     local jitter   = (math.random() - 0.5) * 0.01
@@ -4389,6 +5236,7 @@ local function BlatantCycle_V2()
 
     task.wait(RealReelDelay)
 
+    -- MAIN 5x REEL
     for _ = 1, 5 do
         Reel_V3()
         task.wait(RealInnerDelay)
@@ -4401,7 +5249,7 @@ end
 
 
 ----------------------------------------------------------------
--- ENGINE 2: BLATANT V3 IMPROVE (extracatch BUILT-IN)
+-- ENGINE 2: BLATANT V3 IMPROVE (NO BUILT-IN EXTRA)
 ----------------------------------------------------------------
 local function BlatantCycle_V3()
     if isFishing or not BlatantImproveOn then return end
@@ -4410,7 +5258,7 @@ local function BlatantCycle_V3()
     pcall(function()
         Events.equip:FireServer(1)
         task.wait(0.01)
-        for _ = 1,3 do
+        for _ = 1, 3 do
             task.spawn(function()
                 Events.charge:InvokeServer(workspace:GetServerTimeNow())
                 task.wait(0.01)
@@ -4423,35 +5271,42 @@ local function BlatantCycle_V3()
     task.wait(BlatantImproveReel)
 
     -- MAIN 5x reel
-    for _ = 1,5 do
+    for _ = 1, 5 do
         Reel_V3()
         task.wait(0.01)
-    end
-    
-    -- EXTRACATCH BUILT-IN (3x tambahan)
-    for _ = 1,3 do
-        Reel_V3()
-        task.wait(BlatantImproveCatch / 3)
     end
 
     task.wait(BlatantImproveCatch)
     isFishing = false
 end
 
-
-
 ----------------------------------------------------------------
--- EXTRACATCH LOOP LAMA (BIARIN UNTUK BLATANT V2)
+-- GLOBAL EXTRA CATCH LOOP (V2 + V3, SELALU ON)
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
-        if BlatantOn and _G.RAY_ExtraCatchBlatant and not isFishing then
-            Reel_V3()
-            task.wait(BlatantCatch)
+        if _G.RAY_ExtraCatchBlatant and not isFishing then
+            -- Kalau V3 nyala, pakai delay V3
+            if BlatantImproveOn then
+                Reel_V3()
+                task.wait(BlatantImproveCatch)
+
+            -- Kalau V2 nyala, pakai delay V2
+            elseif BlatantOn then
+                Reel_V3()
+                task.wait(BlatantCatch)
+
+            else
+                -- gak ada blatant aktif, cuma idle
+                task.wait(0.05)
+            end
+        else
+            task.wait(0.05)
         end
-        task.wait(0.05)
     end
 end)
+
+
 
 
 -- ====================== AUTO OPTION CONTENT ======================
@@ -4827,175 +5682,131 @@ local function autoDropdown(text)
             end
         end)
 
-    ----------------------------------------------------------------
-    -- BLATANT FISHING
-    ----------------------------------------------------------------
-    elseif text == "Blatant Fishing" then
-        local row = Instance.new("Frame", sub)
-        row.Size = UDim2.new(1,0,0,36)
-        row.BackgroundTransparency = 1
+----------------------------------------------------------------
+-- GUI: BLATANT FISHING (TANPA TOGGLE EXTRA CATCH)
+----------------------------------------------------------------
+-- (potongan yang dipakai di builder GUI kamu)
+elseif text == "Blatant Fishing" then
+    local row = Instance.new("Frame", sub)
+    row.Size = UDim2.new(1,0,0,36)
+    row.BackgroundTransparency = 1
 
-        local label = Instance.new("TextLabel", row)
-        label.Size = UDim2.new(1,-100,1,0)
-        label.Position = UDim2.new(0,16,0,0)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = TEXT
-        label.Text = "Blatant Fishing"
+    local label = Instance.new("TextLabel", row)
+    label.Size = UDim2.new(1,-100,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT
+    label.Text = "Blatant Fishing"
 
-        local pill = Instance.new("TextButton", row)
-        pill.Size = UDim2.new(0,50,0,24)
-        pill.Position = UDim2.new(1,-80,0.5,-12)
-        pill.BackgroundColor3 = MUTED
-        pill.BackgroundTransparency = 0.1
-        pill.Text = ""
-        pill.AutoButtonColor = false
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
 
-        local knob = Instance.new("Frame", pill)
-        knob.Size = UDim2.new(0,18,0,18)
-        knob.Position = UDim2.new(0,3,0.5,-9)
-        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        knob.BackgroundTransparency = 0
-        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    knob.BackgroundTransparency = 0
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-        local function refreshBlatant()
-            pill.BackgroundColor3 = BlatantOn and ACCENT or MUTED
-            knob.Position = BlatantOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
-        end
+    local function refreshBlatant()
+        pill.BackgroundColor3 = BlatantOn and ACCENT or MUTED
+        knob.Position = BlatantOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+    end
 
-        pill.MouseButton1Click:Connect(function()
-            BlatantOn = not BlatantOn
-            AutoFishAFK = false
-            BlatantImproveOn = false
-            
-            refreshBlatant()
-        end)
-
+    pill.MouseButton1Click:Connect(function()
+        BlatantOn = not BlatantOn
+        AutoFishAFK = false
+        BlatantImproveOn = false
         refreshBlatant()
+    end)
 
-        -- Reel delay blatant
-        local reelRow = Instance.new("Frame", sub)
-        reelRow.Size = UDim2.new(1,0,0,30)
-        reelRow.BackgroundTransparency = 1
+    refreshBlatant()
 
-        local reelLabel = Instance.new("TextLabel", reelRow)
-        reelLabel.Size = UDim2.new(0.6,0,1,0)
-        reelLabel.Position = UDim2.new(0,16,0,0)
-        reelLabel.BackgroundTransparency = 1
-        reelLabel.Font = Enum.Font.Gotham
-        reelLabel.TextSize = 13
-        reelLabel.TextXAlignment = Enum.TextXAlignment.Left
-        reelLabel.TextColor3 = TEXT
-        reelLabel.Text = "Reel Delay (sec)"
+    -- Reel delay blatant
+    local reelRow = Instance.new("Frame", sub)
+    reelRow.Size = UDim2.new(1,0,0,30)
+    reelRow.BackgroundTransparency = 1
 
-        local reelBox = Instance.new("TextBox", reelRow)
-        reelBox.Size = UDim2.new(0.35,0,1,0)
-        reelBox.Position = UDim2.new(0.6,8,0,0)
-        reelBox.Text = tostring(BlatantReel)
-        reelBox.Font = Enum.Font.Gotham
-        reelBox.TextSize = 13
-        reelBox.TextXAlignment = Enum.TextXAlignment.Center
-        reelBox.TextColor3 = TEXT
-        reelBox.ClearTextOnFocus = false
-        reelBox.BackgroundColor3 = CARD
-        reelBox.BackgroundTransparency = 0.12
-        Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0,8)
+    local reelLabel = Instance.new("TextLabel", reelRow)
+    reelLabel.Size = UDim2.new(0.6,0,1,0)
+    reelLabel.Position = UDim2.new(0,16,0,0)
+    reelLabel.BackgroundTransparency = 1
+    reelLabel.Font = Enum.Font.Gotham
+    reelLabel.TextSize = 13
+    reelLabel.TextXAlignment = Enum.TextXAlignment.Left
+    reelLabel.TextColor3 = TEXT
+    reelLabel.Text = "Reel Delay (sec)"
 
-        reelBox.FocusLost:Connect(function()
-            local n = tonumber(reelBox.Text:match("[%d%.]+"))
-            if n and n > 0 then
-                BlatantReel = n
-                reelBox.Text = tostring(n)
-            else
-                reelBox.Text = tostring(BlatantReel)
-            end
-        end)
+    local reelBox = Instance.new("TextBox", reelRow)
+    reelBox.Size = UDim2.new(0.35,0,1,0)
+    reelBox.Position = UDim2.new(0.6,8,0,0)
+    reelBox.Text = tostring(BlatantReel)
+    reelBox.Font = Enum.Font.Gotham
+    reelBox.TextSize = 13
+    reelBox.TextXAlignment = Enum.TextXAlignment.Center
+    reelBox.TextColor3 = TEXT
+    reelBox.ClearTextOnFocus = false
+    reelBox.BackgroundColor3 = CARD
+    reelBox.BackgroundTransparency = 0.12
+    Instance.new("UICorner", reelBox).CornerRadius = UDim.new(0,8)
 
-        -- Catch delay blatant
-        local catchRow = Instance.new("Frame", sub)
-        catchRow.Size = UDim2.new(1,0,0,30)
-        catchRow.BackgroundTransparency = 1
-
-        local catchLabel = Instance.new("TextLabel", catchRow)
-        catchLabel.Size = UDim2.new(0.6,0,1,0)
-        catchLabel.Position = UDim2.new(0,16,0,0)
-        catchLabel.BackgroundTransparency = 1
-        catchLabel.Font = Enum.Font.Gotham
-        catchLabel.TextSize = 13
-        catchLabel.TextXAlignment = Enum.TextXAlignment.Left
-        catchLabel.TextColor3 = TEXT
-        catchLabel.Text = "Catch Delay (sec)"
-
-        local catchBox = Instance.new("TextBox", catchRow)
-        catchBox.Size = UDim2.new(0.35,0,1,0)
-        catchBox.Position = UDim2.new(0.6,8,0,0)
-        catchBox.Text = tostring(BlatantCatch)
-        catchBox.Font = Enum.Font.Gotham
-        catchBox.TextSize = 13
-        catchBox.TextXAlignment = Enum.TextXAlignment.Center
-        catchBox.TextColor3 = TEXT
-        catchBox.ClearTextOnFocus = false
-        catchBox.BackgroundColor3 = CARD
-        catchBox.BackgroundTransparency = 0.12
-        Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0,8)
-
-        catchBox.FocusLost:Connect(function()
-            local n = tonumber(catchBox.Text:match("[%d%.]+"))
-            if n and n > 0 then
-                BlatantCatch = n
-                catchBox.Text = tostring(n)
-            else
-                catchBox.Text = tostring(BlatantCatch)
-            end
-        end)
-
-        -- Extra catch toggle
-        _G.RAY_ExtraCatchBlatant = _G.RAY_ExtraCatchBlatant or false
-
-        local extraRow = Instance.new("Frame", sub)
-        extraRow.Size = UDim2.new(1,0,0,32)
-        extraRow.BackgroundTransparency = 1
-
-        local extraLabel = Instance.new("TextLabel", extraRow)
-        extraLabel.Size = UDim2.new(1,-100,1,0)
-        extraLabel.Position = UDim2.new(0,16,0,0)
-        extraLabel.BackgroundTransparency = 1
-        extraLabel.Font = Enum.Font.Gotham
-        extraLabel.TextSize = 13
-        extraLabel.TextXAlignment = Enum.TextXAlignment.Left
-        extraLabel.TextColor3 = TEXT
-        extraLabel.Text = "Extra Catch"
-
-        local extraPill = Instance.new("TextButton", extraRow)
-        extraPill.Size = UDim2.new(0,50,0,24)
-        extraPill.Position = UDim2.new(1,-80,0.5,-12)
-        extraPill.BackgroundColor3 = MUTED
-        extraPill.BackgroundTransparency = 0.1
-        extraPill.Text = ""
-        extraPill.AutoButtonColor = false
-        Instance.new("UICorner", extraPill).CornerRadius = UDim.new(0,999)
-
-        local extraKnob = Instance.new("Frame", extraPill)
-        extraKnob.Size = UDim2.new(0,18,0,18)
-        extraKnob.Position = UDim2.new(0,3,0.5,-9)
-        extraKnob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        extraKnob.BackgroundTransparency = 0
-        Instance.new("UICorner", extraKnob).CornerRadius = UDim.new(0,999)
-
-        local function refreshExtra()
-            extraPill.BackgroundColor3 = _G.RAY_ExtraCatchBlatant and ACCENT or MUTED
-            extraKnob.Position = _G.RAY_ExtraCatchBlatant and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+    reelBox.FocusLost:Connect(function()
+        local n = tonumber(reelBox.Text:match("[%d%.]+"))
+        if n and n > 0 then
+            BlatantReel = n
+            reelBox.Text = tostring(n)
+        else
+            reelBox.Text = tostring(BlatantReel)
         end
+    end)
 
-        extraPill.MouseButton1Click:Connect(function()
-            _G.RAY_ExtraCatchBlatant = not _G.RAY_ExtraCatchBlatant
-            refreshExtra()
-        end)
+    -- Catch delay blatant
+    local catchRow = Instance.new("Frame", sub)
+    catchRow.Size = UDim2.new(1,0,0,30)
+    catchRow.BackgroundTransparency = 1
 
-        refreshExtra()
+    local catchLabel = Instance.new("TextLabel", catchRow)
+    catchLabel.Size = UDim2.new(0.6,0,1,0)
+    catchLabel.Position = UDim2.new(0,16,0,0)
+    catchLabel.BackgroundTransparency = 1
+    catchLabel.Font = Enum.Font.Gotham
+    catchLabel.TextSize = 13
+    catchLabel.TextXAlignment = Enum.TextXAlignment.Left
+    catchLabel.TextColor3 = TEXT
+    catchLabel.Text = "Catch Delay (sec)"
+
+    local catchBox = Instance.new("TextBox", catchRow)
+    catchBox.Size = UDim2.new(0.35,0,1,0)
+    catchBox.Position = UDim2.new(0.6,8,0,0)
+    catchBox.Text = tostring(BlatantCatch)
+    catchBox.Font = Enum.Font.Gotham
+    catchBox.TextSize = 13
+    catchBox.TextXAlignment = Enum.TextXAlignment.Center
+    catchBox.TextColor3 = TEXT
+    catchBox.ClearTextOnFocus = false
+    catchBox.BackgroundColor3 = CARD
+    catchBox.BackgroundTransparency = 0.12
+    Instance.new("UICorner", catchBox).CornerRadius = UDim.new(0,8)
+
+    catchBox.FocusLost:Connect(function()
+        local n = tonumber(catchBox.Text:match("[%d%.]+"))
+        if n and n > 0 then
+            BlatantCatch = n
+            catchBox.Text = tostring(n)
+        else
+            catchBox.Text = tostring(BlatantCatch)
+        end
+    end)
+
 
     ----------------------------------------------------------------
     -- BLATANT V2 IMPROVE
@@ -5134,6 +5945,7 @@ local function autoDropdown(text)
         noteLabel.TextXAlignment = Enum.TextXAlignment.Center
         noteLabel.TextColor3 = MUTED
         noteLabel.Text = "✓ Improve Low Speed 3/4 Notip"
+
 
 elseif text == "Auto Spot Island" then
     local info = Instance.new("TextLabel", sub)
@@ -6007,7 +6819,7 @@ pages["Auto Option"].Visible = true
 task.wait(0.1)
 
 ----------------------------------------------------------------
--- MAIN LOOPS TERPISAH
+-- MAIN LOOPS (ENGINE)
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
@@ -6029,7 +6841,6 @@ task.spawn(function()
         task.wait(0.1)
     end
 end)
-
 
 
 -- AUTO SELL ENGINE SIMPLE
@@ -6070,6 +6881,74 @@ task.spawn(function()
     end
 end)
 
+task.spawn(function()
+    task.wait(5)
+    while true do
+        if AutoWeatherOn then
+            warn("[WEATHER] Auto ON, selected:", selectedWeather) -- debug
+            for name, on in pairs(selectedWeather) do
+                if on then
+                    warn("[WEATHER] Buying:", name)
+                    pcall(function()
+                        local ok, res = pcall(function()
+                            return Events.purchaseWeather:InvokeServer(name)
+                        end)
+                        warn("[WEATHER] Result:", name, ok, res)
+                    end)
+                    task.wait(1.5)
+                end
+            end
+        end
+        task.wait(5)
+    end
+end)
+
+
+----------------------------------------------------------------
+-- AUTO X1 TOTEM LOOP (1 JAM SEKALI)
+----------------------------------------------------------------
+
+task.spawn(function()
+    while true do
+        if _G.RAYAutoTotemOn then
+            local jenis = _G.RAYSelectedTotemType or "Lucky"
+            local uuid = findTotemUuidByType(jenis)
+            if uuid then
+                SpawnTotemUUID(uuid)
+            end
+            -- nunggu sampai durasi totem habis (3600 detik) [web:2]
+            task.wait(TOTEM_DURATION)
+        else
+            task.wait(0.5)
+        end
+    end
+end)
+
+----------------------------------------------------------------
+-- LOOP ENGINE AUTO FAVORITE
+----------------------------------------------------------------
+task.spawn(function()
+    while true do
+        if _G.RAYFavOn then
+            pcall(AutoFavoriteOnce)
+            task.wait(5)
+        else
+            task.wait(1)
+        end
+    end
+end)
+
+task.spawn(function()
+    while true do
+        if _G.RAYFavCurrentOn then
+            pcall(AutoFavoriteCurrentOnce)
+            task.wait(2)
+        else
+            task.wait(1)
+        end
+    end
+end)
+
 -- AUTO BUY ROD ENGINE
 task.spawn(function()
     task.wait(5)
@@ -6097,3 +6976,4 @@ task.spawn(function()
         task.wait(1)
     end
 end)
+
