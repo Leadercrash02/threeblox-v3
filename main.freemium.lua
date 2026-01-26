@@ -4373,7 +4373,7 @@ end
 pages["Auto Option"].Visible = true
 
 ----------------------------------------------------------------
--- TELEPORT PAGE (RAPI: SAVE POS + PLAYER + ISLAND)
+-- TELEPORT PAGE (RAPI: PLAYER + ISLAND)
 ----------------------------------------------------------------
 local teleportPage = pages["Teleport"]
 
@@ -4395,201 +4395,216 @@ tpTitleMain.Text = "Teleport"
 tpTitleMain.LayoutOrder = 1
 
 ----------------------------------------------------------------
--- 🧭 TELEPORT • SAVE POSITION (DROPDOWN SLOT)
+-- 🏝️ TELEPORT TO ISLAND
 ----------------------------------------------------------------
-do
-    local panel = Instance.new("Frame")
-    panel.Name = "TeleportSavePanel"
-    panel.Parent = teleportPage
-    panel.Size = UDim2.new(1,-32,0,150)
-    panel.BackgroundColor3 = CARD
-    panel.BackgroundTransparency = ALPHA_CARD
-    panel.LayoutOrder = 2
-    Instance.new("UICorner", panel).CornerRadius = UDim.new(0,10)
+local holderIsland = Instance.new("Frame", teleportPage)
+holderIsland.Size = UDim2.new(1,0,0,34)
+holderIsland.BackgroundTransparency = 1
+holderIsland.LayoutOrder = 3
 
-    local pad = Instance.new("UIPadding", panel)
-    pad.PaddingTop = UDim.new(0,8)
-    pad.PaddingLeft = UDim.new(0,16)
-    pad.PaddingRight = UDim.new(0,16)
-    pad.PaddingBottom = UDim.new(0,8)
+local rowIsland = Instance.new("TextButton", holderIsland)
+rowIsland.Size = UDim2.new(1,-32,0,34)
+rowIsland.Position = UDim2.new(0,16,0,0)
+rowIsland.BackgroundColor3 = CARD
+rowIsland.BackgroundTransparency = ALPHA_CARD
+rowIsland.AutoButtonColor = false
+rowIsland.Font = Enum.Font.Gotham
+rowIsland.TextSize = 13
+rowIsland.TextXAlignment = Enum.TextXAlignment.Left
+rowIsland.TextColor3 = TEXT
+rowIsland.Text = "  🏝️ Teleport to Island  >"
+Instance.new("UICorner", rowIsland).CornerRadius = UDim.new(0,8)
 
-    local layout = Instance.new("UIListLayout", panel)
-    layout.FillDirection = Enum.FillDirection.Vertical
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0,6)
+local tpIslandFrame = Instance.new("Frame", holderIsland)
+tpIslandFrame.Position = UDim2.new(0,0,0,34)
+tpIslandFrame.Size = UDim2.new(1,0,0,0)
+tpIslandFrame.BackgroundTransparency = 1
+tpIslandFrame.Visible = false
 
-    -- HEADER
-    local header = Instance.new("TextLabel", panel)
-    header.Size = UDim2.new(1,0,0,20)
-    header.BackgroundTransparency = 1
-    header.Font = Enum.Font.GothamBold
-    header.TextSize = 15
-    header.TextXAlignment = Enum.TextXAlignment.Left
-    header.TextColor3 = TEXT
-    header.Text = "🧭 Save Position"
+local islandCard = Instance.new("Frame", tpIslandFrame)
+islandCard.Size = UDim2.new(1,-32,0,160) -- sama tinggi
+islandCard.Position = UDim2.new(0,16,0,0)
+islandCard.BackgroundColor3 = CARD
+islandCard.BackgroundTransparency = 0.12
+Instance.new("UICorner", islandCard).CornerRadius = UDim.new(0,10)
 
-    ----------------------------------------------------------------
-    -- ROW 1 : SELECT SLOT (DROPDOWN)
-    ----------------------------------------------------------------
-    local rowSlot = Instance.new("Frame", panel)
-    rowSlot.Size = UDim2.new(1,0,0,32)
-    rowSlot.BackgroundTransparency = 1
+local islandPad = Instance.new("UIPadding", islandCard)
+islandPad.PaddingTop = UDim.new(0,10)
+islandPad.PaddingLeft = UDim.new(0,14)
+islandPad.PaddingRight = UDim.new(0,14)
+islandPad.PaddingBottom = UDim.new(0,10)
 
-    local lblSlot = Instance.new("TextLabel", rowSlot)
-    lblSlot.Size = UDim2.new(0.55,0,1,0)
-    lblSlot.BackgroundTransparency = 1
-    lblSlot.Font = Enum.Font.Gotham
-    lblSlot.TextSize = 13
-    lblSlot.TextXAlignment = Enum.TextXAlignment.Left
-    lblSlot.TextColor3 = TEXT
-    lblSlot.Text = "🎯 Position Slot"
+local islandTitle = Instance.new("TextLabel", islandCard)
+islandTitle.Size = UDim2.new(1,0,0,22)
+islandTitle.BackgroundTransparency = 1
+islandTitle.Font = Enum.Font.GothamBold
+islandTitle.TextSize = 15
+islandTitle.TextColor3 = TEXT
+islandTitle.TextXAlignment = Enum.TextXAlignment.Left
+islandTitle.Text = "🏝️ Teleport to Island"
 
-    local slotBtn = Instance.new("TextButton", rowSlot)
-    slotBtn.Size = UDim2.new(0.4,0,0,26)
-    slotBtn.Position = UDim2.new(0.58,0,0.5,-13)
-    slotBtn.BackgroundColor3 = CARD
-    slotBtn.BackgroundTransparency = 0.16
-    slotBtn.AutoButtonColor = false
-    slotBtn.Font = Enum.Font.Gotham
-    slotBtn.TextSize = 12
-    slotBtn.TextColor3 = MUTED
-    slotBtn.TextXAlignment = Enum.TextXAlignment.Left
-    slotBtn.Text = "  Slot "..tostring(_G.RAY_SelectedSlotIndex or 1).."  ▼"
-    Instance.new("UICorner", slotBtn).CornerRadius = UDim.new(0,8)
+local selectIslandBtn = Instance.new("TextButton", islandCard)
+selectIslandBtn.Size = UDim2.new(0.4,0,0,26)
+selectIslandBtn.Position = UDim2.new(0,0,0,26)
+selectIslandBtn.BackgroundColor3 = CARD
+selectIslandBtn.BackgroundTransparency = 0.16
+selectIslandBtn.AutoButtonColor = false
+selectIslandBtn.Font = Enum.Font.Gotham
+selectIslandBtn.TextSize = 12
+selectIslandBtn.TextColor3 = MUTED
+selectIslandBtn.TextXAlignment = Enum.TextXAlignment.Left
+selectIslandBtn.Text = "  Select Island"
+Instance.new("UICorner", selectIslandBtn).CornerRadius = UDim.new(0,8)
 
-    local slotDrop = Instance.new("Frame", rowSlot)
-    slotDrop.Position = UDim2.new(0.58,0,1,4)
-    slotDrop.Size = UDim2.new(0.4,0,0,72)
-    slotDrop.BackgroundColor3 = CARD
-    slotDrop.BackgroundTransparency = 0.06
-    slotDrop.Visible = false
-    slotDrop.ZIndex = 5
-    Instance.new("UICorner", slotDrop).CornerRadius = UDim.new(0,8)
+local tpIslandBtn = Instance.new("TextButton", islandCard)
+tpIslandBtn.Size = UDim2.new(0.4,0,0,28)
+tpIslandBtn.Position = UDim2.new(0,0,0,56)
+tpIslandBtn.BackgroundColor3 = ACCENT
+tpIslandBtn.BackgroundTransparency = 0.08
+tpIslandBtn.AutoButtonColor = false
+tpIslandBtn.Font = Enum.Font.Gotham
+tpIslandBtn.TextSize = 12
+tpIslandBtn.TextColor3 = TEXT
+tpIslandBtn.Text = "🏝️ Teleport To Island"
+Instance.new("UICorner", tpIslandBtn).CornerRadius = UDim.new(0,8)
 
-    local slotList = Instance.new("UIListLayout", slotDrop)
-    slotList.Padding = UDim2.new(0,4)
-    slotList.SortOrder = Enum.SortOrder.LayoutOrder
+local refreshIslandBtn = Instance.new("TextButton", islandCard)
+refreshIslandBtn.Size = UDim2.new(0.4,0,0,24)
+refreshIslandBtn.Position = UDim2.new(0,0,0,90)
+refreshIslandBtn.BackgroundColor3 = CARD
+refreshIslandBtn.BackgroundTransparency = 0.18
+refreshIslandBtn.AutoButtonColor = false
+refreshIslandBtn.Font = Enum.Font.Gotham
+refreshIslandBtn.TextSize = 12
+refreshIslandBtn.TextColor3 = TEXT
+refreshIslandBtn.TextXAlignment = Enum.TextXAlignment.Center
+refreshIslandBtn.Text = "Refresh Island"
+Instance.new("UICorner", refreshIslandBtn).CornerRadius = UDim.new(0,8)
 
-    for i = 1,3 do
-        local b = Instance.new("TextButton", slotDrop)
-        b.Size = UDim2.new(1,-8,0,22)
-        b.Position = UDim2.new(0,4,0, (i-1)*(22+4))
-        b.BackgroundColor3 = CARD
-        b.BackgroundTransparency = 0.18
-        b.Font = Enum.Font.Gotham
-        b.TextSize = 12
-        b.TextColor3 = MUTED
-        b.TextXAlignment = Enum.TextXAlignment.Left
-        b.Text = "  Slot "..i
-        b.ZIndex = 6
-        Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+-- PANEL KANAN ISLAND (SAMA PERSIS STYLE PLAYER)
+local islandDropFrame = Instance.new("Frame", islandCard)
+islandDropFrame.Size = UDim2.new(0.55,0,0,140)
+islandDropFrame.AnchorPoint = Vector2.new(1,0)
+islandDropFrame.Position = UDim2.new(1,-8,0,26)
+islandDropFrame.BackgroundColor3 = CARD
+islandDropFrame.BackgroundTransparency = 0.06
+islandDropFrame.Visible = false
+islandDropFrame.ZIndex = 5
+Instance.new("UICorner", islandDropFrame).CornerRadius = UDim.new(0,8)
 
-        b.MouseButton1Click:Connect(function()
-            _G.RAY_SelectedSlotIndex = i
-            slotBtn.Text = "  Slot "..i.."  ▼"
-            slotBtn.TextColor3 = TEXT
-            slotDrop.Visible = false
-        end)
+local islandDropPad = Instance.new("UIPadding", islandDropFrame)
+islandDropPad.PaddingTop = UDim.new(0,6)
+islandDropPad.PaddingLeft = UDim.new(0,6)
+islandDropPad.PaddingRight = UDim.new(0,6)
+islandDropPad.PaddingBottom = UDim.new(0,6)
+
+local islandListFrame = Instance.new("ScrollingFrame", islandDropFrame)
+islandListFrame.Position = UDim2.new(0,0,0,24)
+islandListFrame.Size = UDim2.new(1,0,1,-24)
+islandListFrame.ScrollBarThickness = 3
+islandListFrame.BackgroundTransparency = 1
+islandListFrame.CanvasSize = UDim2.new(0,0,0,0)
+islandListFrame.ClipsDescendants = true
+islandListFrame.ZIndex = 6
+
+local islandListLayout = Instance.new("UIListLayout", islandListFrame)
+islandListLayout.Padding = UDim.new(0,2)
+islandListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+islandListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    islandListFrame.CanvasSize = UDim2.new(0,0,0,islandListLayout.AbsoluteContentSize.Y + 4)
+end)
+
+local selectedIslandName
+
+local function rebuildIslandDropdown()
+    for _,c in ipairs(islandListFrame:GetChildren()) do
+        if c:IsA("TextButton") then c:Destroy() end
     end
 
-    local slotOpen = false
-    slotBtn.MouseButton1Click:Connect(function()
-        slotOpen = not slotOpen
-        slotDrop.Visible = slotOpen
-    end)
+    -- pakai DEFAULT_SPOT_ORDER biar urut
+    for _,name in ipairs(DEFAULT_SPOT_ORDER) do
+        local cf = ISLAND_SPOTS[name]
+        if cf then
+            local b = Instance.new("TextButton", islandListFrame)
+            b.Size = UDim2.new(1,0,0,20)
+            b.BackgroundColor3 = CARD
+            b.BackgroundTransparency = 0.2
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 11
+            b.TextXAlignment = Enum.TextXAlignment.Left
+            b.TextColor3 = TEXT
+            b.Text = "  "..name
+            b.AutoButtonColor = false
+            b.ZIndex = 7
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0,4)
 
-    ----------------------------------------------------------------
-    -- ROW 2 : BUTTON SAVE POS (PAKAI SLOT TERPILIH)
-    ----------------------------------------------------------------
-    local rowSave = Instance.new("Frame", panel)
-    rowSave.Size = UDim2.new(1,0,0,28)
-    rowSave.BackgroundTransparency = 1
-
-    local lblSave = Instance.new("TextLabel", rowSave)
-    lblSave.Size = UDim2.new(0.55,0,1,0)
-    lblSave.BackgroundTransparency = 1
-    lblSave.Font = Enum.Font.Gotham
-    lblSave.TextSize = 13
-    lblSave.TextXAlignment = Enum.TextXAlignment.Left
-    lblSave.TextColor3 = TEXT
-    lblSave.Text = "📍 Save Position"
-
-    local btnSave = Instance.new("TextButton", rowSave)
-    btnSave.Size = UDim2.new(0,150,0,24)
-    btnSave.Position = UDim2.new(1,-160,0.5,-12)
-    btnSave.BackgroundColor3 = CARD
-    btnSave.BackgroundTransparency = 0.2
-    btnSave.AutoButtonColor = false
-    btnSave.Font = Enum.Font.Gotham
-    btnSave.TextSize = 12
-    btnSave.TextColor3 = TEXT
-    btnSave.Text = "💾 Save to Selected Slot"
-    Instance.new("UICorner", btnSave).CornerRadius = UDim.new(0,8)
-
-    btnSave.MouseButton1Click:Connect(function()
-        local hrp = GetHRP()
-        if not hrp then return end
-        local idx = _G.RAY_SelectedSlotIndex or 1
-        _G.RAY_SavedSlots[idx] = hrp.CFrame
-    end)
-
-    ----------------------------------------------------------------
-    -- HELPER : ROW TOGGLE PILL
-    ----------------------------------------------------------------
-    local function makeToggleRow(parent, title, subtitle)
-        local row = Instance.new("Frame", parent)
-        row.Size = UDim2.new(1,0,0,34)
-        row.BackgroundTransparency = 1
-
-        local txt = Instance.new("TextLabel", row)
-        txt.Size = UDim2.new(1,-90,1,0)
-        txt.BackgroundTransparency = 1
-        txt.Font = Enum.Font.Gotham
-        txt.TextSize = 12
-        txt.TextXAlignment = Enum.TextXAlignment.Left
-        txt.TextColor3 = TEXT
-        txt.TextWrapped = true
-        txt.Text = title.."\n"..subtitle
-
-        local pill = Instance.new("TextButton", row)
-        pill.Size = UDim2.new(0,50,0,24)
-        pill.Position = UDim2.new(1,-60,0.5,-12)
-        pill.BackgroundColor3 = MUTED
-        pill.BackgroundTransparency = 0.1
-        pill.Text = ""
-        pill.AutoButtonColor = false
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
-
-        local knob = Instance.new("Frame", pill)
-        knob.Size = UDim2.new(0,18,0,18)
-        knob.Position = UDim2.new(0,3,0.5,-9)
-        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        Instance.new("UICorner", knob).CornerRadius = UDim.New(0,999)
-
-        return row, pill, knob
+            b.MouseButton1Click:Connect(function()
+                selectedIslandName = name
+                selectIslandBtn.Text = "  "..name
+                selectIslandBtn.TextColor3 = TEXT
+                tpIslandBtn.Text = "🏝️ Teleport To Island : "..name
+                islandDropFrame.Visible = false
+            end)
+        end
     end
 
-    ----------------------------------------------------------------
-    -- ROW 3 : AUTO TELEPORT TO SELECTED SLOT
-    ----------------------------------------------------------------
-    local rowAutoTp, pillAutoTp, knobAutoTp = makeToggleRow(
-        panel,
-        "🚀 Auto Teleport to Saved Slot",
-        "Automatically teleport to selected slot when script executed."
-    )
-
-    local function refreshAutoTp()
-        local on = _G.RAY_AutoTpToSavedOnExec
-        pillAutoTp.BackgroundColor3 = on and ACCENT or MUTED
-        knobAutoTp.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+    if not selectedIslandName then
+        selectIslandBtn.Text = "  Select Island"
+        selectIslandBtn.TextColor3 = MUTED
+        tpIslandBtn.Text = "🏝️ Teleport To Island"
     end
-
-    pillAutoTp.MouseButton1Click:Connect(function()
-        _G.RAY_AutoTpToSavedOnExec = not _G.RAY_AutoTpToSavedOnExec
-        refreshAutoTp()
-    end)
-    refreshAutoTp()
 end
+
+local islandOpen = false
+local function recalcIsland()
+    if islandOpen then
+        tpIslandFrame.Visible = true
+        tpIslandFrame.Size = UDim2.new(1,0,0,168)
+        holderIsland.Size = UDim2.new(1,0,0,34 + 168)
+        rowIsland.Text = "  🏝️ Teleport to Island  v"
+    else
+        tpIslandFrame.Visible = false
+        tpIslandFrame.Size = UDim2.new(1,0,0,0)
+        holderIsland.Size = UDim2.new(1,0,0,34)
+        rowIsland.Text = "  🏝️ Teleport to Island  >"
+        islandDropFrame.Visible = false
+    end
+end
+
+rowIsland.MouseButton1Click:Connect(function()
+    islandOpen = not islandOpen
+    recalcIsland()
+end)
+
+local islandDropdownOpen = false
+selectIslandBtn.MouseButton1Click:Connect(function()
+    islandDropdownOpen = not islandDropdownOpen
+    islandDropFrame.Visible = islandDropdownOpen
+    if islandDropdownOpen then
+        rebuildIslandDropdown()
+    end
+end)
+
+tpIslandBtn.MouseButton1Click:Connect(function()
+    if not selectedIslandName then return end
+
+    local cf = ISLAND_SPOTS[selectedIslandName]
+    if not cf then return end
+
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    local root = char:WaitForChild("HumanoidRootPart")
+    root.AssemblyLinearVelocity  = Vector3.new(0,0,0)
+    root.AssemblyAngularVelocity = Vector3.new(0,0,0)
+    root.CFrame = cf
+end)
+
+refreshIslandBtn.MouseButton1Click:Connect(function()
+    selectedIslandName = nil
+    rebuildIslandDropdown()
+end)
+
+rebuildIslandDropdown()
 
 
 ----------------------------------------------------------------
@@ -4598,7 +4613,7 @@ end
 local holderPlayer = Instance.new("Frame", teleportPage)
 holderPlayer.Size = UDim2.new(1,0,0,34)
 holderPlayer.BackgroundTransparency = 1
-holderPlayer.LayoutOrder = 3
+holderPlayer.LayoutOrder = 2
 
 local rowPlayer = Instance.new("TextButton", holderPlayer)
 rowPlayer.Size = UDim2.new(1,-32,0,34)
@@ -4620,7 +4635,7 @@ tpPlayerFrame.BackgroundTransparency = 1
 tpPlayerFrame.Visible = false
 
 local playerCard = Instance.new("Frame", tpPlayerFrame)
-playerCard.Size = UDim2.new(1,-32,0,160)
+playerCard.Size = UDim2.new(1,-32,0,160) -- cukup tinggi untuk panel
 playerCard.Position = UDim2.new(0,16,0,0)
 playerCard.BackgroundColor3 = CARD
 playerCard.BackgroundTransparency = 0.12
@@ -4679,7 +4694,7 @@ refreshBtn.TextXAlignment = Enum.TextXAlignment.Center
 refreshBtn.Text = "Refresh Player"
 Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0,8)
 
--- PANEL KANAN PLAYER
+-- PANEL KANAN PLAYER (DALAM CARD, PANJANG)
 local dropFrame = Instance.new("Frame", playerCard)
 dropFrame.Size = UDim2.new(0.55,0,0,140)
 dropFrame.AnchorPoint = Vector2.new(1,0)
@@ -4819,7 +4834,7 @@ tpBtn.MouseButton1Click:Connect(function()
 
     myHrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
     myHrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
-    myHrp.CFrame = hrp.CFrame + Vector3.new(0,0,3)
+    myHrp.CFrame   = hrp.CFrame + Vector3.new(0,0,3)
 end)
 
 refreshBtn.MouseButton1Click:Connect(function()
@@ -4830,216 +4845,7 @@ end)
 
 rebuildDropdown()
 
-----------------------------------------------------------------
--- 🏝️ TELEPORT TO ISLAND
-----------------------------------------------------------------
-local holderIsland = Instance.new("Frame", teleportPage)
-holderIsland.Size = UDim2.new(1,0,0,34)
-holderIsland.BackgroundTransparency = 1
-holderIsland.LayoutOrder = 4
 
-local rowIsland = Instance.new("TextButton", holderIsland)
-rowIsland.Size = UDim2.new(1,-32,0,34)
-rowIsland.Position = UDim2.new(0,16,0,0)
-rowIsland.BackgroundColor3 = CARD
-rowIsland.BackgroundTransparency = ALPHA_CARD
-rowIsland.AutoButtonColor = false
-rowIsland.Font = Enum.Font.Gotham
-rowIsland.TextSize = 13
-rowIsland.TextXAlignment = Enum.TextXAlignment.Left
-rowIsland.TextColor3 = TEXT
-rowIsland.Text = "  🏝️ Teleport to Island  >"
-Instance.new("UICorner", rowIsland).CornerRadius = UDim.new(0,8)
-
-local tpIslandFrame = Instance.new("Frame", holderIsland)
-tpIslandFrame.Position = UDim2.new(0,0,0,34)
-tpIslandFrame.Size = UDim2.new(1,0,0,0)
-tpIslandFrame.BackgroundTransparency = 1
-tpIslandFrame.Visible = false
-
-local islandCard = Instance.new("Frame", tpIslandFrame)
-islandCard.Size = UDim2.new(1,-32,0,160)
-islandCard.Position = UDim2.new(0,16,0,0)
-islandCard.BackgroundColor3 = CARD
-islandCard.BackgroundTransparency = 0.12
-Instance.new("UICorner", islandCard).CornerRadius = UDim2.new(0,10)
-
-local islandPad = Instance.new("UIPadding", islandCard)
-islandPad.PaddingTop = UDim.new(0,10)
-islandPad.PaddingLeft = UDim.new(0,14)
-islandPad.PaddingRight = UDim.new(0,14)
-islandPad.PaddingBottom = UDim.new(0,10)
-
-local islandTitle = Instance.new("TextLabel", islandCard)
-islandTitle.Size = UDim2.new(1,0,0,22)
-islandTitle.BackgroundTransparency = 1
-islandTitle.Font = Enum.Font.GothamBold
-islandTitle.TextSize = 15
-islandTitle.TextColor3 = TEXT
-islandTitle.TextXAlignment = Enum.TextXAlignment.Left
-islandTitle.Text = "🏝️ Teleport to Island"
-
-local selectIslandBtn = Instance.new("TextButton", islandCard)
-selectIslandBtn.Size = UDim2.new(0.4,0,0,26)
-selectIslandBtn.Position = UDim2.new(0,0,0,26)
-selectIslandBtn.BackgroundColor3 = CARD
-selectIslandBtn.BackgroundTransparency = 0.16
-selectIslandBtn.AutoButtonColor = false
-selectIslandBtn.Font = Enum.Font.Gotham
-selectIslandBtn.TextSize = 12
-selectIslandBtn.TextColor3 = MUTED
-selectIslandBtn.TextXAlignment = Enum.TextXAlignment.Left
-selectIslandBtn.Text = "  Select Island"
-Instance.new("UICorner", selectIslandBtn).CornerRadius = UDim.new(0,8)
-
-local tpIslandBtn = Instance.new("TextButton", islandCard)
-tpIslandBtn.Size = UDim2.new(0.4,0,0,28)
-tpIslandBtn.Position = UDim2.new(0,0,0,56)
-tpIslandBtn.BackgroundColor3 = ACCENT
-tpIslandBtn.BackgroundTransparency = 0.08
-tpIslandBtn.AutoButtonColor = false
-tpIslandBtn.Font = Enum.Font.Gotham
-tpIslandBtn.TextSize = 12
-tpIslandBtn.TextColor3 = TEXT
-tpIslandBtn.Text = "🏝️ Teleport To Island"
-Instance.new("UICorner", tpIslandBtn).CornerRadius = UDim.new(0,8)
-
-local refreshIslandBtn = Instance.new("TextButton", islandCard)
-refreshIslandBtn.Size = UDim2.new(0.4,0,0,24)
-refreshIslandBtn.Position = UDim2.new(0,0,0,90)
-refreshIslandBtn.BackgroundColor3 = CARD
-refreshIslandBtn.BackgroundTransparency = 0.18
-refreshIslandBtn.AutoButtonColor = false
-refreshIslandBtn.Font = Enum.Font.Gotham
-refreshIslandBtn.TextSize = 12
-refreshIslandBtn.TextColor3 = TEXT
-refreshIslandBtn.TextXAlignment = Enum.TextXAlignment.Center
-refreshIslandBtn.Text = "Refresh Island"
-Instance.new("UICorner", refreshIslandBtn).CornerRadius = UDim.new(0,8)
-
--- PANEL KANAN ISLAND
-local islandDropFrame = Instance.new("Frame", islandCard)
-islandDropFrame.Size = UDim2.new(0.55,0,0,140)
-islandDropFrame.AnchorPoint = Vector2.new(1,0)
-islandDropFrame.Position = UDim2.new(1,-8,0,26)
-islandDropFrame.BackgroundColor3 = CARD
-islandDropFrame.BackgroundTransparency = 0.06
-islandDropFrame.Visible = false
-islandDropFrame.ZIndex = 5
-Instance.new("UICorner", islandDropFrame).CornerRadius = UDim.new(0,8)
-
-local islandDropPad = Instance.new("UIPadding", islandDropFrame)
-islandDropPad.PaddingTop = UDim.new(0,6)
-islandDropPad.PaddingLeft = UDim.new(0,6)
-islandDropPad.PaddingRight = UDim.new(0,6)
-islandDropPad.PaddingBottom = UDim.new(0,6)
-
-local islandListFrame = Instance.new("ScrollingFrame", islandDropFrame)
-islandListFrame.Position = UDim2.new(0,0,0,24)
-islandListFrame.Size = UDim2.new(1,0,1,-24)
-islandListFrame.ScrollBarThickness = 3
-islandListFrame.BackgroundTransparency = 1
-islandListFrame.CanvasSize = UDim2.new(0,0,0,0)
-islandListFrame.ClipsDescendants = true
-islandListFrame.ZIndex = 6
-
-local islandListLayout = Instance.new("UIListLayout", islandListFrame)
-islandListLayout.Padding = UDim.new(0,2)
-islandListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-islandListLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-    islandListFrame.CanvasSize = UDim2.new(0,0,0,islandListLayout.AbsoluteContentSize.Y + 4)
-end)
-
-local selectedIslandName
-
-local function rebuildIslandDropdown()
-    for _,c in ipairs(islandListFrame:GetChildren()) do
-        if c:IsA("TextButton") then c:Destroy() end
-    end
-
-    for _,name in ipairs(DEFAULT_SPOT_ORDER) do
-        local cf = ISLAND_SPOTS[name]
-        if cf then
-            local b = Instance.new("TextButton", islandListFrame)
-            b.Size = UDim2.new(1,0,0,20)
-            b.BackgroundColor3 = CARD
-            b.BackgroundTransparency = 0.2
-            b.Font = Enum.Font.Gotham
-            b.TextSize = 11
-            b.TextXAlignment = Enum.TextXAlignment.Left
-            b.TextColor3 = TEXT
-            b.Text = "  "..name
-            b.AutoButtonColor = false
-            b.ZIndex = 7
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0,4)
-
-            b.MouseButton1Click:Connect(function()
-                selectedIslandName = name
-                selectIslandBtn.Text = "  "..name
-                selectIslandBtn.TextColor3 = TEXT
-                tpIslandBtn.Text = "🏝️ Teleport To Island : "..name
-                islandDropFrame.Visible = false
-            end)
-        end
-    end
-
-    if not selectedIslandName then
-        selectIslandBtn.Text = "  Select Island"
-        selectIslandBtn.TextColor3 = MUTED
-        tpIslandBtn.Text = "🏝️ Teleport To Island"
-    end
-end
-
-local islandOpen = false
-local function recalcIsland()
-    if islandOpen then
-        tpIslandFrame.Visible = true
-        tpIslandFrame.Size = UDim2.new(1,0,0,168)
-        holderIsland.Size = UDim2.new(1,0,0,34 + 168)
-        rowIsland.Text = "  🏝️ Teleport to Island  v"
-    else
-        tpIslandFrame.Visible = false
-        tpIslandFrame.Size = UDim2.new(1,0,0,0)
-        holderIsland.Size = UDim2.new(1,0,0,34)
-        rowIsland.Text = "  🏝️ Teleport to Island  >"
-        islandDropFrame.Visible = false
-    end
-end
-
-rowIsland.MouseButton1Click:Connect(function()
-    islandOpen = not islandOpen
-    recalcIsland()
-end)
-
-local islandDropdownOpen = false
-selectIslandBtn.MouseButton1Click:Connect(function()
-    islandDropdownOpen = not islandDropdownOpen
-    islandDropFrame.Visible = islandDropdownOpen
-    if islandDropdownOpen then
-        rebuildIslandDropdown()
-    end
-end)
-
-tpIslandBtn.MouseButton1Click:Connect(function()
-    if not selectedIslandName then return end
-
-    local cf = ISLAND_SPOTS[selectedIslandName]
-    if not cf then return end
-
-    local char = lp.Character or lp.CharacterAdded:Wait()
-    local root = char:WaitForChild("HumanoidRootPart")
-    root.AssemblyLinearVelocity  = Vector3.new(0,0,0)
-    root.AssemblyAngularVelocity = Vector3.new(0,0,0)
-    root.CFrame = cf
-end)
-
-refreshIslandBtn.MouseButton1Click:Connect(function()
-    selectedIslandName = nil
-    rebuildIslandDropdown()
-end)
-
-rebuildIslandDropdown()
 
 ----------------------------------------------------------------
 -- AUTO CLOSE PANEL KANAN (PLAYER + ISLAND)
@@ -5168,18 +4974,6 @@ function SpawnTotemUUID(uuid)
         -- SpawnTotemRemote:FireServer({UUID = uuid})
     end)
 end
-
--- 🌍 GLOBAL & FUNCTION POSISI
-_G.RAY_SavedSlots          = _G.RAY_SavedSlots          or {}   -- slot 1..3
-_G.RAY_SelectedSlotIndex   = _G.RAY_SelectedSlotIndex   or 1
-_G.RAY_AutoTpToSavedOnExec = _G.RAY_AutoTpToSavedOnExec or false
-
-local function GetHRP()
-    local char = lp.Character or lp.CharacterAdded:Wait()
-    return char:FindFirstChild("HumanoidRootPart")
-end
-
-
 
 ----------------------------------------------------------------
 -- AUTO FAVORITE FISH BACKEND (LEGEND / MYTHIC / SECRET)
@@ -5675,7 +5469,6 @@ local function autoDropdown(text)
         icon.Text = "🦈"
     elseif text == "Auto Totem" then
         icon.Text = "🔱"
-    elseif text == "Save Position" then 
     else
         icon.Text = "⚙️"
     end
@@ -7190,21 +6983,3 @@ task.spawn(function()
     end
 end)
 
--- 🚀 Auto teleport ke slot yang dipilih saat script di‑execute
-task.spawn(function()
-    if _G.RAY_AutoTpToSavedOnExec then
-        local idx = _G.RAY_SelectedSlotIndex or 1
-        local cf  = _G.RAY_SavedSlots and _G.RAY_SavedSlots[idx]
-        if cf then
-            task.wait(1.5)
-            pcall(function()
-                local hrp = GetHRP()
-                if hrp then
-                    hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
-                    hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
-                    hrp.CFrame = cf
-                end
-            end)
-        end
-    end
-end)
