@@ -4903,7 +4903,7 @@ local Events = {
 }
 
 ----------------------------------------------------------------
--- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
+-- X1 TOTEM BACKEND + AUTO (TOGGLE FRIENDLY)
 ----------------------------------------------------------------
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -4916,25 +4916,16 @@ local SpawnTotemRemote = ReplicatedStorage
     :WaitForChild("net")
     :WaitForChild("RE/SpawnTotem")
 
--- Id dari data module:
--- Luck Totem      -> Id = 1 [web:2]
--- Mutation Totem  -> Id = 2 [web:2]
--- Shiny Totem     -> Id = 3 (dari decompile kamu)
 local TotemTypeId = {
     Mutasi = 2,
     Shiny  = 3,
     Lucky  = 1,
 }
 
--- Semua totem Duration = 3600 (1 jam) [web:2]
-local TOTEM_DURATION = 3600
+local TOTEM_DURATION = 3600  -- 1 jam
 
 _G.RAYAutoTotemOn       = _G.RAYAutoTotemOn or false
-_G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky" -- jenis (string), bukan UUID
-
-----------------------------------------------------------------
--- REPLION DATA HELPER
-----------------------------------------------------------------
+_G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"
 
 local function GetTotemDataReplion()
     local ok, data = pcall(function()
@@ -4945,7 +4936,6 @@ local function GetTotemDataReplion()
     return data
 end
 
--- Resolver UUID realtime dari jenis (Lucky / Mutasi / Shiny)
 local function findTotemUuidByType(jenis)
     local targetId = TotemTypeId[jenis]
     if not targetId then return nil end
@@ -4965,15 +4955,16 @@ local function findTotemUuidByType(jenis)
     return nil
 end
 
-function SpawnTotemUUID(uuid)
+local function SpawnTotemUUID(uuid)
     if not uuid then return end
     pcall(function()
-        -- kalau remote minta langsung UUID:
         SpawnTotemRemote:FireServer(uuid)
-        -- kalau ternyata minta table, ganti ke:
-        -- SpawnTotemRemote:FireServer({UUID = uuid})
+        -- atau SpawnTotemRemote:FireServer({UUID = uuid}) kalau server minta table
     end)
 end
+
+
+
 
 ----------------------------------------------------------------
 -- AUTO FAVORITE FISH BACKEND (LEGEND / MYTHIC / SECRET)
@@ -6911,23 +6902,43 @@ end)
 
 
 ----------------------------------------------------------------
--- AUTO X1 TOTEM LOOP (1 JAM SEKALI)
+-- AUTO TOTEM LOOP (RESPECT TOGGLE, RESET KALAU DIMATIKAN)
 ----------------------------------------------------------------
 
 task.spawn(function()
+    local lastPlacedAt = 0
+
     while true do
         if _G.RAYAutoTotemOn then
-            local jenis = _G.RAYSelectedTotemType or "Lucky"
-            local uuid = findTotemUuidByType(jenis)
-            if uuid then
-                SpawnTotemUUID(uuid)
+            -- cek apakah totem sudah habis durasi
+            local now = os.clock()
+            local elapsed = now - lastPlacedAt
+
+            if elapsed >= TOTEM_DURATION or lastPlacedAt == 0 then
+                local jenis = _G.RAYSelectedTotemType or "Lucky"
+                local uuid = findTotemUuidByType(jenis)
+
+                if uuid then
+                    SpawnTotemUUID(uuid)
+                    lastPlacedAt = os.clock()
+                else
+                    -- kalau ga nemu, coba lagi setelah sebentar
+                    task.wait(2)
+                end
+            else
+                -- masih dalam durasi totem, tunggu sisa waktunya
+                local remaining = TOTEM_DURATION - elapsed
+                -- tapi jangan tidur terlalu lama, supaya bisa respon kalau toggle dimatiin
+                local step = math.min(remaining, 5)
+                task.wait(step)
             end
-            -- nunggu sampai durasi totem habis (3600 detik) [web:2]
-            task.wait(TOTEM_DURATION)
         else
+            -- toggle OFF → reset timer, siap pasang lagi nanti
+            lastPlacedAt = 0
             task.wait(0.5)
         end
     end
+end)
 end)
 
 ----------------------------------------------------------------
