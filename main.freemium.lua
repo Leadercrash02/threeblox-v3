@@ -121,32 +121,35 @@ local ISLAND_SPOTS = {
     -- ["Christmas Spot"]    = CFrame.new(1138.9039, 23.43064, 1560.8541),
 
     -- spot lama
-    ["Esoteric Depths"]            = CFrame.new(3232.9036, -1302.8549, 1401.0824),
-    ["Creater Island"]             = CFrame.new(1000.1009, 18.02404, 5093.1221),
-    ["Ancient Jungle"]             = CFrame.new(1470.9269, 4.5879965, -323.6044),
-    ["Temple Guardian"]            = CFrame.new(1486.0616, 127.62498, -590.1211),
-    ["Secred Temple"]              = CFrame.new(1496.1331, -22.125002, -639.2121),
-    ["Ancient Ruin"]               = CFrame.new(6081.9009, -585.92419, 4634.6240),
-    ["Kohana"]                     = CFrame.new(-603.82385, 17.250059, 514.24432),
-    ["Kohana Volcano"]             = CFrame.new(-617.46448, 48.560577, 189.16815),
-    ["Fisherman Spawn"]            = CFrame.new(90.31225, 17.033522, 2839.8655),
-    ["Sysphus State"]              = CFrame.new(-3698.2456, -135.07391, -1007.7955),
-    ["Treasure Room"]              = CFrame.new(-3595.2686, -275.74152, -1639.2794),
-    ["Weater Machine"]             = CFrame.new(-1489.2069, 3.5, 1917.9594),
-    ["Coral Reefs"]                = CFrame.new(-2755.0881, 4.0107765, 2163.7251),
-    ["Tropical Grouve"]            = CFrame.new(-2016.4812, 9.037539, 3752.3533),
+    ["Esoteric Depths"]          = CFrame.new(3232.9036, -1302.8549, 1401.0824),
+    ["Creater Island"]           = CFrame.new(1000.1009, 18.02404, 5093.1221),
+    ["Ancient Jungle"]           = CFrame.new(1470.9269, 4.5879965, -323.6044),
+    ["Temple Guardian"]          = CFrame.new(1486.0616, 127.62498, -590.1211),
+    ["Secred Temple"]            = CFrame.new(1496.1331, -22.125002, -639.2121),
+    ["Ancient Ruin"]             = CFrame.new(6081.9009, -585.92419, 4634.6240),
+    ["Kohana"]                   = CFrame.new(-603.82385, 17.250059, 514.24432),
+    ["Kohana Volcano"]           = CFrame.new(-617.46448, 48.560577, 189.16815),
+    ["Fisherman Spawn"]          = CFrame.new(90.31225, 17.033522, 2839.8655),
+    ["Sysphus State"]            = CFrame.new(-3698.2456, -135.07391, -1007.7955),
+    ["Treasure Room"]            = CFrame.new(-3595.2686, -275.74152, -1639.2794),
+    ["Weater Machine"]           = CFrame.new(-1489.2069, 3.5, 1917.9594),
+    ["Coral Reefs"]              = CFrame.new(-2755.0881, 4.0107765, 2163.7251),
+    ["Tropical Grouve"]          = CFrame.new(-2016.4812, 9.037539, 3752.3533),
 
     -- tambahan baru
-    ["Pirate Treasure Room"]       = CFrame.new(3291.126465, -299.092438, 3068.046387),
-    ["Maze Room"]                  = CFrame.new(3439.706787, -287.844818, 3390.595459),
-    ["Pirate Cove"]                = CFrame.new(3408.831787, 3.759813, 3444.318115),
-    ["Pirate Cove Laviatant"]      = CFrame.new(3471.531250, -287.843170, 3474.382568),  -- baru ditambah
+    ["Pirate Treasure Room"]     = CFrame.new(3291.126465, -299.092438, 3068.046387),
+    ["Maze Room"]                = CFrame.new(3439.706787, -287.844818, 3390.595459),
+    ["Pirate Cove"]              = CFrame.new(3408.831787, 3.759813, 3444.318115),
+    ["Pirate Cove Laviatant"]    = CFrame.new(3471.531250, -287.843170, 3474.382568),
     ["Hourglass Diamond Artifact"] = CFrame.new(1500.734131, 6.376950, -849.561951),
-    ["Diamond Artifact"]           = CFrame.new(1833.328003, 5.230289, -322.866364),
-    ["Crescent Artifact"]          = CFrame.new(1380.416626, 0.845884, 118.727592),
-    ["Arrow Artifact"]             = CFrame.new(879.857178, 4.921622, -339.661469),
-    ["Crystalline Passage"]        = CFrame.new(6052.331055, -538.900208, 4374.166016),
-    ["Crystal Depths"]             = CFrame.new(5747.040039, -904.802124, 15396.442383),
+    ["Diamond Artifact"]         = CFrame.new(1833.328003, 5.230289, -322.866364),
+    ["Crescent Artifact"]        = CFrame.new(1380.416626, 0.845884, 118.727592),
+    ["Arrow Artifact"]           = CFrame.new(879.857178, 4.921622, -339.661469),
+    ["Crystalline Passage"]      = CFrame.new(6052.331055, -538.900208, 4374.166016),
+    ["Crystal Depths"]           = CFrame.new(5747.040039, -904.802124, 15396.442383),
+    
+    -- TAMBAHAN BARU - Underground Cellar
+    ["Underground Cellar"]      = CFrame.new(2125.3, -91.2, -750.4),  -- koordinat lo tadi
 }
 
 local DEFAULT_SPOT_ORDER = {
@@ -172,13 +175,16 @@ local DEFAULT_SPOT_ORDER = {
     "Pirate Treasure Room",
     "Maze Room",
     "Pirate Cove",
-    "Pirate Cove Laviatant",  -- ditambah di sini
+    "Pirate Cove Laviatant",
     "Hourglass Diamond Artifact",
     "Diamond Artifact",
     "Crescent Artifact",
     "Arrow Artifact",
     "Crystalline Passage",
     "Crystal Depths",
+    
+    -- TAMBAHAN BARU
+    "Underground Cellar",  -- ditambah di sini
 }
 -- ROOT
 local gui = Instance.new("ScreenGui", CoreGui)
