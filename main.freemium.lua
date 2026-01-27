@@ -2566,12 +2566,12 @@ local function BuildShopMerchant()
     end
 
     ----------------------------------------------------------------
-    -- POSISI CARD MERCHANT DI BAWAH ROD (SAMA BASEY)
+    -- POSISI CARD MERCHANT DI BAWAH BAIT
     ----------------------------------------------------------------
-    local rodCard = shopPage:WaitForChild("RodSelectorCard", 5)
-    local baseY = rodCard
-        and (rodCard.Position.Y.Offset + rodCard.Size.Y.Offset + 12)
-        or 160
+    local baitCard = shopPage:WaitForChild("BaitSelectorCard", 5)
+    local baseY = baitCard
+        and (baitCard.Position.Y.Offset + baitCard.Size.Y.Offset + 12)
+        or 200
 
     ----------------------------------------------------------------
     -- CARD MERCHANT (DROPDOWN)
@@ -2579,7 +2579,7 @@ local function BuildShopMerchant()
     local card = Instance.new("Frame")
     card.Name = "MerchantCard"
     card.Parent = shopPage
-    card.Size = UDim2.new(1, -32, 0, 48)          -- mulai dari tinggi 48
+    card.Size = UDim2.new(1, -32, 0, 48)  -- tinggi awal 48 (judul saja)
     card.Position = UDim2.new(0, 16, 0, baseY)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
@@ -2830,7 +2830,7 @@ local function BuildShopMerchant()
     merchant:OnChange("Items", RefreshStockTextAndSelected)
 
     ----------------------------------------------------------------
-    -- PANEL KANAN PILIH ITEM (SAMA GAYA ROD/BAIT)
+    -- PANEL KANAN PILIH ITEM
     ----------------------------------------------------------------
     local overlay = Instance.new("TextButton")
     overlay.Name = "MerchantOverlay"
@@ -3012,15 +3012,35 @@ local function BuildShopMerchant()
     refreshAutoToggle()
     recalcMerchant()
 
+    ----------------------------------------------------------------
+    -- LISTEN BAIT CHANGES & REPOSITION MERCHANT
+    ----------------------------------------------------------------
+    local function updateMerchantPosition()
+        local bait = shopPage:FindFirstChild("BaitSelectorCard")
+        if bait then
+            local newY = bait.Position.Y.Offset + bait.Size.Y.Offset + 12
+            card.Position = UDim2.new(0, 16, 0, newY)
+        end
+    end
+
+    local baitConn
+    if baitCard then
+        baitConn = baitCard:GetPropertyChangedSignal("Size"):Connect(updateMerchantPosition)
+        baitCard:GetPropertyChangedSignal("Position"):Connect(updateMerchantPosition)
+    end
+    updateMerchantPosition()
+
     -- CLEANUP
     card.AncestryChanged:Connect(function()
         if not card.Parent then
+            if baitConn then baitConn:Disconnect() end
             overlay:Destroy()
         end
     end)
 end
 
 BuildShopMerchant()
+
 
 
 ----------------------------------------------------------------
