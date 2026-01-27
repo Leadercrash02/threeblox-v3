@@ -1286,7 +1286,7 @@ end
 BuildQuestDiamond()
 
 ----------------------------------------------------------------
--- QUEST CARD : CHEST FARM (Replion, global per server)
+-- QUEST : CHEST FARM (Replion, pakai Id/Location)
 ----------------------------------------------------------------
 local function BuildQuestChestFarm()
     local questPage = pages["Quest"]
@@ -1294,12 +1294,12 @@ local function BuildQuestChestFarm()
     _G.RAYChestFarmOn = _G.RAYChestFarmOn == nil and false or _G.RAYChestFarmOn
 
     ------------------------------------------------------------
-    -- CARD UI
+    -- CARD UI (pakai style quest)
     ------------------------------------------------------------
     local card = Instance.new("Frame")
     card.Name = "QuestChestFarmCard"
     card.Parent = questPage
-    card.Size = UDim2.new(1,-32,0,48)
+    card.Size = UDim2.new(1,-32,0,60)
     card.Position = UDim2.new(0,16,0,0)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
@@ -1307,104 +1307,48 @@ local function BuildQuestChestFarm()
     card.LayoutOrder = 10
     Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
 
-    local cardTitle = Instance.new("TextLabel", card)
-    cardTitle.Size = UDim2.new(1,-40,0,22)
-    cardTitle.Position = UDim2.new(0,16,0,4)
-    cardTitle.BackgroundTransparency = 1
-    cardTitle.Font = Enum.Font.GothamSemibold
-    cardTitle.TextSize = 14
-    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
-    cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "🧭 Chest Farm (Pirate)"
+    local titleLabel = Instance.new("TextLabel", card)
+    titleLabel.Size = UDim2.new(1,-110,0,22)
+    titleLabel.Position = UDim2.new(0,16,0,4)
+    titleLabel.BackgroundTransparency = 1
+    titleLabel.Font = Enum.Font.GothamSemibold
+    titleLabel.TextSize = 14
+    titleLabel.TextColor3 = TEXT
+    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+    titleLabel.Text = "🧭 Chest Farm (Replion)"
 
-    local arrow = Instance.new("TextLabel", card)
-    arrow.Size = UDim2.new(0,24,0,24)
-    arrow.Position = UDim2.new(1,-28,0,10)
-    arrow.BackgroundTransparency = 1
-    arrow.Font = Enum.Font.Gotham
-    arrow.TextSize = 18
-    arrow.TextColor3 = TEXT
-    arrow.Text = "▼"
-
-    local cardBtn = Instance.new("TextButton", card)
-    cardBtn.BackgroundTransparency = 1
-    cardBtn.Size = UDim2.new(1,0,1,0)
-    cardBtn.Text = ""
-    cardBtn.AutoButtonColor = false
-
-    local subChest = Instance.new("Frame", card)
-    subChest.Name = "ChestFarmContents"
-    subChest.Position = UDim2.new(0,0,0,48)
-    subChest.Size = UDim2.new(1,0,0,0)
-    subChest.BackgroundTransparency = 1
-    subChest.ClipsDescendants = true
-
-    local chestLayout = Instance.new("UIListLayout", subChest)
-    chestLayout.Padding = UDim.new(0,6)
-    chestLayout.FillDirection = Enum.FillDirection.Vertical
-    chestLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    chestLayout.SortOrder = Enum.SortOrder.LayoutOrder
-
-    local row = Instance.new("Frame", subChest)
-    row.Size = UDim2.new(1,0,0,32)
-    row.BackgroundTransparency = 1
-
-    local toggleButton = Instance.new("TextButton", row)
-    toggleButton.Size = UDim2.new(0,90,1,0)
-    toggleButton.Position = UDim2.new(0,4,0,0)
-    toggleButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
-    toggleButton.BorderSizePixel = 0
+    local toggleButton = Instance.new("TextButton", card)
+    toggleButton.Size = UDim2.new(0,80,0,26)
+    toggleButton.Position = UDim2.new(1,-90,0,6)
+    toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    toggleButton.TextColor3 = Color3.new(1,1,1)
     toggleButton.Font = Enum.Font.GothamBold
     toggleButton.TextSize = 14
-    toggleButton.TextColor3 = Color3.new(1,1,1)
     toggleButton.Text = "OFF"
     toggleButton.AutoButtonColor = false
+    toggleButton.BorderSizePixel = 0
     Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0,8)
 
-    local statusLabel = Instance.new("TextLabel", row)
-    statusLabel.Size = UDim2.new(1,-100,1,0)
-    statusLabel.Position = UDim2.new(0,100,0,0)
+    local statusLabel = Instance.new("TextLabel", card)
+    statusLabel.Size = UDim2.new(1,-32,0,22)
+    statusLabel.Position = UDim2.new(0,16,0,32)
     statusLabel.BackgroundTransparency = 1
     statusLabel.Font = Enum.Font.Gotham
     statusLabel.TextSize = 13
-    statusLabel.TextXAlignment = Enum.TextXAlignment.Left
     statusLabel.TextColor3 = TEXT
+    statusLabel.TextXAlignment = Enum.TextXAlignment.Left
     statusLabel.Text = "Waiting Replion..."
 
     ------------------------------------------------------------
-    -- DROPDOWN
-    ------------------------------------------------------------
-    local chestOpen = false
-    local function recalcChest()
-        local h = chestLayout.AbsoluteContentSize.Y
-        if chestOpen then
-            subChest.Size = UDim2.new(1,0,0,h + 8)
-            card.Size     = UDim2.new(1,-32,0,48 + h + 8)
-            arrow.Text    = "▲"
-        else
-            subChest.Size = UDim2.new(1,0,0,0)
-            card.Size     = UDim2.new(1,-32,0,48)
-            arrow.Text    = "▼"
-        end
-    end
-
-    chestLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcChest)
-
-    cardBtn.MouseButton1Click:Connect(function()
-        chestOpen = not chestOpen
-        recalcChest()
-    end)
-
-    ------------------------------------------------------------
-    -- TOGGLE STATE
+    -- TOGGLE (logic sama, cuma wadahnya card)
     ------------------------------------------------------------
     local function UpdateToggle()
         if _G.RAYChestFarmOn then
             toggleButton.Text = "ON"
-            toggleButton.BackgroundColor3 = Color3.fromRGB(50,180,50)
+            toggleButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
         else
             toggleButton.Text = "OFF"
-            toggleButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
+            toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
         end
     end
     UpdateToggle()
@@ -1415,7 +1359,7 @@ local function BuildQuestChestFarm()
     end)
 
     ------------------------------------------------------------
-    -- REPLION CHEST DATA (array { string, Vector3 })
+    -- REPLION CHEST DATA (PERSIS logic lama)
     ------------------------------------------------------------
     local chestReplion
 
@@ -1434,26 +1378,27 @@ local function BuildQuestChestFarm()
         print("[ChestFarm] Replion Data:", chestReplion.Data)
     end)
 
-    local function GetAllChestEntries()
+    local function GetAllChestUUIDs()
         if not chestReplion then return {} end
         local data = chestReplion.Data
         local spawned = data and data.SpawnedChests
         if typeof(spawned) ~= "table" then return {} end
 
         local list = {}
-        for _, entry in ipairs(spawned) do
-            -- dari dump: entry = { "uuid", Vector3 }
-            local id  = entry[1]
-            local pos = entry[2]
-            if typeof(id) == "string" and typeof(pos) == "Vector3" then
-                table.insert(list, {Id = id, Location = pos})
+        for i, entry in ipairs(spawned) do
+            -- bentuk entry berdasarkan debug: { Id = <uuid>, Location = <Vector3>, ... }
+            local uuid = entry.Id
+            local pos  = entry.Location
+            -- print("Chest", i, "UUID:", uuid, "Pos:", pos)
+            if typeof(uuid) == "string" then
+                table.insert(list, uuid)
             end
         end
         return list
     end
 
     ------------------------------------------------------------
-    -- FARM LOOP (per server, per player)
+    -- FARM LOOP (PERSIS logic lama)
     ------------------------------------------------------------
     task.spawn(function()
         while true do
@@ -1469,23 +1414,23 @@ local function BuildQuestChestFarm()
                 continue
             end
 
-            local chests = GetAllChestEntries()
-            if #chests == 0 then
+            local uuids = GetAllChestUUIDs()
+            if #uuids == 0 then
                 statusLabel.Text = "No chests spawned."
             else
-                statusLabel.Text = "Claiming "..#chests.." chests..."
-                for _, chest in ipairs(chests) do
+                statusLabel.Text = "Claiming "..#uuids.." chests..."
+                for _, uuid in ipairs(uuids) do
                     pcall(function()
-                        -- kebanyakan game cukup pakai Id saja
-                        ClaimPirateChest:FireServer(chest.Id)
-                        -- kalau ternyata perlu posisi juga:
-                        -- ClaimPirateChest:FireServer(chest.Id, chest.Location)
+                        ClaimPirateChest:FireServer(uuid)
                     end)
                 end
             end
         end
     end)
+
+    print("[ChestFarm] Loaded with Replion PirateTreasureChests (Quest card)")
 end
+
 
 
 BuildQuestChestFarm()
@@ -4410,6 +4355,10 @@ end)
 ----------------------------------------------------------------
 -- REMOTES
 ----------------------------------------------------------------
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local lp = Players.LocalPlayer
+
 local Net = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
@@ -4425,9 +4374,16 @@ local Events = {
     equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
     unequip  = Net:WaitForChild("RE/UnequipToolFromHotbar"),
 
-    -- WEATHER
     purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
 }
+
+-- Replion (sama kayak script yang works)
+local Replion = require(ReplicatedStorage.Packages.Replion)
+
+-- ClaimPirateChest pakai Net yang sama
+local ClaimPirateChest = Net:WaitForChild("RE/ClaimPirateChest")
+
+
 
 ----------------------------------------------------------------
 -- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
