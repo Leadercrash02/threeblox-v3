@@ -2770,7 +2770,6 @@ local function BuildShopMerchant()
     local function RefreshStockTextAndSelected()
         local stock = GetCurrentMerchantStock()
         stockLabel.Text = "Current Merchant Stock"
-        stockSub.Text   = "" -- nggak dipakai di card ini
 
         if #stock == 0 then
             stockLine.Text = "No items."
@@ -3009,7 +3008,7 @@ local function ShowPage(name)
             BuildShopBait()
         end
 
-        if not shopPage:FindFirstChild("MarchantCard") then
+        if not shopPage:FindFirstChild("MerchantCard") then
             BuildShopMerchant()
         end
 
