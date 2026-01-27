@@ -1286,16 +1286,15 @@ end
 BuildQuestDiamond()
 
 ----------------------------------------------------------------
--- QUEST : CHEST FARM (PIRATE TREASURE)
+-- QUEST CARD : CHEST FARM (Replion, global per server)
 ----------------------------------------------------------------
 local function BuildQuestChestFarm()
     local questPage = pages["Quest"]
 
-    -- STATE GLOBAL (BIAR TETAP KEINGET)
     _G.RAYChestFarmOn = _G.RAYChestFarmOn == nil and false or _G.RAYChestFarmOn
 
     ------------------------------------------------------------
-    -- CARD UTAMA
+    -- CARD UI
     ------------------------------------------------------------
     local card = Instance.new("Frame")
     card.Name = "QuestChestFarmCard"
@@ -1305,7 +1304,7 @@ local function BuildQuestChestFarm()
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
-    card.LayoutOrder = 10 -- atur urutan di tab Quest
+    card.LayoutOrder = 10
     Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
 
     local cardTitle = Instance.new("TextLabel", card)
@@ -1333,9 +1332,6 @@ local function BuildQuestChestFarm()
     cardBtn.Text = ""
     cardBtn.AutoButtonColor = false
 
-    ------------------------------------------------------------
-    -- ISI DROPDOWN (TOGGLE + STATUS)
-    ------------------------------------------------------------
     local subChest = Instance.new("Frame", card)
     subChest.Name = "ChestFarmContents"
     subChest.Position = UDim2.new(0,0,0,48)
@@ -1349,7 +1345,6 @@ local function BuildQuestChestFarm()
     chestLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     chestLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    -- ROW 1: TOGGLE + LABEL
     local row = Instance.new("Frame", subChest)
     row.Size = UDim2.new(1,0,0,32)
     row.BackgroundTransparency = 1
@@ -1377,7 +1372,7 @@ local function BuildQuestChestFarm()
     statusLabel.Text = "Waiting Replion..."
 
     ------------------------------------------------------------
-    -- DROPDOWN BEHAVIOUR
+    -- DROPDOWN
     ------------------------------------------------------------
     local chestOpen = false
     local function recalcChest()
@@ -1401,7 +1396,7 @@ local function BuildQuestChestFarm()
     end)
 
     ------------------------------------------------------------
-    -- TOGGLE LOGIC
+    -- TOGGLE STATE
     ------------------------------------------------------------
     local function UpdateToggle()
         if _G.RAYChestFarmOn then
@@ -1420,7 +1415,7 @@ local function BuildQuestChestFarm()
     end)
 
     ------------------------------------------------------------
-    -- REPLION + CHEST DATA
+    -- REPLION CHEST DATA (array { string, Vector3 })
     ------------------------------------------------------------
     local chestReplion
 
@@ -1439,7 +1434,7 @@ local function BuildQuestChestFarm()
         print("[ChestFarm] Replion Data:", chestReplion.Data)
     end)
 
-    local function GetAllChestUUIDs()
+    local function GetAllChestEntries()
         if not chestReplion then return {} end
         local data = chestReplion.Data
         local spawned = data and data.SpawnedChests
@@ -1447,18 +1442,18 @@ local function BuildQuestChestFarm()
 
         local list = {}
         for _, entry in ipairs(spawned) do
-            -- { Id = <uuid>, Location = <Vector3>, ... }
-            local uuid = entry.Id
-            -- local pos = entry.Location -- kalau mau dipakai nanti
-            if typeof(uuid) == "string" then
-                table.insert(list, uuid)
+            -- dari dump: entry = { "uuid", Vector3 }
+            local id  = entry[1]
+            local pos = entry[2]
+            if typeof(id) == "string" and typeof(pos) == "Vector3" then
+                table.insert(list, {Id = id, Location = pos})
             end
         end
         return list
     end
 
     ------------------------------------------------------------
-    -- FARM LOOP (PAKAI STATUS LABEL DI CARD)
+    -- FARM LOOP (per server, per player)
     ------------------------------------------------------------
     task.spawn(function()
         while true do
@@ -1474,20 +1469,24 @@ local function BuildQuestChestFarm()
                 continue
             end
 
-            local uuids = GetAllChestUUIDs()
-            if #uuids == 0 then
+            local chests = GetAllChestEntries()
+            if #chests == 0 then
                 statusLabel.Text = "No chests spawned."
             else
-                statusLabel.Text = "Claiming "..#uuids.." chests..."
-                for _, uuid in ipairs(uuids) do
+                statusLabel.Text = "Claiming "..#chests.." chests..."
+                for _, chest in ipairs(chests) do
                     pcall(function()
-                        ClaimPirateChest:FireServer(uuid)
+                        -- kebanyakan game cukup pakai Id saja
+                        ClaimPirateChest:FireServer(chest.Id)
+                        -- kalau ternyata perlu posisi juga:
+                        -- ClaimPirateChest:FireServer(chest.Id, chest.Location)
                     end)
                 end
             end
         end
     end)
 end
+
 
 BuildQuestChestFarm()
 
@@ -1801,7 +1800,7 @@ end
 BuildShopWeather()
 
 ----------------------------------------------------------------
--- PAGE SWITCH (Quest + Chest Farm)
+-- PAGE SWITCH
 ----------------------------------------------------------------
 local function ShowPage(name)
     for _, page in pairs(pages) do
@@ -1846,6 +1845,7 @@ local function ShowPage(name)
         end
     end
 end
+
 
 
 
