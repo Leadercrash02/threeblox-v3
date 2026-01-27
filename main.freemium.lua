@@ -1286,157 +1286,6 @@ end
 BuildQuestDiamond()
 
 ----------------------------------------------------------------
--- QUEST : CHEST FARM (Replion, pakai Id/Location)
-----------------------------------------------------------------
-local function BuildQuestChestFarm()
-    local questPage = pages["Quest"]
-
-    _G.RAYChestFarmOn = _G.RAYChestFarmOn == nil and false or _G.RAYChestFarmOn
-
-    ------------------------------------------------------------
-    -- CARD UI (pakai style quest)
-    ------------------------------------------------------------
-    local card = Instance.new("Frame")
-    card.Name = "QuestChestFarmCard"
-    card.Parent = questPage
-    card.Size = UDim2.new(1,-32,0,60)
-    card.Position = UDim2.new(0,16,0,0)
-    card.BackgroundColor3 = CARD
-    card.BackgroundTransparency = ALPHA_CARD
-    card.ClipsDescendants = true
-    card.LayoutOrder = 10
-    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
-
-    local titleLabel = Instance.new("TextLabel", card)
-    titleLabel.Size = UDim2.new(1,-110,0,22)
-    titleLabel.Position = UDim2.new(0,16,0,4)
-    titleLabel.BackgroundTransparency = 1
-    titleLabel.Font = Enum.Font.GothamSemibold
-    titleLabel.TextSize = 14
-    titleLabel.TextColor3 = TEXT
-    titleLabel.TextXAlignment = Enum.TextXAlignment.Left
-    titleLabel.Text = "🧭 Chest Farm (Replion)"
-
-    local toggleButton = Instance.new("TextButton", card)
-    toggleButton.Size = UDim2.new(0,80,0,26)
-    toggleButton.Position = UDim2.new(1,-90,0,6)
-    toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    toggleButton.TextColor3 = Color3.new(1,1,1)
-    toggleButton.Font = Enum.Font.GothamBold
-    toggleButton.TextSize = 14
-    toggleButton.Text = "OFF"
-    toggleButton.AutoButtonColor = false
-    toggleButton.BorderSizePixel = 0
-    Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0,8)
-
-    local statusLabel = Instance.new("TextLabel", card)
-    statusLabel.Size = UDim2.new(1,-32,0,22)
-    statusLabel.Position = UDim2.new(0,16,0,32)
-    statusLabel.BackgroundTransparency = 1
-    statusLabel.Font = Enum.Font.Gotham
-    statusLabel.TextSize = 13
-    statusLabel.TextColor3 = TEXT
-    statusLabel.TextXAlignment = Enum.TextXAlignment.Left
-    statusLabel.Text = "Waiting Replion..."
-
-    ------------------------------------------------------------
-    -- TOGGLE (logic sama, cuma wadahnya card)
-    ------------------------------------------------------------
-    local function UpdateToggle()
-        if _G.RAYChestFarmOn then
-            toggleButton.Text = "ON"
-            toggleButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
-        else
-            toggleButton.Text = "OFF"
-            toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        end
-    end
-    UpdateToggle()
-
-    toggleButton.MouseButton1Click:Connect(function()
-        _G.RAYChestFarmOn = not _G.RAYChestFarmOn
-        UpdateToggle()
-    end)
-
-    ------------------------------------------------------------
-    -- REPLION CHEST DATA (PERSIS logic lama)
-    ------------------------------------------------------------
-    local chestReplion
-
-    task.spawn(function()
-        local ok, r = pcall(function()
-            return Replion.Client:WaitReplion("PirateTreasureChests")
-        end)
-        print("[ChestFarm] WaitReplion:", ok, r)
-        if not ok or not r or typeof(r.Data) ~= "table" then
-            statusLabel.Text = "Replion failed."
-            warn("[ChestFarm] Failed to get PirateTreasureChests")
-            return
-        end
-        chestReplion = r
-        statusLabel.Text = "Replion ready."
-        print("[ChestFarm] Replion Data:", chestReplion.Data)
-    end)
-
-    local function GetAllChestUUIDs()
-        if not chestReplion then return {} end
-        local data = chestReplion.Data
-        local spawned = data and data.SpawnedChests
-        if typeof(spawned) ~= "table" then return {} end
-
-        local list = {}
-        for i, entry in ipairs(spawned) do
-            -- bentuk entry berdasarkan debug: { Id = <uuid>, Location = <Vector3>, ... }
-            local uuid = entry.Id
-            local pos  = entry.Location
-            -- print("Chest", i, "UUID:", uuid, "Pos:", pos)
-            if typeof(uuid) == "string" then
-                table.insert(list, uuid)
-            end
-        end
-        return list
-    end
-
-    ------------------------------------------------------------
-    -- FARM LOOP (PERSIS logic lama)
-    ------------------------------------------------------------
-    task.spawn(function()
-        while true do
-            task.wait(0.25)
-
-            if not _G.RAYChestFarmOn then
-                statusLabel.Text = "Paused."
-                continue
-            end
-
-            if not chestReplion then
-                statusLabel.Text = "Waiting Replion..."
-                continue
-            end
-
-            local uuids = GetAllChestUUIDs()
-            if #uuids == 0 then
-                statusLabel.Text = "No chests spawned."
-            else
-                statusLabel.Text = "Claiming "..#uuids.." chests..."
-                for _, uuid in ipairs(uuids) do
-                    pcall(function()
-                        ClaimPirateChest:FireServer(uuid)
-                    end)
-                end
-            end
-        end
-    end)
-
-    print("[ChestFarm] Loaded with Replion PirateTreasureChests (Quest card)")
-end
-
-
-
-BuildQuestChestFarm()
-
-
-----------------------------------------------------------------
 -- SHOP & TRADE : WEATHER PRESET
 ----------------------------------------------------------------
 local function BuildShopWeather()
@@ -1742,8 +1591,6 @@ local function BuildShopWeather()
     end)
 end
 
-BuildShopWeather()
-
 ----------------------------------------------------------------
 -- PAGE SWITCH
 ----------------------------------------------------------------
@@ -1785,18 +1632,14 @@ local function ShowPage(name)
         if not questPage:FindFirstChild("QuestDiamondCard") then
             BuildQuestDiamond()
         end
-        if not questPage:FindFirstChild("QuestChestFarmCard") then
-            BuildQuestChestFarm()
-        end
     end
 end
 
+BuildShopWeather()
 
 
 
-
-
-----------------------------------------------------------------
+---------------------------------------------------------------
 -- MISC PAGE : BUILD FUNCTION
 ----------------------------------------------------------------
 local function BuildMisc()
@@ -2003,6 +1846,8 @@ local function BuildMisc()
         end
     end
 
+
+
 ----------------------------------------------------------------
 -- DROPDOWN : 🎥 STREAMER HIDE NAME
 ----------------------------------------------------------------
@@ -2193,33 +2038,18 @@ function StopAntiAFK()
     end
 end
 
-local ROD_VFX_NAMES = {
-    "1x1x1x1 Ban Hammer Dive",
-    "Abyssal Chroma Dive",
-    "Abyssfire Dive",
-    "Amber Dive",
-    "Amethyst Dive",
-    "BanHammerThrow",
-    "Xmas Tree Rod Dive",
-    "The Vanquisher Dive",
-    "Ornament Axe Dive",
-    "Frozen Krampus Scythe Dive",
-    "Electric Guitar Dive",
-    "Eclipse Katana Dive",
-    "Divine Blade Dive",
-}
+--- kill vfx ---
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-function KillAllRodSkins()
+local function KillAllVFX()
     local vfxRoot = ReplicatedStorage:FindFirstChild("VFX")
     if not vfxRoot then return end
 
-    for _, name in ipairs(ROD_VFX_NAMES) do
-        local obj = vfxRoot:FindFirstChild(name, true)
-        if obj then
-            pcall(function()
-                obj:Destroy()
-            end)
-        end
+    -- Hapus semua descendant di dalam folder VFX
+    for _, obj in ipairs(vfxRoot:GetDescendants()) do
+        pcall(function()
+            obj:Destroy()
+        end)
     end
 end
 
@@ -3315,13 +3145,245 @@ end
         refreshDark()
     end
 
+----------------------------------------------------------------
+-- GLOBAL FLAG MISC
+----------------------------------------------------------------
+_G.RAY_AutoReconnect = _G.RAY_AutoReconnect or false
+
+----------------------------------------------------------------
+-- DROPDOWN : 🌐 SERVER SETTINGS (LayoutOrder = 2)
+----------------------------------------------------------------
+do
+    local holderSrv = Instance.new("Frame", miscContainer)
+    holderSrv.Size = UDim2.new(1,0,0,42)
+    holderSrv.BackgroundTransparency = 1
+    holderSrv.LayoutOrder = 2   -- di atas Notification & Visual
+
+    local mainBtnSrv = Instance.new("TextButton", holderSrv)
+    mainBtnSrv.Size = UDim2.new(1,0,0,42)
+    mainBtnSrv.Text = "🌐 Server Settings ▼"
+    mainBtnSrv.Font = Enum.Font.Gotham
+    mainBtnSrv.TextSize = 15
+    mainBtnSrv.TextXAlignment = Enum.TextXAlignment.Left
+    mainBtnSrv.TextColor3 = TEXT
+    mainBtnSrv.BackgroundColor3 = CARD
+    mainBtnSrv.BackgroundTransparency = ALPHA_CARD
+    mainBtnSrv.AutoButtonColor = false
+    Instance.new("UICorner", mainBtnSrv).CornerRadius = UDim.new(0,10)
+
+    local subSrv = Instance.new("Frame", holderSrv)
+    subSrv.Position = UDim2.new(0,0,0,42)
+    subSrv.Size = UDim2.new(1,0,0,0)
+    subSrv.ClipsDescendants = true
+    subSrv.BackgroundTransparency = 1
+
+    local subLayoutSrv = Instance.new("UIListLayout", subSrv)
+    subLayoutSrv.Padding = UDim.new(0,6)
+
+    local openSrv = false
+    local function recalcSrv()
+        task.wait()
+        local h = subLayoutSrv.AbsoluteContentSize.Y
+        if openSrv then
+            subSrv.Size    = UDim2.new(1,0,0,h)
+            holderSrv.Size = UDim2.new(1,0,0,42 + h)
+            mainBtnSrv.Text = "🌐 Server Settings ▲"
+        else
+            subSrv.Size    = UDim2.new(1,0,0,0)
+            holderSrv.Size = UDim2.new(1,0,0,42)
+            mainBtnSrv.Text = "🌐 Server Settings ▼"
+        end
+    end
+
+    mainBtnSrv.MouseButton1Click:Connect(function()
+        openSrv = not openSrv
+        recalcSrv()
+    end)
+
+    ----------------------------------------------------------------
+    -- 🌐 AUTO RECONNECT TOGGLE
+    ----------------------------------------------------------------
+    do
+        local CoreGui         = game:GetService("CoreGui")
+        local TeleportService = game:GetService("TeleportService")
+        local Players         = game:GetService("Players")
+        local lp              = Players.LocalPlayer
+
+        local rowAR = Instance.new("Frame", subSrv)
+        rowAR.Size = UDim2.new(1,0,0,36)
+        rowAR.BackgroundTransparency = 1
+
+        local labelAR = Instance.new("TextLabel", rowAR)
+        labelAR.Size = UDim2.new(1,-100,1,0)
+        labelAR.Position = UDim2.new(0,16,0,0)
+        labelAR.BackgroundTransparency = 1
+        labelAR.Font = Enum.Font.Gotham
+        labelAR.TextSize = 13
+        labelAR.TextXAlignment = Enum.TextXAlignment.Left
+        labelAR.TextColor3 = TEXT
+        labelAR.Text = "🌐 Auto Reconnect"
+
+        local pillAR = Instance.new("TextButton", rowAR)
+        pillAR.Size = UDim2.new(0,50,0,24)
+        pillAR.Position = UDim2.new(1,-80,0.5,-12)
+        pillAR.BackgroundColor3 = MUTED
+        pillAR.BackgroundTransparency = 0.1
+        pillAR.Text = ""
+        pillAR.AutoButtonColor = false
+        Instance.new("UICorner", pillAR).CornerRadius = UDim.new(0,999)
+
+        local knobAR = Instance.new("Frame", pillAR)
+        knobAR.Size = UDim2.new(0,18,0,18)
+        knobAR.Position = UDim2.new(0,3,0.5,-9)
+        knobAR.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knobAR).CornerRadius = UDim.new(0,999)
+
+        local enabled   = _G.RAY_AutoReconnect
+        local connPrompt
+
+        local function refreshAR()
+            pillAR.BackgroundColor3 = enabled and ACCENT or MUTED
+            knobAR.Position = enabled and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+        end
+
+        local function startListen()
+            if connPrompt then return end
+            task.spawn(function()
+                local promptGui
+                while enabled and not promptGui do
+                    promptGui = CoreGui:FindFirstChild("RobloxPromptGui")
+                    if not promptGui then
+                        CoreGui.ChildAdded:Wait()
+                    end
+                end
+                if not enabled or not promptGui then return end
+
+                local overlay = promptGui:WaitForChild("promptOverlay")
+                connPrompt = overlay.ChildAdded:Connect(function(child)
+                    if not enabled then return end
+                    if child.Name == "ErrorPrompt" then
+                        task.wait(2)
+                        while enabled do
+                            pcall(function()
+                                TeleportService:Teleport(game.PlaceId, lp)
+                            end)
+                            task.wait(2)
+                        end
+                    end
+                end)
+            end)
+        end
+
+        local function stopListen()
+            if connPrompt then
+                connPrompt:Disconnect()
+                connPrompt = nil
+            end
+        end
+
+        pillAR.MouseButton1Click:Connect(function()
+            enabled = not enabled
+            _G.RAY_AutoReconnect = enabled
+            if enabled then
+                startListen()
+            else
+                stopListen()
+            end
+            refreshAR()
+        end)
+
+        if enabled then
+            startListen()
+        end
+        refreshAR()
+    end
+
+    ----------------------------------------------------------------
+    -- 🔁 AUTO CHANGE SERVER (SERVER HOP)
+    ----------------------------------------------------------------
+    do
+        local Players         = game:GetService("Players")
+        local TeleportService = game:GetService("TeleportService")
+        local HttpService     = game:GetService("HttpService")
+        local lp              = Players.LocalPlayer
+
+        local rowHop = Instance.new("Frame", subSrv)
+        rowHop.Size = UDim2.new(1,0,0,48)
+        rowHop.BackgroundTransparency = 1
+
+        local labelHop = Instance.new("TextLabel", rowHop)
+        labelHop.Size = UDim2.new(1,-100,0.5,0)
+        labelHop.Position = UDim2.new(0,16,0,0)
+        labelHop.BackgroundTransparency = 1
+        labelHop.Font = Enum.Font.Gotham
+        labelHop.TextSize = 13
+        labelHop.TextXAlignment = Enum.TextXAlignment.Left
+        labelHop.TextColor3 = TEXT
+        labelHop.Text = "🔁 Auto Change Server"
+
+        local infoHop = Instance.new("TextLabel", rowHop)
+        infoHop.Size = UDim2.new(1,-16,0.5,0)
+        infoHop.Position = UDim2.new(0,16,0.5,0)
+        infoHop.BackgroundTransparency = 1
+        infoHop.Font = Enum.Font.Gotham
+        infoHop.TextSize = 11
+        infoHop.TextXAlignment = Enum.TextXAlignment.Left
+        infoHop.TextColor3 = MUTED
+        infoHop.TextWrapped = true
+        infoHop.Text = "Klik 'Hop' untuk pindah ke server lain secara otomatis."
+
+        local btnHop = Instance.new("TextButton", rowHop)
+        btnHop.Size = UDim2.new(0,80,0,22)
+        btnHop.Position = UDim2.new(1,-96,0.25,-11)
+        btnHop.BackgroundColor3 = ACCENT
+        btnHop.BackgroundTransparency = 0.06
+        btnHop.AutoButtonColor = false
+        btnHop.Font = Enum.Font.Gotham
+        btnHop.TextSize = 12
+        btnHop.TextColor3 = TEXT
+        btnHop.Text = "Hop"
+        Instance.new("UICorner", btnHop).CornerRadius = UDim.new(0,8)
+
+        local isHopping = false
+
+        local function ServerHopOnce()
+            if isHopping then return end
+            isHopping = true
+
+            pcall(function()
+                local placeId    = game.PlaceId
+                local currentJob = game.JobId
+
+                local url  = "https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
+                local body = game:HttpGet(url)
+                local data = HttpService:JSONDecode(body)
+
+                for _, srv in ipairs(data.data or {}) do
+                    if srv.id ~= currentJob and srv.playing < srv.maxPlayers then
+                        TeleportService:TeleportToPlaceInstance(placeId, srv.id, lp)
+                        return
+                    end
+                end
+            end)
+
+            isHopping = false
+        end
+
+        btnHop.MouseButton1Click:Connect(ServerHopOnce)
+    end
+
+    -- penting: tutup dropdown server
+    recalcSrv()
+end
+
+
     ----------------------------------------------------------------
     -- DROPDOWN : 🔔 NOTIFICATION & VISUAL
     ----------------------------------------------------------------
     local holder = Instance.new("Frame", miscContainer)
     holder.Size = UDim2.new(1,0,0,42)
     holder.BackgroundTransparency = 1
-    holder.LayoutOrder = 2
+    holder.LayoutOrder = 3
 
     local mainBtn = Instance.new("TextButton", holder)
     mainBtn.Size = UDim2.new(1,0,0,42)
@@ -3678,7 +3740,7 @@ do
     infoSkin.TextXAlignment = Enum.TextXAlignment.Left
     infoSkin.TextColor3 = MUTED
     infoSkin.TextWrapped = true
-    infoSkin.Text = "Kill skin: 1x1x1x1 Ban Hammer, Abyssal Chroma, Abyssfire, Amber, Amethyst, BanHammerThrow, Xmas Tree, Vanquisher, Ornament Axe, Frozen Krampus Scythe, Electric Guitar, Eclipse Katana, Divine Blade."
+    infoSkin.Text = "Disable All Skin Effect."
 
     local pillSkin = Instance.new("TextButton", rowSkin)
     pillSkin.Size = UDim2.new(0,50,0,24)
@@ -3709,7 +3771,7 @@ do
         _G.RAY_DisableRodSkin = enabled
 
         if enabled then
-            KillAllRodSkins()
+            KillAllVFX()
         end
 
         refreshSkin()
@@ -3717,7 +3779,7 @@ do
 
     lp.CharacterAdded:Connect(function()
         if enabled then
-            task.delay(0.5, KillAllRodSkins)
+            task.delay(0.5, KillAllVFX)
         end
     end)
 
@@ -4355,10 +4417,6 @@ end)
 ----------------------------------------------------------------
 -- REMOTES
 ----------------------------------------------------------------
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local lp = Players.LocalPlayer
-
 local Net = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
@@ -4374,16 +4432,9 @@ local Events = {
     equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
     unequip  = Net:WaitForChild("RE/UnequipToolFromHotbar"),
 
+    -- WEATHER
     purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
 }
-
--- Replion (sama kayak script yang works)
-local Replion = require(ReplicatedStorage.Packages.Replion)
-
--- ClaimPirateChest pakai Net yang sama
-local ClaimPirateChest = Net:WaitForChild("RE/ClaimPirateChest")
-
-
 
 ----------------------------------------------------------------
 -- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
