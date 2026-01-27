@@ -2556,13 +2556,11 @@ local function BuildShopMerchant()
         end)
     end
 
-    -- POSISI CARD MERCHANT DI BAWAH BAIT
     local baitCard = shopPage:WaitForChild("BaitSelectorCard", 5)
     local baseY = baitCard
         and (baitCard.Position.Y.Offset + baitCard.Size.Y.Offset + 12)
         or 120
 
-    -- CARD MERCHANT
     local card = Instance.new("Frame")
     card.Name = "MerchantCard"
     card.Parent = shopPage
@@ -2579,15 +2577,15 @@ local function BuildShopMerchant()
     cardPad.PaddingRight  = UDim.new(0, 16)
     cardPad.PaddingBottom = UDim.new(0, 8)
 
-    local cardTitle = Instance.new("TextLabel", card)
-    cardTitle.Size = UDim2.new(1, -40, 0, 22)
-    cardTitle.Position = UDim2.new(0, 16, 0, 4)
-    cardTitle.BackgroundTransparency = 1
-    cardTitle.Font = Enum.Font.GothamSemibold
-    cardTitle.TextSize = 14
-    cardTitle.TextXAlignment = Enum.TextXAlignment.Left
-    cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "🛒 Traveling Merchant"
+    local title = Instance.new("TextLabel", card)
+    title.Size = UDim2.new(1, -40, 0, 22)
+    title.Position = UDim2.new(0, 16, 0, 4)
+    title.BackgroundTransparency = 1
+    title.Font = Enum.Font.GothamSemibold
+    title.TextSize = 14
+    title.TextXAlignment = Enum.TextXAlignment.Left
+    title.TextColor3 = TEXT
+    title.Text = "🛒 Traveling Merchant"
 
     local arrow = Instance.new("TextLabel", card)
     arrow.Size = UDim2.new(0, 24, 0, 24)
@@ -2604,7 +2602,6 @@ local function BuildShopMerchant()
     cardBtn.Text = ""
     cardBtn.AutoButtonColor = false
 
-    -- DROPDOWN CONTAINER
     local subMerchant = Instance.new("Frame", card)
     subMerchant.Name = "MerchantContents"
     subMerchant.Position = UDim2.new(0, 0, 0, 48)
@@ -2638,9 +2635,8 @@ local function BuildShopMerchant()
     end)
 
     ----------------------------------------------------------------
-    -- ISI DROPDOWN: STOCK, REFRESH, SELECT, QUANTITY
+    -- ISI DROPDOWN
     ----------------------------------------------------------------
-    -- ROW: CURRENT STOCK
     local rowStock = Instance.new("Frame", subMerchant)
     rowStock.Size = UDim2.new(1, 0, 0, 36)
     rowStock.BackgroundTransparency = 1
@@ -2665,7 +2661,6 @@ local function BuildShopMerchant()
     stockLine.TextColor3 = MUTED
     stockLine.Text = "None"
 
-    -- ROW: REFRESH STOCK
     local rowRefresh = Instance.new("Frame", subMerchant)
     rowRefresh.Size = UDim2.new(1, 0, 0, 32)
     rowRefresh.BackgroundColor3 = CARD
@@ -2681,7 +2676,6 @@ local function BuildShopMerchant()
     refreshBtn.Text = "Refresh Stock"
     refreshBtn.AutoButtonColor = false
 
-    -- ROW: SELECT ITEMS TO BUY
     local rowSelect = Instance.new("Frame", subMerchant)
     rowSelect.Size = UDim2.new(1, 0, 0, 36)
     rowSelect.BackgroundColor3 = CARD
@@ -2723,7 +2717,6 @@ local function BuildShopMerchant()
     selectBtn.Text = ""
     selectBtn.AutoButtonColor = false
 
-    -- ROW: QUANTITY + AUTO BUY
     local rowBottom = Instance.new("Frame", subMerchant)
     rowBottom.Size = UDim2.new(1, 0, 0, 36)
     rowBottom.BackgroundTransparency = 1
@@ -2775,7 +2768,7 @@ local function BuildShopMerchant()
     Instance.new("UICorner", autoKnob).CornerRadius = UDim.new(0, 999)
 
     ----------------------------------------------------------------
-    -- QUANTITY INPUT
+    -- QUANTITY + STOCK
     ----------------------------------------------------------------
     qtyBox:GetPropertyChangedSignal("Text"):Connect(function()
         local n = tonumber(qtyBox.Text)
@@ -2788,9 +2781,6 @@ local function BuildShopMerchant()
         qtyBox.Text = tostring(n)
     end)
 
-    ----------------------------------------------------------------
-    -- STOCK TEXT + SELECTED IDS
-    ----------------------------------------------------------------
     local function RefreshStockTextAndSelected()
         local stock = GetCurrentMerchantStock()
         stockLabel.Text = "Current Merchant Stock"
@@ -2802,12 +2792,10 @@ local function BuildShopMerchant()
         else
             local names = {}
             selectedIds = {}
-
             for _, def in ipairs(stock) do
                 table.insert(names, def.Identifier)
                 selectedIds[def.Id] = true
             end
-
             stockLine.Text = table.concat(names, ", ")
             selectedHint.Text = "All current items"
         end
@@ -2817,7 +2805,7 @@ local function BuildShopMerchant()
     merchant:OnChange("Items", RefreshStockTextAndSelected)
 
     ----------------------------------------------------------------
-    -- PANEL KANAN PILIH ITEM
+    -- PANEL PILIH ITEM
     ----------------------------------------------------------------
     local overlay = Instance.new("TextButton")
     overlay.Name = "MerchantOverlay"
@@ -2950,9 +2938,6 @@ local function BuildShopMerchant()
         updateSelectedHint()
     end)
 
-    ----------------------------------------------------------------
-    -- OPEN/CLOSE PANEL PILIH ITEM
-    ----------------------------------------------------------------
     local panelOpen = false
     local function setPanelOpen(state)
         panelOpen = state
@@ -3006,7 +2991,7 @@ local function BuildShopMerchant()
     end)
 
     ----------------------------------------------------------------
-    -- LISTEN BAIT CHANGES & REPOSITION MERCHANT
+    -- REPOSITION MERCHANT DI BAWAH BAIT
     ----------------------------------------------------------------
     local function updateMerchantPosition()
         local baitNow = shopPage:FindFirstChild("BaitSelectorCard")
@@ -3032,7 +3017,6 @@ local function BuildShopMerchant()
 end
 
 BuildShopMerchant()
-
 
 ----------------------------------------------------------------
 -- PAGE SWITCH
