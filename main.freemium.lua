@@ -2579,7 +2579,7 @@ local function BuildShopMerchant()
     local card = Instance.new("Frame")
     card.Name = "MerchantCard"
     card.Parent = shopPage
-    card.Size = UDim2.new(1, -32, 0, 48)  -- tinggi awal 48 (judul)
+    card.Size = UDim2.new(1, -32, 0, 48)
     card.Position = UDim2.new(0, 16, 0, baseY)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
@@ -2846,9 +2846,9 @@ local function BuildShopMerchant()
     local panel = Instance.new("Frame")
     panel.Name = "MerchantItemPanel"
     panel.Parent = overlay
-    panel.Size = UDim2.new(0, 220, 0, 230)            -- lebih pendek
+    panel.Size = UDim2.new(0, 220, 0, 230)
     panel.AnchorPoint = Vector2.new(1, 0.5)
-    panel.Position = UDim2.new(1, -24, 0.52, 0)        -- sedikit lebih turun
+    panel.Position = UDim2.new(1, -24, 0.52, 0)
     panel.BackgroundColor3 = CARD
     panel.BackgroundTransparency = 0.04
     panel.Visible = false
@@ -2984,7 +2984,7 @@ local function BuildShopMerchant()
     end)
 
     ----------------------------------------------------------------
-    -- TOGGLE AUTO BUY
+    -- TOGGLE AUTO BUY (ON/OFF BENERAN)
     ----------------------------------------------------------------
     local function refreshAutoToggle()
         autoPill.BackgroundColor3 = AutoMerchantOn and ACCENT or MUTED
@@ -2996,17 +2996,7 @@ local function BuildShopMerchant()
     autoPill.MouseButton1Click:Connect(function()
         AutoMerchantOn = not AutoMerchantOn
         refreshAutoToggle()
-
-        if AutoMerchantOn then
-            local stock = GetCurrentMerchantStock()
-            for _, def in ipairs(stock) do
-                if selectedIds[def.Id] then
-                    BuyMerchantIdOnce(def.Id, Quantity)
-                end
-            end
-            AutoMerchantOn = false
-            refreshAutoToggle()
-        end
+        -- tidak ada beli langsung di sini
     end)
 
     refreshAutoToggle()
@@ -3040,6 +3030,7 @@ local function BuildShopMerchant()
 end
 
 BuildShopMerchant()
+
 
 
 
