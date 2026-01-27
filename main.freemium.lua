@@ -428,6 +428,16 @@ newPage("Quest")
 newPage("Shop & Trade")
 newPage("Misc")
 
+---- page remotes quest ----
+local Net = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+
+local Replion = require(ReplicatedStorage.Packages.Replion)
+local ClaimPirateChest = Net:WaitForChild("RE/ClaimPirateChest")
+
 -- layout untuk halaman Quest (biar card tidak nabrak)
 local questLayout = Instance.new("UIListLayout", pages["Quest"])
 questLayout.Padding = UDim.new(0,8)
@@ -5128,13 +5138,6 @@ local Events = {
 
     purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
 }
-
--- Replion (sama kayak script yang works)
-local Replion = require(ReplicatedStorage.Packages.Replion)
-
--- ClaimPirateChest pakai Net yang sama
-local ClaimPirateChest = Net:WaitForChild("RE/ClaimPirateChest")
-
 
 
 ----------------------------------------------------------------
