@@ -2820,13 +2820,14 @@ local function BuildShopMerchant()
     panel.Visible = false
     panel.ZIndex = 5
     panel.Active = true
-    Instance.new("UICorner", panel).CornerRadius = UDim2.new(0,12)
+    Instance.new("UICorner", panel).CornerRadius = UDim.new(0, 12)
 
     local pPad = Instance.new("UIPadding", panel)
-    pPad.PaddingTop    = UDim2.new(0,8)
-    pPad.PaddingLeft   = UDim2.new(0,8)
-    pPad.PaddingRight  = UDim2.new(0,8)
-    pPad.PaddingBottom = UDim2.new(0,8)
+    pPad.PaddingTop    = UDim.new(0,8)
+    pPad.PaddingLeft   = UDim.new(0,8)
+    pPad.PaddingRight  = UDim.new(0,8)
+    pPad.PaddingBottom = UDim.new(0,8)
+
 
     local pTitle = Instance.new("TextLabel", panel)
     pTitle.Size = UDim2.new(1,0,0,20)
@@ -2848,11 +2849,11 @@ local function BuildShopMerchant()
     scroller.Active = true
 
     local scLayout = Instance.new("UIListLayout", scroller)
-    scLayout.Padding = UDim2.new(0,4)
+    scLayout.Padding = UDim.new(0,4)                 -- ✅ benar, tipe UDim
     scLayout.SortOrder = Enum.SortOrder.LayoutOrder
     scLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        scroller.CanvasSize = UDim2.new(0,0,0,scLayout.AbsoluteContentSize.Y + 8)
-    end)
+    scroller.CanvasSize = UDim2.new(0,0,0,scLayout.AbsoluteContentSize.Y + 8)
+end)
 
     local function updateSelectedHint()
         local names = {}
@@ -2900,7 +2901,7 @@ local function BuildShopMerchant()
                 b.Text = "  " .. name
                 b.AutoButtonColor = false
                 b.ZIndex = 6
-                Instance.new("UICorner", b).CornerRadius = UDim2.new(0,6)
+                Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)   -- ✅
 
                 b.MouseButton1Click:Connect(function()
                     selectedIds[id] = not selectedIds[id]
