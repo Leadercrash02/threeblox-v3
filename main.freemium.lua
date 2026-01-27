@@ -438,40 +438,6 @@ local Net = ReplicatedStorage
 local Replion = require(ReplicatedStorage.Packages.Replion)
 local ClaimPirateChest = Net:WaitForChild("RE/ClaimPirateChest")
 
-----------------------------------------------------------------
--- TRAVELING MERCHANT DATA
-----------------------------------------------------------------
-local MarketItemData = require(ReplicatedStorage.Shared.MarketItemData)
-local MerchantReplion = Replion.Client:WaitReplion("Merchant") -- sama kayak test
-
-local AutoMerchantOn = false
-local MerchantSelectedIds = {} -- [id] = true jika dipilih
-local MerchantBuyQty = 1       -- quantity per item
-
-local function TM_GetCurrentMerchantStock()
-    local ids = MerchantReplion:GetExpect("Items") or {}
-    local list = {}
-
-    for _, id in ipairs(ids) do
-        for _, def in ipairs(MarketItemData) do
-            if def.Id == id then
-                table.insert(list, def)
-                break
-            end
-        end
-    end
-
-    return list
-end
-
-local function TM_BuyMerchantId(id)
-    task.spawn(function()
-        pcall(function()
-            local rf = Net:WaitForChild("RF/PurchaseMarketItem")
-            rf:InvokeServer(id)
-        end)
-    end)
-end
 
 ----------------------------------------------------------------
 -- LAYOUT VERTICAL UNTUK SHOP & TRADE
@@ -1550,26 +1516,22 @@ BuildQuestChestFarm()
 
 
 ----------------------------------------------------------------
--- SHOP & TRADE : WEATHER & SERVER INFO
+-- SHOP & TRADE : WEATHER PRESET  (VERTICAL CARD)
 ----------------------------------------------------------------
 local function BuildShopWeather()
     local shopPage = pages["Shop & Trade"]
 
-    local WeatherAutoOn = false
-    local ServerHopOn = false
-
     ------------------------------------------------------------
-    -- CARD WEATHER (LEVEL 1)
+    -- CARD "WEATHER PRESET"
     ------------------------------------------------------------
     local card = Instance.new("Frame")
-    card.Name = "WeatherCard"
+    card.Name = "WeatherPresetCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,0)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
-    card.LayoutOrder = 2
+    card.LayoutOrder = 1
     Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
 
     local cardTitle = Instance.new("TextLabel", card)
@@ -1580,7 +1542,7 @@ local function BuildShopWeather()
     cardTitle.TextSize = 14
     cardTitle.TextXAlignment = Enum.TextXAlignment.Left
     cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "⛅ Weather & Server"
+    cardTitle.Text = "🌦 Weather Preset"
 
     local arrow = Instance.new("TextLabel", card)
     arrow.Size = UDim2.new(0,24,0,24)
@@ -1598,171 +1560,272 @@ local function BuildShopWeather()
     cardBtn.AutoButtonColor = false
 
     ------------------------------------------------------------
-    -- DROPDOWN CONTAINER (LEVEL 2)
+    -- DROPDOWN CONTENT
     ------------------------------------------------------------
-    local subWeather = Instance.new("Frame", card)
-    subWeather.Name = "WeatherContents"
-    subWeather.Position = UDim2.new(0,0,0,48)
-    subWeather.Size = UDim2.new(1,0,0,0)
-    subWeather.BackgroundTransparency = 1
-    subWeather.ClipsDescendants = true
+    local subPreset = Instance.new("Frame", card)
+    subPreset.Name = "PresetContents"
+    subPreset.Position = UDim2.new(0,0,0,48)
+    subPreset.Size = UDim2.new(1,0,0,0)
+    subPreset.BackgroundTransparency = 1
+    subPreset.ClipsDescendants = true
 
-    local wLayout = Instance.new("UIListLayout", subWeather)
-    wLayout.Padding = UDim.new(0,6)
-    wLayout.FillDirection = Enum.FillDirection.Vertical
-    wLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    wLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    local presetLayout = Instance.new("UIListLayout", subPreset)
+    presetLayout.Padding = UDim.new(0,6)
+    presetLayout.FillDirection = Enum.FillDirection.Vertical
+    presetLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    presetLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    local weatherOpen = false
-    local function recalcWeather()
-        local h = wLayout.AbsoluteContentSize.Y
-        if weatherOpen then
-            subWeather.Size = UDim2.new(1,0,0,h + 8)
+    local presetOpen = false
+    local function recalcPreset()
+        local h = presetLayout.AbsoluteContentSize.Y
+        if presetOpen then
+            subPreset.Size = UDim2.new(1,0,0,h + 8)
             card.Size = UDim2.new(1,-32,0,48 + h + 8)
             arrow.Text = "▲"
         else
-            subWeather.Size = UDim2.new(1,0,0,0)
+            subPreset.Size = UDim2.new(1,0,0,0)
             card.Size = UDim2.new(1,-32,0,48)
             arrow.Text = "▼"
         end
     end
 
-    wLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcWeather)
+    presetLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcPreset)
 
     cardBtn.MouseButton1Click:Connect(function()
-        weatherOpen = not weatherOpen
-        recalcWeather()
+        presetOpen = not presetOpen
+        recalcPreset()
     end)
 
     ------------------------------------------------------------
-    -- ROW 1: CURRENT WEATHER LABEL
+    -- ROW: SELECT WEATHER
     ------------------------------------------------------------
-    local rowInfo = Instance.new("Frame", subWeather)
-    rowInfo.Size = UDim2.new(1,0,0,32)
-    rowInfo.BackgroundTransparency = 1
+    local rowSelect = Instance.new("Frame", subPreset)
+    rowSelect.Size = UDim2.new(1,0,0,36)
+    rowSelect.BackgroundTransparency = 1
 
-    local lblWeather = Instance.new("TextLabel", rowInfo)
-    lblWeather.Size = UDim2.new(1,-32,1,0)
-    lblWeather.Position = UDim2.new(0,16,0,0)
-    lblWeather.BackgroundTransparency = 1
-    lblWeather.Font = Enum.Font.Gotham
-    lblWeather.TextSize = 12
-    lblWeather.TextXAlignment = Enum.TextXAlignment.Left
-    lblWeather.TextColor3 = TEXT
-    lblWeather.Text = "Weather: Unknown"
+    local lblSelect = Instance.new("TextLabel", rowSelect)
+    lblSelect.Size = UDim2.new(0.5,0,1,0)
+    lblSelect.Position = UDim2.new(0,16,0,0)
+    lblSelect.BackgroundTransparency = 1
+    lblSelect.Font = Enum.Font.Gotham
+    lblSelect.TextSize = 13
+    lblSelect.TextXAlignment = Enum.TextXAlignment.Left
+    lblSelect.TextColor3 = TEXT
+    lblSelect.Text = "Select Weather"
+
+    local hint = Instance.new("TextLabel", rowSelect)
+    hint.Size = UDim2.new(0.5,-32,1,0)
+    hint.Position = UDim2.new(0.5,0,0,0)
+    hint.BackgroundTransparency = 1
+    hint.Font = Enum.Font.Gotham
+    hint.TextSize = 11
+    hint.TextXAlignment = Enum.TextXAlignment.Right
+    hint.TextColor3 = Color3.fromRGB(170,170,170)
+    hint.Text = "Auto buy • MAX 4."
+
+    local chevron = Instance.new("TextLabel", rowSelect)
+    chevron.Size = UDim2.new(0,20,1,0)
+    chevron.Position = UDim2.new(1,-20,0,0)
+    chevron.BackgroundTransparency = 1
+    chevron.Font = Enum.Font.Gotham
+    chevron.TextSize = 16
+    chevron.TextColor3 = TEXT
+    chevron.Text = "▾"
+
+    local selectBtn = Instance.new("TextButton", rowSelect)
+    selectBtn.BackgroundTransparency = 1
+    selectBtn.Size = UDim2.new(1,0,1,0)
+    selectBtn.Text = ""
+    selectBtn.AutoButtonColor = false
 
     ------------------------------------------------------------
-    -- ROW 2: AUTO WEATHER TOGGLE (PILL)
+    -- ROW: AUTO BUY WEATHER
     ------------------------------------------------------------
-    local rowAutoWeather = Instance.new("Frame", subWeather)
-    rowAutoWeather.Size = UDim2.new(1,0,0,36)
-    rowAutoWeather.BackgroundTransparency = 1
+    local rowAuto = Instance.new("Frame", subPreset)
+    rowAuto.Size = UDim2.new(1,0,0,36)
+    rowAuto.BackgroundTransparency = 1
 
-    local lblAutoWeather = Instance.new("TextLabel", rowAutoWeather)
-    lblAutoWeather.Size = UDim2.new(1,-120,1,0)
-    lblAutoWeather.Position = UDim2.new(0,16,0,0)
-    lblAutoWeather.BackgroundTransparency = 1
-    lblAutoWeather.Font = Enum.Font.Gotham
-    lblAutoWeather.TextSize = 13
-    lblAutoWeather.TextXAlignment = Enum.TextXAlignment.Left
-    lblAutoWeather.TextColor3 = TEXT
-    lblAutoWeather.Text = "Auto Optimal Weather"
+    local lblAuto = Instance.new("TextLabel", rowAuto)
+    lblAuto.Size = UDim2.new(1,-120,1,0)
+    lblAuto.Position = UDim2.new(0,16,0,0)
+    lblAuto.BackgroundTransparency = 1
+    lblAuto.Font = Enum.Font.Gotham
+    lblAuto.TextSize = 13
+    lblAuto.TextXAlignment = Enum.TextXAlignment.Left
+    lblAuto.TextColor3 = TEXT
+    lblAuto.Text = "Auto Buy Weather"
 
-    local pillWeather = Instance.new("TextButton", rowAutoWeather)
-    pillWeather.Size = UDim2.new(0,50,0,24)
-    pillWeather.Position = UDim2.new(1,-80,0.5,-12)
-    pillWeather.BackgroundColor3 = MUTED
-    pillWeather.BackgroundTransparency = 0.1
-    pillWeather.Text = ""
-    pillWeather.AutoButtonColor = false
-    Instance.new("UICorner", pillWeather).CornerRadius = UDim.new(0,999)
+    local pill = Instance.new("TextButton", rowAuto)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
 
-    local knobWeather = Instance.new("Frame", pillWeather)
-    knobWeather.Size = UDim2.new(0,18,0,18)
-    knobWeather.Position = UDim2.new(0,3,0.5,-9)
-    knobWeather.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knobWeather).CornerRadius = UDim.new(0,999)
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-    local function refreshWeatherToggle()
-        pillWeather.BackgroundColor3 = WeatherAutoOn and ACCENT or MUTED
-        knobWeather.Position = WeatherAutoOn
+    local AutoWeatherOn = false
+    local function refreshAuto()
+        pill.BackgroundColor3 = AutoWeatherOn and ACCENT or MUTED
+        knob.Position = AutoWeatherOn
             and UDim2.new(1,-21,0.5,-9)
             or  UDim2.new(0,3,0.5,-9)
     end
 
-    pillWeather.MouseButton1Click:Connect(function()
-        WeatherAutoOn = not WeatherAutoOn
-        _G.RAY_WeatherAutoOn = WeatherAutoOn
-        refreshWeatherToggle()
+    pill.MouseButton1Click:Connect(function()
+        AutoWeatherOn = not AutoWeatherOn
+        refreshAuto()
     end)
 
+    refreshAuto()
+    recalcPreset()
+
     ------------------------------------------------------------
-    -- ROW 3: AUTO SERVER HOP (PILL)
+    -- OVERLAY + PANEL KANAN (logic lama, posisi dibenerin)
     ------------------------------------------------------------
-    local rowServer = Instance.new("Frame", subWeather)
-    rowServer.Size = UDim2.new(1,0,0,36)
-    rowServer.BackgroundTransparency = 1
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "WeatherOverlay"
+    overlay.Parent = shopPage
+    overlay.Size = UDim2.new(1,0,1,0)
+    overlay.Position = UDim2.new(0,0,0,0)
+    overlay.BackgroundTransparency = 1
+    overlay.Text = ""
+    overlay.Visible = false
+    overlay.ZIndex = 4
+    overlay.AutoButtonColor = false
 
-    local lblServer = Instance.new("TextLabel", rowServer)
-    lblServer.Size = UDim2.new(1,-120,1,0)
-    lblServer.Position = UDim2.new(0,16,0,0)
-    lblServer.BackgroundTransparency = 1
-    lblServer.Font = Enum.Font.Gotham
-    lblServer.TextSize = 13
-    lblServer.TextXAlignment = Enum.TextXAlignment.Left
-    lblServer.TextColor3 = TEXT
-    lblServer.Text = "Server Hop On Bad Weather"
+    local weatherPanel = Instance.new("Frame")
+    weatherPanel.Name = "WeatherPanel"
+    weatherPanel.Parent = overlay
+    weatherPanel.Size = UDim2.new(0,220,0,220)
+    weatherPanel.AnchorPoint = Vector2.new(1,0.5)
+    weatherPanel.Position = UDim2.new(1,-24,0.5,0)
+    weatherPanel.BackgroundColor3 = CARD
+    weatherPanel.BackgroundTransparency = 0.04
+    weatherPanel.Visible = false
+    weatherPanel.ZIndex = 5
+    weatherPanel.Active = true
+    Instance.new("UICorner", weatherPanel).CornerRadius = UDim.new(0,12)
 
-    local pillServer = Instance.new("TextButton", rowServer)
-    pillServer.Size = UDim2.new(0,50,0,24)
-    pillServer.Position = UDim2.new(1,-80,0.5,-12)
-    pillServer.BackgroundColor3 = MUTED
-    pillServer.BackgroundTransparency = 0.1
-    pillServer.Text = ""
-    pillServer.AutoButtonColor = false
-    Instance.new("UICorner", pillServer).CornerRadius = UDim.new(0,999)
+    local wPad = Instance.new("UIPadding", weatherPanel)
+    wPad.PaddingTop    = UDim.new(0,8)
+    wPad.PaddingLeft   = UDim.new(0,8)
+    wPad.PaddingRight  = UDim.new(0,8)
+    wPad.PaddingBottom = UDim.new(0,8)
 
-    local knobServer = Instance.new("Frame", pillServer)
-    knobServer.Size = UDim2.new(0,18,0,18)
-    knobServer.Position = UDim2.new(0,3,0.5,-9)
-    knobServer.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    Instance.new("UICorner", knobServer).CornerRadius = UDim.new(0,999)
+    local weatherList = Instance.new("ScrollingFrame", weatherPanel)
+    weatherList.Position = UDim2.new(0,0,0,0)
+    weatherList.Size = UDim2.new(1,0,1,0)
+    weatherList.ScrollBarThickness = 4
+    weatherList.ScrollingDirection = Enum.ScrollingDirection.Y
+    weatherList.CanvasSize = UDim2.new(0,0,0,0)
+    weatherList.BackgroundTransparency = 1
+    weatherList.ClipsDescendants = true
+    weatherList.ZIndex = 6
+    weatherList.Active = true
 
-    local function refreshServerToggle()
-        pillServer.BackgroundColor3 = ServerHopOn and ACCENT or MUTED
-        knobServer.Position = ServerHopOn
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
+    local wlLayout = Instance.new("UIListLayout", weatherList)
+    wlLayout.Padding = UDim.new(0,4)
+    wlLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    wlLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        weatherList.CanvasSize = UDim2.new(0,0,0,wlLayout.AbsoluteContentSize.Y + 8)
+    end)
+
+    local function rebuildWeatherPanel()
+        for _, c in ipairs(weatherList:GetChildren()) do
+            if c:IsA("TextButton") then c:Destroy() end
+        end
+
+        for _, name in ipairs(WEATHER_OPTIONS) do
+            local b = Instance.new("TextButton", weatherList)
+            b.Size = UDim2.new(1,0,0,26)
+            b.BackgroundColor3 = CARD
+            b.BackgroundTransparency = selectedWeather[name] and 0.08 or 0.18
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 13
+            b.TextXAlignment = Enum.TextXAlignment.Left
+            b.TextColor3 = TEXT
+            b.Text = "  " .. name
+            b.ZIndex = 6
+            b.AutoButtonColor = false
+            Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+            local highlight = Instance.new("Frame")
+            highlight.Name = "Highlight"
+            highlight.Parent = b
+            highlight.AnchorPoint = Vector2.new(0,0.5)
+            highlight.Position = UDim2.new(0,0,0.5,0)
+            highlight.Size = UDim2.new(0,3,1,-6)
+            highlight.BackgroundColor3 = Color3.fromRGB(255,220,0)
+            highlight.BackgroundTransparency = selectedWeather[name] and 0 or 1
+            highlight.ZIndex = 7
+
+            b.MouseButton1Click:Connect(function()
+                local before = selectedWeather[name]
+                toggleWeather(name)
+                if not before and not selectedWeather[name] then
+                    return
+                end
+                rebuildWeatherPanel()
+            end)
+        end
     end
 
-    pillServer.MouseButton1Click:Connect(function()
-        ServerHopOn = not ServerHopOn
-        _G.RAY_ServerHopOn = ServerHopOn
-        refreshServerToggle()
+    rebuildWeatherPanel()
+
+    local panelOpen = false
+    local function setPanelOpen(state)
+        panelOpen = state
+        overlay.Visible = panelOpen
+        weatherPanel.Visible = panelOpen
+    end
+
+    selectBtn.MouseButton1Click:Connect(function()
+        setPanelOpen(not panelOpen)
+    end)
+
+    overlay.MouseButton1Click:Connect(function()
+        setPanelOpen(false)
     end)
 
     ------------------------------------------------------------
-    -- INIT
+    -- ENGINE AUTO BUY (logic lama dipertahankan)
     ------------------------------------------------------------
-    refreshWeatherToggle()
-    refreshServerToggle()
-    recalcWeather()
-
-    ------------------------------------------------------------
-    -- CLEANUP
-    ------------------------------------------------------------
-    card.AncestryChanged:Connect(function()
-        if not card.Parent then
-            -- nothing special to clean here, but hook disconnection is safe
+    task.spawn(function()
+        task.wait(5)
+        while true do
+            if AutoWeatherOn then
+                for name, on in pairs(selectedWeather) do
+                    if on then
+                        pcall(function()
+                            local RS = game:GetService("ReplicatedStorage")
+                            local rf = RS
+                                :WaitForChild("Packages")
+                                :WaitForChild("_Index")
+                                :WaitForChild("sleitnick_net@0.2.0")
+                                :WaitForChild("net")
+                                :WaitForChild("RF/PurchaseWeatherEvent")
+                            rf:InvokeServer(name)
+                        end)
+                        task.wait(1.5)
+                    end
+                end
+            end
+            task.wait(5)
         end
     end)
 end
 
-
 BuildShopWeather()
 
 ----------------------------------------------------------------
--- SHOP & TRADE : ROD SELECTOR
+-- SHOP & TRADE : ROD SELECTOR (VERTICAL, TETAP LOGIC LAMA)
 ----------------------------------------------------------------
 local function BuildShopRods()
     local shopPage = pages["Shop & Trade"]
@@ -1788,14 +1851,10 @@ local function BuildShopRods()
     local selectedRodPrice = 0
     local AutoRodOn = false
 
-    ------------------------------------------------------------
-    -- CARD ROD SELECTOR (LEVEL 1)
-    ------------------------------------------------------------
     local card = Instance.new("Frame")
     card.Name = "RodSelectorCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,0)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
@@ -1827,9 +1886,6 @@ local function BuildShopRods()
     cardBtn.Text = ""
     cardBtn.AutoButtonColor = false
 
-    ------------------------------------------------------------
-    -- DROPDOWN CONTAINER (LEVEL 2)
-    ------------------------------------------------------------
     local subRod = Instance.new("Frame", card)
     subRod.Name = "RodContents"
     subRod.Position = UDim2.new(0,0,0,48)
@@ -1864,9 +1920,6 @@ local function BuildShopRods()
         recalcRod()
     end)
 
-    ------------------------------------------------------------
-    -- ROW 1: SELECT ROD
-    ------------------------------------------------------------
     local rowSelect = Instance.new("Frame", subRod)
     rowSelect.Size = UDim2.new(1,0,0,36)
     rowSelect.BackgroundTransparency = 1
@@ -1906,9 +1959,6 @@ local function BuildShopRods()
     selectBtn.Text = ""
     selectBtn.AutoButtonColor = false
 
-    ------------------------------------------------------------
-    -- ROW 2: PRICE
-    ------------------------------------------------------------
     local rowPrice = Instance.new("Frame", subRod)
     rowPrice.Size = UDim2.new(1,0,0,28)
     rowPrice.BackgroundTransparency = 1
@@ -1923,9 +1973,6 @@ local function BuildShopRods()
     priceLabel.TextColor3 = Color3.fromRGB(255,200,100)
     priceLabel.Text = "💰 None"
 
-    ------------------------------------------------------------
-    -- ROW 3: AUTO BUY ROD (PILL)
-    ------------------------------------------------------------
     local rowAuto = Instance.new("Frame", subRod)
     rowAuto.Size = UDim2.new(1,0,0,36)
     rowAuto.BackgroundTransparency = 1
@@ -1972,7 +2019,7 @@ local function BuildShopRods()
     recalcRod()
 
     ------------------------------------------------------------
-    -- PANEL KANAN: LIST ROD (LEVEL 3)
+    -- PANEL KANAN (logic lama, posisi dibenerin)
     ------------------------------------------------------------
     local overlay = Instance.new("TextButton")
     overlay.Name = "RodOverlay"
@@ -1989,8 +2036,8 @@ local function BuildShopRods()
     rodPanel.Name = "RodPanel"
     rodPanel.Parent = overlay
     rodPanel.Size = UDim2.new(0,220,0,280)
-    rodPanel.AnchorPoint = Vector2.new(1,0)
-    rodPanel.Position = UDim2.new(1,-24,0.38,0)
+    rodPanel.AnchorPoint = Vector2.new(1,0.5)
+    rodPanel.Position = UDim2.new(1,-24,0.5,0)
     rodPanel.BackgroundColor3 = CARD
     rodPanel.BackgroundTransparency = 0.04
     rodPanel.Visible = false
@@ -2036,7 +2083,6 @@ local function BuildShopRods()
     local function updateCanvas()
         rodList.CanvasSize = UDim2.new(0,0,0,rlLayout.AbsoluteContentSize.Y + 16)
     end
-
     rlLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
 
     local function rebuildRodPanel()
@@ -2075,12 +2121,10 @@ local function BuildShopRods()
                 selectedRod = id
                 selectedRodName = name
                 selectedRodPrice = price
-
                 local displayPrice = string.format("%d", price)
                 hint.Text = "🎣 " .. selectedRodName
                 priceLabel.Text = "💰 $" .. displayPrice
                 _G.RAY_SelectedRod = selectedRod
-
                 rebuildRodPanel()
             end)
         end
@@ -2109,9 +2153,6 @@ local function BuildShopRods()
         setPanelOpen(false)
     end)
 
-    ------------------------------------------------------------
-    -- CLEANUP
-    ------------------------------------------------------------
     card.AncestryChanged:Connect(function()
         if not card.Parent then
             overlay:Destroy()
@@ -2119,27 +2160,20 @@ local function BuildShopRods()
     end)
 end
 
-
-
 BuildShopRods()
 
-
-
-----------------------------------------------------------------
--- SHOP & TRADE : BUY BAIT PRESET
-----------------------------------------------------------------
 local function BuildShopBait()
     local shopPage = pages["Shop & Trade"]
 
     local BAIT_LIST = {
-        {2,  "⭐ Luck Bait",          1000},
-        {3,  "🌙 Midnight Bait",      3000},
-        {17, "🌿 Nature Bait",        83500},
-        {6,  "🌈 Chroma Bait",        290000},
-        {8,  "🖤 Dark Matter Bait",   630000},
-        {15, "☠️ Corrupt Bait",       1148484},
-        {16, "✨ Aether Bait",        3700000},
-        {20, "🌸 Floral Bait",        4000000},
+        {2,  "⭐ Luck Bait",        1000},
+        {3,  "🌙 Midnight Bait",    3000},
+        {17, "🌿 Nature Bait",      83500},
+        {6,  "🌈 Chroma Bait",      290000},
+        {8,  "🖤 Dark Matter Bait", 630000},
+        {15, "☠️ Corrupt Bait",     1148484},
+        {16, "✨ Aether Bait",      3700000},
+        {20, "🌸 Floral Bait",      4000000},
     }
 
     local selectedBait = nil
@@ -2148,13 +2182,12 @@ local function BuildShopBait()
     local AutoBaitOn = false
 
     ------------------------------------------------------------
-    -- CARD BAIT SELECTOR (LEVEL 1)
+    -- CARD BAIT (VERTICAL LAYOUT, DI BAWAH ROD)
     ------------------------------------------------------------
     local card = Instance.new("Frame")
     card.Name = "BaitSelectorCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,0)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
@@ -2169,7 +2202,7 @@ local function BuildShopBait()
     cardTitle.TextSize = 14
     cardTitle.TextXAlignment = Enum.TextXAlignment.Left
     cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "🪱 Buy Bait Preset"
+    cardTitle.Text = "🛒 Buy Bait Preset"
 
     local arrow = Instance.new("TextLabel", card)
     arrow.Size = UDim2.new(0,24,0,24)
@@ -2186,9 +2219,6 @@ local function BuildShopBait()
     cardBtn.Text = ""
     cardBtn.AutoButtonColor = false
 
-    ------------------------------------------------------------
-    -- DROPDOWN CONTAINER (LEVEL 2)
-    ------------------------------------------------------------
     local subBait = Instance.new("Frame", card)
     subBait.Name = "BaitContents"
     subBait.Position = UDim2.new(0,0,0,48)
@@ -2224,7 +2254,7 @@ local function BuildShopBait()
     end)
 
     ------------------------------------------------------------
-    -- ROW 1: SELECT BAIT
+    -- ROW SELECT BAIT
     ------------------------------------------------------------
     local rowSelect = Instance.new("Frame", subBait)
     rowSelect.Size = UDim2.new(1,0,0,36)
@@ -2266,7 +2296,7 @@ local function BuildShopBait()
     selectBtn.AutoButtonColor = false
 
     ------------------------------------------------------------
-    -- ROW 2: PRICE
+    -- ROW PRICE
     ------------------------------------------------------------
     local rowPrice = Instance.new("Frame", subBait)
     rowPrice.Size = UDim2.new(1,0,0,28)
@@ -2283,7 +2313,7 @@ local function BuildShopBait()
     priceLabel.Text = "💰 None"
 
     ------------------------------------------------------------
-    -- ROW 3: AUTO BUY BAIT (PILL)
+    -- ROW AUTO BUY BAIT
     ------------------------------------------------------------
     local rowAuto = Instance.new("Frame", subBait)
     rowAuto.Size = UDim2.new(1,0,0,36)
@@ -2331,7 +2361,7 @@ local function BuildShopBait()
     recalcBait()
 
     ------------------------------------------------------------
-    -- PANEL KANAN: LIST BAIT (LEVEL 3)
+    -- PANEL KANAN BAIT (SCROLL PERFECT)
     ------------------------------------------------------------
     local overlay = Instance.new("TextButton")
     overlay.Name = "BaitOverlay"
@@ -2348,8 +2378,8 @@ local function BuildShopBait()
     baitPanel.Name = "BaitPanel"
     baitPanel.Parent = overlay
     baitPanel.Size = UDim2.new(0,220,0,280)
-    baitPanel.AnchorPoint = Vector2.new(1,0)
-    baitPanel.Position = UDim2.new(1,-24,0.38,0)
+    baitPanel.AnchorPoint = Vector2.new(1,0.5)
+    baitPanel.Position = UDim2.new(1,-24,0.5,0)
     baitPanel.BackgroundColor3 = CARD
     baitPanel.BackgroundTransparency = 0.04
     baitPanel.Visible = false
@@ -2395,7 +2425,6 @@ local function BuildShopBait()
     local function updateCanvas()
         baitList.CanvasSize = UDim2.new(0,0,0,blLayout.AbsoluteContentSize.Y + 16)
     end
-
     blLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
 
     local function rebuildBaitPanel()
@@ -2434,12 +2463,10 @@ local function BuildShopBait()
                 selectedBait = id
                 selectedBaitName = name
                 selectedBaitPrice = price
-
                 local displayPrice = string.format("%d", price)
-                hint.Text = "🎣 " .. selectedBaitName
+                hint.Text = "🛒 " .. selectedBaitName
                 priceLabel.Text = "💰 $" .. displayPrice
                 _G.RAY_SelectedBait = selectedBait
-
                 rebuildBaitPanel()
             end)
         end
@@ -2468,9 +2495,6 @@ local function BuildShopBait()
         setPanelOpen(false)
     end)
 
-    ------------------------------------------------------------
-    -- CLEANUP
-    ------------------------------------------------------------
     card.AncestryChanged:Connect(function()
         if not card.Parent then
             overlay:Destroy()
@@ -2478,9 +2502,8 @@ local function BuildShopBait()
     end)
 end
 
-
-
 BuildShopBait()
+
 
 ----------------------------------------------------------------
 -- SHOP & TRADE : TRAVELING MERCHANT
@@ -2488,17 +2511,60 @@ BuildShopBait()
 local function BuildShopTravelingMerchant()
     local shopPage = pages["Shop & Trade"]
 
-    local AutoTravelOn = false
-    local SelectedTravelPreset = "None"
+    local AutoMerchantOn = false
+    local SelectedIds = {}   -- id -> true
+    local Quantity = 1
 
     ------------------------------------------------------------
-    -- CARD TRAVELING MERCHANT (LEVEL 1)
+    -- REPLION / MARKET LOGIC (COPY DARI TEST PANEL)
+    ------------------------------------------------------------
+    local Replion = require(ReplicatedStorage.Packages.Replion)
+    local MarketItemData = require(ReplicatedStorage.Shared.MarketItemData)
+    local merchant = Replion.Client:WaitReplion("Merchant")
+
+    local function GetCurrentMerchantStock()
+        local ids = merchant:GetExpect("Items") or {}
+        local list = {}
+
+        for _, id in ipairs(ids) do
+            for _, def in ipairs(MarketItemData) do
+                if def.Id == id then
+                    table.insert(list, def)
+                    break
+                end
+            end
+        end
+
+        return list
+    end
+
+    local function BuyMerchantId(id, count)
+        task.spawn(function()
+            pcall(function()
+                local rf = ReplicatedStorage
+                    :WaitForChild("Packages")
+                    :WaitForChild("_Index")
+                    :WaitForChild("sleitnick_net@0.2.0")
+                    :WaitForChild("net")
+                    :WaitForChild("RF/PurchaseMarketItem")
+
+                -- kalau server support quantity, kirim count; kalau tidak, panggil beberapa kali
+                count = math.clamp(count or 1, 1, 999)
+                for i = 1, count do
+                    rf:InvokeServer(id)
+                    task.wait(0.1)
+                end
+            end)
+        end)
+    end
+
+    ------------------------------------------------------------
+    -- CARD UTAMA (LAYOUT VERTIKAL)
     ------------------------------------------------------------
     local card = Instance.new("Frame")
     card.Name = "TravelingMerchantCard"
     card.Parent = shopPage
     card.Size = UDim2.new(1,-32,0,48)
-    card.Position = UDim2.new(0,16,0,0)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
     card.ClipsDescendants = true
@@ -2513,7 +2579,7 @@ local function BuildShopTravelingMerchant()
     cardTitle.TextSize = 14
     cardTitle.TextXAlignment = Enum.TextXAlignment.Left
     cardTitle.TextColor3 = TEXT
-    cardTitle.Text = "🧭 Traveling Merchant"
+    cardTitle.Text = "Shop"
 
     local arrow = Instance.new("TextLabel", card)
     arrow.Size = UDim2.new(0,24,0,24)
@@ -2531,70 +2597,120 @@ local function BuildShopTravelingMerchant()
     cardBtn.AutoButtonColor = false
 
     ------------------------------------------------------------
-    -- DROPDOWN CONTAINER
+    -- CONTAINER (ISI CARD)
     ------------------------------------------------------------
-    local subTravel = Instance.new("Frame", card)
-    subTravel.Name = "TravelContents"
-    subTravel.Position = UDim2.new(0,0,0,48)
-    subTravel.Size = UDim2.new(1,0,0,0)
-    subTravel.BackgroundTransparency = 1
-    subTravel.ClipsDescendants = true
+    local contents = Instance.new("Frame", card)
+    contents.Name = "MerchantContents"
+    contents.Position = UDim2.new(0,0,0,48)
+    contents.Size = UDim2.new(1,0,0,0)
+    contents.BackgroundTransparency = 1
+    contents.ClipsDescendants = true
 
-    local tLayout = Instance.new("UIListLayout", subTravel)
-    tLayout.Padding = UDim.new(0,6)
-    tLayout.FillDirection = Enum.FillDirection.Vertical
-    tLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    tLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    local layout = Instance.new("UIListLayout", contents)
+    layout.Padding = UDim.new(0,6)
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    local travelOpen = false
-    local function recalcTravel()
-        local h = tLayout.AbsoluteContentSize.Y
-        if travelOpen then
-            subTravel.Size = UDim2.new(1,0,0,h + 8)
+    local open = false
+    local function recalcCard()
+        local h = layout.AbsoluteContentSize.Y
+        if open then
+            contents.Size = UDim2.new(1,0,0,h + 8)
             card.Size = UDim2.new(1,-32,0,48 + h + 8)
             arrow.Text = "▲"
         else
-            subTravel.Size = UDim2.new(1,0,0,0)
+            contents.Size = UDim2.new(1,0,0,0)
             card.Size = UDim2.new(1,-32,0,48)
             arrow.Text = "▼"
         end
     end
 
-    tLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcTravel)
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(recalcCard)
 
     cardBtn.MouseButton1Click:Connect(function()
-        travelOpen = not travelOpen
-        recalcTravel()
+        open = not open
+        recalcCard()
     end)
 
     ------------------------------------------------------------
-    -- ROW 1: TRAVEL PRESET
+    -- ROW: CURRENT MERCHANT STOCK
     ------------------------------------------------------------
-    local rowPreset = Instance.new("Frame", subTravel)
-    rowPreset.Size = UDim2.new(1,0,0,36)
-    rowPreset.BackgroundTransparency = 1
+    local rowStock = Instance.new("Frame", contents)
+    rowStock.Size = UDim2.new(1,0,0,52)
+    rowStock.BackgroundColor3 = CARD
+    rowStock.BackgroundTransparency = 0.1
+    Instance.new("UICorner", rowStock).CornerRadius = UDim.new(0,8)
 
-    local lblPreset = Instance.new("TextLabel", rowPreset)
-    lblPreset.Size = UDim2.new(0.5,0,1,0)
-    lblPreset.Position = UDim2.new(0,16,0,0)
-    lblPreset.BackgroundTransparency = 1
-    lblPreset.Font = Enum.Font.Gotham
-    lblPreset.TextSize = 13
-    lblPreset.TextXAlignment = Enum.TextXAlignment.Left
-    lblPreset.TextColor3 = TEXT
-    lblPreset.Text = "Travel Preset"
+    local stockTitle = Instance.new("TextLabel", rowStock)
+    stockTitle.Size = UDim2.new(1,-16,0,20)
+    stockTitle.Position = UDim2.new(0,8,0,4)
+    stockTitle.BackgroundTransparency = 1
+    stockTitle.Font = Enum.Font.GothamBold
+    stockTitle.TextSize = 13
+    stockTitle.TextXAlignment = Enum.TextXAlignment.Left
+    stockTitle.TextColor3 = TEXT
+    stockTitle.Text = "Current Merchant Stock"
 
-    local presetHint = Instance.new("TextLabel", rowPreset)
-    presetHint.Size = UDim2.new(0.5,-32,1,0)
-    presetHint.Position = UDim2.new(0.5,0,0,0)
-    presetHint.BackgroundTransparency = 1
-    presetHint.Font = Enum.Font.Gotham
-    presetHint.TextSize = 11
-    presetHint.TextXAlignment = Enum.TextXAlignment.Right
-    presetHint.TextColor3 = TEXT
-    presetHint.Text = "None"
+    local stockLine = Instance.new("TextLabel", rowStock)
+    stockLine.Size = UDim2.new(1,-16,0,18)
+    stockLine.Position = UDim2.new(0,8,0,24)
+    stockLine.BackgroundTransparency = 1
+    stockLine.Font = Enum.Font.Gotham
+    stockLine.TextSize = 12
+    stockLine.TextXAlignment = Enum.TextXAlignment.Left
+    stockLine.TextColor3 = MUTED
+    stockLine.Text = "None"
 
-    local chevron = Instance.new("TextLabel", rowPreset)
+    ------------------------------------------------------------
+    -- ROW: REFRESH STOCK BUTTON
+    ------------------------------------------------------------
+    local rowRefresh = Instance.new("Frame", contents)
+    rowRefresh.Size = UDim2.new(1,0,0,36)
+    rowRefresh.BackgroundTransparency = 1
+
+    local btnRefresh = Instance.new("TextButton", rowRefresh)
+    btnRefresh.Size = UDim2.new(1,0,1,0)
+    btnRefresh.Position = UDim2.new(0,0,0,0)
+    btnRefresh.BackgroundColor3 = CARD
+    btnRefresh.BackgroundTransparency = 0.1
+    btnRefresh.TextColor3 = TEXT
+    btnRefresh.Font = Enum.Font.GothamSemibold
+    btnRefresh.TextSize = 13
+    btnRefresh.Text = "Refresh Stock"
+    btnRefresh.AutoButtonColor = false
+    Instance.new("UICorner", btnRefresh).CornerRadius = UDim.new(0,8)
+
+    ------------------------------------------------------------
+    -- ROW: SELECT ITEMS TO BUY (DROPDOWN)
+    ------------------------------------------------------------
+    local rowSelect = Instance.new("Frame", contents)
+    rowSelect.Size = UDim2.new(1,0,0,40)
+    rowSelect.BackgroundColor3 = CARD
+    rowSelect.BackgroundTransparency = 0.1
+    Instance.new("UICorner", rowSelect).CornerRadius = UDim.new(0,8)
+
+    local lblSelect = Instance.new("TextLabel", rowSelect)
+    lblSelect.Size = UDim2.new(0.5,0,1,0)
+    lblSelect.Position = UDim2.new(0,12,0,0)
+    lblSelect.BackgroundTransparency = 1
+    lblSelect.Font = Enum.Font.Gotham
+    lblSelect.TextSize = 13
+    lblSelect.TextXAlignment = Enum.TextXAlignment.Left
+    lblSelect.TextColor3 = TEXT
+    lblSelect.Text = "Select Items to Buy"
+
+    local selectedHint = Instance.new("TextLabel", rowSelect)
+    selectedHint.Size = UDim2.new(0.5,-32,1,0)
+    selectedHint.Position = UDim2.new(0.5,0,0,0)
+    selectedHint.BackgroundTransparency = 1
+    selectedHint.Font = Enum.Font.Gotham
+    selectedHint.TextSize = 12
+    selectedHint.TextXAlignment = Enum.TextXAlignment.Right
+    selectedHint.TextColor3 = MUTED
+    selectedHint.Text = "Select Options"
+
+    local chevron = Instance.new("TextLabel", rowSelect)
     chevron.Size = UDim2.new(0,20,1,0)
     chevron.Position = UDim2.new(1,-20,0,0)
     chevron.BackgroundTransparency = 1
@@ -2603,100 +2719,87 @@ local function BuildShopTravelingMerchant()
     chevron.TextColor3 = TEXT
     chevron.Text = "▾"
 
-    local presetBtn = Instance.new("TextButton", rowPreset)
-    presetBtn.BackgroundTransparency = 1
-    presetBtn.Size = UDim2.new(1,0,1,0)
-    presetBtn.Text = ""
-    presetBtn.AutoButtonColor = false
+    local selectBtn = Instance.new("TextButton", rowSelect)
+    selectBtn.BackgroundTransparency = 1
+    selectBtn.Size = UDim2.new(1,0,1,0)
+    selectBtn.Text = ""
+    selectBtn.AutoButtonColor = false
 
     ------------------------------------------------------------
-    -- SUBLIST PRESET
+    -- ROW: ITEMS QUANTITY
     ------------------------------------------------------------
-    local presetListFrame = Instance.new("Frame", subTravel)
-    presetListFrame.Name = "TravelPresetList"
-    presetListFrame.Size = UDim2.new(1,-32,0,0)
-    presetListFrame.Position = UDim2.new(0,16,0,0)
-    presetListFrame.BackgroundTransparency = 1
-    presetListFrame.ClipsDescendants = true
-    presetListFrame.Visible = false
+    local rowQty = Instance.new("Frame", contents)
+    rowQty.Size = UDim2.new(1,0,0,40)
+    rowQty.BackgroundColor3 = CARD
+    rowQty.BackgroundTransparency = 0.1
+    Instance.new("UICorner", rowQty).CornerRadius = UDim.new(0,8)
 
-    local pList = Instance.new("UIListLayout", presetListFrame)
-    pList.Padding = UDim.new(0,4)
-    pList.FillDirection = Enum.FillDirection.Vertical
-    pList.HorizontalAlignment = Enum.HorizontalAlignment.Left
-    pList.SortOrder = Enum.SortOrder.LayoutOrder
+    local lblQty = Instance.new("TextLabel", rowQty)
+    lblQty.Size = UDim2.new(0.5,0,1,0)
+    lblQty.Position = UDim2.new(0,12,0,0)
+    lblQty.BackgroundTransparency = 1
+    lblQty.Font = Enum.Font.Gotham
+    lblQty.TextSize = 13
+    lblQty.TextXAlignment = Enum.TextXAlignment.Left
+    lblQty.TextColor3 = TEXT
+    lblQty.Text = "Items Quantity"
 
-    local travelPresets = {
-        "Nearest Hotspot",
-        "Best Weather",
-        "Highest Rarity Zone",
-        "Manual Only"
-    }
+    local subQty = Instance.new("TextLabel", rowQty)
+    subQty.Size = UDim2.new(0.5,0,1,0)
+    subQty.Position = UDim2.new(0,12,0,18)
+    subQty.BackgroundTransparency = 1
+    subQty.Font = Enum.Font.Gotham
+    subQty.TextSize = 11
+    subQty.TextXAlignment = Enum.TextXAlignment.Left
+    subQty.TextColor3 = MUTED
+    subQty.Text = "Input quantity of the items"
 
-    local function rebuildTravelPreset()
-        for _, c in ipairs(presetListFrame:GetChildren()) do
-            if c:IsA("TextButton") then c:Destroy() end
+    local qtyBox = Instance.new("TextBox", rowQty)
+    qtyBox.Size = UDim2.new(0,60,0,24)
+    qtyBox.Position = UDim2.new(1,-72,0.5,-12)
+    qtyBox.BackgroundColor3 = Color3.fromRGB(20,22,30)
+    qtyBox.TextColor3 = TEXT
+    qtyBox.Font = Enum.Font.GothamSemibold
+    qtyBox.TextSize = 14
+    qtyBox.Text = "1"
+    qtyBox.ClearTextOnFocus = false
+    qtyBox.TextXAlignment = Enum.TextXAlignment.Center
+    Instance.new("UICorner", qtyBox).CornerRadius = UDim.new(0,8)
+
+    qtyBox:GetPropertyChangedSignal("Text"):Connect(function()
+        local n = tonumber(qtyBox.Text)
+        if not n then
+            qtyBox.Text = tostring(Quantity)
+            return
         end
-
-        for _, name in ipairs(travelPresets) do
-            local b = Instance.new("TextButton", presetListFrame)
-            b.Size = UDim2.new(1,0,0,26)
-            b.BackgroundColor3 = CARD
-            b.BackgroundTransparency = SelectedTravelPreset == name and 0.08 or 0.18
-            b.Font = Enum.Font.Gotham
-            b.TextSize = 12
-            b.TextXAlignment = Enum.TextXAlignment.Left
-            b.TextColor3 = TEXT
-            b.Text = "  " .. name
-            b.AutoButtonColor = false
-            Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
-
-            b.MouseButton1Click:Connect(function()
-                SelectedTravelPreset = name
-                presetHint.Text = name
-                _G.RAY_TravelPreset = name
-                rebuildTravelPreset()
-            end)
-        end
-
-        task.wait()
-        presetListFrame.Size = UDim2.new(1,-32,0,pList.AbsoluteContentSize.Y)
-        recalcTravel()
-    end
-
-    rebuildTravelPreset()
-
-    local presetOpen = false
-    local function togglePresetList()
-        presetOpen = not presetOpen
-        presetListFrame.Visible = presetOpen
-        recalcTravel()
-    end
-
-    presetBtn.MouseButton1Click:Connect(togglePresetList)
+        n = math.clamp(math.floor(n),1,999)
+        Quantity = n
+        qtyBox.Text = tostring(n)
+    end)
 
     ------------------------------------------------------------
-    -- ROW 2: AUTO TRAVEL TOGGLE
+    -- ROW: AUTO BUY MERCHANT TOGGLE
     ------------------------------------------------------------
-    local rowAuto = Instance.new("Frame", subTravel)
-    rowAuto.Size = UDim2.new(1,0,0,36)
-    rowAuto.BackgroundTransparency = 1
+    local rowAuto = Instance.new("Frame", contents)
+    rowAuto.Size = UDim2.new(1,0,0,40)
+    rowAuto.BackgroundColor3 = CARD
+    rowAuto.BackgroundTransparency = 0.1
+    Instance.new("UICorner", rowAuto).CornerRadius = UDim.new(0,8)
 
     local lblAuto = Instance.new("TextLabel", rowAuto)
-    lblAuto.Size = UDim2.new(1,-120,1,0)
-    lblAuto.Position = UDim2.new(0,16,0,0)
+    lblAuto.Size = UDim2.new(0.7,0,1,0)
+    lblAuto.Position = UDim2.new(0,12,0,0)
     lblAuto.BackgroundTransparency = 1
     lblAuto.Font = Enum.Font.Gotham
     lblAuto.TextSize = 13
     lblAuto.TextXAlignment = Enum.TextXAlignment.Left
     lblAuto.TextColor3 = TEXT
-    lblAuto.Text = "Auto Traveling"
+    lblAuto.Text = "Auto Buy Merchant"
 
     local pill = Instance.new("TextButton", rowAuto)
     pill.Size = UDim2.new(0,50,0,24)
-    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.Position = UDim2.new(1,-60,0.5,-12)
     pill.BackgroundColor3 = MUTED
-    pill.BackgroundTransparency = 0.1
     pill.Text = ""
     pill.AutoButtonColor = false
     Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
@@ -2707,25 +2810,199 @@ local function BuildShopTravelingMerchant()
     knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
     Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-    local function refreshAutoTravel()
-        pill.BackgroundColor3 = AutoTravelOn and ACCENT or MUTED
-        knob.Position = AutoTravelOn
+    local function refreshToggle()
+        pill.BackgroundColor3 = AutoMerchantOn and ACCENT or MUTED
+        knob.Position = AutoMerchantOn
             and UDim2.new(1,-21,0.5,-9)
             or  UDim2.new(0,3,0.5,-9)
     end
 
     pill.MouseButton1Click:Connect(function()
-        AutoTravelOn = not AutoTravelOn
-        _G.RAY_AutoTravelOn = AutoTravelOn
-        refreshAutoTravel()
+        AutoMerchantOn = not AutoMerchantOn
+        refreshToggle()
+    end)
+
+    refreshToggle()
+    recalcCard()
+
+    ------------------------------------------------------------
+    -- DROPDOWN PANEL UNTUK PILIH ITEM (MULTI-SELECT)
+    ------------------------------------------------------------
+    local overlay = Instance.new("TextButton")
+    overlay.Name = "MerchantOverlay"
+    overlay.Parent = shopPage
+    overlay.Size = UDim2.new(1,0,1,0)
+    overlay.Position = UDim2.new(0,0,0,0)
+    overlay.BackgroundTransparency = 1
+    overlay.Text = ""
+    overlay.Visible = false
+    overlay.ZIndex = 4
+    overlay.AutoButtonColor = false
+
+    local listPanel = Instance.new("Frame")
+    listPanel.Name = "MerchantItemPanel"
+    listPanel.Parent = overlay
+    listPanel.Size = UDim2.new(0,220,0,260)
+    listPanel.AnchorPoint = Vector2.new(1,0.5)
+    listPanel.Position = UDim2.new(1,-24,0.5,0)
+    listPanel.BackgroundColor3 = CARD
+    listPanel.BackgroundTransparency = 0.04
+    listPanel.ZIndex = 5
+    listPanel.Active = true
+    Instance.new("UICorner", listPanel).CornerRadius = UDim.new(0,12)
+
+    local lpPad = Instance.new("UIPadding", listPanel)
+    lpPad.PaddingTop = UDim.new(0,8)
+    lpPad.PaddingBottom = UDim.new(0,8)
+    lpPad.PaddingLeft = UDim.new(0,8)
+    lpPad.PaddingRight = UDim.new(0,8)
+
+    local listTitle = Instance.new("TextLabel", listPanel)
+    listTitle.Size = UDim2.new(1,0,0,20)
+    listTitle.BackgroundTransparency = 1
+    listTitle.Font = Enum.Font.GothamBold
+    listTitle.TextSize = 13
+    listTitle.TextXAlignment = Enum.TextXAlignment.Left
+    listTitle.TextColor3 = TEXT
+    listTitle.Text = "Select Items"
+
+    local scroller = Instance.new("ScrollingFrame", listPanel)
+    scroller.Position = UDim2.new(0,0,0,24)
+    scroller.Size = UDim2.new(1,0,1,-24)
+    scroller.BackgroundTransparency = 1
+    scroller.ScrollBarThickness = 6
+    scroller.ScrollingDirection = Enum.ScrollingDirection.Y
+    scroller.CanvasSize = UDim2.new(0,0,0,0)
+    scroller.ZIndex = 6
+    scroller.Active = true
+
+    local scLayout = Instance.new("UIListLayout", scroller)
+    scLayout.Padding = UDim.new(0,4)
+    scLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    scLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        scroller.CanvasSize = UDim2.new(0,0,0,scLayout.AbsoluteContentSize.Y + 8)
+    end)
+
+    local function rebuildItemList()
+        for _, c in ipairs(scroller:GetChildren()) do
+            if c:IsA("TextButton") then c:Destroy() end
+        end
+
+        local stock = GetCurrentMerchantStock()
+        if #stock == 0 then
+            local empty = Instance.new("TextLabel", scroller)
+            empty.Size = UDim2.new(1,0,0,20)
+            empty.BackgroundTransparency = 1
+            empty.Font = Enum.Font.Gotham
+            empty.TextSize = 12
+            empty.TextColor3 = MUTED
+            empty.TextXAlignment = Enum.TextXAlignment.Left
+            empty.Text = "No items."
+        else
+            for _, def in ipairs(stock) do
+                local id = def.Id
+                local name = def.Identifier or ("Item "..tostring(id))
+
+                local b = Instance.new("TextButton", scroller)
+                b.Size = UDim2.new(1,0,0,26)
+                b.BackgroundColor3 = CARD
+                b.BackgroundTransparency = SelectedIds[id] and 0.08 or 0.18
+                b.Font = Enum.Font.Gotham
+                b.TextSize = 12
+                b.TextXAlignment = Enum.TextXAlignment.Left
+                b.TextColor3 = TEXT
+                b.Text = "  " .. name
+                b.AutoButtonColor = false
+                b.ZIndex = 6
+                Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+                local function updateSelectedHint()
+                    local names = {}
+                    local stockNow = GetCurrentMerchantStock()
+                    for _, d in ipairs(stockNow) do
+                        if SelectedIds[d.Id] then
+                            table.insert(names, d.Identifier or tostring(d.Id))
+                        end
+                    end
+                    if #names == 0 then
+                        selectedHint.Text = "Select Options"
+                    else
+                        selectedHint.Text = table.concat(names, ", ")
+                    end
+                end
+
+                b.MouseButton1Click:Connect(function()
+                    SelectedIds[id] = not SelectedIds[id]
+                    b.BackgroundTransparency = SelectedIds[id] and 0.08 or 0.18
+                    updateSelectedHint()
+                end)
+            end
+        end
+    end
+
+    rebuildItemList()
+    merchant:OnChange("Items", function()
+        -- refresh stock label + dropdown list
+        local stock = GetCurrentMerchantStock()
+        if #stock == 0 then
+            stockLine.Text = "None"
+        else
+            local names = {}
+            for _, def in ipairs(stock) do
+                table.insert(names, def.Identifier or tostring(def.Id))
+            end
+            stockLine.Text = table.concat(names, ", ")
+        end
+        rebuildItemList()
+    end)
+
+    btnRefresh.MouseButton1Click:Connect(function()
+        -- sekadar refresh tampilan dari Replion data
+        local stock = GetCurrentMerchantStock()
+        if #stock == 0 then
+            stockLine.Text = "None"
+        else
+            local names = {}
+            for _, def in ipairs(stock) do
+                table.insert(names, def.Identifier or tostring(def.Id))
+            end
+            stockLine.Text = table.concat(names, ", ")
+        end
+        rebuildItemList()
+    end)
+
+    local function setPanelOpen(state)
+        overlay.Visible = state
+        listPanel.Visible = state
+    end
+
+    selectBtn.MouseButton1Click:Connect(function()
+        setPanelOpen(not overlay.Visible)
+    end)
+
+    overlay.MouseButton1Click:Connect(function()
+        setPanelOpen(false)
     end)
 
     ------------------------------------------------------------
-    -- INIT
+    -- LOOP AUTO BUY (PAKE Quantity & SelectedIds)
     ------------------------------------------------------------
-    refreshAutoTravel()
-    recalcTravel()
+    task.spawn(function()
+        while card.Parent do
+            if AutoMerchantOn then
+                local stock = GetCurrentMerchantStock()
+                for _, def in ipairs(stock) do
+                    if SelectedIds[def.Id] then
+                        BuyMerchantId(def.Id, Quantity)
+                        task.wait(1.5)
+                    end
+                end
+            end
+            task.wait(0.5)
+        end
+    end)
 end
+
 
 
 BuildShopTravelingMerchant()
