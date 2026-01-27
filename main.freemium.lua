@@ -2571,7 +2571,7 @@ local function BuildShopMerchant()
     local baitCard = shopPage:WaitForChild("BaitSelectorCard", 5)
     local baseY = baitCard
         and (baitCard.Position.Y.Offset + baitCard.Size.Y.Offset + 12)
-        or 200
+        or 120
 
     ----------------------------------------------------------------
     -- CARD MERCHANT (DROPDOWN)
@@ -2579,7 +2579,7 @@ local function BuildShopMerchant()
     local card = Instance.new("Frame")
     card.Name = "MerchantCard"
     card.Parent = shopPage
-    card.Size = UDim2.new(1, -32, 0, 48)  -- tinggi awal 48 (judul saja)
+    card.Size = UDim2.new(1, -32, 0, 48)  -- tinggi awal 48 (judul)
     card.Position = UDim2.new(0, 16, 0, baseY)
     card.BackgroundColor3 = CARD
     card.BackgroundTransparency = ALPHA_CARD
@@ -2846,9 +2846,9 @@ local function BuildShopMerchant()
     local panel = Instance.new("Frame")
     panel.Name = "MerchantItemPanel"
     panel.Parent = overlay
-    panel.Size = UDim2.new(0, 220, 0, 260)
+    panel.Size = UDim2.new(0, 220, 0, 230)            -- lebih pendek
     panel.AnchorPoint = Vector2.new(1, 0.5)
-    panel.Position = UDim2.new(1, -24, 0.5, 0)
+    panel.Position = UDim2.new(1, -24, 0.52, 0)        -- sedikit lebih turun
     panel.BackgroundColor3 = CARD
     panel.BackgroundTransparency = 0.04
     panel.Visible = false
@@ -2984,7 +2984,7 @@ local function BuildShopMerchant()
     end)
 
     ----------------------------------------------------------------
-    -- TOGGLE AUTO BUY: BELI 1x SETIAP DI-ON
+    -- TOGGLE AUTO BUY
     ----------------------------------------------------------------
     local function refreshAutoToggle()
         autoPill.BackgroundColor3 = AutoMerchantOn and ACCENT or MUTED
