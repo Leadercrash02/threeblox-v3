@@ -2580,15 +2580,16 @@ local function BuildShopMerchant()
     card.ClipsDescendants = true
     Instance.new("UICorner", card).CornerRadius = UDim.new(0, 10)
 
+    -- SENGAJA beda dikit dari bait biar agak ke kiri (padding lebih kecil)
     local pad = Instance.new("UIPadding", card)
     pad.PaddingTop    = UDim.new(0, 8)
-    pad.PaddingLeft   = UDim.new(0, 16)
+    pad.PaddingLeft   = UDim.new(0, 12)   -- 16 -> 12 (geser konten sedikit ke kiri)
     pad.PaddingRight  = UDim.new(0, 16)
     pad.PaddingBottom = UDim.new(0, 8)
 
     local title = Instance.new("TextLabel", card)
-    title.Size = UDim2.new(1, -40, 0, 22)
-    title.Position = UDim2.new(0, 16, 0, 4)
+    title.Size = UDim2.new(1, -44, 0, 22)       -- -40 -> -44 supaya text block lebih ke kiri
+    title.Position = UDim2.new(0, 14, 0, 4)     -- 16 -> 14
     title.BackgroundTransparency = 1
     title.Font = Enum.Font.GothamSemibold
     title.TextSize = 14
@@ -2978,7 +2979,7 @@ local function BuildShopMerchant()
     end)
 
     ----------------------------------------------------------------
-    -- TOGGLE AUTO BUY + LOOP (PAKAI Quantity)
+    -- TOGGLE AUTO BUY + LOOP 3 DETIK
     ----------------------------------------------------------------
     local function refreshAutoToggle()
         autoPill.BackgroundColor3 = AutoMerchantOn and ACCENT or MUTED
@@ -3003,12 +3004,12 @@ local function BuildShopMerchant()
                     if selectedIds[def.Id] then
                         for i = 1, Quantity do
                             BuyMerchantIdOnce(def.Id)
-                            task.wait(0.35)
+                            task.wait(0.1) -- jeda kecil antar 1 item
                         end
                     end
                 end
             end
-            task.wait(0.5)
+            task.wait(3) -- jeda 3 detik antar batch
         end
     end)
 
@@ -3040,8 +3041,6 @@ local function BuildShopMerchant()
 end
 
 BuildShopMerchant()
-
-
 
 
 
