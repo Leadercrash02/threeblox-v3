@@ -1301,8 +1301,6 @@ BuildQuestDiamond()
 local function BuildQuestChestFarm()
     local questPage = pages["Quest"]
 
-    _G.RAYChestFarmOn = _G.RAYChestFarmOn == nil and false or _G.RAYChestFarmOn
-
     -- CARD UTAMA
     local card = Instance.new("Frame")
     card.Name = "QuestChestFarmCard"
@@ -1354,34 +1352,68 @@ local function BuildQuestChestFarm()
     chestLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
     chestLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
-    -- ROW: TOGGLE + STATUS
+    ----------------------------------------------------------------
+    -- ROW: TOGGLE PILL + STATUS
+    ----------------------------------------------------------------
     local row = Instance.new("Frame", subChest)
-    row.Size = UDim2.new(1,0,0,32)
+    row.Size = UDim2.new(1,0,0,36)
     row.BackgroundTransparency = 1
 
-    local toggleButton = Instance.new("TextButton", row)
-    toggleButton.Size = UDim2.new(0,90,1,0)
-    toggleButton.Position = UDim2.new(0,4,0,0)
-    toggleButton.BackgroundColor3 = Color3.fromRGB(30,30,30)
-    toggleButton.BorderSizePixel = 0
-    toggleButton.Font = Enum.Font.GothamBold
-    toggleButton.TextSize = 14
-    toggleButton.TextColor3 = Color3.new(1,1,1)
-    toggleButton.Text = "OFF"
-    toggleButton.AutoButtonColor = false
-    Instance.new("UICorner", toggleButton).CornerRadius = UDim.new(0,8)
+    local lbl = Instance.new("TextLabel", row)
+    lbl.Size = UDim2.new(1,-120,1,0)
+    lbl.Position = UDim2.new(0,16,0,0)
+    lbl.BackgroundTransparency = 1
+    lbl.Font = Enum.Font.Gotham
+    lbl.TextSize = 13
+    lbl.TextXAlignment = Enum.TextXAlignment.Left
+    lbl.TextColor3 = TEXT
+    lbl.Text = "Auto Chest Farm"
+
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    pill.BorderSizePixel = 0
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
     local statusLabel = Instance.new("TextLabel", row)
-    statusLabel.Size = UDim2.new(1,-100,1,0)
-    statusLabel.Position = UDim2.new(0,100,0,0)
+    statusLabel.Size = UDim2.new(1,-120,1,0)
+    statusLabel.Position = UDim2.new(0,16,0,18)
     statusLabel.BackgroundTransparency = 1
     statusLabel.Font = Enum.Font.Gotham
-    statusLabel.TextSize = 13
+    statusLabel.TextSize = 11
     statusLabel.TextXAlignment = Enum.TextXAlignment.Left
-    statusLabel.TextColor3 = TEXT
+    statusLabel.TextColor3 = MUTED
     statusLabel.Text = "Waiting Replion..."
 
+    -- GLOBAL STATE
+    _G.RAYChestFarmOn = _G.RAYChestFarmOn == nil and false or _G.RAYChestFarmOn
+
+    local function refreshToggle()
+        pill.BackgroundColor3 = _G.RAYChestFarmOn and ACCENT or MUTED
+        knob.Position = _G.RAYChestFarmOn
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+    refreshToggle()
+
+    pill.MouseButton1Click:Connect(function()
+        _G.RAYChestFarmOn = not _G.RAYChestFarmOn
+        refreshToggle()
+    end)
+
+    ----------------------------------------------------------------
     -- DROPDOWN BEHAVIOUR
+    ----------------------------------------------------------------
     local chestOpen = false
     local function recalcChest()
         local h = chestLayout.AbsoluteContentSize.Y
@@ -1403,26 +1435,9 @@ local function BuildQuestChestFarm()
         recalcChest()
     end)
 
-    -- TOGGLE LOGIC (logic asli, cuma UI beda)
-    local function UpdateToggle()
-        if _G.RAYChestFarmOn then
-            toggleButton.Text = "ON"
-            toggleButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
-        else
-            toggleButton.Text = "OFF"
-            toggleButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        end
-    end
-    UpdateToggle()
-
-    toggleButton.MouseButton1Click:Connect(function()
-        _G.RAYChestFarmOn = not _G.RAYChestFarmOn
-        UpdateToggle()
-    end)
-
-    ------------------------------------------------------------
-    -- REPLION + FARM (logic sama persis dengan script lama)
-    ------------------------------------------------------------
+    ----------------------------------------------------------------
+    -- REPLION + FARM (logic sama seperti script test)
+    ----------------------------------------------------------------
     local chestReplion
 
     task.spawn(function()
@@ -1448,6 +1463,7 @@ local function BuildQuestChestFarm()
 
         local list = {}
         for i, entry in ipairs(spawned) do
+            -- bentuk entry berdasarkan debug: { Id = <uuid>, Location = <Vector3>, ... }
             local uuid = entry.Id
             local pos  = entry.Location
             if typeof(uuid) == "string" then
@@ -1485,8 +1501,6 @@ local function BuildQuestChestFarm()
         end
     end)
 end
-
-
 
 BuildQuestChestFarm()
 
@@ -4076,6 +4090,237 @@ end
 
         refreshDark()
     end
+
+    ----------------------------------------------------------------
+-- GLOBAL FLAG MISC
+----------------------------------------------------------------
+_G.RAY_AutoReconnect = _G.RAY_AutoReconnect or false
+
+----------------------------------------------------------------
+-- DROPDOWN : 🌐 SERVER SETTINGS (LayoutOrder = 2)
+----------------------------------------------------------------
+do
+    local holderSrv = Instance.new("Frame", miscContainer)
+    holderSrv.Size = UDim2.new(1,0,0,42)
+    holderSrv.BackgroundTransparency = 1
+    holderSrv.LayoutOrder = 2   -- di atas Notification & Visual
+
+    local mainBtnSrv = Instance.new("TextButton", holderSrv)
+    mainBtnSrv.Size = UDim2.new(1,0,0,42)
+    mainBtnSrv.Text = "🌐 Server Settings ▼"
+    mainBtnSrv.Font = Enum.Font.Gotham
+    mainBtnSrv.TextSize = 15
+    mainBtnSrv.TextXAlignment = Enum.TextXAlignment.Left
+    mainBtnSrv.TextColor3 = TEXT
+    mainBtnSrv.BackgroundColor3 = CARD
+    mainBtnSrv.BackgroundTransparency = ALPHA_CARD
+    mainBtnSrv.AutoButtonColor = false
+    Instance.new("UICorner", mainBtnSrv).CornerRadius = UDim.new(0,10)
+
+    local subSrv = Instance.new("Frame", holderSrv)
+    subSrv.Position = UDim2.new(0,0,0,42)
+    subSrv.Size = UDim2.new(1,0,0,0)
+    subSrv.ClipsDescendants = true
+    subSrv.BackgroundTransparency = 1
+
+    local subLayoutSrv = Instance.new("UIListLayout", subSrv)
+    subLayoutSrv.Padding = UDim.new(0,6)
+
+    local openSrv = false
+    local function recalcSrv()
+        task.wait()
+        local h = subLayoutSrv.AbsoluteContentSize.Y
+        if openSrv then
+            subSrv.Size    = UDim2.new(1,0,0,h)
+            holderSrv.Size = UDim2.new(1,0,0,42 + h)
+            mainBtnSrv.Text = "🌐 Server Settings ▲"
+        else
+            subSrv.Size    = UDim2.new(1,0,0,0)
+            holderSrv.Size = UDim2.new(1,0,0,42)
+            mainBtnSrv.Text = "🌐 Server Settings ▼"
+        end
+    end
+
+    mainBtnSrv.MouseButton1Click:Connect(function()
+        openSrv = not openSrv
+        recalcSrv()
+    end)
+
+    ----------------------------------------------------------------
+    -- 🌐 AUTO RECONNECT TOGGLE
+    ----------------------------------------------------------------
+    do
+        local CoreGui         = game:GetService("CoreGui")
+        local TeleportService = game:GetService("TeleportService")
+        local Players         = game:GetService("Players")
+        local lp              = Players.LocalPlayer
+
+        local rowAR = Instance.new("Frame", subSrv)
+        rowAR.Size = UDim2.new(1,0,0,36)
+        rowAR.BackgroundTransparency = 1
+
+        local labelAR = Instance.new("TextLabel", rowAR)
+        labelAR.Size = UDim2.new(1,-100,1,0)
+        labelAR.Position = UDim2.new(0,16,0,0)
+        labelAR.BackgroundTransparency = 1
+        labelAR.Font = Enum.Font.Gotham
+        labelAR.TextSize = 13
+        labelAR.TextXAlignment = Enum.TextXAlignment.Left
+        labelAR.TextColor3 = TEXT
+        labelAR.Text = "🌐 Auto Reconnect"
+
+        local pillAR = Instance.new("TextButton", rowAR)
+        pillAR.Size = UDim2.new(0,50,0,24)
+        pillAR.Position = UDim2.new(1,-80,0.5,-12)
+        pillAR.BackgroundColor3 = MUTED
+        pillAR.BackgroundTransparency = 0.1
+        pillAR.Text = ""
+        pillAR.AutoButtonColor = false
+        Instance.new("UICorner", pillAR).CornerRadius = UDim.new(0,999)
+
+        local knobAR = Instance.new("Frame", pillAR)
+        knobAR.Size = UDim2.new(0,18,0,18)
+        knobAR.Position = UDim2.new(0,3,0.5,-9)
+        knobAR.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knobAR).CornerRadius = UDim.new(0,999)
+
+        local enabled   = _G.RAY_AutoReconnect
+        local connPrompt
+
+        local function refreshAR()
+            pillAR.BackgroundColor3 = enabled and ACCENT or MUTED
+            knobAR.Position = enabled and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+        end
+
+        local function startListen()
+            if connPrompt then return end
+            task.spawn(function()
+                local promptGui
+                while enabled and not promptGui do
+                    promptGui = CoreGui:FindFirstChild("RobloxPromptGui")
+                    if not promptGui then
+                        CoreGui.ChildAdded:Wait()
+                    end
+                end
+                if not enabled or not promptGui then return end
+
+                local overlay = promptGui:WaitForChild("promptOverlay")
+                connPrompt = overlay.ChildAdded:Connect(function(child)
+                    if not enabled then return end
+                    if child.Name == "ErrorPrompt" then
+                        task.wait(2)
+                        while enabled do
+                            pcall(function()
+                                TeleportService:Teleport(game.PlaceId, lp)
+                            end)
+                            task.wait(2)
+                        end
+                    end
+                end)
+            end)
+        end
+
+        local function stopListen()
+            if connPrompt then
+                connPrompt:Disconnect()
+                connPrompt = nil
+            end
+        end
+
+        pillAR.MouseButton1Click:Connect(function()
+            enabled = not enabled
+            _G.RAY_AutoReconnect = enabled
+            if enabled then
+                startListen()
+            else
+                stopListen()
+            end
+            refreshAR()
+        end)
+
+        if enabled then
+            startListen()
+        end
+        refreshAR()
+    end
+
+    ----------------------------------------------------------------
+    -- 🔁 AUTO CHANGE SERVER (SERVER HOP)
+    ----------------------------------------------------------------
+    do
+        local Players         = game:GetService("Players")
+        local TeleportService = game:GetService("TeleportService")
+        local HttpService     = game:GetService("HttpService")
+        local lp              = Players.LocalPlayer
+
+        local rowHop = Instance.new("Frame", subSrv)
+        rowHop.Size = UDim2.new(1,0,0,48)
+        rowHop.BackgroundTransparency = 1
+
+        local labelHop = Instance.new("TextLabel", rowHop)
+        labelHop.Size = UDim2.new(1,-100,0.5,0)
+        labelHop.Position = UDim2.new(0,16,0,0)
+        labelHop.BackgroundTransparency = 1
+        labelHop.Font = Enum.Font.Gotham
+        labelHop.TextSize = 13
+        labelHop.TextXAlignment = Enum.TextXAlignment.Left
+        labelHop.TextColor3 = TEXT
+        labelHop.Text = "🔁 Auto Change Server"
+
+        local infoHop = Instance.new("TextLabel", rowHop)
+        infoHop.Size = UDim2.new(1,-16,0.5,0)
+        infoHop.Position = UDim2.new(0,16,0.5,0)
+        infoHop.BackgroundTransparency = 1
+        infoHop.Font = Enum.Font.Gotham
+        infoHop.TextSize = 11
+        infoHop.TextXAlignment = Enum.TextXAlignment.Left
+        infoHop.TextColor3 = MUTED
+        infoHop.TextWrapped = true
+        infoHop.Text = "Klik 'Hop' untuk pindah ke server lain secara otomatis."
+
+        local btnHop = Instance.new("TextButton", rowHop)
+        btnHop.Size = UDim2.new(0,80,0,22)
+        btnHop.Position = UDim2.new(1,-96,0.25,-11)
+        btnHop.BackgroundColor3 = ACCENT
+        btnHop.BackgroundTransparency = 0.06
+        btnHop.AutoButtonColor = false
+        btnHop.Font = Enum.Font.Gotham
+        btnHop.TextSize = 12
+        btnHop.TextColor3 = TEXT
+        btnHop.Text = "Hop"
+        Instance.new("UICorner", btnHop).CornerRadius = UDim.new(0,8)
+
+        local isHopping = false
+
+        local function ServerHopOnce()
+            if isHopping then return end
+            isHopping = true
+
+            pcall(function()
+                local placeId    = game.PlaceId
+                local currentJob = game.JobId
+
+                local url  = "https://games.roblox.com/v1/games/"..placeId.."/servers/Public?sortOrder=Asc&limit=100"
+                local body = game:HttpGet(url)
+                local data = HttpService:JSONDecode(body)
+
+                for _, srv in ipairs(data.data or {}) do
+                    if srv.id ~= currentJob and srv.playing < srv.maxPlayers then
+                        TeleportService:TeleportToPlaceInstance(placeId, srv.id, lp)
+                        return
+                    end
+                end
+            end)
+
+            isHopping = false
+        end
+
+        btnHop.MouseButton1Click:Connect(ServerHopOnce)
+    end
+
+    -- penting: tutup dropdown server
+    recalcSrv()
+end
 
     ----------------------------------------------------------------
     -- DROPDOWN : 🔔 NOTIFICATION & VISUAL
