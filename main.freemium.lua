@@ -4792,8 +4792,9 @@ UIS.InputBegan:Connect(function(input, gp)
 end)
 
 
--- REMOTES --
-
+----------------------------------------------------------------
+-- REMOTES
+----------------------------------------------------------------
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Net = ReplicatedStorage
@@ -4803,19 +4804,23 @@ local Net = ReplicatedStorage
     :WaitForChild("net")
 
 local Events = {
-    fishing  = Net:WaitForChild("RE/FishingCompleted"),
-    sell     = Net:WaitForChild("RF/SellAllItems"),
-    charge   = Net:WaitForChild("RF/ChargeFishingRod"),
-    minigame = Net:WaitForChild("RF/RequestFishingMinigameStarted"),
-    cancel   = Net:WaitForChild("RF/CancelFishingInputs"),
-    equip    = Net:WaitForChild("RE/EquipToolFromHotbar"),
-    unequip  = Net:WaitForChild("RE/UnequipToolFromHotbar"),
-    purchaseWeather = Net:WaitForChild("RF/PurchaseWeatherEvent"),
-    purchaseRod     = Net:WaitForChild("RF/PurchaseFishingRod"),
-    purchaseBait    = Net:WaitForChild("RF/PurchaseBait"),
+    -- Complete / catch pakai RemoteFunction baru
+    catch   = Net:WaitForChild("RF/CatchFishCompleted"),
 
+    -- jual / sistem lain
+    sell    = Net:WaitForChild("RF/SellAllItems"),
+    charge  = Net:WaitForChild("RF/ChargeFishingRod"),
+    minigame= Net:WaitForChild("RF/RequestFishingMinigameStarted"),
+    cancel  = Net:WaitForChild("RF/CancelFishingInputs"),
+    equip   = Net:WaitForChild("RE/EquipToolFromHotbar"),
+    unequip = Net:WaitForChild("RE/UnequipToolFromHotbar"),
+
+    purchaseWeather     = Net:WaitForChild("RF/PurchaseWeatherEvent"),
+    purchaseRod         = Net:WaitForChild("RF/PurchaseFishingRod"),
+    purchaseBait        = Net:WaitForChild("RF/PurchaseBait"),
     updateSellThreshold = Net:WaitForChild("RF/UpdateAutoSellThreshold"),
 }
+
 
 ----------------------------------------------------------------
 -- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
@@ -5065,27 +5070,28 @@ end
 ----------------------------------------------------------------
 -- ENGINE STATE
 ----------------------------------------------------------------
-local AutoFishAFK         = false
-local isFishing           = false
+local AutoFishAFK   = false
+local isFishing     = false
 
--- Base AFK cycle (boleh dipakai juga kalau mau sinkron)
-local DelayReel           = 3       -- hook muncul (AFK)
-local DelayCatch          = 2       -- jeda setelah reel (AFK)
+-- AFK base
+local DelayReel     = 3      -- hook delay AFK
+local DelayCatch    = 2      -- jeda antar cast AFK
 
--- Blatant V2
-local BlatantOn           = false
-local BlatantReel         = 1.17    -- COMPLETE delay (mulai reel)
-local BlatantCatch        = 0.25    -- CYCLE delay (antar cast)
-local InnerDelayGui       = 0.0009  -- delay antar spam reel
+-- Blatant
+local BlatantOn     = false
+local BlatantReel   = 1.17   -- COMPLETE delay (mulai complete)
+local BlatantCatch  = 0.25   -- CYCLE delay (antar cast)
+local InnerDelayGui = 0.0009 -- spam interval
 
-_G.RAY_ExtraCatchBlatant  = true
+_G.RAY_ExtraCatchBlatant = true
 
 ----------------------------------------------------------------
--- FUNGSI DASAR
+-- FUNGSI DASAR CAST / COMPLETE
 ----------------------------------------------------------------
-local function Reel_V3()
+local function Complete_V3()
     pcall(function()
-        Events.fishing:FireServer()
+        -- remote baru: RF/CatchFishCompleted
+        Events.catch:InvokeServer()
     end)
 end
 
@@ -5100,7 +5106,7 @@ local function Cast_V3()
 end
 
 ----------------------------------------------------------------
--- ENGINE 0: AFK DELAY
+-- ENGINE 0: AUTO FISH FEEL V2 (AFK)
 ----------------------------------------------------------------
 local function Engine_V3_Delayed()
     if isFishing or not AutoFishAFK then return end
@@ -5108,55 +5114,55 @@ local function Engine_V3_Delayed()
 
     Cast_V3()
     task.wait(DelayReel)
-    Reel_V3()
+    Complete_V3()
     task.wait(DelayCatch)
 
     isFishing = false
 end
 
 ----------------------------------------------------------------
--- ENGINE 1: BLATANT V2 (COMPLETE ATAS, CYCLE BAWAH)
+-- ENGINE 1: BLATANT V2 (COMPLETE + CYCLE)
 ----------------------------------------------------------------
 local function BlatantCycle_V2()
     if isFishing or not BlatantOn then return end
     isFishing = true
 
-    -- CAST
+    -- 1) CAST
     Cast_V3()
 
-    -- COMPLETE DELAY (ATAS / TEXTBOX "Reel Delay")
-    local baseReel      = BlatantReel              -- langsung dari textbox atas
+    -- 2) COMPLETE DELAY (textbox atas)
+    local baseReel      = BlatantReel
     local jitter        = (math.random() - 0.5) * 0.05
     local RealReelDelay = math.max(0.2, baseReel + jitter)
-
     task.wait(RealReelDelay)
 
-    -- SPAM REEL
+    -- 3) SPAM COMPLETE (lebih dari sekali biar aman)
     local RealInnerDelay = math.clamp(InnerDelayGui, 0.001, 0.02)
     for _ = 1, 5 do
-        Reel_V3()
+        Complete_V3()
         task.wait(RealInnerDelay)
     end
 
-    -- CYCLE DELAY (BAWAH / TEXTBOX "Catch Delay")
+    -- 4) CYCLE DELAY (textbox bawah)
     task.wait(BlatantCatch)
 
     isFishing = false
 end
 
 ----------------------------------------------------------------
--- GLOBAL EXTRA CATCH LOOP
+-- GLOBAL EXTRA CATCH LOOP (opsional)
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
         if _G.RAY_ExtraCatchBlatant and not isFishing and BlatantOn then
-            Reel_V3()
-            task.wait(BlatantCatch) -- ikut cycle bawah
+            Complete_V3()
+            task.wait(BlatantCatch)
         else
             task.wait(0.05)
         end
     end
 end)
+
 
 
 
@@ -6551,17 +6557,17 @@ task.wait(0.1)
 ----------------------------------------------------------------
 -- LOOP UTAMA ENGINE (FINAL)
 ----------------------------------------------------------------
+----------------------------------------------------------------
+-- LOOP UTAMA ENGINE
+----------------------------------------------------------------
 task.spawn(function()
     while true do
         task.wait(0.05)
-
-        -- AFK engine (pakai DelayReel / DelayCatch dari GUI Auto Fishing)
         Engine_V3_Delayed()
-
-        -- Blatant engine (pakai BlatantReel / BlatantCatch dari GUI Blatant Fishing)
         BlatantCycle_V2()
     end
 end)
+
 
 
 ----------------------------------------------------------------
