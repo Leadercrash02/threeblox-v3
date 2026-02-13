@@ -1652,9 +1652,8 @@ do
 end
 
 ----------------------------------------------------------------
--- SKIN ANIMATION SECTION + PANEL KANAN LIST SKIN
+-- SKIN ANIMATION SECTION (MUNCUL DI BAWAH FISHING SUPPORT)
 ----------------------------------------------------------------
-
 local Controllers = ReplicatedStorage:WaitForChild("Controllers")
 local Modules     = ReplicatedStorage:WaitForChild("Modules")
 
@@ -1669,7 +1668,6 @@ if type(oldGetAnimationData) ~= "function" then
     warn("[SkinOverride] GetAnimationData tidak ada di AnimationController")
 end
 
--- daftar skin yang mau muncul
 local SKINS = {
     "Eclipse Katana",
     "Holy Trident",
@@ -1680,7 +1678,6 @@ local SKINS = {
     "1x1x1x1 Ban Hammer",
 }
 
--- STATE override (logic sama, cuma dibungkus)
 local SelectedAnimSkin = nil
 local OverrideEnabled  = false
 
@@ -1702,10 +1699,6 @@ AnimModule.GetAnimationData = function(self, animName)
         return nil, nil
     end
 
-    -- override hanya kalau:
-    -- - override ON
-    -- - ada skin terpilih
-    -- - anim dasar punya Variants
     if not OverrideEnabled or not SelectedAnimSkin or not baseData.Variants then
         return baseData, baseKey
     end
@@ -1720,10 +1713,8 @@ AnimModule.GetAnimationData = function(self, animName)
     return baseData, baseKey
 end
 
+print("[SkinOverride] AnimationController patched for skin override")
 
-----------------------------------------------------------------
--- SECTION DROPDOWN "Skin Animation"
-----------------------------------------------------------------
 local SkinAnimationSection
 
 if AutoPage then
@@ -1732,33 +1723,64 @@ if AutoPage then
     local layout = Instance.new("UIListLayout")
     layout.Parent = SkinAnimationSection
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 6)
+    layout.Padding = UDim2.new(0, 6)
 
-    -- garis ungu di bawah title section
     local LineSA = Instance.new("Frame")
     LineSA.Parent = SkinAnimationSection
     LineSA.Size = UDim2.new(1, 0, 0, 2)
     LineSA.Position = UDim2.new(0, 0, 0, 2)
     LineSA.BackgroundColor3 = THEME_MAIN
     LineSA.BorderSizePixel = 0
+
+    local row = Instance.new("Frame")
+    row.Parent = SkinAnimationSection
+    row.Size = UDim2.new(1,0,0,40)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel")
+    label.Parent = row
+    label.Size = UDim2.new(1,-110,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT or THEME_TEXT
+    label.Text = "Open Skin Animation Panel"
+
+    local btn = Instance.new("TextButton")
+    btn.Parent = row
+    btn.Size = UDim2.new(0,80,0,24)
+    btn.Position = UDim2.new(1,-100,0.5,-12)
+    btn.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+    btn.BackgroundTransparency = 0.1
+    btn.Text = "Open"
+    btn.TextColor3 = THEME_TEXT
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.AutoButtonColor = true
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+    btn.MouseButton1Click:Connect(function()
+        RightPanel.Visible = not RightPanel.Visible
+    end)
 end
 
 ----------------------------------------------------------------
--- PANEL KANAN FULL HEIGHT UNTUK LIST SKIN
+-- PANEL KANAN MENEMPEL KE FRAME MAIN (TINGGI NGIKUT MAIN)
 ----------------------------------------------------------------
-
 local RightPanel = Instance.new("Frame")
 RightPanel.Name = "SkinAnimationRightPanel"
-RightPanel.Size = UDim2.new(0, 260, 1, 0)
+RightPanel.Size = UDim2.new(0, 220, 1, -46)   -- tinggi = tinggi Main - TitleBar
 RightPanel.AnchorPoint = Vector2.new(1, 0)
-RightPanel.Position = UDim2.new(1, 0, 0, 0)
+RightPanel.Position = UDim2.new(1, -10, 0, 40) -- nempel kanan Main, di bawah TitleBar
 RightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
 RightPanel.BackgroundTransparency = 0.25
 RightPanel.BorderSizePixel = 0
 RightPanel.Visible = false
-RightPanel.Parent = Gui
+RightPanel.Parent = Main          -- PENTING: parent ke Main, bukan Gui
 
-Instance.new("UICorner", RightPanel).CornerRadius = UDim.new(0, 12)
+Instance.new("UICorner", RightPanel).CornerRadius = UDim.new(0, 10)
 local rStroke = Instance.new("UIStroke", RightPanel)
 rStroke.Color = THEME_MAIN
 rStroke.Transparency = 0.5
@@ -1810,7 +1832,6 @@ local function UpdateRightLabels()
     end
 end
 
--- toggle pill di panel kanan
 local rpToggle = Instance.new("TextButton")
 rpToggle.Parent = RightPanel
 rpToggle.Size = UDim2.new(0.9, 0, 0, 24)
@@ -1849,7 +1870,6 @@ end)
 RefreshToggle()
 UpdateRightLabels()
 
--- scroll list skin
 local rpScroll = Instance.new("ScrollingFrame")
 rpScroll.Parent = RightPanel
 rpScroll.Size = UDim2.new(1, -10, 1, -110)
@@ -1865,7 +1885,6 @@ local rpList = Instance.new("UIListLayout", rpScroll)
 rpList.SortOrder = Enum.SortOrder.LayoutOrder
 rpList.Padding = UDim.new(0,4)
 
--- bikin entry skin + garis ungu kiri saat terpilih
 local function CreateSkinEntry(skinName)
     local row = Instance.new("Frame")
     row.Parent = rpScroll
@@ -1896,10 +1915,6 @@ local function CreateSkinEntry(skinName)
     btn.AutoButtonColor = true
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
-    local function UpdateLine()
-        line.Visible = (SelectedAnimSkin == skinName)
-    end
-
     btn.MouseButton1Click:Connect(function()
         AnimModule:SetAnimationSkin(skinName)
         SelectedAnimSkin = skinName
@@ -1911,48 +1926,8 @@ local function CreateSkinEntry(skinName)
             end
         end
     end)
-
-    UpdateLine()
 end
 
 for _, sn in ipairs(SKINS) do
     CreateSkinEntry(sn)
-end
-
-----------------------------------------------------------------
--- ROW DI SECTION "Skin Animation": TOMBOL BUKA PANEL KANAN
-----------------------------------------------------------------
-if SkinAnimationSection then
-    local row = Instance.new("Frame")
-    row.Parent = SkinAnimationSection
-    row.Size = UDim2.new(1,0,0,40)
-    row.BackgroundTransparency = 1
-
-    local label = Instance.new("TextLabel")
-    label.Parent = row
-    label.Size = UDim2.new(1,-110,1,0)
-    label.Position = UDim2.new(0,16,0,0)
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 13
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextColor3 = TEXT or THEME_TEXT
-    label.Text = "Open Skin Animation Panel"
-
-    local btn = Instance.new("TextButton")
-    btn.Parent = row
-    btn.Size = UDim2.new(0,80,0,24)
-    btn.Position = UDim2.new(1,-100,0.5,-12)
-    btn.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
-    btn.BackgroundTransparency = 0.1
-    btn.Text = "Open"
-    btn.TextColor3 = THEME_TEXT
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12
-    btn.AutoButtonColor = true
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
-
-    btn.MouseButton1Click:Connect(function()
-        RightPanel.Visible = not RightPanel.Visible
-    end)
 end
