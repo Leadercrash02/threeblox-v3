@@ -1828,13 +1828,17 @@ end
 UpdateRightSkinLabel()
 
 ----------------------------------------------------------------
--- CLOSE PANEL JIKA KLIK DI LUAR PANEL
+-- CLOSE PANEL (MOUSE & TOUCH)
 ----------------------------------------------------------------
-UIS.InputBegan:Connect(function(input, gp)
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
+UIS.InputBegan:Connect(function(input)
     if not RightPanel.Visible then return end
 
-    local pos    = input.Position
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1
+    and input.UserInputType ~= Enum.UserInputType.Touch then
+        return
+    end
+
+    local pos = input.Position
     local absPos = RightPanel.AbsolutePosition
     local absSize = RightPanel.AbsoluteSize
 
@@ -1842,11 +1846,11 @@ UIS.InputBegan:Connect(function(input, gp)
         pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
         pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
 
-    -- kalau klik BUKAN di dalam panel, tutup
     if not inside then
         RightPanel.Visible = false
     end
 end)
+
 
 ----------------------------------------------------------------
 -- DROPDOWN “Skin Animation” DI BAWAH FISHING SUPPORT
