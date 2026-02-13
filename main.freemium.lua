@@ -1727,6 +1727,7 @@ RightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
 RightPanel.BackgroundTransparency = 0.25
 RightPanel.BorderSizePixel = 0
 RightPanel.Visible = false
+RightPanel.ZIndex = 10
 RightPanel.Parent = Main          -- parent ke Main
 
 Instance.new("UICorner", RightPanel).CornerRadius = UDim.new(0, 10)
@@ -1743,6 +1744,7 @@ rpTitle.Font = Enum.Font.GothamBold
 rpTitle.TextSize = 16
 rpTitle.TextXAlignment = Enum.TextXAlignment.Left
 rpTitle.TextColor3 = THEME_TEXT
+rpTitle.ZIndex = 11
 rpTitle.Text = "Skin Animation"
 
 local rpSkin = Instance.new("TextLabel")
@@ -1754,6 +1756,7 @@ rpSkin.Font = Enum.Font.Gotham
 rpSkin.TextSize = 12
 rpSkin.TextXAlignment = Enum.TextXAlignment.Left
 rpSkin.TextColor3 = Color3.fromRGB(200,200,200)
+rpSkin.ZIndex = 11
 
 local function UpdateRightSkinLabel()
     if SelectedAnimSkin and #SelectedAnimSkin > 0 then
@@ -1773,6 +1776,7 @@ rpScroll.ScrollBarThickness = 3
 rpScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
 rpScroll.CanvasSize = UDim2.new(0,0,0,0)
 rpScroll.ScrollBarImageColor3 = THEME_MAIN
+rpScroll.ZIndex = 10
 
 local rpList = Instance.new("UIListLayout", rpScroll)
 rpList.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1784,15 +1788,17 @@ local function CreateSkinEntry(skinName)
     row.Size = UDim2.new(1, -4, 0, 24)
     row.BackgroundTransparency = 1
     row.BorderSizePixel = 0
+    row.ZIndex = 11
 
     local line = Instance.new("Frame")
     line.Name = "Highlight"
     line.Parent = row
     line.Size = UDim2.new(0, 3, 1, 0)
     line.Position = UDim2.new(0, 0, 0, 0)
-    line.BackgroundColor3 = THEME_MAIN
+    line.BackgroundColor3 = THEME_MAIN or Color3.fromRGB(170, 90, 255)
     line.BorderSizePixel = 0
     line.Visible = false
+    line.ZIndex = 12
 
     local btn = Instance.new("TextButton")
     btn.Parent = row
@@ -1806,6 +1812,7 @@ local function CreateSkinEntry(skinName)
     btn.TextXAlignment = Enum.TextXAlignment.Left
     btn.Text = "  " .. skinName
     btn.AutoButtonColor = true
+    btn.ZIndex = 11
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
     btn.MouseButton1Click:Connect(function()
@@ -1828,7 +1835,7 @@ end
 UpdateRightSkinLabel()
 
 ----------------------------------------------------------------
--- CLOSE PANEL (MOUSE & TOUCH)
+-- CLOSE PANEL (MOUSE & TOUCH, KLIK DI MANA PUN)
 ----------------------------------------------------------------
 UIS.InputBegan:Connect(function(input)
     if not RightPanel.Visible then return end
@@ -1851,11 +1858,8 @@ UIS.InputBegan:Connect(function(input)
     end
 end)
 
-
 ----------------------------------------------------------------
 -- DROPDOWN “Skin Animation” DI BAWAH FISHING SUPPORT
---  - Toggle override di sini (bukan di panel)
---  - Tombol “Open Skin Panel” untuk buka/close panel kanan
 ----------------------------------------------------------------
 local SkinAnimationSection
 
@@ -1874,7 +1878,7 @@ if AutoPage then
     LineSA.BackgroundColor3 = THEME_MAIN
     LineSA.BorderSizePixel = 0
 
-    -- Row 1: toggle override (pill kayak Water Walk)
+    -- Row 1: toggle override
     do
         local row = Instance.new("Frame")
         row.Parent = SkinAnimationSection
