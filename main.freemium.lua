@@ -1715,59 +1715,8 @@ end
 
 print("[SkinOverride] AnimationController patched for skin override")
 
-local SkinAnimationSection
-
-if AutoPage then
-    SkinAnimationSection = CreateSectionDropdown(AutoPage, "Skin Animation")
-
-    local layout = Instance.new("UIListLayout")
-    layout.Parent = SkinAnimationSection
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim2.new(0, 6)
-
-    local LineSA = Instance.new("Frame")
-    LineSA.Parent = SkinAnimationSection
-    LineSA.Size = UDim2.new(1, 0, 0, 2)
-    LineSA.Position = UDim2.new(0, 0, 0, 2)
-    LineSA.BackgroundColor3 = THEME_MAIN
-    LineSA.BorderSizePixel = 0
-
-    local row = Instance.new("Frame")
-    row.Parent = SkinAnimationSection
-    row.Size = UDim2.new(1,0,0,40)
-    row.BackgroundTransparency = 1
-
-    local label = Instance.new("TextLabel")
-    label.Parent = row
-    label.Size = UDim2.new(1,-110,1,0)
-    label.Position = UDim2.new(0,16,0,0)
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 13
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextColor3 = TEXT or THEME_TEXT
-    label.Text = "Open Skin Animation Panel"
-
-    local btn = Instance.new("TextButton")
-    btn.Parent = row
-    btn.Size = UDim2.new(0,80,0,24)
-    btn.Position = UDim2.new(1,-100,0.5,-12)
-    btn.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
-    btn.BackgroundTransparency = 0.1
-    btn.Text = "Open"
-    btn.TextColor3 = THEME_TEXT
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12
-    btn.AutoButtonColor = true
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
-
-    btn.MouseButton1Click:Connect(function()
-        RightPanel.Visible = not RightPanel.Visible
-    end)
-end
-
 ----------------------------------------------------------------
--- PANEL KANAN MENEMPEL KE FRAME MAIN (TINGGI NGIKUT MAIN)
+-- PANEL KANAN MENEMPEL KE MAIN (TINGGI NGIKUT MAIN)
 ----------------------------------------------------------------
 local RightPanel = Instance.new("Frame")
 RightPanel.Name = "SkinAnimationRightPanel"
@@ -1778,7 +1727,7 @@ RightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
 RightPanel.BackgroundTransparency = 0.25
 RightPanel.BorderSizePixel = 0
 RightPanel.Visible = false
-RightPanel.Parent = Main          -- PENTING: parent ke Main, bukan Gui
+RightPanel.Parent = Main          -- parent ke Main
 
 Instance.new("UICorner", RightPanel).CornerRadius = UDim.new(0, 10)
 local rStroke = Instance.new("UIStroke", RightPanel)
@@ -1930,4 +1879,58 @@ end
 
 for _, sn in ipairs(SKINS) do
     CreateSkinEntry(sn)
+end
+
+----------------------------------------------------------------
+-- DROPDOWN “Skin Animation” DI BAWAH FISHING SUPPORT
+----------------------------------------------------------------
+local SkinAnimationSection
+
+if AutoPage then
+    SkinAnimationSection = CreateSectionDropdown(AutoPage, "Skin Animation")
+
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = SkinAnimationSection
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 6)
+
+    local LineSA = Instance.new("Frame")
+    LineSA.Parent = SkinAnimationSection
+    LineSA.Size = UDim2.new(1, 0, 0, 2)
+    LineSA.Position = UDim2.new(0, 0, 0, 2)
+    LineSA.BackgroundColor3 = THEME_MAIN
+    LineSA.BorderSizePixel = 0
+
+    local row = Instance.new("Frame")
+    row.Parent = SkinAnimationSection
+    row.Size = UDim2.new(1,0,0,40)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel")
+    label.Parent = row
+    label.Size = UDim2.new(1,-110,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT or THEME_TEXT
+    label.Text = "Toggle & Panel Skin Animation"
+
+    local btn = Instance.new("TextButton")
+    btn.Parent = row
+    btn.Size = UDim2.new(0,80,0,24)
+    btn.Position = UDim2.new(1,-100,0.5,-12)
+    btn.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+    btn.BackgroundTransparency = 0.1
+    btn.Text = "Open"
+    btn.TextColor3 = THEME_TEXT
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    btn.AutoButtonColor = true
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+    btn.MouseButton1Click:Connect(function()
+        RightPanel.Visible = not RightPanel.Visible
+    end)
 end
