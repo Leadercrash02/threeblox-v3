@@ -1557,7 +1557,7 @@ if AutoPage then
 end
 
 ----------------------------------------------------------------
--- DISABLE CUTSCENE (KILL REMOTE) - DI DALAM FISHING SUPPORT
+-- DISABLE CUTSCENE (SKIP VISUAL, MANCING LANJUT) - DI DALAM FISHING SUPPORT
 ----------------------------------------------------------------
 do
     local row = Instance.new("Frame")
@@ -1594,37 +1594,52 @@ do
     knob.BackgroundTransparency = 0
     Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
+    -- status global biar ke-remember
     local enabled = _G.RAY_DisableCutscene or false
 
+    -- cache fungsi GuiControl asli biar bisa balikin
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local GuiControl = require(ReplicatedStorage.Modules.GuiControl)
+
+    _G.__RAY_OldGuiControlClose = _G.__RAY_OldGuiControlClose or GuiControl.Close
+    _G.__RAY_OldGuiControlLock  = _G.__RAY_OldGuiControlLock  or GuiControl.Lock
+    _G.__RAY_OldGuiControlHUD   = _G.__RAY_OldGuiControlHUD   or GuiControl.SetHUDVisibility
+
+    local function applyPatch()
+        -- Skip efek cutscene: jangan tutup/lock HUD & kontrol
+        function GuiControl:Close(skipHud)
+            -- no-op: jangan lakukan apa-apa, biar fishing/GUI ga ke-close
+            return
+        end
+
+        function GuiControl:Lock()
+            -- no-op: jangan kunci movement / input
+            return
+        end
+
+        function GuiControl:SetHUDVisibility(flag)
+            -- optional: biarin HUD selalu kelihatan, abaikan permintaan cutscene
+            return
+        end
+    end
+
+    local function restorePatch()
+        if _G.__RAY_OldGuiControlClose then
+            GuiControl.Close = _G.__RAY_OldGuiControlClose
+        end
+        if _G.__RAY_OldGuiControlLock then
+            GuiControl.Lock = _G.__RAY_OldGuiControlLock
+        end
+        if _G.__RAY_OldGuiControlHUD then
+            GuiControl.SetHUDVisibility = _G.__RAY_OldGuiControlHUD
+        end
+    end
+
     local function refresh()
-        -- ON = ungu (THEME_MAIN), OFF = MUTED
         pill.BackgroundColor3 = enabled and THEME_MAIN or (MUTED or Color3.fromRGB(70,70,90))
         knob.Position = enabled
             and UDim2.new(1,-21,0.5,-9)
             or  UDim2.new(0,3,0.5,-9)
-    end
-
-    local function KillCutsceneRemotes()
-        local RS = game:GetService("ReplicatedStorage")
-        local pkg = RS:FindFirstChild("Packages")
-        if not pkg then return end
-
-        local index = pkg:FindFirstChild("_Index")
-        if not index then return end
-
-        local netPkg = index:FindFirstChild("sleitnick_net@0.2.0")
-            or index:FindFirstChild("sleitnick_net")
-        if not netPkg then return end
-
-        local netScript = netPkg:FindFirstChild("net")
-        if not netScript then return end
-
-        for _, name in ipairs({"RE/ReplicateCutscene","RE/StopCutscene"}) do
-            local inst = netScript:FindFirstChild(name)
-            if inst then
-                inst:Destroy()
-            end
-        end
     end
 
     pill.MouseButton1Click:Connect(function()
@@ -1632,7 +1647,9 @@ do
         _G.RAY_DisableCutscene = enabled
 
         if enabled then
-            KillCutsceneRemotes()
+            applyPatch()   -- cutscene dipanggil, tapi efek HUD/lock di-skip
+        else
+            restorePatch() -- balikin perilaku normal
         end
 
         refresh()
@@ -1641,12 +1658,233 @@ do
         end
     end)
 
-    -- auto kill lagi kalau rejoin / script reload dan toggle masih ON
+    -- kalau rejoin / script reload dan toggle masih ON, pasang patch lagi
     task.delay(1, function()
         if enabled then
-            KillCutsceneRemotes()
+            applyPatch()
+            refresh()
         end
     end)
+
+    refresh()
+end
+
+----------------------------------------------------------------
+-- NO CUTSCENE PAUSE (CUTSCENE JALAN, MANCING TETAP LANJUT)
+----------------------------------------------------------------
+do
+    local row = Instance.new("Frame")
+    row.Parent = FishingSupportSection
+    row.Size = UDim2.new(1,0,0,36)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel")
+    label.Parent = row
+    label.Size = UDim2.new(1,-120,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT or THEME_TEXT
+    label.Text = "No Cutscene Pause"
+
+    local pill = Instance.new("TextButton")
+    pill.Parent = row
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame")
+    knob.Parent = pill
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    knob.BackgroundTransparency = 0
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    -- status global biar ke-remember
+    local enabled = _G.RAY_NoCutscenePause or false
+
+    -- patch cuma bagian "lock", biar cutscene tetap kelihatan
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local GuiControl = require(ReplicatedStorage.Modules.GuiControl)
+
+    _G.__RAY_OldGuiControlLock = _G.__RAY_OldGuiControlLock or GuiControl.Lock
+
+    local function applyPatch()
+        function GuiControl:Lock()
+            -- no-op: jangan kunci movement / input
+            return
+        end
+    end
+
+    local function restorePatch()
+        if _G.__RAY_OldGuiControlLock then
+            GuiControl.Lock = _G.__RAY_OldGuiControlLock
+        end
+    end
+
+    local function refresh()
+        pill.BackgroundColor3 = enabled and THEME_MAIN or (MUTED or Color3.fromRGB(70,70,90))
+        knob.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        _G.RAY_NoCutscenePause = enabled
+
+        if enabled then
+            applyPatch()    -- cutscene tetap tayang, tapi nggak nge-lock kontrol
+        else
+            restorePatch()  -- balikin lock normal
+        end
+
+        refresh()
+        if NotifyFeature then
+            NotifyFeature("No Cutscene Pause", enabled)
+        end
+    end)
+
+    -- kalau rejoin / script reload dan toggle masih ON, pasang patch lagi
+    task.delay(1, function()
+        if enabled then
+            applyPatch()
+        end
+        refresh()
+    end)
+
+    refresh()
+end
+
+----------------------------------------------------------------
+-- ROD FREEZE (ROD DIEM, MANCING TETAP JALAN) - FISHING SUPPORT
+----------------------------------------------------------------
+do
+    local row = Instance.new("Frame")
+    row.Parent = FishingSupportSection
+    row.Size = UDim2.new(1,0,0,36)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel")
+    label.Parent = row
+    label.Size = UDim2.new(1,-120,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT or THEME_TEXT
+    label.Text = "Rod Freeze"
+
+    local pill = Instance.new("TextButton")
+    pill.Parent = row
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = Color3.fromRGB(120,120,120)
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = true
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame")
+    knob.Parent = pill
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    knob.BackgroundTransparency = 0
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    -- status global, biar ke-remember
+    local enabled = _G.RAY_RodFreeze or false
+
+    ----------------------------------------------------------------
+    -- Anim Controller dari Controllers (path sudah pasti dari log-mu)
+    ----------------------------------------------------------------
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local AnimController = require(ReplicatedStorage.Controllers.AnimationController)
+    print("[RodFreeze] AnimController =", AnimController)
+
+    -- simpan PlayAnimation asli sekali
+    _G.__RAY_OldPlayAnimation = _G.__RAY_OldPlayAnimation or AnimController.PlayAnimation
+    local OldPlay = _G.__RAY_OldPlayAnimation
+
+    ----------------------------------------------------------------
+    -- ANIM ROD DASAR YANG DI-FREEZE (ALL ROD, NO SKIN JUGA KEKENA)
+    ----------------------------------------------------------------
+    local ROD_ANIMS = {
+        ["RodThrow"]         = true,
+        ["ReelStart"]        = true,
+        ["ReelingIdle"]      = true,
+        ["ReelIntermission"] = true,
+        ["FishCaught"]       = true,
+    }
+
+    local function refresh()
+        if enabled then
+            pill.BackgroundColor3 = Color3.fromRGB(0,200,100)   -- hijau ON
+        else
+            pill.BackgroundColor3 = Color3.fromRGB(120,120,120) -- abu OFF
+        end
+
+        knob.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    local function applyPatch()
+        AnimController.PlayAnimation = function(self, animName, waitEnd)
+            if _G.RAY_RodFreeze and ROD_ANIMS[animName] then
+                print("[RodFreeze] BLOCK", animName)
+                local dummy = {
+                    Play = function() end;
+                    Stop = function() end;
+                    Destroy = function() end;
+                    Stopped = { Connect = function() end; Once = function() end };
+                    Ended   = { Connect = function() end; Once = function() end };
+                    TimePosition = 0;
+                    Length = 0;
+                }
+                return dummy, nil
+            end
+
+            return OldPlay(self, animName, waitEnd)
+        end
+    end
+
+    local function restorePatch()
+        AnimController.PlayAnimation = OldPlay
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        _G.RAY_RodFreeze = enabled
+
+        if enabled then
+            applyPatch()
+        else
+            restorePatch()
+        end
+
+        refresh()
+        print("[RodFreeze] Enabled:", enabled)
+        if NotifyFeature then
+            NotifyFeature("Rod Freeze", enabled)
+        end
+    end)
+
+    -- inisialisasi sesuai state global
+    if enabled then
+        applyPatch()
+    else
+        restorePatch()
+    end
 
     refresh()
 end
