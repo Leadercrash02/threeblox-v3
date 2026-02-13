@@ -272,6 +272,7 @@ local Events = {
     purchaseRod         = Net:WaitForChild("RF/PurchaseFishingRod"),
     purchaseBait        = Net:WaitForChild("RF/PurchaseBait"),
     updateSellThreshold = Net:WaitForChild("RF/UpdateAutoSellThreshold"),
+    UpdateAutoFishing   = Net:WaitForChild("RF/UpdateAutoFishingState"),
 }
 
 
@@ -474,69 +475,12 @@ end
 ----------------------------------------------------------------
 -- ENGINE STATE
 ----------------------------------------------------------------
-local AutoFishAFK   = AutoFishAFK   or false
-local BlatantOn     = BlatantOn     or false
-local isFishing     = false
+local AutoFishAFK = AutoFishAFK or false
+local isFishing   = false
 
 -- AFK mode
-local DelayReel     = DelayReel     or 0.3
-local DelayCatch    = DelayCatch    or 0.3
-
--- BLATANT (GUI)
--- TEXTBOX ATAS: "Complete Delay (sec)" → lama window spam per cast
-local BlatantReel   = BlatantReel   or 3.35
--- TEXTBOX BAWAH: "Cycle Delay" → jeda antar cast
-local BlatantCatch  = BlatantCatch  or 0.20
-
--- inner delay dasar antar spam Complete
-local InnerDelayGui = InnerDelayGui or 0.002
-
-_G.RAY_ExtraCatchBlatant = (_G.RAY_ExtraCatchBlatant ~= nil) and _G.RAY_ExtraCatchBlatant or true
-
-print("[RAY] Engine init | AutoFishAFK =", AutoFishAFK, "BlatantOn =", BlatantOn)
-print("[RAY] Events =", Events and Events.catch, Events and Events.charge, Events and Events.minigame, Events and Events.equip)
-
-
-----------------------------------------------------------------
--- SERVICES & HELPER (HRP RAYCAST – OPSIONAL, TIDAK DIPAKAI DI CAST_V3)
-----------------------------------------------------------------
-local Players      = game:GetService("Players")
-local LocalPlayer  = Players.LocalPlayer
-local Workspace    = workspace
-
-local function getFilteredTargets()
-    local ignore = {}
-    local char = LocalPlayer.Character
-    if char then
-        table.insert(ignore, char)
-    end
-    return ignore
-end
-
-local function computeCastRay()
-    local char = LocalPlayer.Character
-    local root = char and char:FindFirstChild("HumanoidRootPart")
-    if not root then
-        warn("[RAY] Cast gagal: tidak ada HumanoidRootPart")
-        return nil
-    end
-
-    local origin    = root.Position
-    local direction = root.CFrame.LookVector * 15
-
-    local params = RaycastParams.new()
-    params.IgnoreWater                = true
-    params.RespectCanCollide          = false
-    params.FilterType                 = Enum.RaycastFilterType.Exclude
-    params.FilterDescendantsInstances = getFilteredTargets()
-
-    local result = Workspace:Raycast(origin, direction, params)
-    if not result then
-        warn("[RAY] Cast gagal: raycast HRP tidak kena apa-apa")
-    end
-    return result
-end
-
+local DelayReel  = DelayReel  or 0.3
+local DelayCatch = DelayCatch or 0.3
 
 ----------------------------------------------------------------
 -- FUNGSI DASAR CAST / COMPLETE
@@ -565,11 +509,6 @@ local function Cast_V3()
             warn("[RAY] Events.equip nil")
         end
 
-        -- NOTE: raycast dibypass dulu biar bisa cast di mana saja.
-        -- Kalau mau pake validasi jarak, aktifin blok di bawah:
-        -- local result = computeCastRay()
-        -- if not result then return end
-
         -- 1) Charge rod (tanpa argumen)
         Events.charge:InvokeServer()
 
@@ -579,16 +518,15 @@ local function Cast_V3()
         local basePower  = 3.376763343811035
         local baseFactor = 0.623453255714559
 
-        local power  = BlatantOn and BlatantReel or basePower
+        local power  = basePower
         local factor = baseFactor
 
         Events.minigame:InvokeServer(power, factor, serverTime)
     end)
 end
 
-
 ----------------------------------------------------------------
--- ENGINE 0: AUTO FISH FEEL V2 (AFK)
+-- ENGINE: AUTO FISH FEEL V2 (AFK SAJA)
 ----------------------------------------------------------------
 local function Engine_V3_Delayed()
     if isFishing or not AutoFishAFK then return end
@@ -603,66 +541,69 @@ local function Engine_V3_Delayed()
     isFishing = false
 end
 
+----------------------------------------------------------------
+-- ENGINE: LEGIT PERFECT V1 (TARGET ~98%)
+----------------------------------------------------------------
+local LegitPerfectOn = _G.RAY_LegitPerfect or false
+_G.RAY_LegitPerfect  = LegitPerfectOn
 
-----------------------------------------------------------------
--- HELPER: LOOP MINIGAME BRUTAL (PAKAI DI AFK)
-----------------------------------------------------------------
-local function brutalMinigameLoop(totalTime)
-    task.wait(totalTime)
+local function SetAutoFishingState(on)
+    LegitPerfectOn        = on and true or false
+    _G.RAY_LegitPerfect   = LegitPerfectOn
+
+    -- sync ke server (mode auto bawaan game)
+    pcall(function()
+        if Events.UpdateAutoFishing then
+            Events.UpdateAutoFishing:InvokeServer(LegitPerfectOn)
+        end
+    end)
 end
 
+local function Cast_V3_LegitPerfect()
+    pcall(function()
+        if not Events or not Events.minigame or not Events.charge then
+            return
+        end
 
-----------------------------------------------------------------
--- ENGINE 1: BLATANT V2 (FULL SPAM)
-----------------------------------------------------------------
-local function BlatantCycle_V2()
-    if isFishing or not BlatantOn then return end
+        if Events.equip then
+            Events.equip:FireServer(1)
+        end
+
+        Events.charge:InvokeServer()
+
+        local serverTime = Workspace:GetServerTimeNow()
+
+        local basePower  = 3.376763343811035
+        local baseFactor = 0.623453255714559
+
+        local power, factor
+
+        -- 98%: hampir selalu dekat basePower
+        local jitter = (math.random() - 0.5) * 0.02  -- ±0.01
+        power  = basePower + jitter
+        factor = baseFactor
+
+        -- 2% chance miss kecil biar kelihatan natural
+        if math.random() < 0.02 then
+            power = basePower + (math.random() - 0.5) * 0.18
+        end
+
+        Events.minigame:InvokeServer(power, factor, serverTime)
+    end)
+end
+
+local function Engine_LegitPerfect()
+    if isFishing or not LegitPerfectOn then return end
     isFishing = true
 
-    -- 1) CAST SEKALI
-    Cast_V3()
+    Cast_V3_LegitPerfect()
+    task.wait(DelayReel)
 
-    -- 2) SELAMA BlatantReel DETIK, SPAM COMPLETE TERUS
-    local baseReel   = BlatantReel
-    local jitterReel = (math.random() - 0.5) * 0.10   -- ±0.10 s
-    local reelWindow = math.max(0.1, baseReel + jitterReel)
-
-    local startTime  = Workspace:GetServerTimeNow()
-    local deadline   = startTime + reelWindow
-
-    while Workspace:GetServerTimeNow() < deadline do
-        local baseInner   = InnerDelayGui
-        local jitterInner = (math.random() - 0.5) * 0.001  -- ±0.001
-        local inner       = math.clamp(baseInner + jitterInner, 0.0005, 0.008)
-
-        Complete_V3()
-        task.wait(inner)
-    end
-
-    -- 3) CYCLE DELAY (ANTAR CAST)
-    local baseCycle      = BlatantCatch
-    local jitterCycle    = (math.random() - 0.5) * 0.02   -- ±0.02 s
-    local RealCycleDelay = math.max(0.03, baseCycle + jitterCycle)
-
-    task.wait(RealCycleDelay)
+    Complete_V3()
+    task.wait(DelayCatch)
 
     isFishing = false
 end
-
-
-----------------------------------------------------------------
--- GLOBAL EXTRA CATCH LOOP
-----------------------------------------------------------------
-task.spawn(function()
-    while true do
-        if _G.RAY_ExtraCatchBlatant and not isFishing and BlatantOn then
-            Complete_V3()
-            task.wait(BlatantCatch)
-        else
-            task.wait(0.05)
-        end
-    end
-end)
 
 
 ----------------------------------------------------------------
@@ -672,22 +613,23 @@ task.spawn(function()
     while true do
         task.wait(0.05)
 
-        Engine_V3_Delayed()
-        BlatantCycle_V2()
+        Engine_V3_Delayed()   -- AFK biasa (AutoFishAFK)
+        Engine_LegitPerfect() -- engine Legit Perfect (RAY_LegitPerfect)
     end
 end)
+
 
 ----------------------------------------------------------------
 -- PAGE SYSTEM (SIDEBAR + CONTENT + INFORMATION PAGE)
 ----------------------------------------------------------------
 local PAGE_CONFIG = {
-    {Name = "Information",   Icon = "rbxassetid://6031094678"},
-    {Name = "Auto Option",   Icon = "rbxassetid://6031280882"},
-    {Name = "Backpack",      Icon = "rbxassetid://6035047377"},
-    {Name = "Teleport",      Icon = "rbxassetid://6031075931"},
-    {Name = "Quest",         Icon = "rbxassetid://3926309567"},
-    {Name = "Shop",          Icon = "rbxassetid://6031265976"},
-    {Name = "Misc",          Icon = "rbxassetid://6034509993"},
+    {Name = "About",        Icon = "rbxassetid://89633575267800"},
+    {Name = "Fishing",     Icon = "rbxassetid://12644442470"}, -- backpack / tas putih pun bisa jadi “peralatan fishing”
+    {Name = "Backpack",    Icon = "rbxassetid://6870729295"},
+    {Name = "Teleport",    Icon = "rbxassetid://6031075931"},
+    {Name = "Quest",       Icon = "rbxassetid://14228191542"},
+    {Name = "Shop",        Icon = "rbxassetid://6031265976"},
+    {Name = "Misc",        Icon = "rbxassetid://6034509993"},
 }
 
 
@@ -820,7 +762,7 @@ end
 -- INFORMATION PAGE CONTENT
 --==================================================
 
-local InfoPage = Pages["Information"]
+local InfoPage = Pages["About"]
 if InfoPage then
     -- CARD UTAMA
     local Card = Instance.new("Frame")
@@ -847,7 +789,7 @@ if InfoPage then
     TitleInfo.TextSize = 16
     TitleInfo.TextXAlignment = Enum.TextXAlignment.Left
     TitleInfo.TextColor3 = THEME_TEXT
-    TitleInfo.Text = "ThreebloxHUB - Information"
+    TitleInfo.Text = "ThreebloxHUB - About"
 
     -- LINE KECIL DI BAWAH TITLE
     local Line = Instance.new("Frame")
@@ -870,7 +812,7 @@ if InfoPage then
     Desc.TextYAlignment = Enum.TextYAlignment.Top
     Desc.TextColor3 = Color3.fromRGB(230,230,255)
     Desc.TextWrapped = true
-    Desc.Text = "Universal UI for ThreebloxHUB.\nOptimized for Fishit games and future hubs."
+    Desc.Text = "Universal UI for ThreebloxHUB."
 
     -- INFO KECIL DI KANAN (VERSI + AUTHOR)
     local SmallInfo = Instance.new("TextLabel")
@@ -884,7 +826,7 @@ if InfoPage then
     SmallInfo.TextYAlignment = Enum.TextYAlignment.Top
     SmallInfo.TextColor3 = Color3.fromRGB(220,220,245)
     SmallInfo.TextWrapped = true
-    SmallInfo.Text = "Version: 1.0.0\nMade by: Threeblox"
+    SmallInfo.Text = "Made by: Threeblox"
 
     -- TOMBOL JOIN DISCORD (OPEN URL + COPY)
     local CopyBtn = Instance.new("TextButton")
@@ -998,9 +940,6 @@ if InfoPage then
     end
 
     AddChangeLine("(+) Added New GUI layout")
-    AddChangeLine("(+) Added FIX Blatant")
-    AddChangeLine("(+) Added Blatant Improve")
-    AddChangeLine("(+) Added Auto Loot Chest Pirate")
 end
 
 ----------------------------------------------------------------
@@ -1142,13 +1081,13 @@ local function CreateSectionDropdown(parent, titleText)
 end
 
 --------------------------
---- KHUSUS AUTO OPTION ---
+--- KHUSUS Fishing Page ---
 --------------------------
 
 ----------------------------------------------------------------
--- AUTO OPTION PAGE
+-- Fishing Page
 ----------------------------------------------------------------
-local AutoPage = Pages["Auto Option"]
+local AutoPage = Pages["Fishing"]
 if AutoPage then
     local layout = Instance.new("UIListLayout", AutoPage)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -1361,6 +1300,35 @@ end
 ----------------------------------------------------------------
 --- ALL LOGIC
 ----------------------------------------------------------------
+local VFXHidden = {}
+local VFXCacheFolder = Instance.new("Folder")
+VFXCacheFolder.Name = "VFX_HIDDEN_CACHE"
+VFXCacheFolder.Parent = ReplicatedStorage
+
+local function HideAllVFX()
+    local vfxRoot = ReplicatedStorage:FindFirstChild("VFX")
+    if not vfxRoot then return end
+
+    -- simpan dan sembunyikan
+    for _, obj in ipairs(vfxRoot:GetChildren()) do
+        if not VFXHidden[obj] then
+            VFXHidden[obj] = obj.Parent
+            obj.Parent = VFXCacheFolder
+        end
+    end
+end
+
+local function RestoreAllVFX()
+    -- balikin semua yang pernah kita pindahin
+    for obj, oldParent in pairs(VFXHidden) do
+        if obj and obj.Parent == VFXCacheFolder then
+            obj.Parent = oldParent
+        end
+    end
+    table.clear(VFXHidden)
+end
+
+
 local Players           = game:GetService("Players")
 local UIS               = game:GetService("UserInputService")
 local CoreGui           = game:GetService("CoreGui")
@@ -1764,6 +1732,187 @@ do
 end
 
 ----------------------------------------------------------------
+-- DISABLE FISH IMAGE (FISHING SUPPORT)
+----------------------------------------------------------------
+do
+    local row = Instance.new("Frame")
+    row.Parent = FishingSupportSection
+    row.Size = UDim2.new(1,0,0,36)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel")
+    label.Parent = row
+    label.Size = UDim2.new(1,-120,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT or THEME_TEXT
+    label.Text = "Disable Fish Image"
+
+    local pill = Instance.new("TextButton")
+    pill.Parent = row
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame")
+    knob.Parent = pill
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    knob.BackgroundTransparency = 0
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    -- global state biar nyimpen
+    local enabled = _G.RAY_DisableFishImage or false
+    local conn
+    local gui = Players.LocalPlayer:WaitForChild("PlayerGui")
+
+    local function refresh()
+        pill.BackgroundColor3 = enabled
+            and (ACCENT or THEME_MAIN)
+            or  (MUTED or Color3.fromRGB(70,70,90))
+
+        knob.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    local function attach()
+        -- kill semua yang sudah muncul sekarang
+        for _, v in ipairs(gui:GetDescendants()) do
+            if v.Name == "Small Notification" then
+                v:Destroy()
+            end
+        end
+        -- blokir semua yang baru
+        conn = gui.DescendantAdded:Connect(function(v)
+            if v.Name == "Small Notification" then
+                v:Destroy()
+            end
+        end)
+    end
+
+    local function detach()
+        if conn then
+            conn:Disconnect()
+            conn = nil
+        end
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        _G.RAY_DisableFishImage = enabled
+
+        if enabled then
+            attach()   -- ON: kill + blokir
+        else
+            detach()   -- OFF: lepas blok, notifikasi baru boleh muncul lagi
+        end
+
+        refresh()
+        if NotifyFeature then
+            NotifyFeature("Disable Fish Image", enabled)
+        end
+    end)
+
+    -- init kalau sebelum reload sudah ON
+    if enabled then
+        attach()
+    end
+
+    refresh()
+end
+
+
+
+----------------------------------------------------------------
+-- DISABLE ROD SKIN (FISHING SUPPORT)
+----------------------------------------------------------------
+do
+    local row = Instance.new("Frame")
+    row.Parent = FishingSupportSection
+    row.Size = UDim2.new(1,0,0,36)
+    row.BackgroundTransparency = 1
+
+    local label = Instance.new("TextLabel")
+    label.Parent = row
+    label.Size = UDim2.new(1,-120,1,0)
+    label.Position = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 13
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = TEXT or THEME_TEXT
+    label.Text = "Disable Rod Skin"
+
+    local pill = Instance.new("TextButton")
+    pill.Parent = row
+    pill.Size = UDim2.new(0,50,0,24)
+    pill.Position = UDim2.new(1,-80,0.5,-12)
+    pill.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+    local knob = Instance.new("Frame")
+    knob.Parent = pill
+    knob.Size = UDim2.new(0,18,0,18)
+    knob.Position = UDim2.new(0,3,0.5,-9)
+    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+    local enabled = _G.RAY_DisableRodSkin or false
+
+    local function refresh()
+        pill.BackgroundColor3 = enabled
+            and (ACCENT or THEME_MAIN)
+            or  (MUTED or Color3.fromRGB(70,70,90))
+
+        knob.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
+    end
+
+    local function apply()
+        if enabled then
+            HideAllVFX()
+        else
+            RestoreAllVFX()
+        end
+    end
+
+    pill.MouseButton1Click:Connect(function()
+        enabled = not enabled
+        _G.RAY_DisableRodSkin = enabled
+
+        apply()
+        refresh()
+        if NotifyFeature then
+            NotifyFeature("Disable Rod Skin", enabled)
+        end
+    end)
+
+    lp.CharacterAdded:Connect(function()
+        if enabled then
+            task.delay(0.5, HideAllVFX)
+        end
+    end)
+
+    -- init sesuai state
+    apply()
+    refresh()
+end
+
+
+----------------------------------------------------------------
 -- ROD FREEZE (ROD + BADAN DIEM, MANCING TETAP JALAN)
 ----------------------------------------------------------------
 do
@@ -1929,6 +2078,99 @@ do
     refresh()
 end
 
+----------------------------------------------------------------
+-- LEGIT PERFECT SECTION (FISHING PAGE)
+----------------------------------------------------------------
+local LegitPerfectSection
+
+if AutoPage then
+    LegitPerfectSection = CreateSectionDropdown(AutoPage, "Legit Perfect")
+
+    local layout = Instance.new("UIListLayout")
+    layout.Parent = LegitPerfectSection
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 6)
+
+    local line = Instance.new("Frame")
+    line.Parent = LegitPerfectSection
+    line.Size = UDim2.new(1, 0, 0, 2)
+    line.Position = UDim2.new(0, 0, 0, 2)
+    line.BackgroundColor3 = THEME_MAIN
+    line.BorderSizePixel = 0
+
+    ----------------------------------------------------------------
+    -- TOGGLE: ENABLE LEGIT PERFECT ENGINE
+    ----------------------------------------------------------------
+    do
+        local row = Instance.new("Frame")
+        row.Parent = LegitPerfectSection
+        row.Size = UDim2.new(1,0,0,32)
+        row.BackgroundTransparency = 1
+
+        local label = Instance.new("TextLabel")
+        label.Parent = row
+        label.Size = UDim2.new(1,-120,1,0)
+        label.Position = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.Gotham
+        label.TextSize = 13
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextColor3 = TEXT or THEME_TEXT
+        label.Text = "Enable Legit Perfect"
+
+        local pill = Instance.new("TextButton")
+        pill.Parent = row
+        pill.Size = UDim2.new(0,50,0,24)
+        pill.Position = UDim2.new(1,-80,0.5,-12)
+        pill.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
+        pill.BackgroundTransparency = 0.1
+        pill.Text = ""
+        pill.AutoButtonColor = false
+        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+        local knob = Instance.new("Frame")
+        knob.Parent = pill
+        knob.Size = UDim2.new(0,18,0,18)
+        knob.Position = UDim2.new(0,3,0.5,-9)
+        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        knob.BackgroundTransparency = 0
+        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+        local enabled = _G.RAY_LegitPerfect or false
+
+        local function refresh()
+            pill.BackgroundColor3 = enabled
+                and (ACCENT or THEME_MAIN)
+                or  (MUTED or Color3.fromRGB(70,70,90))
+
+            knob.Position = enabled
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        pill.MouseButton1Click:Connect(function()
+            enabled = not enabled
+            SetAutoFishingState(enabled)  -- sync global + server
+
+            -- opsional: kalau Legit Perfect ON, matikan AFK biasa
+            if enabled then
+                AutoFishAFK = false
+                _G.RAY_LegitPerfect = true
+            else
+                _G.RAY_LegitPerfect = false
+            end
+
+            refresh()
+            if NotifyFeature then
+                NotifyFeature("Legit Perfect Engine", enabled)
+            end
+        end)
+
+        refresh()
+    end
+end
+
+
 
 ----------------------------------------------------------------
 -- SKIN ANIMATION SECTION (MUNCUL DI BAWAH FISHING SUPPORT)
@@ -1992,7 +2234,7 @@ AnimModule.GetAnimationData = function(self, animName)
     return baseData, baseKey
 end
 
-print("[SkinOverride] AnimationController patched for skin override")
+
 
 ----------------------------------------------------------------
 -- PANEL KANAN MENEMPEL KE MAIN (HANYA LIST SKIN)
