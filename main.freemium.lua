@@ -1828,14 +1828,13 @@ end
 UpdateRightSkinLabel()
 
 ----------------------------------------------------------------
--- CLOSE PANEL JIKA KLIK DI LUAR PANEL (PAKAI InputEnded)
+-- CLOSE PANEL JIKA KLIK DI LUAR PANEL
 ----------------------------------------------------------------
-UIS.InputEnded:Connect(function(input, gp)
+UIS.InputBegan:Connect(function(input, gp)
     if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-    if gp then return end
     if not RightPanel.Visible then return end
 
-    local pos = input.Position
+    local pos    = input.Position
     local absPos = RightPanel.AbsolutePosition
     local absSize = RightPanel.AbsoluteSize
 
@@ -1843,6 +1842,7 @@ UIS.InputEnded:Connect(function(input, gp)
         pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
         pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
 
+    -- kalau klik BUKAN di dalam panel, tutup
     if not inside then
         RightPanel.Visible = false
     end
