@@ -475,22 +475,26 @@ end
 ----------------------------------------------------------------
 -- ENGINE STATE
 ----------------------------------------------------------------
-local AutoFishAFK    = AutoFishAFK or false
+local AutoFishAFK    = _G.RAY_AutoFishAFK or false
+_G.RAY_AutoFishAFK   = AutoFishAFK
+
 local LegitPerfectOn = _G.RAY_LegitPerfect or false
 _G.RAY_LegitPerfect  = LegitPerfectOn
 
-local isFishing      = false
+local isFishingAFK   = false
+local isFishingLegit = false
 
--- AFK / Legit delay
-local DelayReel  = DelayReel  or 0.3
-local DelayCatch = DelayCatch or 0.3
+-- AFK mode
+local DelayReel  = _G.RAY_DelayReel  or 0.3
+local DelayCatch = _G.RAY_DelayCatch or 0.3
 
 ----------------------------------------------------------------
--- CAST / COMPLETE DASAR (AFK biasa)
+-- FUNGSI DASAR CAST / COMPLETE
 ----------------------------------------------------------------
 local function Complete_V3()
     pcall(function()
         if not Events or not Events.catch then
+            warn("[RAY] Events.catch nil")
             return
         end
         Events.catch:InvokeServer()
@@ -500,15 +504,23 @@ end
 local function Cast_V3_Base()
     pcall(function()
         if not Events or not Events.minigame or not Events.charge then
+            warn("[RAY] Events.minigame / Events.charge nil")
             return
         end
 
+        -- Equip rod di slot 1
         if Events.equip then
-            Events.equip:FireServer(1) -- auto equip rod slot 1
+            Events.equip:FireServer(1)
+        else
+            warn("[RAY] Events.equip nil")
         end
 
+
+
+        -- 1) Charge rod (tanpa argumen)
         Events.charge:InvokeServer()
 
+        -- 2) Start minigame (power, factor, serverTime)
         local serverTime = Workspace:GetServerTimeNow()
 
         local basePower  = 3.376763343811035
@@ -519,11 +531,11 @@ local function Cast_V3_Base()
 end
 
 ----------------------------------------------------------------
--- ENGINE AFK BIASA
+-- ENGINE: AUTO FISH FEEL V2 (AFK SAJA)
 ----------------------------------------------------------------
 local function Engine_V3_Delayed()
-    if isFishing or not AutoFishAFK then return end
-    isFishing = true
+    if isFishingAFK or not AutoFishAFK then return end
+    isFishingAFK = true
 
     Cast_V3_Base()
     task.wait(DelayReel)
@@ -531,38 +543,28 @@ local function Engine_V3_Delayed()
     Complete_V3()
     task.wait(DelayCatch)
 
-    isFishing = false
+    isFishingAFK = false
 end
 
 ----------------------------------------------------------------
--- HELPER: SYNC AUTO FISHING MODE KE SERVER
+-- ENGINE: LEGIT PERFECT V1
 ----------------------------------------------------------------
-local function SetAutoFishingState(on)
-    LegitPerfectOn      = on and true or false
-    _G.RAY_LegitPerfect = LegitPerfectOn
+-- delay khusus legit (boleh sama dengan AFK, boleh beda)
+local LegitDelayReel  = _G.RAY_LegitDelayReel  or 0.25
+local LegitDelayCatch = _G.RAY_LegitDelayCatch or 0.25
 
-    pcall(function()
-        if Events.UpdateAutoFishing then
-            Events.UpdateAutoFishing:InvokeServer(LegitPerfectOn)
-        end
-    end)
-end
-
-----------------------------------------------------------------
--- ENGINE: LEGIT PERFECT V1 (AUTO PERFECT + AUTO EQUIP)
-----------------------------------------------------------------
 local function Cast_V3_LegitPerfect()
     pcall(function()
         if not Events or not Events.minigame or not Events.charge then
             return
         end
 
-        -- auto equip rod slot 1
+        -- Equip rod di slot 1
         if Events.equip then
             Events.equip:FireServer(1)
         end
 
-        -- charge rod
+        -- charge
         Events.charge:InvokeServer()
 
         local serverTime = Workspace:GetServerTimeNow()
@@ -570,43 +572,46 @@ local function Cast_V3_LegitPerfect()
         local basePower  = 3.376763343811035
         local baseFactor = 0.623453255714559
 
+        -- versi awal: full PERFECT
         local power  = basePower
         local factor = baseFactor
 
-        -- versi awal: 100% PERFECT
-        -- kalau sudah kamu tes mantap, baru tambahin jitter kecil di sini
+        -- nanti kalau mau 98%, tinggal tambah jitter kecil di sini
 
         Events.minigame:InvokeServer(power, factor, serverTime)
     end)
 end
 
 local function Engine_LegitPerfect()
-    if isFishing or not LegitPerfectOn then return end
-    isFishing = true
+    if isFishingLegit or not LegitPerfectOn then return end
+    isFishingLegit = true
 
     Cast_V3_LegitPerfect()
-    task.wait(DelayReel)
+    task.wait(LegitDelayReel)
 
     Complete_V3()
-    task.wait(DelayCatch)
+    task.wait(LegitDelayCatch)
 
-    isFishing = false
+    isFishingLegit = false
 end
 
 ----------------------------------------------------------------
--- LOOP UTAMA: PILIH AFK BIASA ATAU LEGIT PERFECT
+-- LOOP UTAMA ENGINE
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
         task.wait(0.05)
 
         if LegitPerfectOn then
+            -- kalau Legit ON, AFK diabaikan
             Engine_LegitPerfect()
         else
+            -- kalau Legit OFF, baru AFK yang jalan (kalau flag-nya true)
             Engine_V3_Delayed()
         end
     end
 end)
+
 
 
 ----------------------------------------------------------------
