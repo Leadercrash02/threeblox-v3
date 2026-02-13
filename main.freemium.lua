@@ -1716,7 +1716,7 @@ end
 print("[SkinOverride] AnimationController patched for skin override")
 
 ----------------------------------------------------------------
--- PANEL KANAN MENEMPEL KE MAIN (TINGGI NGIKUT MAIN)
+-- PANEL KANAN MENEMPEL KE MAIN (HANYA LIST SKIN)
 ----------------------------------------------------------------
 local RightPanel = Instance.new("Frame")
 RightPanel.Name = "SkinAnimationRightPanel"
@@ -1745,35 +1745,17 @@ rpTitle.TextXAlignment = Enum.TextXAlignment.Left
 rpTitle.TextColor3 = THEME_TEXT
 rpTitle.Text = "Skin Animation"
 
-local rpStatus = Instance.new("TextLabel")
-rpStatus.Parent = RightPanel
-rpStatus.Size = UDim2.new(1, -10, 0, 18)
-rpStatus.Position = UDim2.new(0, 5, 0, 30)
-rpStatus.BackgroundTransparency = 1
-rpStatus.Font = Enum.Font.Gotham
-rpStatus.TextSize = 13
-rpStatus.TextXAlignment = Enum.TextXAlignment.Left
-rpStatus.TextColor3 = Color3.fromRGB(200,200,200)
-
 local rpSkin = Instance.new("TextLabel")
 rpSkin.Parent = RightPanel
 rpSkin.Size = UDim2.new(1, -10, 0, 18)
-rpSkin.Position = UDim2.new(0, 5, 0, 48)
+rpSkin.Position = UDim2.new(0, 5, 0, 30)
 rpSkin.BackgroundTransparency = 1
 rpSkin.Font = Enum.Font.Gotham
-rpSkin.TextSize = 13
+rpSkin.TextSize = 12
 rpSkin.TextXAlignment = Enum.TextXAlignment.Left
 rpSkin.TextColor3 = Color3.fromRGB(200,200,200)
 
-local function UpdateRightLabels()
-    if OverrideEnabled then
-        rpStatus.Text = "Override: ON"
-        rpStatus.TextColor3 = Color3.fromRGB(80,255,120)
-    else
-        rpStatus.Text = "Override: OFF"
-        rpStatus.TextColor3 = Color3.fromRGB(255,120,80)
-    end
-
+local function UpdateRightSkinLabel()
     if SelectedAnimSkin and #SelectedAnimSkin > 0 then
         rpSkin.Text = "Skin: " .. SelectedAnimSkin
     else
@@ -1781,48 +1763,10 @@ local function UpdateRightLabels()
     end
 end
 
-local rpToggle = Instance.new("TextButton")
-rpToggle.Parent = RightPanel
-rpToggle.Size = UDim2.new(0.9, 0, 0, 24)
-rpToggle.Position = UDim2.new(0.05, 0, 0, 70)
-rpToggle.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
-rpToggle.BackgroundTransparency = 0.1
-rpToggle.Text = ""
-rpToggle.AutoButtonColor = false
-Instance.new("UICorner", rpToggle).CornerRadius = UDim.new(0, 999)
-
-local rpKnob = Instance.new("Frame")
-rpKnob.Parent = rpToggle
-rpKnob.Size = UDim2.new(0,18,0,18)
-rpKnob.Position = UDim2.new(0,3,0.5,-9)
-rpKnob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-rpKnob.BackgroundTransparency = 0
-Instance.new("UICorner", rpKnob).CornerRadius = UDim.new(0,999)
-
-local function RefreshToggle()
-    rpToggle.BackgroundColor3 = OverrideEnabled and THEME_MAIN or (MUTED or Color3.fromRGB(70,70,90))
-    rpKnob.Position = OverrideEnabled
-        and UDim2.new(1,-21,0.5,-9)
-        or  UDim2.new(0,3,0.5,-9)
-end
-
-rpToggle.MouseButton1Click:Connect(function()
-    OverrideEnabled = not OverrideEnabled
-    AnimModule:SetSkinOverrideEnabled(OverrideEnabled)
-    RefreshToggle()
-    UpdateRightLabels()
-    if NotifyFeature then
-        NotifyFeature("Skin Animation Override", OverrideEnabled)
-    end
-end)
-
-RefreshToggle()
-UpdateRightLabels()
-
 local rpScroll = Instance.new("ScrollingFrame")
 rpScroll.Parent = RightPanel
-rpScroll.Size = UDim2.new(1, -10, 1, -110)
-rpScroll.Position = UDim2.new(0, 5, 0, 100)
+rpScroll.Size = UDim2.new(1, -10, 1, -70)
+rpScroll.Position = UDim2.new(0, 5, 0, 54)
 rpScroll.BackgroundTransparency = 1
 rpScroll.BorderSizePixel = 0
 rpScroll.ScrollBarThickness = 3
@@ -1837,7 +1781,7 @@ rpList.Padding = UDim.new(0,4)
 local function CreateSkinEntry(skinName)
     local row = Instance.new("Frame")
     row.Parent = rpScroll
-    row.Size = UDim2.new(1, -4, 0, 26)
+    row.Size = UDim2.new(1, -4, 0, 24)
     row.BackgroundTransparency = 1
     row.BorderSizePixel = 0
 
@@ -1858,7 +1802,7 @@ local function CreateSkinEntry(skinName)
     btn.BorderSizePixel = 0
     btn.TextColor3 = THEME_TEXT
     btn.Font = Enum.Font.Gotham
-    btn.TextSize = 14
+    btn.TextSize = 12
     btn.TextXAlignment = Enum.TextXAlignment.Left
     btn.Text = "  " .. skinName
     btn.AutoButtonColor = true
@@ -1867,7 +1811,7 @@ local function CreateSkinEntry(skinName)
     btn.MouseButton1Click:Connect(function()
         AnimModule:SetAnimationSkin(skinName)
         SelectedAnimSkin = skinName
-        UpdateRightLabels()
+        UpdateRightSkinLabel()
 
         for _, child in ipairs(rpScroll:GetChildren()) do
             if child:IsA("Frame") and child:FindFirstChild("Highlight") then
@@ -1881,8 +1825,34 @@ for _, sn in ipairs(SKINS) do
     CreateSkinEntry(sn)
 end
 
+UpdateRightSkinLabel()
+
+----------------------------------------------------------------
+-- CLOSE PANEL JIKA KLIK DI LUAR PANEL
+----------------------------------------------------------------
+UIS.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if not RightPanel.Visible then return end
+
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        local pos = input.Position
+        local absPos = RightPanel.AbsolutePosition
+        local absSize = RightPanel.AbsoluteSize
+
+        local inside =
+            pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
+            pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
+
+        if not inside then
+            RightPanel.Visible = false
+        end
+    end
+end)
+
 ----------------------------------------------------------------
 -- DROPDOWN “Skin Animation” DI BAWAH FISHING SUPPORT
+--  - Toggle override di sini (bukan di panel)
+--  - Tombol “Open Skin Panel” untuk buka/close panel kanan
 ----------------------------------------------------------------
 local SkinAnimationSection
 
@@ -1901,36 +1871,94 @@ if AutoPage then
     LineSA.BackgroundColor3 = THEME_MAIN
     LineSA.BorderSizePixel = 0
 
-    local row = Instance.new("Frame")
-    row.Parent = SkinAnimationSection
-    row.Size = UDim2.new(1,0,0,40)
-    row.BackgroundTransparency = 1
+    -- Row 1: toggle override (pill kayak Water Walk)
+    do
+        local row = Instance.new("Frame")
+        row.Parent = SkinAnimationSection
+        row.Size = UDim2.new(1,0,0,36)
+        row.BackgroundTransparency = 1
 
-    local label = Instance.new("TextLabel")
-    label.Parent = row
-    label.Size = UDim2.new(1,-110,1,0)
-    label.Position = UDim2.new(0,16,0,0)
-    label.BackgroundTransparency = 1
-    label.Font = Enum.Font.Gotham
-    label.TextSize = 13
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextColor3 = TEXT or THEME_TEXT
-    label.Text = "Toggle & Panel Skin Animation"
+        local label = Instance.new("TextLabel")
+        label.Parent = row
+        label.Size = UDim2.new(1,-100,1,0)
+        label.Position = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.Gotham
+        label.TextSize = 13
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextColor3 = TEXT or THEME_TEXT
+        label.Text = "Skin Override"
 
-    local btn = Instance.new("TextButton")
-    btn.Parent = row
-    btn.Size = UDim2.new(0,80,0,24)
-    btn.Position = UDim2.new(1,-100,0.5,-12)
-    btn.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
-    btn.BackgroundTransparency = 0.1
-    btn.Text = "Open"
-    btn.TextColor3 = THEME_TEXT
-    btn.Font = Enum.Font.GothamBold
-    btn.TextSize = 12
-    btn.AutoButtonColor = true
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+        local pill = Instance.new("TextButton")
+        pill.Parent = row
+        pill.Size = UDim2.new(0,50,0,24)
+        pill.Position = UDim2.new(1,-80,0.5,-12)
+        pill.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
+        pill.BackgroundTransparency = 0.1
+        pill.Text = ""
+        pill.AutoButtonColor = false
+        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
 
-    btn.MouseButton1Click:Connect(function()
-        RightPanel.Visible = not RightPanel.Visible
-    end)
+        local knob = Instance.new("Frame")
+        knob.Parent = pill
+        knob.Size = UDim2.new(0,18,0,18)
+        knob.Position = UDim2.new(0,3,0.5,-9)
+        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        knob.BackgroundTransparency = 0
+        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+        local function refreshToggle()
+            pill.BackgroundColor3 = OverrideEnabled and THEME_MAIN or (MUTED or Color3.fromRGB(70,70,90))
+            knob.Position = OverrideEnabled
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        pill.MouseButton1Click:Connect(function()
+            OverrideEnabled = not OverrideEnabled
+            AnimModule:SetSkinOverrideEnabled(OverrideEnabled)
+            refreshToggle()
+            if NotifyFeature then
+                NotifyFeature("Skin Override", OverrideEnabled)
+            end
+        end)
+
+        refreshToggle()
+    end
+
+    -- Row 2: tombol buka panel kanan
+    do
+        local row = Instance.new("Frame")
+        row.Parent = SkinAnimationSection
+        row.Size = UDim2.new(1,0,0,40)
+        row.BackgroundTransparency = 1
+
+        local label = Instance.new("TextLabel")
+        label.Parent = row
+        label.Size = UDim2.new(1,-110,1,0)
+        label.Position = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.Gotham
+        label.TextSize = 13
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextColor3 = TEXT or THEME_TEXT
+        label.Text = "Open Skin Panel"
+
+        local btn = Instance.new("TextButton")
+        btn.Parent = row
+        btn.Size = UDim2.new(0,80,0,24)
+        btn.Position = UDim2.new(1,-100,0.5,-12)
+        btn.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+        btn.BackgroundTransparency = 0.1
+        btn.Text = "Open"
+        btn.TextColor3 = THEME_TEXT
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 12
+        btn.AutoButtonColor = true
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+        btn.MouseButton1Click:Connect(function()
+            RightPanel.Visible = not RightPanel.Visible
+        end)
+    end
 end
