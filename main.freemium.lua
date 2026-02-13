@@ -548,8 +548,8 @@ local LegitPerfectOn = _G.RAY_LegitPerfect or false
 _G.RAY_LegitPerfect  = LegitPerfectOn
 
 local function SetAutoFishingState(on)
-    LegitPerfectOn        = on and true or false
-    _G.RAY_LegitPerfect   = LegitPerfectOn
+    LegitPerfectOn      = on and true or false
+    _G.RAY_LegitPerfect = LegitPerfectOn
 
     -- sync ke server (mode auto bawaan game)
     pcall(function()
@@ -573,20 +573,15 @@ local function Cast_V3_LegitPerfect()
 
         local serverTime = Workspace:GetServerTimeNow()
 
+        -- base yang sebelumnya kamu pakai buat perfect
         local basePower  = 3.376763343811035
         local baseFactor = 0.623453255714559
 
         local power, factor
 
-        -- 98%: hampir selalu dekat basePower
-        local jitter = (math.random() - 0.5) * 0.02  -- ±0.01
-        power  = basePower + jitter
+        -- langkah 1: bikin dulu 100% perfect (tanpa jitter)
+        power  = basePower
         factor = baseFactor
-
-        -- 2% chance miss kecil biar kelihatan natural
-        if math.random() < 0.02 then
-            power = basePower + (math.random() - 0.5) * 0.18
-        end
 
         Events.minigame:InvokeServer(power, factor, serverTime)
     end)
@@ -605,19 +600,20 @@ local function Engine_LegitPerfect()
     isFishing = false
 end
 
-
 ----------------------------------------------------------------
--- LOOP UTAMA ENGINE
+-- LOOP UTAMA: PILIH ANTARA AFK BIASA ATAU LEGIT PERFECT
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
         task.wait(0.05)
 
-        Engine_V3_Delayed()   -- AFK biasa (AutoFishAFK)
-        Engine_LegitPerfect() -- engine Legit Perfect (RAY_LegitPerfect)
+        if LegitPerfectOn then
+            Engine_LegitPerfect()
+        else
+            Engine_V3_Delayed() -- engine AFK lama
+        end
     end
 end)
-
 
 ----------------------------------------------------------------
 -- PAGE SYSTEM (SIDEBAR + CONTENT + INFORMATION PAGE)
