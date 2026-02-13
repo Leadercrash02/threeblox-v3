@@ -1764,7 +1764,7 @@ do
 end
 
 ----------------------------------------------------------------
--- ROD FREEZE (ROD DIEM, MANCING TETAP JALAN) - FISHING SUPPORT
+-- ROD FREEZE (ROD + BADAN DIEM, MANCING TETAP JALAN)
 ----------------------------------------------------------------
 do
     local row = Instance.new("Frame")
@@ -1801,23 +1801,22 @@ do
     knob.BackgroundTransparency = 0
     Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-    -- status global, biar ke-remember
     local enabled = _G.RAY_RodFreeze or false
 
-    ----------------------------------------------------------------
-    -- Anim Controller dari Controllers (path sudah pasti dari log-mu)
-    ----------------------------------------------------------------
     local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Players          = game:GetService("Players")
+    local RunService       = game:GetService("RunService")
+
+    local lp = Players.LocalPlayer
+
+    -- AnimController dari Controllers (path ini sudah pasti dari log-mu)
     local AnimController = require(ReplicatedStorage.Controllers.AnimationController)
     print("[RodFreeze] AnimController =", AnimController)
 
-    -- simpan PlayAnimation asli sekali
     _G.__RAY_OldPlayAnimation = _G.__RAY_OldPlayAnimation or AnimController.PlayAnimation
     local OldPlay = _G.__RAY_OldPlayAnimation
 
-    ----------------------------------------------------------------
-    -- ANIM ROD DASAR YANG DI-FREEZE (ALL ROD, NO SKIN JUGA KEKENA)
-    ----------------------------------------------------------------
+    -- anim rod dasar (all rod no-skin ikut)
     local ROD_ANIMS = {
         ["RodThrow"]         = true,
         ["ReelStart"]        = true,
@@ -1825,6 +1824,43 @@ do
         ["ReelIntermission"] = true,
         ["FishCaught"]       = true,
     }
+
+    -- koneksi heartbeat buat hard-freeze semua anim di humanoid
+    local hardFreezeConn
+
+    local function startHardFreeze()
+        if hardFreezeConn then hardFreezeConn:Disconnect() end
+
+        hardFreezeConn = RunService.Heartbeat:Connect(function()
+            local char = lp.Character
+            if not char then return end
+
+            local hum = char:FindFirstChildWhichIsA("Humanoid")
+            if not hum then return end
+
+            for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
+                track:AdjustSpeed(0)
+            end
+        end)
+    end
+
+    local function stopHardFreeze()
+        if hardFreezeConn then
+            hardFreezeConn:Disconnect()
+            hardFreezeConn = nil
+        end
+
+        -- optional: balikin speed ke normal (1) buat semua anim yang masih jalan
+        local char = lp.Character
+        if char then
+            local hum = char:FindFirstChildWhichIsA("Humanoid")
+            if hum then
+                for _, track in ipairs(hum:GetPlayingAnimationTracks()) do
+                    track:AdjustSpeed(1)
+                end
+            end
+        end
+    end
 
     local function refresh()
         if enabled then
@@ -1868,8 +1904,10 @@ do
 
         if enabled then
             applyPatch()
+            startHardFreeze()
         else
             restorePatch()
+            stopHardFreeze()
         end
 
         refresh()
@@ -1879,15 +1917,18 @@ do
         end
     end)
 
-    -- inisialisasi sesuai state global
+    -- init sesuai state global
     if enabled then
         applyPatch()
+        startHardFreeze()
     else
         restorePatch()
+        stopHardFreeze()
     end
 
     refresh()
 end
+
 
 ----------------------------------------------------------------
 -- SKIN ANIMATION SECTION (MUNCUL DI BAWAH FISHING SUPPORT)
