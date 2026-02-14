@@ -2392,7 +2392,7 @@ if AutoPage then
 end
 
 ----------------------------------------------------------------
--- BACKPACK PAGE + SECTION "Auto Sell" (STRUKTUR BARU)
+-- AUTO SELL SECTION DI BACKPACK (STRUKTUR BARU)
 ----------------------------------------------------------------
 
 local BackpackPage = Pages["Backpack"]
@@ -2404,7 +2404,6 @@ end
 
 local BackpackAutoSellSection
 if BackpackPage then
-    -- dropdown section di Backpack, judul: "Auto Sell"
     BackpackAutoSellSection = CreateSectionDropdown(BackpackPage, "Auto Sell")
 
     local sectionLayout = Instance.new("UIListLayout", BackpackAutoSellSection)
@@ -2412,7 +2411,7 @@ if BackpackPage then
     sectionLayout.Padding = UDim.new(0, 4)
 
     ----------------------------------------------------------------
-    -- STATE GLOBAL (PERSIS SEPERTI LAMA)
+    -- STATE GLOBAL
     ----------------------------------------------------------------
     local AutoSellOn = _G.RAY_AutoSellOn or false
     _G.RAY_SellThreshold          = _G.RAY_SellThreshold          or "Legendary"
@@ -2421,7 +2420,7 @@ if BackpackPage then
     _G.RAY_SellInventoryThreshold = _G.RAY_SellInventoryThreshold or 30
 
     ----------------------------------------------------------------
-    -- HELPER ROW (parent: BackpackAutoSellSection)
+    -- HELPER ROW
     ----------------------------------------------------------------
     local function makeRow(title)
         local row = Instance.new("Frame")
@@ -2663,7 +2662,8 @@ if BackpackPage then
     Instance.new("UICorner", knob2).CornerRadius = UDim.new(0,999)
 
     local function refreshSell()
-        pill2.BackgroundColor3 = AutoSellOn and (ACCENT or Color3.fromRGB(0,200,100))
+        pill2.BackgroundColor3 =
+            AutoSellOn and (ACCENT or Color3.fromRGB(0,200,100))
             or (MUTED or Color3.fromRGB(70,70,90))
         knob2.Position = AutoSellOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
     end
@@ -2679,34 +2679,59 @@ if BackpackPage then
 end
 
 ----------------------------------------------------------------
--- AUTO SELL ENGINE
+-- AUTO SELL ENGINE (TIME + INVENTORY VIA REPLION)
 ----------------------------------------------------------------
-task.spawn(function()
+do
+    local RS = game:GetService("ReplicatedStorage")
     local Players = game:GetService("Players")
     local lp = Players.LocalPlayer
-    local lastSell = 0
 
-    while true do
-        if _G.RAY_AutoSellOn then
-            local mode = _G.RAY_SellMode or "time"
+    local Replion = require(RS.Packages.Replion)
 
-            if mode == "time" then
-                local delay = tonumber(_G.RAY_SellDelay) or 5
-                if os.clock() - lastSell >= delay then
-                    local ok, err = pcall(function()
-                        Events.sell:InvokeServer()
-                    end)
-                    if ok then
-                        lastSell = os.clock()
-                    else
-                        warn("[AUTO SELL] sell (time) error:", err)
+    local function getInvItemsForSell()
+        local ok, repl = pcall(function()
+            return Replion.Client:WaitReplion("Data")
+        end)
+        if not ok or not repl or not repl.Data then
+            return {}
+        end
+        local root = repl.Data
+        local inv = root and root.Inventory
+        local items = inv and inv.Items
+        if typeof(items) ~= "table" then
+            return {}
+        end
+        return items
+    end
+
+    task.spawn(function()
+        local lastSell = 0
+
+        while true do
+            if _G.RAY_AutoSellOn then
+                local mode = _G.RAY_SellMode or "time"
+
+                if mode == "time" then
+                    local delay = tonumber(_G.RAY_SellDelay) or 5
+                    if os.clock() - lastSell >= delay then
+                        local ok, err = pcall(function()
+                            Events.sell:InvokeServer()
+                        end)
+                        if ok then
+                            lastSell = os.clock()
+                        else
+                            warn("[AUTO SELL] sell (time) error:", err)
+                        end
                     end
-                end
 
-            elseif mode == "inventory" then
-                local backpack = lp:FindFirstChild("Backpack")
-                if backpack then
-                    local count = #backpack:GetChildren()
+                elseif mode == "inventory" then
+                    local items = getInvItemsForSell()
+                    local count = 0
+                    for _, entry in pairs(items) do
+                        -- kalau mau filter hanya Fish, bisa cek entry.Id lewat ItemDataById
+                        count += 1
+                    end
+
                     local limit = tonumber(_G.RAY_SellInventoryThreshold) or 30
                     if count >= limit then
                         local ok, err = pcall(function()
@@ -2719,11 +2744,12 @@ task.spawn(function()
                         end
                     end
                 end
+            else
+                lastSell = 0
             end
-        else
-            lastSell = 0
-        end
 
-        task.wait(0.5)
-    end
-end)
+            task.wait(0.5)
+        end
+    end)
+end
+
