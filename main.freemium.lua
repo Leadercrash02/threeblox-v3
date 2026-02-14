@@ -2642,74 +2642,21 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------------------
--- AUTO FAVORITE BY RARITY + NAME + VARIANT (FULL, SIAP PAKAI)
+-- GLOBAL STATE AUTO FAVORITE (MODE + FILTER)
 ----------------------------------------------------------------
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players           = game:GetService("Players")
-local UIS               = game:GetService("UserInputService")
-local RunService        = game:GetService("RunService")
+_G.RAYFavOn            = _G.RAYFavOn or false
+_G.RAYFavMode          = _G.RAYFavMode or "By Rarity + List" -- All Fish / By Rarity / By List / By Rarity + List
 
-local Loader    = require(ReplicatedStorage.Packages.Loader)
-local Replion   = require(ReplicatedStorage.Packages.Replion)
-local EventsMod = require(ReplicatedStorage.Events)
+_G.RAYFavLegendOn      = _G.RAYFavLegendOn or true
+_G.RAYFavMythicOn      = _G.RAYFavMythicOn or true
+_G.RAYFavSecretOn      = _G.RAYFavSecretOn or true
 
-----------------------------------------------------------------
--- MASTER DATA: ITEMS, TIERS, VARIANTS
-----------------------------------------------------------------
-
-local Items_upvr    = require(ReplicatedStorage.Items)      -- sama seperti module GetItemData [file:1]
-local Variants_upvr = require(ReplicatedStorage.Variants)   -- sama seperti GetVariants [file:1]
-local Tiers_upvr    = require(ReplicatedStorage.Tiers)
-
-local ItemDataById = {}
-for _, v in Items_upvr do
-    if v.Data and v.Data.Id then
-        ItemDataById[v.Data.Id] = v.Data
-    end
-end
-
-local TierByIndex = {}
-for _, t in Tiers_upvr do
-    TierByIndex[t.Tier] = t
-end
-
-local VariantDataById = {}
-local VariantNameById = {}
-local VariantIdByName = {}
-for _, v in Variants_upvr do
-    local d = v.Data
-    if d and d.Type == "Variant" and d.Id and d.Name then
-        VariantDataById[d.Id] = d
-        VariantNameById[d.Id] = d.Name
-        VariantIdByName[d.Name] = d.Id
-    end
-end
+_G.RAYFavVariantFilter = _G.RAYFavVariantFilter or "Any"     -- Any / Albino / Galaxy / dll
+_G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {}        -- [FishName] = true
 
 ----------------------------------------------------------------
--- REMOTE FAVORITE ITEM
-----------------------------------------------------------------
-
-local FavoriteRemote = ReplicatedStorage.Packages
-    :WaitForChild("_Index")
-    :WaitForChild("sleitnick_net@0.2.0")
-    :WaitForChild("net")
-    :WaitForChild("RE/FavoriteItem")                          -- ini remote favorit bawaan [file:1]
-
-----------------------------------------------------------------
--- GLOBAL STATE AUTO FAVORITE
-----------------------------------------------------------------
-
-_G.RAYFavOn             = _G.RAYFavOn or false               -- auto favorite inventory loop
-_G.RAYFavCurrentOn      = _G.RAYFavCurrentOn or false        -- (opsional) current fish loop
-_G.RAYFavSelectedNames  = _G.RAYFavSelectedNames or {}       -- table [FishName] = true
-_G.RAYFavLegendOn       = _G.RAYFavLegendOn or false
-_G.RAYFavMythicOn       = _G.RAYFavMythicOn or false
-_G.RAYFavSecretOn       = _G.RAYFavSecretOn or false
-_G.RAYFavVariantFilter  = _G.RAYFavVariantFilter or "Any"    -- "Any" / "Albino" / "Galaxy" / dll
-
-----------------------------------------------------------------
--- HELPER: TIER, RARITY, NAME, VARIANT FILTER
+-- BACKEND FILTER (PAKAI MODE BARU)
 ----------------------------------------------------------------
 
 local function getTierFromItem(data)
@@ -2720,6 +2667,9 @@ local function getTierFromItem(data)
 end
 
 local function passesRarityFilterFav(data)
+    if _G.RAYFavMode == "All Fish" or _G.RAYFavMode == "By List" then
+        return true
+    end
     local tierInfo = getTierFromItem(data)
     local rName    = tierInfo and tierInfo.Name
     if not rName then return false end
@@ -2728,7 +2678,6 @@ local function passesRarityFilterFav(data)
     local M = _G.RAYFavMythicOn
     local S = _G.RAYFavSecretOn
 
-    -- kalau semua OFF, rarity tidak difilter
     if not L and not M and not S then
         return true
     end
@@ -2742,13 +2691,15 @@ end
 
 local function passesNameFilterFav(data)
     local sel = _G.RAYFavSelectedNames
+    if _G.RAYFavMode == "All Fish" or _G.RAYFavMode == "By Rarity" then
+        return true
+    end
     if not sel or next(sel) == nil then
         return true
     end
     return data.Name and sel[data.Name] == true
 end
 
--- PENTING: kalau di inventory field ID variant beda, ganti di sini (misal entry.Variant atau entry.VariantID)
 local function getVariantNameFromEntry(entry)
     local vid = entry.VariantId or entry.VariantID or entry.Variant
     if not vid then return nil end
@@ -2766,27 +2717,7 @@ local function passesVariantFilterFav(entry)
 end
 
 ----------------------------------------------------------------
--- HELPER: AMBIL INVENTORY VIA REPLION
-----------------------------------------------------------------
-
-local function getInvItems()
-    local ok, repl = pcall(function()
-        return Replion.Client:WaitReplion("Data")
-    end)
-    if not ok or not repl or not repl.Data then
-        return {}
-    end
-    local root  = repl.Data
-    local inv   = root and root.Inventory
-    local items = inv and inv.Items
-    if typeof(items) ~= "table" then
-        return {}
-    end
-    return items
-end
-
-----------------------------------------------------------------
--- AUTO FAVORITE SEKALI JALAN (ONCE)
+-- AUTO FAVORITE ONCE (PAKAI FILTER BARU)
 ----------------------------------------------------------------
 
 function AutoFavoriteOnce()
@@ -2816,31 +2747,8 @@ function AutoFavoriteOnce()
 end
 
 ----------------------------------------------------------------
--- LOOP AUTO FAVORITE INVENTORY
+-- BACKPACK: SECTION "Auto Favorite" (TANPA PANEL DALAM)
 ----------------------------------------------------------------
-
-task.spawn(function()
-    while true do
-        if _G.RAYFavOn then
-            pcall(AutoFavoriteOnce)
-        end
-        task.wait(3)
-    end
-end)
-
-----------------------------------------------------------------
--- UI: AUTO FAVORITE SECTION DI BACKPACK
-----------------------------------------------------------------
-
-local BackpackPage = Pages["Backpack"]
-if BackpackPage then
-    local layout = BackpackPage:FindFirstChildOfClass("UIListLayout")
-    if not layout then
-        layout = Instance.new("UIListLayout", BackpackPage)
-        layout.SortOrder = Enum.SortOrder.LayoutOrder
-        layout.Padding   = UDim.new(0, 6)
-    end
-end
 
 if BackpackPage then
     local AutoFavSection = CreateSectionDropdown(BackpackPage, "Auto Favorite")
@@ -2852,20 +2760,20 @@ if BackpackPage then
 
     local function makeRow(title, height)
         local row = Instance.new("Frame")
-        row.Parent              = AutoFavSection
-        row.Size                = UDim2.new(1,0,0,height or 32)
-        row.BackgroundTransparency = 1
+        row.Parent                  = AutoFavSection
+        row.Size                    = UDim2.new(1,0,0,height or 32)
+        row.BackgroundTransparency  = 1
 
         local label = Instance.new("TextLabel")
-        label.Parent              = row
-        label.Size                = UDim2.new(1,-100,1,0)
-        label.Position            = UDim2.new(0,16,0,0)
+        label.Parent                = row
+        label.Size                  = UDim2.new(1,-110,1,0)
+        label.Position              = UDim2.new(0,16,0,0)
         label.BackgroundTransparency = 1
-        label.Font                = Enum.Font.Gotham
-        label.TextSize            = 13
-        label.TextXAlignment      = Enum.TextXAlignment.Left
-        label.TextColor3          = Color3.fromRGB(255,255,255)
-        label.Text                = title
+        label.Font                  = Enum.Font.Gotham
+        label.TextSize              = 13
+        label.TextXAlignment        = Enum.TextXAlignment.Left
+        label.TextColor3            = Color3.fromRGB(255,255,255)
+        label.Text                  = title
 
         return row
     end
@@ -2906,34 +2814,34 @@ if BackpackPage then
         refresh()
     end
 
-    -- Row: Auto Favorite Inventory
+    -- Toggle Auto Favorite (engine)
     do
-        local row = makeRow("Auto Favorite Inventory")
+        local row = makeRow("Enable Auto Favorite")
         makeTogglePill(row,
             function() return _G.RAYFavOn end,
             function(v) _G.RAYFavOn = v and true or false end,
-            "Auto Favorite Inventory"
+            "Auto Favorite Engine"
         )
     end
 
-    -- Row: Favorite sekali (once)
+    -- Tombol Favorite Once
     do
         local row = makeRow("Favorite sekarang (once)")
 
-        local btnOnce = Instance.new("TextButton")
-        btnOnce.Parent              = row
-        btnOnce.Size                = UDim2.new(0,100,0,24)
-        btnOnce.Position            = UDim2.new(1,-116,0.5,-12)
-        btnOnce.BackgroundColor3    = ACCENT or Color3.fromRGB(0,200,100)
-        btnOnce.BackgroundTransparency = 0.1
-        btnOnce.Font                = Enum.Font.GothamBold
-        btnOnce.TextSize            = 12
-        btnOnce.TextColor3          = Color3.fromRGB(255,255,255)
-        btnOnce.Text                = "Run"
-        btnOnce.AutoButtonColor     = false
-        Instance.new("UICorner", btnOnce).CornerRadius = UDim.new(0,999)
+        local btn = Instance.new("TextButton")
+        btn.Parent                 = row
+        btn.Size                   = UDim2.new(0,100,0,24)
+        btn.Position               = UDim2.new(1,-116,0.5,-12)
+        btn.BackgroundColor3       = ACCENT or Color3.fromRGB(0,200,100)
+        btn.BackgroundTransparency = 0.1
+        btn.Font                   = Enum.Font.GothamBold
+        btn.TextSize               = 12
+        btn.TextColor3             = Color3.fromRGB(255,255,255)
+        btn.Text                   = "Run"
+        btn.AutoButtonColor        = false
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,999)
 
-        btnOnce.MouseButton1Click:Connect(function()
+        btn.MouseButton1Click:Connect(function()
             task.spawn(function()
                 pcall(AutoFavoriteOnce)
                 if NotifyFeature then
@@ -2943,189 +2851,429 @@ if BackpackPage then
         end)
     end
 
-    ----------------------------------------------------------------
-    -- PANEL KANAN VARIANT (STRUKTUR SAMA DENGAN SKINANIMATIONRIGHTPANEL)
-    ----------------------------------------------------------------
+    -- Tombol buka panel kanan
+    local rowOpen = makeRow("Filter Auto Favorite")
+    do
+        local btn = Instance.new("TextButton")
+        btn.Parent                 = rowOpen
+        btn.Size                   = UDim2.new(1,-32,0,30)
+        btn.Position               = UDim2.new(0,16,0,0)
+        btn.BackgroundColor3       = CARD or Color3.fromRGB(25,25,35)
+        btn.BackgroundTransparency = 0.12
+        btn.AutoButtonColor        = false
+        btn.Font                   = Enum.Font.Gotham
+        btn.TextSize               = 13
+        btn.TextColor3             = Color3.fromRGB(255,255,255)
+        btn.TextXAlignment         = Enum.TextXAlignment.Left
+        btn.Text                   = "Open Auto Favorite Panel"
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
 
-    local Main = CoreGui and CoreGui:FindFirstChild("ThreebloxHUB") or nil
-    -- kalau Main sudah didefinisikan di atas script ini, pakai itu langsung
-
-    if Main then
-        local VariantRightPanel = Instance.new("Frame")
-        VariantRightPanel.Name                  = "VariantFilterRightPanel"
-        VariantRightPanel.Size                  = UDim2.new(0, 220, 1, -46)
-        VariantRightPanel.AnchorPoint           = Vector2.new(1, 0)
-        VariantRightPanel.Position              = UDim2.new(1, -10, 0, 40)
-        VariantRightPanel.BackgroundColor3      = CARD or Color3.fromRGB(15, 15, 25)
-        VariantRightPanel.BackgroundTransparency = 0.25
-        VariantRightPanel.BorderSizePixel       = 0
-        VariantRightPanel.Visible               = false
-        VariantRightPanel.ZIndex                = 10
-        VariantRightPanel.Parent                = Main
-
-        Instance.new("UICorner", VariantRightPanel).CornerRadius = UDim.new(0, 10)
-        local vStroke = Instance.new("UIStroke", VariantRightPanel)
-        vStroke.Color        = THEME_MAIN or THEMEMAIN
-        vStroke.Transparency = 0.5
-
-        local vTitle = Instance.new("TextLabel")
-        vTitle.Parent              = VariantRightPanel
-        vTitle.Size                = UDim2.new(1, -10, 0, 24)
-        vTitle.Position            = UDim2.new(0, 5, 0, 6)
-        vTitle.BackgroundTransparency = 1
-        vTitle.Font                = Enum.Font.GothamBold
-        vTitle.TextSize            = 16
-        vTitle.TextXAlignment      = Enum.TextXAlignment.Left
-        vTitle.TextColor3          = THEME_TEXT or THEMETEXT
-        vTitle.ZIndex              = 11
-        vTitle.Text                = "Variant Filter"
-
-        local vInfo = Instance.new("TextLabel")
-        vInfo.Parent              = VariantRightPanel
-        vInfo.Size                = UDim2.new(1, -10, 0, 18)
-        vInfo.Position            = UDim2.new(0, 5, 0, 30)
-        vInfo.BackgroundTransparency = 1
-        vInfo.Font                = Enum.Font.Gotham
-        vInfo.TextSize            = 12
-        vInfo.TextXAlignment      = Enum.TextXAlignment.Left
-        vInfo.TextColor3          = Color3.fromRGB(200,200,200)
-        vInfo.ZIndex              = 11
-        vInfo.Text                = "Pilih variant yang boleh di-favorite."
-
-        local vScroll = Instance.new("ScrollingFrame")
-        vScroll.Parent                 = VariantRightPanel
-        vScroll.Size                   = UDim2.new(1, -10, 1, -70)
-        vScroll.Position               = UDim2.new(0, 5, 0, 54)
-        vScroll.BackgroundTransparency = 1
-        vScroll.BorderSizePixel        = 0
-        vScroll.ScrollBarThickness     = 3
-        vScroll.AutomaticCanvasSize    = Enum.AutomaticSize.Y
-        vScroll.CanvasSize             = UDim2.new(0,0,0,0)
-        vScroll.ScrollBarImageColor3   = THEME_MAIN or THEMEMAIN
-        vScroll.ZIndex                 = 10
-
-        local vList = Instance.new("UIListLayout", vScroll)
-        vList.SortOrder = Enum.SortOrder.LayoutOrder
-        vList.Padding   = UDim.new(0,4)
-
-        local variantNames = {}
-        for _, d in pairs(VariantDataById) do
-            table.insert(variantNames, d.Name)
-        end
-        table.sort(variantNames)
-
-        local function CreateVariantEntry(name)
-            local selected = (_G.RAYFavVariantFilter == name)
-
-            local row = Instance.new("Frame")
-            row.Parent                 = vScroll
-            row.Size                   = UDim2.new(1, -4, 0, 24)
-            row.BackgroundTransparency = 1
-            row.BorderSizePixel        = 0
-            row.ZIndex                 = 11
-
-            local line = Instance.new("Frame")
-            line.Name                  = "Highlight"
-            line.Parent                = row
-            line.Size                  = UDim2.new(0, 3, 1, 0)
-            line.Position              = UDim2.new(0, 0, 0, 0)
-            line.BackgroundColor3      = THEME_MAIN or THEMEMAIN or Color3.fromRGB(170, 90, 255)
-            line.BorderSizePixel       = 0
-            line.Visible               = selected
-            line.ZIndex                = 12
-
-            local btn = Instance.new("TextButton")
-            btn.Parent                 = row
-            btn.Size                   = UDim2.new(1, -6, 1, 0)
-            btn.Position               = UDim2.new(0, 4, 0, 0)
-            btn.BackgroundColor3       = selected and Color3.fromRGB(40,40,70) or Color3.fromRGB(30,30,50)
-            btn.BorderSizePixel        = 0
-            btn.TextColor3             = THEME_TEXT or THEMETEXT
-            btn.Font                   = Enum.Font.Gotham
-            btn.TextSize               = 12
-            btn.TextXAlignment         = Enum.TextXAlignment.Left
-            btn.Text                   = "  "..name
-            btn.AutoButtonColor        = true
-            btn.ZIndex                 = 11
-            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-
-            btn.MouseButton1Click:Connect(function()
-                if _G.RAYFavVariantFilter == name then
-                    _G.RAYFavVariantFilter = "Any"
-                else
-                    _G.RAYFavVariantFilter = name
-                end
-
-                for _, child in ipairs(vScroll:GetChildren()) do
-                    if child:IsA("Frame") and child:FindFirstChild("Highlight") then
-                        local h = child.Highlight
-                        local b = child:FindFirstChildOfClass("TextButton")
-                        local isThis = (child == row) and (_G.RAYFavVariantFilter == name)
-                        h.Visible = isThis
-                        if b then
-                            b.BackgroundColor3 = isThis and Color3.fromRGB(40,40,70) or Color3.fromRGB(30,30,50)
-                        end
-                    end
-                end
-
-                if NotifyFeature then
-                    NotifyFeature("Variant Filter: ".._G.RAYFavVariantFilter, true)
-                end
-            end)
+        local panelOpen = false
+        local function setPanelVisible(state)
+            panelOpen = state
+            AutoFavoriteRightPanel.Visible = panelOpen
         end
 
-        CreateVariantEntry("Any")
-        for _, name in ipairs(variantNames) do
-            CreateVariantEntry(name)
-        end
+        btn.MouseButton1Click:Connect(function()
+            setPanelVisible(not panelOpen)
+        end)
 
-        -- Row pembuka panel kanan variant
-        local rowOpenVar = makeRow("Filter Variant (panel kanan)")
-        do
-            local openVarBtn = Instance.new("TextButton")
-            openVarBtn.Parent                 = rowOpenVar
-            openVarBtn.Size                   = UDim2.new(1,-32,0,30)
-            openVarBtn.Position               = UDim2.new(0,16,0,0)
-            openVarBtn.BackgroundColor3       = CARD or Color3.fromRGB(25,25,35)
-            openVarBtn.BackgroundTransparency = 0.12
-            openVarBtn.AutoButtonColor        = false
-            openVarBtn.Font                   = Enum.Font.Gotham
-            openVarBtn.TextSize               = 13
-            openVarBtn.TextColor3             = Color3.fromRGB(255,255,255)
-            openVarBtn.TextXAlignment         = Enum.TextXAlignment.Left
-            openVarBtn.Text                   = "Open Variant Filter Panel"
-            Instance.new("UICorner", openVarBtn).CornerRadius = UDim.new(0,8)
-
-            local variantPanelOpen = false
-            local function setVariantPanelVisible(state)
-                variantPanelOpen          = state
-                VariantRightPanel.Visible = variantPanelOpen
+        UIS.InputBegan:Connect(function(input)
+            if not AutoFavoriteRightPanel.Visible then return end
+            if input.UserInputType ~= Enum.UserInputType.MouseButton1
+            and input.UserInputType ~= Enum.UserInputType.Touch then
+                return
             end
 
-            openVarBtn.MouseButton1Click:Connect(function()
-                setVariantPanelVisible(not variantPanelOpen)
-            end)
+            local pos    = input.Position
+            local absPos = AutoFavoriteRightPanel.AbsolutePosition
+            local absSz  = AutoFavoriteRightPanel.AbsoluteSize
 
-            UIS.InputBegan:Connect(function(input)
-                if not VariantRightPanel.Visible then return end
+            local inside =
+                pos.X >= absPos.X and pos.X <= absPos.X + absSz.X and
+                pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSz.Y
 
-                if input.UserInputType ~= Enum.UserInputType.MouseButton1
-                and input.UserInputType ~= Enum.UserInputType.Touch then
-                    return
-                end
+            if not inside then
+                setPanelVisible(false)
+            end
+        end)
+    end
+end
 
-                local pos     = input.Position
-                local absPos  = VariantRightPanel.AbsolutePosition
-                local absSize = VariantRightPanel.AbsoluteSize
+----------------------------------------------------------------
+-- PANEL KANAN: AutoFavoriteRightPanel (RARITY + VARIANT + LIST IKAN)
+----------------------------------------------------------------
 
-                local inside =
-                    pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
-                    pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
+local AutoFavoriteRightPanel = Instance.new("Frame")
+AutoFavoriteRightPanel.Name = "AutoFavoriteRightPanel"
+AutoFavoriteRightPanel.Size = UDim2.new(0, 220, 1, -46)
+AutoFavoriteRightPanel.AnchorPoint = Vector2.new(1, 0)
+AutoFavoriteRightPanel.Position = UDim2.new(1, -10, 0, 40)
+AutoFavoriteRightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
+AutoFavoriteRightPanel.BackgroundTransparency = 0.25
+AutoFavoriteRightPanel.BorderSizePixel = 0
+AutoFavoriteRightPanel.Visible = false
+AutoFavoriteRightPanel.ZIndex = 10
+AutoFavoriteRightPanel.Parent = Main
 
-                if not inside then
-                    setVariantPanelVisible(false)
-                end
-            end)
+Instance.new("UICorner", AutoFavoriteRightPanel).CornerRadius = UDim.new(0, 10)
+local afStroke = Instance.new("UIStroke", AutoFavoriteRightPanel)
+afStroke.Color = THEMEMAIN
+afStroke.Transparency = 0.5
+
+local afTitle = Instance.new("TextLabel")
+afTitle.Parent = AutoFavoriteRightPanel
+afTitle.Size = UDim2.new(1, -10, 0, 24)
+afTitle.Position = UDim2.new(0, 5, 0, 6)
+afTitle.BackgroundTransparency = 1
+afTitle.Font = Enum.Font.GothamBold
+afTitle.TextSize = 16
+afTitle.TextXAlignment = Enum.TextXAlignment.Left
+afTitle.TextColor3 = THEMETEXT
+afTitle.ZIndex = 11
+afTitle.Text = "Auto Favorite Filter"
+
+local afInfo = Instance.new("TextLabel")
+afInfo.Parent = AutoFavoriteRightPanel
+afInfo.Size = UDim2.new(1, -10, 0, 18)
+afInfo.Position = UDim2.new(0, 5, 0, 30)
+afInfo.BackgroundTransparency = 1
+afInfo.Font = Enum.Font.Gotham
+afInfo.TextSize = 12
+afInfo.TextXAlignment = Enum.TextXAlignment.Left
+afInfo.TextColor3 = Color3.fromRGB(200,200,200)
+afInfo.ZIndex = 11
+afInfo.Text = "Atur mode, rarity, variant, dan list ikan."
+
+local afScroll = Instance.new("ScrollingFrame")
+afScroll.Parent = AutoFavoriteRightPanel
+afScroll.Size = UDim2.new(1, -10, 1, -54)
+afScroll.Position = UDim2.new(0, 5, 0, 54)
+afScroll.BackgroundTransparency = 1
+afScroll.BorderSizePixel = 0
+afScroll.ScrollBarThickness = 3
+afScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+afScroll.CanvasSize = UDim2.new(0,0,0,0)
+afScroll.ScrollBarImageColor3 = THEMEMAIN
+afScroll.ZIndex = 10
+
+local afList = Instance.new("UIListLayout", afScroll)
+afList.SortOrder = Enum.SortOrder.LayoutOrder
+afList.Padding   = UDim.new(0,6)
+
+-- helper row dalam panel kanan
+local function makePRow(height)
+    local row = Instance.new("Frame")
+    row.Parent = afScroll
+    row.Size = UDim2.new(1, -4, 0, height or 28)
+    row.BackgroundTransparency = 1
+    row.BorderSizePixel = 0
+    row.ZIndex = 11
+    return row
+end
+
+----------------------------------------------------------------
+-- MODE (All Fish / By Rarity / By List / By Rarity + List)
+----------------------------------------------------------------
+
+do
+    local row = makePRow(24)
+
+    local label = Instance.new("TextLabel")
+    label.Parent = row
+    label.Size = UDim2.new(1,0,1,0)
+    label.Position = UDim2.new(0,0,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = THEMETEXT
+    label.Text = "Mode"
+
+    local modes = {"All Fish","By Rarity","By List","By Rarity + List"}
+
+    local modeBtn = Instance.new("TextButton")
+    modeBtn.Parent = row
+    modeBtn.Size = UDim2.new(0,120,1,0)
+    modeBtn.Position = UDim2.new(1,-124,0,0)
+    modeBtn.BackgroundColor3 = Color3.fromRGB(30,30,50)
+    modeBtn.BackgroundTransparency = 0.08
+    modeBtn.Font = Enum.Font.Gotham
+    modeBtn.TextSize = 12
+    modeBtn.TextXAlignment = Enum.TextXAlignment.Left
+    modeBtn.TextColor3 = THEMETEXT
+    modeBtn.Text = "  ".._G.RAYFavMode
+    modeBtn.AutoButtonColor = true
+    modeBtn.ZIndex = 12
+    Instance.new("UICorner", modeBtn).CornerRadius = UDim.new(0,6)
+
+    local drop = Instance.new("Frame")
+    drop.Parent = row
+    drop.Size = UDim2.new(0,120,0,#modes * 22 + 4)
+    drop.Position = UDim2.new(1,-124,1,4)
+    drop.BackgroundColor3 = Color3.fromRGB(20,20,35)
+    drop.BackgroundTransparency = 0.05
+    drop.Visible = false
+    drop.ZIndex = 20
+    Instance.new("UICorner", drop).CornerRadius = UDim.new(0,6)
+
+    local dl = Instance.new("UIListLayout", drop)
+    dl.SortOrder = Enum.SortOrder.LayoutOrder
+    dl.Padding   = UDim.new(0,2)
+
+    local function setMode(m)
+        _G.RAYFavMode = m
+        modeBtn.Text  = "  "..m
+        drop.Visible  = false
+        if NotifyFeature then
+            NotifyFeature("Fav Mode: "..m, true)
         end
+    end
+
+    for _, m in ipairs(modes) do
+        local b = Instance.new("TextButton")
+        b.Parent                 = drop
+        b.Size                   = UDim2.new(1,-4,0,20)
+        b.Position               = UDim2.new(0,2,0,0)
+        b.BackgroundColor3       = Color3.fromRGB(25,25,40)
+        b.BackgroundTransparency = 0.1
+        b.Font                   = Enum.Font.Gotham
+        b.TextSize               = 12
+        b.TextXAlignment         = Enum.TextXAlignment.Left
+        b.TextColor3             = THEMETEXT
+        b.Text                   = "  "..m
+        b.AutoButtonColor        = true
+        b.ZIndex                 = 21
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0,4)
+
+        b.MouseButton1Click:Connect(function()
+            setMode(m)
+        end)
+    end
+
+    local open = false
+    modeBtn.MouseButton1Click:Connect(function()
+        open = not open
+        drop.Visible = open
+    end)
+end
+
+----------------------------------------------------------------
+-- RARITY TOGGLE (GARIS UNGU)
+----------------------------------------------------------------
+
+do
+    local row = makePRow(26)
+
+    local H = THEMEMAIN
+    local function makeRarityBtn(txt, flagKey, xOffset)
+        local btn = Instance.new("TextButton")
+        btn.Parent = row
+        btn.Size = UDim2.new(0,68,1,0)
+        btn.Position = UDim2.new(0,xOffset,0,0)
+        btn.BackgroundColor3 = Color3.fromRGB(30,30,50)
+        btn.BackgroundTransparency = 0.18
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 11
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.TextColor3 = THEMETEXT
+        btn.Text = "  "..txt
+        btn.AutoButtonColor = true
+        btn.ZIndex = 12
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+        local line = Instance.new("Frame")
+        line.Name = "Highlight"
+        line.Parent = btn
+        line.Size = UDim2.new(0,3,1,0)
+        line.Position = UDim2.new(0,0,0,0)
+        line.BackgroundColor3 = H
+        line.BorderSizePixel = 0
+        line.ZIndex = 13
+
+        local function refresh()
+            local on = _G[flagKey]
+            btn.BackgroundTransparency = on and 0.08 or 0.18
+            line.Visible = on
+        end
+
+        btn.MouseButton1Click:Connect(function()
+            _G[flagKey] = not _G[flagKey]
+            refresh()
+            if NotifyFeature then
+                NotifyFeature("Fav "..txt, _G[flagKey])
+            end
+        end)
+
+        refresh()
+    end
+
+    makeRarityBtn("Legend", "RAYFavLegendOn", 0)
+    makeRarityBtn("Mythic", "RAYFavMythicOn", 74)
+    makeRarityBtn("Secret", "RAYFavSecretOn", 148)
+end
+
+----------------------------------------------------------------
+-- VARIANT FILTER (GARIS UNGU)
+----------------------------------------------------------------
+
+do
+    local row = makePRow(26)
+
+    local label = Instance.new("TextLabel")
+    label.Parent = row
+    label.Size = UDim2.new(0.45,0,1,0)
+    label.Position = UDim2.new(0,0,0,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = THEMETEXT
+    label.Text = "Variant"
+
+    local variantNames = {}
+    for _, d in pairs(VariantDataById) do
+        table.insert(variantNames, d.Name)
+    end
+    table.sort(variantNames)
+
+    local btn = Instance.new("TextButton")
+    btn.Parent = row
+    btn.Size = UDim2.new(0.5,0,1,0)
+    btn.Position = UDim2.new(0.5,0,0,0)
+    btn.BackgroundColor3 = Color3.fromRGB(30,30,50)
+    btn.BackgroundTransparency = 0.1
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 12
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.TextColor3 = THEMETEXT
+    btn.Text = "  "..(_G.RAYFavVariantFilter or "Any")
+    btn.AutoButtonColor = true
+    btn.ZIndex = 12
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+    local drop = Instance.new("Frame")
+    drop.Parent = row
+    drop.Size = UDim2.new(0.5,0,0, (#variantNames + 1) * 22 + 4)
+    drop.Position = UDim2.new(0.5,0,1,4)
+    drop.BackgroundColor3 = Color3.fromRGB(20,20,35)
+    drop.BackgroundTransparency = 0.05
+    drop.Visible = false
+    drop.ZIndex = 20
+    Instance.new("UICorner", drop).CornerRadius = UDim.new(0,6)
+
+    local dl = Instance.new("UIListLayout", drop)
+    dl.SortOrder = Enum.SortOrder.LayoutOrder
+    dl.Padding = UDim.new(0,2)
+
+    local function makeOpt(name)
+        local b = Instance.new("TextButton")
+        b.Parent = drop
+        b.Size = UDim2.new(1,-4,0,20)
+        b.Position = UDim2.new(0,2,0,0)
+        b.BackgroundColor3 = Color3.fromRGB(25,25,40)
+        b.BackgroundTransparency = 0.1
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 12
+        b.TextXAlignment = Enum.TextXAlignment.Left
+        b.TextColor3 = THEMETEXT
+        b.Text = "  "..name
+        b.AutoButtonColor = true
+        b.ZIndex = 21
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0,4)
+
+        b.MouseButton1Click:Connect(function()
+            _G.RAYFavVariantFilter = name
+            btn.Text = "  "..name
+            drop.Visible = false
+            if NotifyFeature then
+                NotifyFeature("Variant Filter: "..name, true)
+            end
+        end)
+    end
+
+    makeOpt("Any")
+    for _, n in ipairs(variantNames) do
+        makeOpt(n)
+    end
+
+    local open = false
+    btn.MouseButton1Click:Connect(function()
+        open = not open
+        drop.Visible = open
+    end)
+end
+
+----------------------------------------------------------------
+-- LIST NAMA IKAN (MULTI SELECT + GARIS UNGU)
+----------------------------------------------------------------
+
+do
+    local rowTitle = makePRow(18)
+    local label = Instance.new("TextLabel")
+    label.Parent = rowTitle
+    label.Size = UDim2.new(1,0,1,0)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.GothamBold
+    label.TextSize = 12
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = THEMETEXT
+    label.Text = "Fish List"
+
+    local allFishNames = {}
+    for _, data in pairs(ItemDataById) do
+        if data.Type == "Fish" and data.Name then
+            allFishNames[data.Name] = true
+        end
+    end
+
+    local sortedNames = {}
+    for n in pairs(allFishNames) do
+        table.insert(sortedNames, n)
+    end
+    table.sort(sortedNames)
+
+    for _, name in ipairs(sortedNames) do
+        local selected = _G.RAYFavSelectedNames[name] == true
+
+        local row = makePRow(24)
+
+        local line = Instance.new("Frame")
+        line.Name = "Highlight"
+        line.Parent = row
+        line.Size = UDim2.new(0,3,1,0)
+        line.Position = UDim2.new(0,0,0,0)
+        line.BackgroundColor3 = THEMEMAIN
+        line.BorderSizePixel = 0
+        line.Visible = selected
+        line.ZIndex = 12
+
+        local btn = Instance.new("TextButton")
+        btn.Parent = row
+        btn.Size = UDim2.new(1,-6,1,0)
+        btn.Position = UDim2.new(0,4,0,0)
+        btn.BackgroundColor3 = selected and Color3.fromRGB(40,40,70) or Color3.fromRGB(30,30,50)
+        btn.BorderSizePixel = 0
+        btn.TextColor3 = THEMETEXT
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 12
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.Text = "  "..name
+        btn.AutoButtonColor = true
+        btn.ZIndex = 11
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+        btn.MouseButton1Click:Connect(function()
+            local sel = _G.RAYFavSelectedNames
+            if sel[name] then
+                sel[name] = nil
+                line.Visible = false
+                btn.BackgroundColor3 = Color3.fromRGB(30,30,50)
+            else
+                sel[name] = true
+                line.Visible = true
+                btn.BackgroundColor3 = Color3.fromRGB(40,40,70)
+            end
+        end)
     end
 end
