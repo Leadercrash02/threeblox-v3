@@ -2688,12 +2688,12 @@ end
 ----------------------------------------------------------------
 -- GLOBAL STATE AUTO FAVORITE
 ----------------------------------------------------------------
-_G.RAYFavOn            = _G.RAYFavOn or false         -- toggle engine (loop)
-_G.RAYFavLegendOn      = _G.RAYFavLegendOn or false   -- rarity Legend
-_G.RAYFavMythicOn      = _G.RAYFavMythicOn or false   -- rarity Mythic
-_G.RAYFavSecretOn      = _G.RAYFavSecretOn or false   -- rarity Secret
+_G.RAYFavOn            = _G.RAYFavOn or false
+_G.RAYFavLegendOn      = _G.RAYFavLegendOn or false
+_G.RAYFavMythicOn      = _G.RAYFavMythicOn or false
+_G.RAYFavSecretOn      = _G.RAYFavSecretOn or false
 _G.RAYFavVariantFilter = _G.RAYFavVariantFilter or "Any"
-_G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {} -- set nama spesifik
+_G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {}
 
 local AUTO_FAV_INTERVAL = 10
 
@@ -2739,6 +2739,7 @@ local function passesRarityFilterFav(data)
         return false
     end
 
+    -- kalau di game-mu nama tier beda (MYTHIC, Mythical, dsb), sesuaikan sini
     if rName == "Legendary" and L then return true end
     if rName == "Mythic"    and M then return true end
     if rName == "SECRET"    and S then return true end
@@ -2774,10 +2775,12 @@ end
 -- 2) PLUS kombinasi spesifik (rarity + nama + variant) kalau di-set
 ----------------------------------------------------------------
 local function matchesGlobalRarity(data)
+    -- semua ikan di rarity yang dicentang, tanpa lihat nama/variant
     return passesRarityFilterFav(data)
 end
 
 local function matchesSpecific(data, entry)
+    -- filter spesifik cuma aktif kalau kamu memang set nama/variant
     local hasNameFilter    = _G.RAYFavSelectedNames and next(_G.RAYFavSelectedNames) ~= nil
     local hasVariantFilter = _G.RAYFavVariantFilter and _G.RAYFavVariantFilter ~= "Any"
 
@@ -2785,6 +2788,7 @@ local function matchesSpecific(data, entry)
         return false
     end
 
+    -- tetap hormati rarity centangmu
     if not passesRarityFilterFav(data) then
         return false
     end
@@ -2801,9 +2805,11 @@ local function matchesSpecific(data, entry)
 end
 
 local function shouldFavorite(data, entry)
+    -- 1) global rarity: semua Mythic/Legend/Secret yang dicentang
     if matchesGlobalRarity(data) then
         return true
     end
+    -- 2) tambahan: kombinasi spesifik (rarity+nama+variant) kalau kamu set
     if matchesSpecific(data, entry) then
         return true
     end
@@ -2861,6 +2867,7 @@ task.delay(1, function()
         StartAutoFavorite()
     end
 end)
+
 
 ----------------------------------------------------------------
 -- PANEL KANAN: RARITY / FISH / VARIANT (PARENT = Main)
