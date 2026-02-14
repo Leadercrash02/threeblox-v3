@@ -2491,7 +2491,7 @@ if BackpackPage then
         b.Text = rar
         b.Font = Enum.Font.Gotham
         b.TextSize = 12
-        b.TextColor3 = MUTED or Color3.fromRGB(180,180,180)
+        b.TextColor3 = MUTED or Color3.fromRGB(255,255,255)
         b.TextXAlignment = Enum.TextXAlignment.Left
         b.ZIndex = 6
         Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
