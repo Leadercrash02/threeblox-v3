@@ -2392,14 +2392,14 @@ if AutoPage then
 end
 
 ----------------------------------------------------------------
--- AUTO SELL SECTION DI BACKPACK (STRUKTUR BARU, MODE time / inventory)
+-- AUTO SELL SECTION (BACKPACK PAGE) - DUA TOGGLE: TIME & INVENTORY
 ----------------------------------------------------------------
 
 local RS = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local lp = Players.LocalPlayer
 
-local Items = require(RS.Items)
+local Items   = require(RS.Items)
 local Replion = require(RS.Packages.Replion)
 
 local BackpackPage = Pages["Backpack"]
@@ -2423,16 +2423,16 @@ if BackpackPage then
     _G.RAY_SellThreshold          = _G.RAY_SellThreshold          or "Legendary"
     _G.RAY_SellDelay              = _G.RAY_SellDelay              or 5
     _G.RAY_SellInventoryThreshold = _G.RAY_SellInventoryThreshold or 30
-    _G.RAY_SellMode               = _G.RAY_SellMode               or "time"      -- "time" / "inventory"
-    _G.RAY_AutoSellOn             = (_G.RAY_AutoSellOn ~= false)  -- default ON
+    _G.RAY_SellByTime             = (_G.RAY_SellByTime ~= false)      -- default ON
+    _G.RAY_SellByInventory        = _G.RAY_SellByInventory or false   -- default OFF
 
     ----------------------------------------------------------------
     -- HELPER ROW
     ----------------------------------------------------------------
-    local function makeRow(title)
+    local function makeRow(title, height)
         local row = Instance.new("Frame")
         row.Parent = BackpackAutoSellSection
-        row.Size = UDim2.new(1,0,0,32)
+        row.Size = UDim2.new(1,0,0,height or 32)
         row.BackgroundTransparency = 1
 
         local label = Instance.new("TextLabel")
@@ -2443,14 +2443,14 @@ if BackpackPage then
         label.Font = Enum.Font.Gotham
         label.TextSize = 13
         label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = TEXT or Color3.fromRGB(230,230,255)
+        label.TextColor3 = Color3.fromRGB(255,255,255)
         label.Text = title
 
         return row
     end
 
     ----------------------------------------------------------------
-    -- Threshold rarity (Legendary/Mythic/Secret)
+    -- Sell Threshold (Legendary/Mythic/Secret)
     ----------------------------------------------------------------
     local ThresholdMap = {
         Legendary = 5,
@@ -2469,7 +2469,7 @@ if BackpackPage then
     thBtn.Text = _G.RAY_SellThreshold.."  ▼"
     thBtn.Font = Enum.Font.Gotham
     thBtn.TextSize = 13
-    thBtn.TextColor3 = MUTED or Color3.fromRGB(180,180,180)
+    thBtn.TextColor3 = Color3.fromRGB(255,255,255)
     thBtn.AutoButtonColor = false
     Instance.new("UICorner", thBtn).CornerRadius = UDim.new(0,8)
 
@@ -2497,7 +2497,7 @@ if BackpackPage then
         b.Text = rar
         b.Font = Enum.Font.Gotham
         b.TextSize = 12
-        b.TextColor3 = Color3.fromRGB(255,255,255) -- biar kelihatan
+        b.TextColor3 = Color3.fromRGB(255,255,255)
         b.TextXAlignment = Enum.TextXAlignment.Left
         b.ZIndex = 6
         Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
@@ -2527,7 +2527,7 @@ if BackpackPage then
     end)
 
     ----------------------------------------------------------------
-    -- Sell Delay (seconds) - mode = time
+    -- Sell Delay (seconds) - dipakai kalau Sell by Time ON
     ----------------------------------------------------------------
     local delayRow = makeRow("Sell Delay (seconds)")
 
@@ -2539,7 +2539,7 @@ if BackpackPage then
     delayBox.Font = Enum.Font.Gotham
     delayBox.TextSize = 13
     delayBox.TextXAlignment = Enum.TextXAlignment.Center
-    delayBox.TextColor3 = TEXT or Color3.fromRGB(230,230,255)
+    delayBox.TextColor3 = Color3.fromRGB(255,255,255)
     delayBox.ClearTextOnFocus = false
     delayBox.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
     delayBox.BackgroundTransparency = 0.12
@@ -2559,7 +2559,7 @@ if BackpackPage then
     end)
 
     ----------------------------------------------------------------
-    -- Inventory Threshold - mode = inventory
+    -- Inventory Threshold (jumlah ikan di tas)
     ----------------------------------------------------------------
     local invRow = makeRow("Inventory Threshold")
 
@@ -2571,7 +2571,7 @@ if BackpackPage then
     invBox.Font = Enum.Font.Gotham
     invBox.TextSize = 13
     invBox.TextXAlignment = Enum.TextXAlignment.Center
-    invBox.TextColor3 = TEXT or Color3.fromRGB(230,230,255)
+    invBox.TextColor3 = Color3.fromRGB(255,255,255)
     invBox.ClearTextOnFocus = false
     invBox.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
     invBox.BackgroundTransparency = 0.12
@@ -2591,112 +2591,89 @@ if BackpackPage then
     end)
 
     ----------------------------------------------------------------
-    -- Mode (time / inventory) - SATU dropdown saja
+    -- Toggle: Sell by Time
     ----------------------------------------------------------------
-    local modeRow = makeRow("Sell Mode")
+    local rowTime = makeRow("Sell by Time")
 
-    local modeBtn = Instance.new("TextButton")
-    modeBtn.Parent = modeRow
-    modeBtn.Size = UDim2.new(0.38,0,0,28)
-    modeBtn.Position = UDim2.new(0.58,0,0.5,-14)
-    modeBtn.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
-    modeBtn.BackgroundTransparency = 0.12
-    modeBtn.Text = _G.RAY_SellMode.."  ▼"
-    modeBtn.Font = Enum.Font.Gotham
-    modeBtn.TextSize = 13
-    modeBtn.TextColor3 = MUTED or Color3.fromRGB(180,180,180)
-    modeBtn.AutoButtonColor = false
-    Instance.new("UICorner", modeBtn).CornerRadius = UDim.new(0,8)
+    local pillTime = Instance.new("TextButton")
+    pillTime.Parent = rowTime
+    pillTime.Size = UDim2.new(0,50,0,24)
+    pillTime.Position = UDim2.new(1,-80,0.5,-12)
+    pillTime.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
+    pillTime.BackgroundTransparency = 0.1
+    pillTime.Text = ""
+    pillTime.AutoButtonColor = false
+    Instance.new("UICorner", pillTime).CornerRadius = UDim.new(0,999)
 
-    local modeDrop = Instance.new("Frame")
-    modeDrop.Parent = modeRow
-    modeDrop.Position = UDim2.new(0.58,0,1,4)
-    modeDrop.Size = UDim2.new(0.38,0,0,48)
-    modeDrop.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
-    modeDrop.BackgroundTransparency = 0.06
-    modeDrop.Visible = false
-    modeDrop.ZIndex = 5
-    Instance.new("UICorner", modeDrop).CornerRadius = UDim.new(0,8)
+    local knobTime = Instance.new("Frame")
+    knobTime.Parent = pillTime
+    knobTime.Size = UDim2.new(0,18,0,18)
+    knobTime.Position = UDim2.new(0,3,0.5,-9)
+    knobTime.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    knobTime.BackgroundTransparency = 0
+    Instance.new("UICorner", knobTime).CornerRadius = UDim.new(0,999)
 
-    local modeList = Instance.new("UIListLayout")
-    modeList.Parent = modeDrop
-    modeList.Padding = UDim.new(0,4)
-    modeList.SortOrder = Enum.SortOrder.LayoutOrder
-
-    for _, m in ipairs({"time","inventory"}) do
-        local b = Instance.new("TextButton")
-        b.Parent = modeDrop
-        b.Size = UDim2.new(1,-8,0,24)
-        b.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
-        b.BackgroundTransparency = 0.18
-        b.Text = m
-        b.Font = Enum.Font.Gotham
-        b.TextSize = 12
-        b.TextColor3 = MUTED or Color3.fromRGB(180,180,180)
-        b.TextXAlignment = Enum.TextXAlignment.Left
-        b.ZIndex = 6
-        Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
-
-        b.MouseButton1Click:Connect(function()
-            _G.RAY_SellMode = m
-            modeBtn.Text = m.."  ▼"
-            modeDrop.Visible = false
-            if NotifyFeature then
-                NotifyFeature("Sell Mode: "..m, true)
-            end
-        end)
-    end
-
-    local modeOpen = false
-    modeBtn.MouseButton1Click:Connect(function()
-        modeOpen = not modeOpen
-        modeDrop.Visible = modeOpen
-    end)
-
-    ----------------------------------------------------------------
-    -- Toggle ON/OFF Auto Sell (boleh dipertahankan jika mau)
-    ----------------------------------------------------------------
-    local rowOn = makeRow("Enable Auto Sell")
-
-    local pill = Instance.new("TextButton")
-    pill.Parent = rowOn
-    pill.Size = UDim2.new(0,50,0,24)
-    pill.Position = UDim2.new(1,-80,0.5,-12)
-    pill.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
-    pill.BackgroundTransparency = 0.1
-    pill.Text = ""
-    pill.AutoButtonColor = false
-    Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
-
-    local knob = Instance.new("Frame")
-    knob.Parent = pill
-    knob.Size = UDim2.new(0,18,0,18)
-    knob.Position = UDim2.new(0,3,0.5,-9)
-    knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-    knob.BackgroundTransparency = 0
-    Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
-
-    local function refreshOn()
-        local on = _G.RAY_AutoSellOn
-        pill.BackgroundColor3 =
+    local function refreshTime()
+        local on = _G.RAY_SellByTime
+        pillTime.BackgroundColor3 =
             on and (ACCENT or Color3.fromRGB(0,200,100))
             or (MUTED or Color3.fromRGB(70,70,90))
-        knob.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+        knobTime.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
     end
 
-    pill.MouseButton1Click:Connect(function()
-        _G.RAY_AutoSellOn = not _G.RAY_AutoSellOn
-        refreshOn()
+    pillTime.MouseButton1Click:Connect(function()
+        _G.RAY_SellByTime = not _G.RAY_SellByTime
+        refreshTime()
         if NotifyFeature then
-            NotifyFeature("Auto Sell", _G.RAY_AutoSellOn)
+            NotifyFeature("Sell by Time", _G.RAY_SellByTime)
         end
     end)
 
-    refreshOn()
+    ----------------------------------------------------------------
+    -- Toggle: Sell by Inventory
+    ----------------------------------------------------------------
+    local rowInv = makeRow("Sell by Inventory")
+
+    local pillInv = Instance.new("TextButton")
+    pillInv.Parent = rowInv
+    pillInv.Size = UDim2.new(0,50,0,24)
+    pillInv.Position = UDim2.new(1,-80,0.5,-12)
+    pillInv.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
+    pillInv.BackgroundTransparency = 0.1
+    pillInv.Text = ""
+    pillInv.AutoButtonColor = false
+    Instance.new("UICorner", pillInv).CornerRadius = UDim.new(0,999)
+
+    local knobInv = Instance.new("Frame")
+    knobInv.Parent = pillInv
+    knobInv.Size = UDim2.new(0,18,0,18)
+    knobInv.Position = UDim2.new(0,3,0.5,-9)
+    knobInv.BackgroundColor3 = Color3.fromRGB(255,255,255)
+    knobInv.BackgroundTransparency = 0
+    Instance.new("UICorner", knobInv).CornerRadius = UDim.new(0,999)
+
+    local function refreshInv()
+        local on = _G.RAY_SellByInventory
+        pillInv.BackgroundColor3 =
+            on and (ACCENT or Color3.fromRGB(0,200,100))
+            or (MUTED or Color3.fromRGB(70,70,90))
+        knobInv.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+    end
+
+    pillInv.MouseButton1Click:Connect(function()
+        _G.RAY_SellByInventory = not _G.RAY_SellByInventory
+        refreshInv()
+        if NotifyFeature then
+            NotifyFeature("Sell by Inventory", _G.RAY_SellByInventory)
+        end
+    end)
+
+    refreshTime()
+    refreshInv()
 end
 
 ----------------------------------------------------------------
--- HELPER: HITUNG JUMLAH IKAN DI INVENTORY (PAKAI REPLION + ITEMS)
+-- HELPER: HITUNG JUMLAH IKAN DI INVENTORY (REPLION + ITEMS)
 ----------------------------------------------------------------
 
 local ItemDataById = {}
@@ -2713,6 +2690,7 @@ local function getFishCountInInventory()
     if not ok or not repl or not repl.Data then
         return 0
     end
+
     local root = repl.Data
     local inv = root and root.Inventory
     local items = inv and inv.Items
@@ -2732,51 +2710,50 @@ local function getFishCountInInventory()
 end
 
 ----------------------------------------------------------------
--- AUTO SELL ENGINE (MODE: time / inventory, SINGKAT & WORK)
+-- AUTO SELL ENGINE (PAKAI TOGGLE SellByTime & SellByInventory)
 ----------------------------------------------------------------
 
 task.spawn(function()
     local lastSell = 0
 
     while true do
-        if _G.RAY_AutoSellOn then
-            local mode = _G.RAY_SellMode or "time"
-            local now = os.clock()
+        local now = os.clock()
 
-            if mode == "time" then
-                local delay = tonumber(_G.RAY_SellDelay) or 5
-                if now - lastSell >= delay then
-                    local ok, err = pcall(function()
-                        Events.sell:InvokeServer()
-                    end)
-                    if ok then
-                        lastSell = now
-                    else
-                        warn("[AUTO SELL] sell (time) error:", err)
-                    end
-                end
-
-            elseif mode == "inventory" then
-                local count = getFishCountInInventory()
-                local limit = tonumber(_G.RAY_SellInventoryThreshold) or 30
-                -- debug kalau mau
-                -- print("[AUTO SELL] fish count =", count, "limit =", limit)
-
-                if count >= limit and now - lastSell >= 0.5 then
-                    local ok, err = pcall(function()
-                        Events.sell:InvokeServer()
-                    end)
-                    if ok then
-                        lastSell = now
-                    else
-                        warn("[AUTO SELL] sell (inv) error:", err)
-                    end
+        -- Sell by Time
+        if _G.RAY_SellByTime then
+            local delay = tonumber(_G.RAY_SellDelay) or 5
+            if now - lastSell >= delay then
+                local ok, err = pcall(function()
+                    Events.sell:InvokeServer()
+                end)
+                if ok then
+                    lastSell = now
+                else
+                    warn("[AUTO SELL] sell (time) error:", err)
                 end
             end
-        else
-            lastSell = 0
+        end
+
+        -- Sell by Inventory (jumlah ikan di tas)
+        if _G.RAY_SellByInventory then
+            local count = getFishCountInInventory()
+            local limit = tonumber(_G.RAY_SellInventoryThreshold) or 30
+            -- debug kalau perlu:
+            -- print("[AUTO SELL] fish count =", count, "limit =", limit)
+
+            if count >= limit and now - lastSell >= 0.5 then
+                local ok, err = pcall(function()
+                    Events.sell:InvokeServer()
+                end)
+                if ok then
+                    lastSell = now
+                else
+                    warn("[AUTO SELL] sell (inv) error:", err)
+                end
+            end
         end
 
         task.wait(0.5)
     end
 end)
+
