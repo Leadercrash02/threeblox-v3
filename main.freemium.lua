@@ -2642,26 +2642,21 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------------------
--- AUTO FAVORITE FISH SECTION (BACKPACK PAGE)
+-- AUTO FAVORITE FISH (BACKPACK PAGE)
 ----------------------------------------------------------------
 
--- ambil service & module yang sudah ada di atas
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players           = game:GetService("Players")
-local lp                = Players.LocalPlayer
+local lp = Players.LocalPlayer
 
--- Net package (IKUT pola Events di atas)
 local Net = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
     :WaitForChild("sleitnick_net@0.2.0")
     :WaitForChild("net")
 
--- remote favorite item
 local FavoriteRemote = Net:WaitForChild("RE/FavoriteItem")
 
 ----------------------------------------------------------------
--- MASTER DATA ITEMS, TIERS, VARIANTS
+-- DATA MODULES (Items / Tiers / Variants / Replion)
 ----------------------------------------------------------------
 local ItemsModule    = require(ReplicatedStorage.Items)
 local TiersModule    = require(ReplicatedStorage.Tiers)
@@ -2693,12 +2688,14 @@ end
 ----------------------------------------------------------------
 -- GLOBAL STATE AUTO FAVORITE
 ----------------------------------------------------------------
-_G.RAYFavOn            = _G.RAYFavOn or false
-_G.RAYFavLegendOn      = _G.RAYFavLegendOn or true
-_G.RAYFavMythicOn      = _G.RAYFavMythicOn or true
-_G.RAYFavSecretOn      = _G.RAYFavSecretOn or true
+_G.RAYFavOn            = _G.RAYFavOn or false         -- toggle engine (loop)
+_G.RAYFavLegendOn      = _G.RAYFavLegendOn or false   -- rarity Legend
+_G.RAYFavMythicOn      = _G.RAYFavMythicOn or false   -- rarity Mythic
+_G.RAYFavSecretOn      = _G.RAYFavSecretOn or false   -- rarity Secret
 _G.RAYFavVariantFilter = _G.RAYFavVariantFilter or "Any"
-_G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {}
+_G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {} -- set nama spesifik
+
+local AUTO_FAV_INTERVAL = 10
 
 ----------------------------------------------------------------
 -- HELPER: AMBIL INVENTORY CLIENT
@@ -2726,6 +2723,9 @@ local function getTierFromItem(data)
     return TierByIndex[1]
 end
 
+----------------------------------------------------------------
+-- FILTER: RARITY / NAMA / VARIANT
+----------------------------------------------------------------
 local function passesRarityFilterFav(data)
     local tierInfo = getTierFromItem(data)
     local rName = tierInfo and tierInfo.Name
@@ -2736,7 +2736,7 @@ local function passesRarityFilterFav(data)
     local S = _G.RAYFavSecretOn
 
     if not L and not M and not S then
-        return true
+        return false
     end
 
     if rName == "Legendary" and L then return true end
@@ -2748,12 +2748,11 @@ end
 local function passesNameFilterFav(data)
     local sel = _G.RAYFavSelectedNames
     if not sel or next(sel) == nil then
-        return true
+        return false
     end
     return data.Name and sel[data.Name] == true
 end
 
--- SESUAIKAN field variant di sini kalau beda di game-mu
 local function getVariantNameFromEntry(entry)
     local vid = entry.VariantId or entry.VariantID or entry.Variant
     if not vid then return nil end
@@ -2761,48 +2760,111 @@ local function getVariantNameFromEntry(entry)
 end
 
 local function passesVariantFilterFav(entry)
-    local mode = _G.RAYFavVariantFilter or "Any"
-    if mode == "Any" then
-        return true
+    if not _G.RAYFavVariantFilter or _G.RAYFavVariantFilter == "Any" then
+        return false
     end
     local vName = getVariantNameFromEntry(entry)
     if not vName then return false end
-    return vName == mode
+    return vName == _G.RAYFavVariantFilter
 end
 
 ----------------------------------------------------------------
--- CORE: FAVORITE SEKALI JALAN
+-- LOGIC SESUAI MAUMU
+-- 1) Semua ikan dengan rarity yg dicentang  => auto fav
+-- 2) PLUS kombinasi spesifik (rarity + nama + variant) kalau di-set
 ----------------------------------------------------------------
-local function AutoFavoriteOnce()
-    local items = getInvItems()
-    local count = 0
+local function matchesGlobalRarity(data)
+    return passesRarityFilterFav(data)
+end
 
-    for _, entry in pairs(items) do
-        local id   = entry.Id
-        local uuid = entry.UUID
-        local data = id and ItemDataById[id]
+local function matchesSpecific(data, entry)
+    local hasNameFilter    = _G.RAYFavSelectedNames and next(_G.RAYFavSelectedNames) ~= nil
+    local hasVariantFilter = _G.RAYFavVariantFilter and _G.RAYFavVariantFilter ~= "Any"
 
-        if data
-            and data.Type == "Fish"
-            and uuid
-            and passesRarityFilterFav(data)
-            and passesNameFilterFav(data)
-            and passesVariantFilterFav(entry)
-        then
-            FavoriteRemote:FireServer(uuid)
-            count += 1
+    if not hasNameFilter and not hasVariantFilter then
+        return false
+    end
+
+    if not passesRarityFilterFav(data) then
+        return false
+    end
+
+    if hasNameFilter and not passesNameFilterFav(data) then
+        return false
+    end
+
+    if hasVariantFilter and not passesVariantFilterFav(entry) then
+        return false
+    end
+
+    return true
+end
+
+local function shouldFavorite(data, entry)
+    if matchesGlobalRarity(data) then
+        return true
+    end
+    if matchesSpecific(data, entry) then
+        return true
+    end
+    return false
+end
+
+----------------------------------------------------------------
+-- ENGINE: AUTO FAVORITE LOOP
+----------------------------------------------------------------
+local autoFavConn
+
+local function StopAutoFavorite()
+    if autoFavConn then
+        autoFavConn:Disconnect()
+        autoFavConn = nil
+    end
+end
+
+local function StartAutoFavorite()
+    StopAutoFavorite()
+
+    autoFavConn = RunService.Heartbeat:Connect(function(dt)
+        autoFavConn._acc = (autoFavConn._acc or 0) + dt
+        if autoFavConn._acc < AUTO_FAV_INTERVAL then
+            return
         end
-    end
+        autoFavConn._acc = 0
 
-    if NotifyFeature then
-        NotifyFeature("Favorited "..tostring(count).." fish", true)
-    end
+        local items = getInvItems()
+        local count = 0
+
+        for _, entry in pairs(items) do
+            local id   = entry.Id
+            local uuid = entry.UUID
+            local data = id and ItemDataById[id]
+
+            if data
+                and data.Type == "Fish"
+                and uuid
+                and shouldFavorite(data, entry)
+            then
+                FavoriteRemote:FireServer(uuid)
+                count += 1
+            end
+        end
+
+        if count > 0 and NotifyFeature then
+            NotifyFeature("Auto Favorite: +"..tostring(count), true)
+        end
+    end)
 end
+
+task.delay(1, function()
+    if _G.RAYFavOn then
+        StartAutoFavorite()
+    end
+end)
 
 ----------------------------------------------------------------
 -- PANEL KANAN: RARITY / FISH / VARIANT (PARENT = Main)
 ----------------------------------------------------------------
--- Rujukan: SkinAnimationRightPanel di paste.txt (posisi & style sama)
 
 -- RARITY PANEL
 local FavRarityRightPanel = Instance.new("Frame")
@@ -2844,7 +2906,7 @@ frInfo.TextSize = 12
 frInfo.TextXAlignment = Enum.TextXAlignment.Left
 frInfo.TextColor3 = Color3.fromRGB(200,200,200)
 frInfo.ZIndex = 11
-frInfo.Text = "Pilih rarity yang mau di-favorite."
+frInfo.Text = "Centang rarity global auto favorite."
 
 local frScroll = Instance.new("ScrollingFrame")
 frScroll.Parent = FavRarityRightPanel
@@ -2900,7 +2962,7 @@ local function makeRarityEntry(text, flagKey)
         line.Visible = _G[flagKey]
         btn.BackgroundColor3 = _G[flagKey] and Color3.fromRGB(40,40,70) or Color3.fromRGB(30,30,50)
         if NotifyFeature then
-            NotifyFeature("Fav "..text, _G[flagKey])
+            NotifyFeature("Rarity: "..text, _G[flagKey])
         end
     end)
 end
@@ -2937,7 +2999,7 @@ ffTitle.TextSize = 16
 ffTitle.TextXAlignment = Enum.TextXAlignment.Left
 ffTitle.TextColor3 = THEME_TEXT
 ffTitle.ZIndex = 11
-ffTitle.Text = "Favorite by Fish Name"
+ffTitle.Text = "Fish Name Filter"
 
 local ffInfo = Instance.new("TextLabel")
 ffInfo.Parent = FavFishRightPanel
@@ -2949,7 +3011,7 @@ ffInfo.TextSize = 12
 ffInfo.TextXAlignment = Enum.TextXAlignment.Left
 ffInfo.TextColor3 = Color3.fromRGB(200,200,200)
 ffInfo.ZIndex = 11
-ffInfo.Text = "Centang ikan yang mau di-favorite."
+ffInfo.Text = "Set list nama buat kombinasi spesifik."
 
 local ffScroll = Instance.new("ScrollingFrame")
 ffScroll.Parent = FavFishRightPanel
@@ -3061,7 +3123,7 @@ fvTitle.TextSize = 16
 fvTitle.TextXAlignment = Enum.TextXAlignment.Left
 fvTitle.TextColor3 = THEME_TEXT
 fvTitle.ZIndex = 11
-fvTitle.Text = "Favorite by Variant"
+fvTitle.Text = "Variant Filter"
 
 local fvInfo = Instance.new("TextLabel")
 fvInfo.Parent = FavVariantRightPanel
@@ -3073,7 +3135,7 @@ fvInfo.TextSize = 12
 fvInfo.TextXAlignment = Enum.TextXAlignment.Left
 fvInfo.TextColor3 = Color3.fromRGB(200,200,200)
 fvInfo.ZIndex = 11
-fvInfo.Text = "Pilih variant utama (klik lagi = Any)."
+fvInfo.Text = "Pilih variant untuk kombinasi spesifik."
 
 local fvScroll = Instance.new("ScrollingFrame")
 fvScroll.Parent = FavVariantRightPanel
@@ -3157,7 +3219,7 @@ local function CreateVariantEntry(name)
         end
 
         if NotifyFeature then
-            NotifyFeature("Variant Filter: ".._G.RAYFavVariantFilter, true)
+            NotifyFeature("Variant: ".._G.RAYFavVariantFilter, true)
         end
     end)
 end
@@ -3168,7 +3230,7 @@ for _, name in ipairs(variantNames) do
 end
 
 ----------------------------------------------------------------
--- SECTION AUTO FAVORITE DI BACKPACK PAGE
+-- SECTION UI DI BACKPACK (TOGGLE ENGINE + OPEN PANEL)
 ----------------------------------------------------------------
 local BackpackPage = Pages and Pages["Backpack"]
 
@@ -3216,9 +3278,9 @@ if BackpackPage then
         return btn
     end
 
-    -- toggle engine
+    -- toggle engine (loop)
     do
-        local row = makeRow("Enable Auto Favorite")
+        local row = makeRow("Enable Auto Favorite (Loop)")
         local pill = Instance.new("TextButton")
         pill.Parent                 = row
         pill.Size                   = UDim2.new(0,50,0,24)
@@ -3243,39 +3305,21 @@ if BackpackPage then
 
         pill.MouseButton1Click:Connect(function()
             _G.RAYFavOn = not _G.RAYFavOn
+            if _G.RAYFavOn then
+                StartAutoFavorite()
+            else
+                StopAutoFavorite()
+            end
             refresh()
             if NotifyFeature then
                 NotifyFeature("Auto Favorite Engine", _G.RAYFavOn)
             end
         end)
 
+        if _G.RAYFavOn then
+            StartAutoFavorite()
+        end
         refresh()
-    end
-
-    -- Favorite once
-    do
-        local row = makeRow("Favorite sekarang (once)")
-        local btn = Instance.new("TextButton")
-        btn.Parent                 = row
-        btn.Size                   = UDim2.new(0,100,0,24)
-        btn.Position               = UDim2.new(1,-116,0.5,-12)
-        btn.BackgroundColor3       = ACCENT or Color3.fromRGB(0,200,100)
-        btn.BackgroundTransparency = 0.1
-        btn.Font                   = Enum.Font.GothamBold
-        btn.TextSize               = 12
-        btn.TextColor3             = Color3.fromRGB(255,255,255)
-        btn.Text                   = "Run"
-        btn.AutoButtonColor        = false
-        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,999)
-
-        btn.MouseButton1Click:Connect(function()
-            task.spawn(function()
-                pcall(AutoFavoriteOnce)
-                if NotifyFeature then
-                    NotifyFeature("Favorite Once", true)
-                end
-            end)
-        end)
     end
 
     -- tombol panel rarity
@@ -3313,7 +3357,7 @@ if BackpackPage then
 end
 
 ----------------------------------------------------------------
--- TUTUP SEMUA PANEL JIKA KLIK DI LUAR (PAKAI UIS YANG SUDAH ADA)
+-- CLOSE PANEL KALAU KLIK DI LUAR
 ----------------------------------------------------------------
 UIS.InputBegan:Connect(function(input)
     if input.UserInputType ~= Enum.UserInputType.MouseButton1
