@@ -1520,7 +1520,7 @@ if AutoPage then
 end
 
 ----------------------------------------------------------------
--- DISABLE CUTSCENE (SKIP VISUAL, MANCING LANJUT) - DI DALAM FISHING SUPPORT
+-- DISABLE CUTSCENE (SKIP VISUAL, MANCING LANJUT)
 ----------------------------------------------------------------
 do
     local row = Instance.new("Frame")
@@ -1536,7 +1536,7 @@ do
     label.Font = Enum.Font.Gotham
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextColor3 = TEXT or THEME_TEXT
+    label.TextColor3 = TEXT or THEME_TEXT or Color3.fromRGB(230,230,255)
     label.Text = "Disable All Cutscenes"
 
     local pill = Instance.new("TextButton")
@@ -1569,18 +1569,18 @@ do
     _G.__RAY_OldGuiControlHUD   = _G.__RAY_OldGuiControlHUD   or GuiControl.SetHUDVisibility
 
     local function applyPatch()
-        -- Skip efek cutscene: jangan tutup/lock HUD & kontrol
-        function GuiControl:Close(skipHud)
+        -- versi fungsi biasa, bukan method :
+        function GuiControl.Close(skipHud)
             -- no-op: jangan lakukan apa-apa, biar fishing/GUI ga ke-close
             return
         end
 
-        function GuiControl:Lock()
+        function GuiControl.Lock()
             -- no-op: jangan kunci movement / input
             return
         end
 
-        function GuiControl:SetHUDVisibility(flag)
+        function GuiControl.SetHUDVisibility(flag)
             -- optional: biarin HUD selalu kelihatan, abaikan permintaan cutscene
             return
         end
@@ -1599,10 +1599,9 @@ do
     end
 
     local function refresh()
-        pill.BackgroundColor3 = enabled and THEME_MAIN or (MUTED or Color3.fromRGB(70,70,90))
-        knob.Position = enabled
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
+        pill.BackgroundColor3 = enabled and (THEME_MAIN or Color3.fromRGB(140,90,255))
+            or (MUTED or Color3.fromRGB(70,70,90))
+        knob.Position = enabled and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
     end
 
     pill.MouseButton1Click:Connect(function()
@@ -1649,8 +1648,8 @@ do
     label.Font = Enum.Font.Gotham
     label.TextSize = 13
     label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextColor3 = TEXT or THEME_TEXT
-    label.Text = "No Cutscene Pause"
+    label.TextColor3 = TEXT or THEME_TEXT or Color3.fromRGB(230,230,255)
+    label.Text = "No Cutscene Pause (BETA)"
 
     local pill = Instance.new("TextButton")
     pill.Parent = row
@@ -1680,7 +1679,7 @@ do
     _G.__RAY_OldGuiControlLock = _G.__RAY_OldGuiControlLock or GuiControl.Lock
 
     local function applyPatch()
-        function GuiControl:Lock()
+        function GuiControl.Lock()
             -- no-op: jangan kunci movement / input
             return
         end
@@ -1693,10 +1692,9 @@ do
     end
 
     local function refresh()
-        pill.BackgroundColor3 = enabled and THEME_MAIN or (MUTED or Color3.fromRGB(70,70,90))
-        knob.Position = enabled
-            and UDim2.new(1,-21,0.5,-9)
-            or  UDim2.new(0,3,0.5,-9)
+        pill.BackgroundColor3 = enabled and (THEME_MAIN or Color3.fromRGB(140,90,255))
+            or (MUTED or Color3.fromRGB(70,70,90))
+        knob.Position = enabled and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
     end
 
     pill.MouseButton1Click:Connect(function()
@@ -1725,6 +1723,7 @@ do
 
     refresh()
 end
+
 
 ----------------------------------------------------------------
 -- DISABLE FISH IMAGE (FISHING SUPPORT)
