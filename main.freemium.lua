@@ -2393,7 +2393,7 @@ if AutoPage then
 end
 
 ----------------------------------------------------------------
--- BACKPACK PAGE LAYOUT
+-- BACKPACK PAGE + SECTION "Auto Sell" (STRUKTUR BARU)
 ----------------------------------------------------------------
 
 local BackpackPage = Pages["Backpack"]
@@ -2403,95 +2403,42 @@ if BackpackPage then
     layout.Padding = UDim.new(0, 6)
 end
 
-----------------------------------------------------------------
--- BACKPACK FEATURE LIST SECTION (MIRIP MAPPING LAMA)
-----------------------------------------------------------------
-
-local BackpackListSection
-local AutoSellContainer
-
+local BackpackAutoSellSection
 if BackpackPage then
-    -- Section utama: daftar fitur Backpack
-    BackpackListSection = CreateSectionDropdown(BackpackPage, "Auto Sell")
+    -- dropdown section di Backpack, judul: "Auto Sell"
+    BackpackAutoSellSection = CreateSectionDropdown(BackpackPage, "Auto Sell")
 
-    local listLayout = Instance.new("UIListLayout", BackpackListSection)
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Padding = UDim.new(0, 4)
-
-    ------------------------------------------------------------
-    -- TOMBOL "Auto Sell" (nyamain mapping lama)
-    ------------------------------------------------------------
-    local autoSellBtn = Instance.new("TextButton")
-    autoSellBtn.Parent = BackpackListSection
-    autoSellBtn.Size = UDim2.new(1, 0, 0, 30)
-    autoSellBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    autoSellBtn.BackgroundTransparency = 0.3
-    autoSellBtn.BorderSizePixel = 0
-    autoSellBtn.Font = Enum.Font.Gotham
-    autoSellBtn.TextSize = 13
-    autoSellBtn.TextColor3 = (THEMETEXT or Color3.fromRGB(255, 255, 255))
-    autoSellBtn.TextXAlignment = Enum.TextXAlignment.Left
-    autoSellBtn.Text = "  Auto Sell"
-    autoSellBtn.AutoButtonColor = true
-    Instance.new("UICorner", autoSellBtn).CornerRadius = UDim.new(0, 8)
-
-    -- Container khusus untuk pengaturan Auto Sell
-    AutoSellContainer = Instance.new("Frame")
-    AutoSellContainer.Parent = BackpackPage
-    AutoSellContainer.Size = UDim2.new(1, -10, 0, 0)
-    AutoSellContainer.Position = UDim2.new(0, 5, 0, 0)
-    AutoSellContainer.BackgroundTransparency = 1
-    AutoSellContainer.BorderSizePixel = 0
-    AutoSellContainer.Visible = false
-
-    local ascLayout = Instance.new("UIListLayout", AutoSellContainer)
-    ascLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    ascLayout.Padding = UDim.new(0, 6)
-
-    autoSellBtn.MouseButton1Click:Connect(function()
-        AutoSellContainer.Visible = not AutoSellContainer.Visible
-    end)
-end
-
-----------------------------------------------------------------
--- AUTO SELL SECTION (ISI PENGATURAN), PAKAI STRUKTUR BARU
-----------------------------------------------------------------
-
-if AutoSellContainer then
-    -- Garis ungu full width di atas pengaturan
-    local Line = Instance.new("Frame")
-    Line.Parent = AutoSellContainer
-    Line.Size = UDim2.new(1, 0, 0, 2)
-    Line.Position = UDim2.new(0, 0, 0, 2)
-    Line.BackgroundColor3 = (THEMEMAIN or Color3.fromRGB(140, 90, 255))
-    Line.BackgroundTransparency = 0
-    Line.BorderSizePixel = 0
+    local sectionLayout = Instance.new("UIListLayout", BackpackAutoSellSection)
+    sectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    sectionLayout.Padding = UDim.new(0, 4)
 
     ----------------------------------------------------------------
-    -- STATE GLOBAL
+    -- STATE GLOBAL (PERSIS SEPERTI LAMA)
     ----------------------------------------------------------------
     local AutoSellOn = _G.RAY_AutoSellOn or false
-    _G.RAY_SellThreshold = _G.RAY_SellThreshold or "Legendary"
-    _G.RAY_SellDelay     = _G.RAY_SellDelay     or 5
+    _G.RAY_SellThreshold          = _G.RAY_SellThreshold          or "Legendary"
+    _G.RAY_SellMode               = _G.RAY_SellMode               or "time"
+    _G.RAY_SellDelay              = _G.RAY_SellDelay              or 5
+    _G.RAY_SellInventoryThreshold = _G.RAY_SellInventoryThreshold or 30
 
     ----------------------------------------------------------------
-    -- HELPER ROW (PARENT = AutoSellContainer)
+    -- HELPER ROW (parent: BackpackAutoSellSection)
     ----------------------------------------------------------------
-    local function makeRow(title, height)
+    local function makeRow(title)
         local row = Instance.new("Frame")
-        row.Parent = AutoSellContainer
-        row.Size = UDim2.new(1, 0, 0, height or 32)
+        row.Parent = BackpackAutoSellSection
+        row.Size = UDim2.new(1,0,0,32)
         row.BackgroundTransparency = 1
 
         local label = Instance.new("TextLabel")
         label.Parent = row
-        label.Size = UDim2.new(0.55, 0, 1, 0)
-        label.Position = UDim2.new(0, 16, 0, -2)
+        label.Size = UDim2.new(0.55,0,1,0)
+        label.Position = UDim2.new(0,16,0,-2)
         label.BackgroundTransparency = 1
         label.Font = Enum.Font.Gotham
         label.TextSize = 13
         label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = (TEXT or THEMETEXT or Color3.fromRGB(230, 230, 255))
+        label.TextColor3 = TEXT or Color3.fromRGB(230,230,255)
         label.Text = title
 
         return row
@@ -2510,49 +2457,49 @@ if AutoSellContainer then
 
     local thBtn = Instance.new("TextButton")
     thBtn.Parent = thRow
-    thBtn.Size = UDim2.new(0.38, 0, 0, 28)
-    thBtn.Position = UDim2.new(0.58, 0, 0.5, -14)
-    thBtn.BackgroundColor3 = (CARD or Color3.fromRGB(25, 25, 35))
+    thBtn.Size = UDim2.new(0.38,0,0,28)
+    thBtn.Position = UDim2.new(0.58,0,0.5,-14)
+    thBtn.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
     thBtn.BackgroundTransparency = 0.12
-    thBtn.Text = _G.RAY_SellThreshold .. "  ▼"
+    thBtn.Text = _G.RAY_SellThreshold.."  ▼"
     thBtn.Font = Enum.Font.Gotham
     thBtn.TextSize = 13
-    thBtn.TextColor3 = (MUTED or Color3.fromRGB(180, 180, 180))
+    thBtn.TextColor3 = MUTED or Color3.fromRGB(180,180,180)
     thBtn.AutoButtonColor = false
-    Instance.new("UICorner", thBtn).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", thBtn).CornerRadius = UDim.new(0,8)
 
     local thDrop = Instance.new("Frame")
     thDrop.Parent = thRow
-    thDrop.Position = UDim2.new(0.58, 0, 1, 4)
-    thDrop.Size = UDim2.new(0.38, 0, 0, 72)
-    thDrop.BackgroundColor3 = (CARD or Color3.fromRGB(25, 25, 35))
+    thDrop.Position = UDim2.new(0.58,0,1,4)
+    thDrop.Size = UDim2.new(0.38,0,0,72)
+    thDrop.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
     thDrop.BackgroundTransparency = 0.06
     thDrop.Visible = false
     thDrop.ZIndex = 5
-    Instance.new("UICorner", thDrop).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", thDrop).CornerRadius = UDim.new(0,8)
 
     local thList = Instance.new("UIListLayout")
     thList.Parent = thDrop
-    thList.Padding = UDim.new(0, 4)
+    thList.Padding = UDim.new(0,4)
     thList.SortOrder = Enum.SortOrder.LayoutOrder
 
-    for _, rar in ipairs({ "Legendary", "Mythic", "Secret" }) do
+    for _, rar in ipairs({"Legendary","Mythic","Secret"}) do
         local b = Instance.new("TextButton")
         b.Parent = thDrop
-        b.Size = UDim2.new(1, -8, 0, 24)
-        b.BackgroundColor3 = (CARD or Color3.fromRGB(25, 25, 35))
+        b.Size = UDim2.new(1,-8,0,24)
+        b.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
         b.BackgroundTransparency = 0.18
         b.Text = rar
         b.Font = Enum.Font.Gotham
         b.TextSize = 12
-        b.TextColor3 = (MUTED or Color3.fromRGB(180, 180, 180))
+        b.TextColor3 = MUTED or Color3.fromRGB(180,180,180)
         b.TextXAlignment = Enum.TextXAlignment.Left
         b.ZIndex = 6
-        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
 
         b.MouseButton1Click:Connect(function()
             _G.RAY_SellThreshold = rar
-            thBtn.Text = rar .. "  ▼"
+            thBtn.Text = rar.."  ▼"
             thDrop.Visible = false
 
             local code = ThresholdMap[rar]
@@ -2562,9 +2509,7 @@ if AutoSellContainer then
                 end)
             end
 
-            if NotifyFeature then
-                NotifyFeature("Sell Threshold: " .. rar, true)
-            end
+            NotifyFeature("Sell Threshold: "..rar, true)
         end)
     end
 
@@ -2575,23 +2520,84 @@ if AutoSellContainer then
     end)
 
     ----------------------------------------------------------------
-    -- Sell Delay (seconds)
+    -- Mode (time / inventory)
+    ----------------------------------------------------------------
+    local modeRow = makeRow("Sell Mode")
+
+    local modeBtn = Instance.new("TextButton")
+    modeBtn.Parent = modeRow
+    modeBtn.Size = UDim2.new(0.38,0,0,28)
+    modeBtn.Position = UDim2.new(0.58,0,0.5,-14)
+    modeBtn.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
+    modeBtn.BackgroundTransparency = 0.12
+    modeBtn.Text = _G.RAY_SellMode.."  ▼"
+    modeBtn.Font = Enum.Font.Gotham
+    modeBtn.TextSize = 13
+    modeBtn.TextColor3 = MUTED or Color3.fromRGB(180,180,180)
+    modeBtn.AutoButtonColor = false
+    Instance.new("UICorner", modeBtn).CornerRadius = UDim.new(0,8)
+
+    local modeDrop = Instance.new("Frame")
+    modeDrop.Parent = modeRow
+    modeDrop.Position = UDim2.new(0.58,0,1,4)
+    modeDrop.Size = UDim2.new(0.38,0,0,48)
+    modeDrop.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
+    modeDrop.BackgroundTransparency = 0.06
+    modeDrop.Visible = false
+    modeDrop.ZIndex = 5
+    Instance.new("UICorner", modeDrop).CornerRadius = UDim.new(0,8)
+
+    local modeList = Instance.new("UIListLayout")
+    modeList.Parent = modeDrop
+    modeList.Padding = UDim.new(0,4)
+    modeList.SortOrder = Enum.SortOrder.LayoutOrder
+
+    for _, m in ipairs({"time","inventory"}) do
+        local b = Instance.new("TextButton")
+        b.Parent = modeDrop
+        b.Size = UDim2.new(1,-8,0,24)
+        b.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
+        b.BackgroundTransparency = 0.18
+        b.Text = m
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 12
+        b.TextColor3 = MUTED or Color3.fromRGB(180,180,180)
+        b.TextXAlignment = Enum.TextXAlignment.Left
+        b.ZIndex = 6
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
+
+        b.MouseButton1Click:Connect(function()
+            _G.RAY_SellMode = m
+            modeBtn.Text = m.."  ▼"
+            modeDrop.Visible = false
+            NotifyFeature("Sell Mode: "..m, true)
+        end)
+    end
+
+    local modeOpen = false
+    modeBtn.MouseButton1Click:Connect(function()
+        modeOpen = not modeOpen
+        modeDrop.Visible = modeOpen
+    end)
+
+    ----------------------------------------------------------------
+    -- Delay (detik, hanya mode = time)
     ----------------------------------------------------------------
     local delayRow = makeRow("Sell Delay (seconds)")
 
     local delayBox = Instance.new("TextBox")
     delayBox.Parent = delayRow
-    delayBox.Size = UDim2.new(0.38, 0, 1, 0)
-    delayBox.Position = UDim2.new(0.58, 0, 0, 0)
+    delayBox.Size = UDim2.new(0.38,0,1,0)
+    delayBox.Position = UDim2.new(0.58,0,0,0)
     delayBox.Text = tostring(_G.RAY_SellDelay)
     delayBox.Font = Enum.Font.Gotham
     delayBox.TextSize = 13
     delayBox.TextXAlignment = Enum.TextXAlignment.Center
-    delayBox.TextColor3 = (TEXT or THEMETEXT or Color3.fromRGB(230, 230, 255))
+    delayBox.TextColor3 = TEXT or Color3.fromRGB(230,230,255)
     delayBox.ClearTextOnFocus = false
-    delayBox.BackgroundColor3 = (CARD or Color3.fromRGB(25, 25, 35))
+    delayBox.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
     delayBox.BackgroundTransparency = 0.12
-    Instance.new("UICorner", delayBox).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", delayBox).CornerRadius = UDim.new(0,8)
 
     delayBox.FocusLost:Connect(function()
         local n = tonumber(delayBox.Text:match("[%d%.]+"))
@@ -2601,9 +2607,37 @@ if AutoSellContainer then
         else
             delayBox.Text = tostring(_G.RAY_SellDelay)
         end
-        if NotifyFeature then
-            NotifyFeature("Sell Delay = " .. tostring(_G.RAY_SellDelay) .. "s", true)
+        NotifyFeature("Sell Delay = "..tostring(_G.RAY_SellDelay).."s", true)
+    end)
+
+    ----------------------------------------------------------------
+    -- Inventory threshold (mode = inventory)
+    ----------------------------------------------------------------
+    local invRow = makeRow("Inventory Threshold")
+
+    local invBox = Instance.new("TextBox")
+    invBox.Parent = invRow
+    invBox.Size = UDim2.new(0.38,0,1,0)
+    invBox.Position = UDim2.new(0.58,0,0,0)
+    invBox.Text = tostring(_G.RAY_SellInventoryThreshold)
+    invBox.Font = Enum.Font.Gotham
+    invBox.TextSize = 13
+    invBox.TextXAlignment = Enum.TextXAlignment.Center
+    invBox.TextColor3 = TEXT or Color3.fromRGB(230,230,255)
+    invBox.ClearTextOnFocus = false
+    invBox.BackgroundColor3 = CARD or Color3.fromRGB(25,25,35)
+    invBox.BackgroundTransparency = 0.12
+    Instance.new("UICorner", invBox).CornerRadius = UDim.new(0,8)
+
+    invBox.FocusLost:Connect(function()
+        local n = tonumber(invBox.Text:match("%d+"))
+        if n and n > 0 then
+            _G.RAY_SellInventoryThreshold = n
+            invBox.Text = tostring(n)
+        else
+            invBox.Text = tostring(_G.RAY_SellInventoryThreshold)
         end
+        NotifyFeature("Inventory Limit = "..tostring(_G.RAY_SellInventoryThreshold), true)
     end)
 
     ----------------------------------------------------------------
@@ -2613,42 +2647,40 @@ if AutoSellContainer then
 
     local pill2 = Instance.new("TextButton")
     pill2.Parent = row2
-    pill2.Size = UDim2.new(0, 50, 0, 24)
-    pill2.Position = UDim2.new(1, -80, 0.5, -12)
-    pill2.BackgroundColor3 = (MUTED or Color3.fromRGB(70, 70, 90))
+    pill2.Size = UDim2.new(0,50,0,24)
+    pill2.Position = UDim2.new(1,-80,0.5,-12)
+    pill2.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
     pill2.BackgroundTransparency = 0.1
     pill2.Text = ""
     pill2.AutoButtonColor = false
-    Instance.new("UICorner", pill2).CornerRadius = UDim.new(0, 999)
+    Instance.new("UICorner", pill2).CornerRadius = UDim.new(0,999)
 
     local knob2 = Instance.new("Frame")
     knob2.Parent = pill2
-    knob2.Size = UDim2.new(0, 18, 0, 18)
-    knob2.Position = UDim2.new(0, 3, 0.5, -9)
-    knob2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob2.Size = UDim2.new(0,18,0,18)
+    knob2.Position = UDim2.new(0,3,0.5,-9)
+    knob2.BackgroundColor3 = Color3.fromRGB(255,255,255)
     knob2.BackgroundTransparency = 0
-    Instance.new("UICorner", knob2).CornerRadius = UDim.new(0, 999)
+    Instance.new("UICorner", knob2).CornerRadius = UDim.new(0,999)
 
     local function refreshSell()
-        pill2.BackgroundColor3 = AutoSellOn and (ACCENT or THEMEMAIN or Color3.fromRGB(0, 200, 100))
-            or (MUTED or Color3.fromRGB(70, 70, 90))
-        knob2.Position = AutoSellOn and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+        pill2.BackgroundColor3 = AutoSellOn and (ACCENT or Color3.fromRGB(0,200,100))
+            or (MUTED or Color3.fromRGB(70,70,90))
+        knob2.Position = AutoSellOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
     end
 
     pill2.MouseButton1Click:Connect(function()
         AutoSellOn = not AutoSellOn
         _G.RAY_AutoSellOn = AutoSellOn
         refreshSell()
-        if NotifyFeature then
-            NotifyFeature("Auto Sell", AutoSellOn)
-        end
+        NotifyFeature("Auto Sell", AutoSellOn)
     end)
 
     refreshSell()
 end
 
 ----------------------------------------------------------------
--- AUTO SELL ENGINE (TIME ONLY)
+-- AUTO SELL ENGINE
 ----------------------------------------------------------------
 task.spawn(function()
     local Players = game:GetService("Players")
@@ -2657,16 +2689,36 @@ task.spawn(function()
 
     while true do
         if _G.RAY_AutoSellOn then
-            local delay = tonumber(_G.RAY_SellDelay) or 5
+            local mode = _G.RAY_SellMode or "time"
 
-            if os.clock() - lastSell >= delay then
-                local ok, err = pcall(function()
-                    Events.sell:InvokeServer()
-                end)
-                if ok then
-                    lastSell = os.clock()
-                else
-                    warn("[AUTO SELL] Events.sell error:", err)
+            if mode == "time" then
+                local delay = tonumber(_G.RAY_SellDelay) or 5
+                if os.clock() - lastSell >= delay then
+                    local ok, err = pcall(function()
+                        Events.sell:InvokeServer()
+                    end)
+                    if ok then
+                        lastSell = os.clock()
+                    else
+                        warn("[AUTO SELL] sell (time) error:", err)
+                    end
+                end
+
+            elseif mode == "inventory" then
+                local backpack = lp:FindFirstChild("Backpack")
+                if backpack then
+                    local count = #backpack:GetChildren()
+                    local limit = tonumber(_G.RAY_SellInventoryThreshold) or 30
+                    if count >= limit then
+                        local ok, err = pcall(function()
+                            Events.sell:InvokeServer()
+                        end)
+                        if ok then
+                            lastSell = os.clock()
+                        else
+                            warn("[AUTO SELL] sell (inv) error:", err)
+                        end
+                    end
                 end
             end
         else
