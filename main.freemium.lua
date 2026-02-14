@@ -2393,7 +2393,7 @@ if AutoPage then
 end
 
 ----------------------------------------------------------------
--- AUTO SELL SECTION DI BACKPACK PAGE
+-- BACKPACK PAGE LAYOUT
 ----------------------------------------------------------------
 
 local BackpackPage = Pages["Backpack"]
@@ -2403,18 +2403,64 @@ if BackpackPage then
     layout.Padding = UDim.new(0, 6)
 end
 
-local AutoSellSection
+----------------------------------------------------------------
+-- BACKPACK FEATURE LIST SECTION (MIRIP MAPPING LAMA)
+----------------------------------------------------------------
+
+local BackpackListSection
+local AutoSellContainer
+
 if BackpackPage then
-    -- Dropdown section: "Auto Sell"
-    AutoSellSection = CreateSectionDropdown(BackpackPage, "Auto Sell")
+    -- Section utama: daftar fitur Backpack
+    BackpackListSection = CreateSectionDropdown(BackpackPage, "Backpack Features")
 
-    local sectionLayout = Instance.new("UIListLayout", AutoSellSection)
-    sectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    sectionLayout.Padding = UDim.new(0, 6)
+    local listLayout = Instance.new("UIListLayout", BackpackListSection)
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 4)
 
-    -- Garis ungu full width di bawah title
+    ------------------------------------------------------------
+    -- TOMBOL "Auto Sell" (nyamain mapping lama)
+    ------------------------------------------------------------
+    local autoSellBtn = Instance.new("TextButton")
+    autoSellBtn.Parent = BackpackListSection
+    autoSellBtn.Size = UDim2.new(1, 0, 0, 30)
+    autoSellBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    autoSellBtn.BackgroundTransparency = 0.3
+    autoSellBtn.BorderSizePixel = 0
+    autoSellBtn.Font = Enum.Font.Gotham
+    autoSellBtn.TextSize = 13
+    autoSellBtn.TextColor3 = THEMETEXT
+    autoSellBtn.TextXAlignment = Enum.TextXAlignment.Left
+    autoSellBtn.Text = "  Auto Sell"
+    autoSellBtn.AutoButtonColor = true
+    Instance.new("UICorner", autoSellBtn).CornerRadius = UDim.new(0, 8)
+
+    -- Container khusus untuk pengaturan Auto Sell
+    AutoSellContainer = Instance.new("Frame")
+    AutoSellContainer.Parent = BackpackPage
+    AutoSellContainer.Size = UDim2.new(1, -10, 0, 0)
+    AutoSellContainer.Position = UDim2.new(0, 5, 0, 0)
+    AutoSellContainer.BackgroundTransparency = 1
+    AutoSellContainer.BorderSizePixel = 0
+    AutoSellContainer.Visible = false
+
+    local ascLayout = Instance.new("UIListLayout", AutoSellContainer)
+    ascLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ascLayout.Padding = UDim.new(0, 6)
+
+    autoSellBtn.MouseButton1Click:Connect(function()
+        AutoSellContainer.Visible = not AutoSellContainer.Visible
+    end)
+end
+
+----------------------------------------------------------------
+-- AUTO SELL SECTION (ISI PENGATURAN), PAKAI STRUKTUR BARU
+----------------------------------------------------------------
+
+if AutoSellContainer then
+    -- Garis ungu full width di atas pengaturan
     local Line = Instance.new("Frame")
-    Line.Parent = AutoSellSection
+    Line.Parent = AutoSellContainer
     Line.Size = UDim2.new(1, 0, 0, 2)
     Line.Position = UDim2.new(0, 0, 0, 2)
     Line.BackgroundColor3 = THEMEMAIN
@@ -2429,11 +2475,11 @@ if BackpackPage then
     _G.RAY_SellDelay     = _G.RAY_SellDelay     or 5
 
     ----------------------------------------------------------------
-    -- HELPER ROW
+    -- HELPER ROW (PARENT = AutoSellContainer)
     ----------------------------------------------------------------
     local function makeRow(title, height)
         local row = Instance.new("Frame")
-        row.Parent = AutoSellSection
+        row.Parent = AutoSellContainer
         row.Size = UDim2.new(1, 0, 0, height or 32)
         row.BackgroundTransparency = 1
 
