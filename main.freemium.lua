@@ -2074,96 +2074,6 @@ do
 end
 
 ----------------------------------------------------------------
--- LEGIT PERFECT SECTION (FISHING PAGE)
-----------------------------------------------------------------
-local LegitPerfectSection
-
-if AutoPage then
-    LegitPerfectSection = CreateSectionDropdown(AutoPage, "Legit Perfect")
-
-    local layout = Instance.new("UIListLayout")
-    layout.Parent = LegitPerfectSection
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 6)
-
-    local line = Instance.new("Frame")
-    line.Parent = LegitPerfectSection
-    line.Size = UDim2.new(1, 0, 0, 2)
-    line.Position = UDim2.new(0, 0, 0, 2)
-    line.BackgroundColor3 = THEME_MAIN
-    line.BorderSizePixel = 0
-
-    ----------------------------------------------------------------
-    -- TOGGLE: ENABLE LEGIT PERFECT ENGINE
-    ----------------------------------------------------------------
-    do
-        local row = Instance.new("Frame")
-        row.Parent = LegitPerfectSection
-        row.Size = UDim2.new(1,0,0,32)
-        row.BackgroundTransparency = 1
-
-        local label = Instance.new("TextLabel")
-        label.Parent = row
-        label.Size = UDim2.new(1,-120,1,0)
-        label.Position = UDim2.new(0,16,0,0)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = TEXT or THEME_TEXT
-        label.Text = "Enable Legit Perfect"
-
-        local pill = Instance.new("TextButton")
-        pill.Parent = row
-        pill.Size = UDim2.new(0,50,0,24)
-        pill.Position = UDim2.new(1,-80,0.5,-12)
-        pill.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
-        pill.BackgroundTransparency = 0.1
-        pill.Text = ""
-        pill.AutoButtonColor = false
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
-
-        local knob = Instance.new("Frame")
-        knob.Parent = pill
-        knob.Size = UDim2.new(0,18,0,18)
-        knob.Position = UDim2.new(0,3,0.5,-9)
-        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
-        knob.BackgroundTransparency = 0
-        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
-
-        local enabled = _G.RAY_LegitPerfect or false
-
-        local function refresh()
-            pill.BackgroundColor3 = enabled
-                and (ACCENT or THEME_MAIN)
-                or  (MUTED or Color3.fromRGB(70,70,90))
-
-            knob.Position = enabled
-                and UDim2.new(1,-21,0.5,-9)
-                or  UDim2.new(0,3,0.5,-9)
-        end
-
-        pill.MouseButton1Click:Connect(function()
-            enabled = not enabled
-
-            -- nyalain / matiin mode auto server + flag engine
-            SetAutoFishingState(enabled)
-
-            if enabled then
-                AutoFishAFK = false -- matiin AFK lama biar nggak tabrakan
-            end
-
-            refresh()
-            if NotifyFeature then
-                NotifyFeature("Legit Perfect Engine", enabled)
-            end
-        end)
-
-        refresh()
-    end
-end
-
-----------------------------------------------------------------
 -- SKIN ANIMATION SECTION (MUNCUL DI BAWAH FISHING SUPPORT)
 ----------------------------------------------------------------
 local Controllers = ReplicatedStorage:WaitForChild("Controllers")
@@ -2481,3 +2391,241 @@ if AutoPage then
         end)
     end
 end
+
+----------------------------------------------------------------
+-- AUTO SELL SECTION DI BACKPACK PAGE
+----------------------------------------------------------------
+
+local BackpackPage = Pages["Backpack"]
+if BackpackPage then
+    local layout = Instance.new("UIListLayout", BackpackPage)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0, 6)
+end
+
+local AutoSellSection
+if BackpackPage then
+    -- Dropdown section: "Auto Sell"
+    AutoSellSection = CreateSectionDropdown(BackpackPage, "Auto Sell")
+
+    local sectionLayout = Instance.new("UIListLayout", AutoSellSection)
+    sectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    sectionLayout.Padding = UDim.new(0, 6)
+
+    -- Garis ungu full width di bawah title
+    local Line = Instance.new("Frame")
+    Line.Parent = AutoSellSection
+    Line.Size = UDim2.new(1, 0, 0, 2)
+    Line.Position = UDim2.new(0, 0, 0, 2)
+    Line.BackgroundColor3 = THEMEMAIN
+    Line.BackgroundTransparency = 0
+    Line.BorderSizePixel = 0
+
+    ----------------------------------------------------------------
+    -- STATE GLOBAL
+    ----------------------------------------------------------------
+    local AutoSellOn = _G.RAY_AutoSellOn or false
+    _G.RAY_SellThreshold = _G.RAY_SellThreshold or "Legendary"
+    _G.RAY_SellDelay     = _G.RAY_SellDelay     or 5
+
+    ----------------------------------------------------------------
+    -- HELPER ROW
+    ----------------------------------------------------------------
+    local function makeRow(title, height)
+        local row = Instance.new("Frame")
+        row.Parent = AutoSellSection
+        row.Size = UDim2.new(1, 0, 0, height or 32)
+        row.BackgroundTransparency = 1
+
+        local label = Instance.new("TextLabel")
+        label.Parent = row
+        label.Size = UDim2.new(0.55, 0, 1, 0)
+        label.Position = UDim2.new(0, 16, 0, -2)
+        label.BackgroundTransparency = 1
+        label.Font = Enum.Font.Gotham
+        label.TextSize = 13
+        label.TextXAlignment = Enum.TextXAlignment.Left
+        label.TextColor3 = TEXT or THEMETEXT
+        label.Text = title
+
+        return row
+    end
+
+    ----------------------------------------------------------------
+    -- Threshold rarity (Legendary/Mythic/Secret)
+    ----------------------------------------------------------------
+    local ThresholdMap = {
+        Legendary = 5,
+        Mythic    = 6,
+        Secret    = 7,
+    }
+
+    local thRow = makeRow("Sell Threshold")
+
+    local thBtn = Instance.new("TextButton")
+    thBtn.Parent = thRow
+    thBtn.Size = UDim2.new(0.38, 0, 0, 28)
+    thBtn.Position = UDim2.new(0.58, 0, 0.5, -14)
+    thBtn.BackgroundColor3 = CARD
+    thBtn.BackgroundTransparency = 0.12
+    thBtn.Text = _G.RAY_SellThreshold .. "  ▼"
+    thBtn.Font = Enum.Font.Gotham
+    thBtn.TextSize = 13
+    thBtn.TextColor3 = MUTED
+    thBtn.AutoButtonColor = false
+    Instance.new("UICorner", thBtn).CornerRadius = UDim.new(0, 8)
+
+    local thDrop = Instance.new("Frame")
+    thDrop.Parent = thRow
+    thDrop.Position = UDim2.new(0.58, 0, 1, 4)
+    thDrop.Size = UDim2.new(0.38, 0, 0, 72)
+    thDrop.BackgroundColor3 = CARD
+    thDrop.BackgroundTransparency = 0.06
+    thDrop.Visible = false
+    thDrop.ZIndex = 5
+    Instance.new("UICorner", thDrop).CornerRadius = UDim.new(0, 8)
+
+    local thList = Instance.new("UIListLayout")
+    thList.Parent = thDrop
+    thList.Padding = UDim.new(0, 4)
+    thList.SortOrder = Enum.SortOrder.LayoutOrder
+
+    for _, rar in ipairs({ "Legendary", "Mythic", "Secret" }) do
+        local b = Instance.new("TextButton")
+        b.Parent = thDrop
+        b.Size = UDim2.new(1, -8, 0, 24)
+        b.BackgroundColor3 = CARD
+        b.BackgroundTransparency = 0.18
+        b.Text = rar
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 12
+        b.TextColor3 = MUTED
+        b.TextXAlignment = Enum.TextXAlignment.Left
+        b.ZIndex = 6
+        Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
+
+        b.MouseButton1Click:Connect(function()
+            _G.RAY_SellThreshold = rar
+            thBtn.Text = rar .. "  ▼"
+            thDrop.Visible = false
+
+            local code = ThresholdMap[rar]
+            if code then
+                pcall(function()
+                    Events.updateSellThreshold:InvokeServer(code)
+                end)
+            end
+
+            if NotifyFeature then
+                NotifyFeature("Sell Threshold: " .. rar, true)
+            end
+        end)
+    end
+
+    local thOpen = false
+    thBtn.MouseButton1Click:Connect(function()
+        thOpen = not thOpen
+        thDrop.Visible = thOpen
+    end)
+
+    ----------------------------------------------------------------
+    -- Sell Delay (seconds)
+    ----------------------------------------------------------------
+    local delayRow = makeRow("Sell Delay (seconds)")
+
+    local delayBox = Instance.new("TextBox")
+    delayBox.Parent = delayRow
+    delayBox.Size = UDim2.new(0.38, 0, 1, 0)
+    delayBox.Position = UDim2.new(0.58, 0, 0, 0)
+    delayBox.Text = tostring(_G.RAY_SellDelay)
+    delayBox.Font = Enum.Font.Gotham
+    delayBox.TextSize = 13
+    delayBox.TextXAlignment = Enum.TextXAlignment.Center
+    delayBox.TextColor3 = TEXT or THEMETEXT
+    delayBox.ClearTextOnFocus = false
+    delayBox.BackgroundColor3 = CARD
+    delayBox.BackgroundTransparency = 0.12
+    Instance.new("UICorner", delayBox).CornerRadius = UDim.new(0, 8)
+
+    delayBox.FocusLost:Connect(function()
+        local n = tonumber(delayBox.Text:match("[%d%.]+"))
+        if n and n > 0 then
+            _G.RAY_SellDelay = n
+            delayBox.Text = tostring(n)
+        else
+            delayBox.Text = tostring(_G.RAY_SellDelay)
+        end
+        if NotifyFeature then
+            NotifyFeature("Sell Delay = " .. tostring(_G.RAY_SellDelay) .. "s", true)
+        end
+    end)
+
+    ----------------------------------------------------------------
+    -- Toggle Auto Sell
+    ----------------------------------------------------------------
+    local row2 = makeRow("Auto Sell")
+
+    local pill2 = Instance.new("TextButton")
+    pill2.Parent = row2
+    pill2.Size = UDim2.new(0, 50, 0, 24)
+    pill2.Position = UDim2.new(1, -80, 0.5, -12)
+    pill2.BackgroundColor3 = MUTED or Color3.fromRGB(70, 70, 90)
+    pill2.BackgroundTransparency = 0.1
+    pill2.Text = ""
+    pill2.AutoButtonColor = false
+    Instance.new("UICorner", pill2).CornerRadius = UDim.new(0, 999)
+
+    local knob2 = Instance.new("Frame")
+    knob2.Parent = pill2
+    knob2.Size = UDim2.new(0, 18, 0, 18)
+    knob2.Position = UDim2.new(0, 3, 0.5, -9)
+    knob2.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob2.BackgroundTransparency = 0
+    Instance.new("UICorner", knob2).CornerRadius = UDim.new(0, 999)
+
+    local function refreshSell()
+        pill2.BackgroundColor3 = AutoSellOn and (ACCENT or THEMEMAIN) or (MUTED or Color3.fromRGB(70, 70, 90))
+        knob2.Position = AutoSellOn and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+    end
+
+    pill2.MouseButton1Click:Connect(function()
+        AutoSellOn = not AutoSellOn
+        _G.RAY_AutoSellOn = AutoSellOn
+        refreshSell()
+        if NotifyFeature then
+            NotifyFeature("Auto Sell", AutoSellOn)
+        end
+    end)
+
+    refreshSell()
+end
+
+----------------------------------------------------------------
+-- AUTO SELL ENGINE (TIME ONLY)
+----------------------------------------------------------------
+task.spawn(function()
+    local Players = game:GetService("Players")
+    local lp = Players.LocalPlayer
+    local lastSell = 0
+
+    while true do
+        if _G.RAY_AutoSellOn then
+            local delay = tonumber(_G.RAY_SellDelay) or 5
+
+            if os.clock() - lastSell >= delay then
+                local ok, err = pcall(function()
+                    Events.sell:InvokeServer()
+                end)
+                if ok then
+                    lastSell = os.clock()
+                else
+                    warn("[AUTO SELL] Events.sell error:", err)
+                end
+            end
+        else
+            lastSell = 0
+        end
+
+        task.wait(0.5)
+    end
+end)
