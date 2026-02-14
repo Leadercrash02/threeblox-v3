@@ -2412,7 +2412,7 @@ local AutoSellContainer
 
 if BackpackPage then
     -- Section utama: daftar fitur Backpack
-    BackpackListSection = CreateSectionDropdown(BackpackPage, "Backpack Features")
+    BackpackListSection = CreateSectionDropdown(BackpackPage, "Auto Sell")
 
     local listLayout = Instance.new("UIListLayout", BackpackListSection)
     listLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -2429,7 +2429,7 @@ if BackpackPage then
     autoSellBtn.BorderSizePixel = 0
     autoSellBtn.Font = Enum.Font.Gotham
     autoSellBtn.TextSize = 13
-    autoSellBtn.TextColor3 = THEMETEXT
+    autoSellBtn.TextColor3 = (THEMETEXT or Color3.fromRGB(255, 255, 255))
     autoSellBtn.TextXAlignment = Enum.TextXAlignment.Left
     autoSellBtn.Text = "  Auto Sell"
     autoSellBtn.AutoButtonColor = true
@@ -2463,7 +2463,7 @@ if AutoSellContainer then
     Line.Parent = AutoSellContainer
     Line.Size = UDim2.new(1, 0, 0, 2)
     Line.Position = UDim2.new(0, 0, 0, 2)
-    Line.BackgroundColor3 = THEMEMAIN
+    Line.BackgroundColor3 = (THEMEMAIN or Color3.fromRGB(140, 90, 255))
     Line.BackgroundTransparency = 0
     Line.BorderSizePixel = 0
 
@@ -2491,7 +2491,7 @@ if AutoSellContainer then
         label.Font = Enum.Font.Gotham
         label.TextSize = 13
         label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = TEXT or THEMETEXT
+        label.TextColor3 = (TEXT or THEMETEXT or Color3.fromRGB(230, 230, 255))
         label.Text = title
 
         return row
@@ -2512,12 +2512,12 @@ if AutoSellContainer then
     thBtn.Parent = thRow
     thBtn.Size = UDim2.new(0.38, 0, 0, 28)
     thBtn.Position = UDim2.new(0.58, 0, 0.5, -14)
-    thBtn.BackgroundColor3 = CARD
+    thBtn.BackgroundColor3 = (CARD or Color3.fromRGB(25, 25, 35))
     thBtn.BackgroundTransparency = 0.12
     thBtn.Text = _G.RAY_SellThreshold .. "  ▼"
     thBtn.Font = Enum.Font.Gotham
     thBtn.TextSize = 13
-    thBtn.TextColor3 = MUTED
+    thBtn.TextColor3 = (MUTED or Color3.fromRGB(180, 180, 180))
     thBtn.AutoButtonColor = false
     Instance.new("UICorner", thBtn).CornerRadius = UDim.new(0, 8)
 
@@ -2525,7 +2525,7 @@ if AutoSellContainer then
     thDrop.Parent = thRow
     thDrop.Position = UDim2.new(0.58, 0, 1, 4)
     thDrop.Size = UDim2.new(0.38, 0, 0, 72)
-    thDrop.BackgroundColor3 = CARD
+    thDrop.BackgroundColor3 = (CARD or Color3.fromRGB(25, 25, 35))
     thDrop.BackgroundTransparency = 0.06
     thDrop.Visible = false
     thDrop.ZIndex = 5
@@ -2540,12 +2540,12 @@ if AutoSellContainer then
         local b = Instance.new("TextButton")
         b.Parent = thDrop
         b.Size = UDim2.new(1, -8, 0, 24)
-        b.BackgroundColor3 = CARD
+        b.BackgroundColor3 = (CARD or Color3.fromRGB(25, 25, 35))
         b.BackgroundTransparency = 0.18
         b.Text = rar
         b.Font = Enum.Font.Gotham
         b.TextSize = 12
-        b.TextColor3 = MUTED
+        b.TextColor3 = (MUTED or Color3.fromRGB(180, 180, 180))
         b.TextXAlignment = Enum.TextXAlignment.Left
         b.ZIndex = 6
         Instance.new("UICorner", b).CornerRadius = UDim.new(0, 6)
@@ -2587,9 +2587,9 @@ if AutoSellContainer then
     delayBox.Font = Enum.Font.Gotham
     delayBox.TextSize = 13
     delayBox.TextXAlignment = Enum.TextXAlignment.Center
-    delayBox.TextColor3 = TEXT or THEMETEXT
+    delayBox.TextColor3 = (TEXT or THEMETEXT or Color3.fromRGB(230, 230, 255))
     delayBox.ClearTextOnFocus = false
-    delayBox.BackgroundColor3 = CARD
+    delayBox.BackgroundColor3 = (CARD or Color3.fromRGB(25, 25, 35))
     delayBox.BackgroundTransparency = 0.12
     Instance.new("UICorner", delayBox).CornerRadius = UDim.new(0, 8)
 
@@ -2615,7 +2615,7 @@ if AutoSellContainer then
     pill2.Parent = row2
     pill2.Size = UDim2.new(0, 50, 0, 24)
     pill2.Position = UDim2.new(1, -80, 0.5, -12)
-    pill2.BackgroundColor3 = MUTED or Color3.fromRGB(70, 70, 90)
+    pill2.BackgroundColor3 = (MUTED or Color3.fromRGB(70, 70, 90))
     pill2.BackgroundTransparency = 0.1
     pill2.Text = ""
     pill2.AutoButtonColor = false
@@ -2630,7 +2630,8 @@ if AutoSellContainer then
     Instance.new("UICorner", knob2).CornerRadius = UDim.new(0, 999)
 
     local function refreshSell()
-        pill2.BackgroundColor3 = AutoSellOn and (ACCENT or THEMEMAIN) or (MUTED or Color3.fromRGB(70, 70, 90))
+        pill2.BackgroundColor3 = AutoSellOn and (ACCENT or THEMEMAIN or Color3.fromRGB(0, 200, 100))
+            or (MUTED or Color3.fromRGB(70, 70, 90))
         knob2.Position = AutoSellOn and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
     end
 
