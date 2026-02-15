@@ -2672,7 +2672,7 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------------------
--- AUTO FAVORITE FISH (BACKPACK PAGE)
+-- AUTO FAVORITE FISH (BACKPACK PAGE) - LIVE DETECT
 ----------------------------------------------------------------
 
 local lp = Players.LocalPlayer
@@ -2725,16 +2725,11 @@ _G.RAYFavSecretOn      = _G.RAYFavSecretOn or false
 _G.RAYFavVariantFilter = _G.RAYFavVariantFilter or "Any"
 _G.RAYFavSelectedNames = _G.RAYFavSelectedNames or {}
 
-local AUTO_FAV_INTERVAL = 10
-
 ----------------------------------------------------------------
 -- HELPER: AMBIL INVENTORY CLIENT
 ----------------------------------------------------------------
-local function getInvItems()
-    local ok, repl = pcall(function()
-        return Replion.Client:WaitReplion("Data")
-    end)
-    if not ok or not repl or not repl.Data then
+local function getInvItemsFromRepl(repl)
+    if not repl or not repl.Data then
         return {}
     end
     local root  = repl.Data
@@ -2754,10 +2749,10 @@ local function getTierFromItem(data)
 end
 
 ----------------------------------------------------------------
--- FILTER: RARITY / NAMA / VARIANT (VERSI SEDERHANA & BERGUNA)
+-- FILTER: RARITY / NAMA / VARIANT
 ----------------------------------------------------------------
 
--- rarity: kalau tidak ada yang dicentang, artinya semua rarity boleh
+-- rarity: kalau semua false => semua rarity boleh
 local function passesRarityFilterFav(data)
     local tierInfo = getTierFromItem(data)
     local rName = tierInfo and tierInfo.Name
@@ -2767,7 +2762,6 @@ local function passesRarityFilterFav(data)
     local M = _G.RAYFavMythicOn
     local S = _G.RAYFavSecretOn
 
-    -- semua false => tidak pakai filter rarity (semua lolos)
     if not L and not M and not S then
         return true
     end
@@ -2778,7 +2772,7 @@ local function passesRarityFilterFav(data)
     return false
 end
 
--- nama: kalau list kosong, artinya tanpa filter nama (semua lolos nama)
+-- nama: kalau list kosong => semua nama boleh
 local function passesNameFilterFav(data)
     local sel = _G.RAYFavSelectedNames
     if not sel or next(sel) == nil then
@@ -2793,7 +2787,7 @@ local function getVariantNameFromEntry(entry)
     return VariantNameById[vid]
 end
 
--- variant: kalau "Any" atau nil, artinya tanpa filter variant (semua lolos variant)
+-- variant: "Any" / nil => semua variant boleh
 local function passesVariantFilterFav(entry)
     if not _G.RAYFavVariantFilter or _G.RAYFavVariantFilter == "Any" then
         return true
@@ -2804,76 +2798,85 @@ local function passesVariantFilterFav(entry)
 end
 
 ----------------------------------------------------------------
--- LOGIC: RARITY = FILTER UTAMA, NAMA & VARIANT OPSIONAL
+-- LOGIC: RARITY WAJIB, NAMA & VARIANT OPSIONAL
 ----------------------------------------------------------------
 
 local function shouldFavorite(data, entry)
     if data.Type ~= "Fish" then
         return false
     end
-
     if not passesRarityFilterFav(data) then
         return false
     end
-
     if not passesNameFilterFav(data) then
         return false
     end
-
     if not passesVariantFilterFav(entry) then
         return false
     end
-
     return true
 end
 
 ----------------------------------------------------------------
--- ENGINE: AUTO FAVORITE LOOP
+-- ENGINE: DETEKSI ITEM BARU & AUTO FAVORITE
 ----------------------------------------------------------------
-local autoFavConn
 
-local function StopAutoFavorite()
-    if autoFavConn then
-        autoFavConn:Disconnect()
-        autoFavConn = nil
+local dataRepl = Replion.Client:WaitReplion("Data")
+
+local lastSnapshot = {}
+
+local function snapshotItems(tbl)
+    local map = {}
+    for _, entry in pairs(tbl or {}) do
+        local uuid = entry.UUID or entry.Uuid or entry.uuid
+        if uuid then
+            map[uuid] = true
+        end
     end
+    return map
 end
 
-local function StartAutoFavorite()
-    StopAutoFavorite()
+-- init snapshot awal
+lastSnapshot = snapshotItems(getInvItemsFromRepl(dataRepl))
 
-    autoFavConn = RunService.Heartbeat:Connect(function(dt)
-        autoFavConn._acc = (autoFavConn._acc or 0) + dt
-        if autoFavConn._acc < AUTO_FAV_INTERVAL then
-            return
-        end
-        autoFavConn._acc = 0
+local function onInventoryChanged(newItems)
+    if not _G.RAYFavOn then
+        -- kalau toggle off, cuma update snapshot
+        lastSnapshot = snapshotItems(newItems)
+        return
+    end
 
-        local items = getInvItems()
-        local count = 0
+    local currentMap = snapshotItems(newItems)
 
-        for _, entry in pairs(items) do
+    -- cari uuid yang BELUM ada di snapshot lama = item baru (drop baru, hasil fishing, dll)
+    for _, entry in pairs(newItems) do
+        local uuid = entry.UUID or entry.Uuid or entry.uuid
+        if uuid and not lastSnapshot[uuid] then
             local id   = entry.Id
-            local uuid = entry.UUID
             local data = id and ItemDataById[id]
-
-            if data and uuid and shouldFavorite(data, entry) then
+            if data and shouldFavorite(data, entry) then
                 FavoriteRemote:FireServer(uuid)
-                count += 1
+                if NotifyFeature then
+                    NotifyFeature("Auto Favorite (baru): "..tostring(data.Name), true)
+                end
             end
         end
+    end
 
-        if count > 0 and NotifyFeature then
-            NotifyFeature("Auto Favorite: +"..tostring(count), true)
+    -- update snapshot buat next update
+    lastSnapshot = currentMap
+end
+
+-- listener ke Replion (kalau nama event beda, cek error di output)
+if dataRepl.OnUpdate then
+    dataRepl.OnUpdate:Connect(function(newData)
+        local inv = newData.Inventory
+        local items = inv and inv.Items
+        if typeof(items) == "table" then
+            onInventoryChanged(items)
         end
     end)
 end
-
-task.delay(1, function()
-    if _G.RAYFavOn then
-        StartAutoFavorite()
-    end
-end)
 
 ----------------------------------------------------------------
 -- PANEL KANAN: RARITY / FISH / VARIANT (PARENT = Main)
@@ -3245,6 +3248,7 @@ end
 ----------------------------------------------------------------
 -- SECTION UI DI BACKPACK (TOGGLE ENGINE + OPEN PANEL)
 ----------------------------------------------------------------
+
 local BackpackPage = Pages and Pages["Backpack"]
 
 if BackpackPage then
@@ -3262,15 +3266,15 @@ if BackpackPage then
         row.BackgroundTransparency  = 1
 
         local label = Instance.new("TextLabel")
-        label.Parent                = row
-        label.Size                  = UDim2.new(1,-110,1,0)
-        label.Position              = UDim2.new(0,16,0,0)
-        label.BackgroundTransparency= 1
-        label.Font                  = Enum.Font.Gotham
-        label.TextSize              = 13
-        label.TextXAlignment        = Enum.TextXAlignment.Left
-        label.TextColor3            = TEXT or THEME_TEXT
-        label.Text                  = title
+        label.Parent                 = row
+        label.Size                   = UDim2.new(1,-110,1,0)
+        label.Position               = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency = 1
+        label.Font                   = Enum.Font.Gotham
+        label.TextSize               = 13
+        label.TextXAlignment         = Enum.TextXAlignment.Left
+        label.TextColor3             = TEXT or THEME_TEXT
+        label.Text                   = title
 
         return row
     end
@@ -3291,17 +3295,17 @@ if BackpackPage then
         return btn
     end
 
-    -- toggle engine (loop)
+    -- toggle engine (live detect)
     do
-        local row = makeRow("Enable Auto Favorite (Loop)")
+        local row = makeRow("Enable Auto Favorite (Live)")
         local pill = Instance.new("TextButton")
-        pill.Parent                  = row
-        pill.Size                    = UDim2.new(0,50,0,24)
-        pill.Position                = UDim2.new(1,-80,0.5,-12)
-        pill.BackgroundColor3        = MUTED or Color3.fromRGB(70,70,90)
-        pill.BackgroundTransparency  = 0.1
-        pill.Text                    = ""
-        pill.AutoButtonColor         = false
+        pill.Parent                 = row
+        pill.Size                   = UDim2.new(0,50,0,24)
+        pill.Position               = UDim2.new(1,-80,0.5,-12)
+        pill.BackgroundColor3       = MUTED or Color3.fromRGB(70,70,90)
+        pill.BackgroundTransparency = 0.1
+        pill.Text                   = ""
+        pill.AutoButtonColor        = false
         Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
 
         local knob = Instance.new("Frame")
@@ -3322,20 +3326,12 @@ if BackpackPage then
 
         pill.MouseButton1Click:Connect(function()
             _G.RAYFavOn = not _G.RAYFavOn
-            if _G.RAYFavOn then
-                StartAutoFavorite()
-            else
-                StopAutoFavorite()
-            end
             refresh()
             if NotifyFeature then
-                NotifyFeature("Auto Favorite Engine", _G.RAYFavOn)
+                NotifyFeature("Auto Favorite Live", _G.RAYFavOn)
             end
         end)
 
-        if _G.RAYFavOn then
-            StartAutoFavorite()
-        end
         refresh()
     end
 
@@ -3344,9 +3340,9 @@ if BackpackPage then
         local row = makeRow("Rarity Filter Panel")
         local btn = makeSmallButton(row, "Open")
         btn.MouseButton1Click:Connect(function()
-            FavRarityRightPanel.Visible  = not FavRarityRightPanel.Visible
-            FavFishRightPanel.Visible    = false
-            FavVariantRightPanel.Visible = false
+            FavRarityRightPanel.Visible   = not FavRarityRightPanel.Visible
+            FavFishRightPanel.Visible     = false
+            FavVariantRightPanel.Visible  = false
         end)
     end
 
@@ -3355,9 +3351,9 @@ if BackpackPage then
         local row = makeRow("Fish Name Filter Panel")
         local btn = makeSmallButton(row, "Open")
         btn.MouseButton1Click:Connect(function()
-            FavFishRightPanel.Visible    = not FavFishRightPanel.Visible
-            FavRarityRightPanel.Visible  = false
-            FavVariantRightPanel.Visible = false
+            FavFishRightPanel.Visible     = not FavFishRightPanel.Visible
+            FavRarityRightPanel.Visible   = false
+            FavVariantRightPanel.Visible  = false
         end)
     end
 
@@ -3366,9 +3362,9 @@ if BackpackPage then
         local row = makeRow("Variant Filter Panel")
         local btn = makeSmallButton(row, "Open")
         btn.MouseButton1Click:Connect(function()
-            FavVariantRightPanel.Visible = not FavVariantRightPanel.Visible
-            FavRarityRightPanel.Visible  = false
-            FavFishRightPanel.Visible    = false
+            FavVariantRightPanel.Visible  = not FavVariantRightPanel.Visible
+            FavRarityRightPanel.Visible   = false
+            FavFishRightPanel.Visible     = false
         end)
     end
 end
@@ -3395,11 +3391,12 @@ UIS.InputBegan:Connect(function(input)
     if not insidePanel(FavRarityRightPanel)
     and not insidePanel(FavFishRightPanel)
     and not insidePanel(FavVariantRightPanel) then
-        FavRarityRightPanel.Visible  = false
-        FavFishRightPanel.Visible    = false
-        FavVariantRightPanel.Visible = false
+        FavRarityRightPanel.Visible   = false
+        FavFishRightPanel.Visible     = false
+        FavVariantRightPanel.Visible  = false
     end
 end)
+
 
 ----------------------------------------------------------------
 -- AUTO TOTEM 🗿 (STRUCTUR BARU + PANEL KANAN + RECAST BOLEH)
