@@ -3539,10 +3539,10 @@ end
 -----------------------------
 -- STATE GLOBAL
 -----------------------------
-_G.RAY_EnchantAutoOn     = _G.RAY_EnchantAutoOn     or false
-_G.RAY_EnchantTargetSlot = _G.RAY_EnchantTargetSlot or 1
-_G.RAY_EnchantStoneId    = _G.RAY_EnchantStoneId    or 10
-_G.RAY_EnchantTargetName = _G.RAY_EnchantTargetName or "Leprechaun I"
+_G.RAY_EnchantAutoOn      = _G.RAY_EnchantAutoOn      or false
+_G.RAY_EnchantTargetSlot  = _G.RAY_EnchantTargetSlot  or 1      -- 1 = altar slot 1, 2 = altar slot 2
+_G.RAY_EnchantStoneId     = _G.RAY_EnchantStoneId     or 10     -- Id batu dari StoneConfig
+_G.RAY_EnchantTargetName  = _G.RAY_EnchantTargetName  or "Leprechaun I"
 
 -----------------------------
 -- KONFIG BATU & ENCHANT
@@ -3627,7 +3627,11 @@ local StoneList = {10, 125, 558, 246}
 -----------------------------
 -- BACKEND: REMOTE & REPLION
 -----------------------------
--- TETAP pakai Replion helper kamu
+local RS        = game:GetService("ReplicatedStorage")
+local Players   = game:GetService("Players")
+local Player    = Players.LocalPlayer
+local Replion   = require(RS.Packages.Replion)
+
 local CF_Altar_Slot1 = CFrame.new(
     3232.90356, -1302.8551, 1401.0824,
     0.483647138, 0, -0.875263095,
@@ -3664,19 +3668,130 @@ local function GetMainData()
     return r.Data
 end
 
--- sementara: belum baca enchant beneran dari Replion
+----------------------------------------------------------------
+-- BACKEND: AUTO EQUIP BATU DI HAND (PAKAI ID -> UUID)
+----------------------------------------------------------------
+
+local EquipItemRE = RS
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RE/EquipItem")
+
+-- cari entry batu di inventory berdasarkan Id
+local function findStoneEntryById(stoneId)
+    local data = GetMainData()
+    if not data then return nil end
+
+    local inv   = data.Inventory
+    local items = inv and inv.Items     -- SESUAIKAN kalau field beda
+    if typeof(items) ~= "table" then return nil end
+
+    for _, entry in pairs(items) do
+        if entry.Id == stoneId then
+            return entry   -- harusnya punya UUID
+        end
+    end
+    return nil
+end
+
+local function EquipStoneById(stoneId)
+    local entry = findStoneEntryById(stoneId)
+    if not entry then
+        if NotifyFeature then
+            NotifyFeature("Stone Id "..tostring(stoneId).." tidak ditemukan di inventory", false)
+        end
+        return
+    end
+
+    local uuid = entry.UUID or entry.Uuid
+    if not uuid then return end
+
+    local category = "Enchant Stones"
+
+    pcall(function()
+        EquipItemRE:FireServer(uuid, category)
+    end)
+
+    if NotifyFeature then
+        NotifyFeature("Equip Stone Id "..tostring(stoneId), true)
+    end
+end
+
+----------------------------------------------------------------
+-- HasTargetEnchant: cek enchant rod, auto STOP kalau sudah dapat
+----------------------------------------------------------------
 local function HasTargetEnchant()
+    local data = GetMainData()
+    if not data then return false end
+
+    local inv   = data.Inventory
+    if not inv then return false end
+
+    local rods  = inv.Rods     -- SESUAIKAN kalau nama beda
+    if typeof(rods) ~= "table" then return false end
+
+    local targetName = _G.RAY_EnchantTargetName
+    if not targetName or targetName == "" then return false end
+
+    -- cari rod yang lagi di-equip
+    local equippedRod
+    for _, rod in pairs(rods) do
+        if rod.Equipped or rod.equipped or rod.IsEquipped then
+            equippedRod = rod
+            break
+        end
+    end
+    if not equippedRod then
+        for _, rod in pairs(rods) do
+            equippedRod = rod
+            break
+        end
+    end
+    if not equippedRod then return false end
+
+    local function checkEnchantEntry(enchantEntry)
+        if not enchantEntry then return false end
+        local name = enchantEntry.Name or enchantEntry.name
+        return name == targetName
+    end
+
+    local e1    = equippedRod.Enchant or equippedRod.enchant
+    local eList = equippedRod.Enchants or equippedRod.enchants
+
+    if e1 and checkEnchantEntry(e1) then
+        return true
+    end
+
+    if typeof(eList) == "table" then
+        for _, e in pairs(eList) do
+            if checkEnchantEntry(e) then
+                return true
+            end
+        end
+    end
+
     return false
 end
 
--- ====== BAGIAN INI YANG DIUBAH: PAKAI ENCHANTINGCONTROLLER ======
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local EnchantingController = require(ReplicatedStorage.Controllers.EnchantingController)
+----------------------------------------------------------------
+-- ENCHANTINGCONTROLLER
+----------------------------------------------------------------
+local EnchantingController = require(RS.Controllers.EnchantingController)
 
 local function DoAltarEnchantOnce()
     local second = (_G.RAY_EnchantTargetSlot == 2)
 
     task.spawn(function()
+        -- 1) auto pegang batu by Id dari panel
+        local stoneId = _G.RAY_EnchantStoneId
+        if stoneId then
+            EquipStoneById(stoneId)
+            task.wait(0.1)
+        end
+
+        -- 2) roll enchant
         local ok, err = pcall(function()
             EnchantingController:Activate(second)
                 :catch(function(msg)
@@ -3699,8 +3814,10 @@ local function DoAltarEnchantOnce()
         end
     end)
 end
--- ===============================================================
 
+----------------------------------------------------------------
+-- LOOP AUTO ENCHANT: stop kalau HasTargetEnchant() true
+----------------------------------------------------------------
 task.spawn(function()
     while true do
         if _G.RAY_EnchantAutoOn then
@@ -3718,13 +3835,12 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------------------
--- SECTION "ENCHANT PRESET" + PANEL KANAN (FIX PANEL OPEN)
+-- SECTION "ENCHANT PRESET" + PANEL KANAN
 ----------------------------------------------------------------
 
 local BackpackPage = Pages and Pages["Backpack"]
 if not BackpackPage then return end
 
--- section utama di backpack (dropdown)
 local EnchantPresetSection = CreateSectionDropdown(BackpackPage, "Enchant Preset")
 
 local layout = Instance.new("UIListLayout")
@@ -3769,7 +3885,7 @@ local function makeSmallButton(row, text)
 end
 
 ----------------------------------------------------------------
--- PANEL KANAN: STONE LIST (NEMPEL MAIN, UKURAN SAMA PANEL SKIN)
+-- PANEL KANAN: STONE LIST
 ----------------------------------------------------------------
 local StoneRightPanel = Instance.new("Frame")
 StoneRightPanel.Name                   = "StoneRightPanel"
@@ -3847,14 +3963,14 @@ local function rebuildStonePanel()
             row.ZIndex                 = 11
 
             local line = Instance.new("Frame")
-            line.Name              = "Highlight"
-            line.Parent            = row
-            line.Size              = UDim2.new(0, 3, 1, 0)
-            line.Position          = UDim2.new(0, 0, 0, 0)
-            line.BackgroundColor3  = THEME_MAIN or Color3.fromRGB(170, 90, 255)
-            line.BorderSizePixel   = 0
-            line.Visible           = (_G.RAY_EnchantStoneId == id)
-            line.ZIndex            = 12
+            line.Name             = "Highlight"
+            line.Parent           = row
+            line.Size             = UDim2.new(0, 3, 1, 0)
+            line.Position         = UDim2.new(0, 0, 0, 0)
+            line.BackgroundColor3 = THEME_MAIN or Color3.fromRGB(170, 90, 255)
+            line.BorderSizePixel  = 0
+            line.Visible          = (_G.RAY_EnchantStoneId == id)
+            line.ZIndex           = 12
 
             local btn = Instance.new("TextButton")
             btn.Parent                 = row
@@ -3885,7 +4001,7 @@ local function rebuildStonePanel()
 end
 
 ----------------------------------------------------------------
--- PANEL KANAN: ENCHANT LIST (NEMPEL MAIN, UKURAN SAMA SKIN)
+-- PANEL KANAN: ENCHANT LIST
 ----------------------------------------------------------------
 local EnchantRightPanel = Instance.new("Frame")
 EnchantRightPanel.Name                   = "EnchantRightPanel"
@@ -3966,14 +4082,14 @@ function rebuildEnchantPanel()
         row.ZIndex                 = 11
 
         local line = Instance.new("Frame")
-        line.Name              = "Highlight"
-        line.Parent            = row
-        line.Size              = UDim2.new(0, 3, 1, 0)
-        line.Position          = UDim2.new(0, 0, 0, 0)
-        line.BackgroundColor3  = THEME_MAIN or Color3.fromRGB(170, 90, 255)
-        line.BorderSizePixel   = 0
-        line.Visible           = (_G.RAY_EnchantTargetName == name)
-        line.ZIndex            = 12
+        line.Name             = "Highlight"
+        line.Parent           = row
+        line.Size             = UDim2.new(0, 3, 1, 0)
+        line.Position         = UDim2.new(0, 0, 0, 0)
+        line.BackgroundColor3 = THEME_MAIN or Color3.fromRGB(170, 90, 255)
+        line.BorderSizePixel  = 0
+        line.Visible          = (_G.RAY_EnchantTargetName == name)
+        line.ZIndex           = 12
 
         local btn = Instance.new("TextButton")
         btn.Parent                 = row
@@ -4004,7 +4120,7 @@ rebuildStonePanel()
 rebuildEnchantPanel()
 
 ----------------------------------------------------------------
--- ROW: TARGET SLOT
+-- ROW: TARGET SLOT (altar slot 1 / 2)
 ----------------------------------------------------------------
 do
     local row = makeRow("Target Slot")
