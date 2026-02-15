@@ -3588,7 +3588,7 @@ local StoneConfig = {
             "Mutation Hunter III",
             "Reeler II",
             "Gold Digger I",
-            "Fairy Hunter I",
+            "Fairy Hunter I",      -- kalau ini ga ada di Enchants, tinggal hapus dari list
             "Stargazer II",
             "Stormhunter II",
             "Empowered I",
@@ -3624,6 +3624,39 @@ local StoneConfig = {
 
 local StoneList = {10, 125, 558, 246}
 
+----------------------------------------------------------------
+-- MAPPING ENCHANT ID -> NAMA (URUT ABJAD NAMA)
+----------------------------------------------------------------
+
+local EnchantIdToName = {
+    [3]  = "Big Hunter I",
+    [12] = "Cursed I",
+    [9]  = "Empowered I",
+    [4]  = "Gold Digger I",
+    [1]  = "Glistening I",
+    [24] = "Glistening II",
+    [5]  = "Leprechaun I",
+    [6]  = "Leprechaun II",
+    [7]  = "Mutation Hunter I",
+    [14] = "Mutation Hunter II",
+    [22] = "Mutation Hunter III",
+    [15] = "Perfection",
+    [13] = "Prismatic I",
+    [2]  = "Reeler I",
+    [21] = "Reeler II",
+    [16] = "SECRET Hunter",
+    [20] = "Shark Hunter",
+    [8]  = "Stargazer I",
+    [17] = "Stargazer II",
+    [11] = "Stormhunter I",
+    [19] = "Stormhunter II",
+    [10] = "XPerienced I",
+}
+
+local function getEnchantNameFromId(id)
+    return EnchantIdToName[id]
+end
+
 -----------------------------
 -- BACKEND: REMOTE & REPLION
 -----------------------------
@@ -3632,6 +3665,7 @@ local Players   = game:GetService("Players")
 local Player    = Players.LocalPlayer
 local Replion   = require(RS.Packages.Replion)
 
+-- CFrame altar (punya kamu)
 local CF_Altar_Slot1 = CFrame.new(
     3232.90356, -1302.8551, 1401.0824,
     0.483647138, 0, -0.875263095,
@@ -3699,12 +3733,12 @@ local function findStoneEntryById(stoneId)
     if not data then return nil end
 
     local inv   = data.Inventory
-    local items = inv and inv.Items     -- sesuaikan jika beda
+    local items = inv and inv.Items
     if typeof(items) ~= "table" then return nil end
 
     for _, entry in pairs(items) do
         if entry.Id == stoneId then
-            return entry   -- harusnya punya UUID
+            return entry
         end
     end
     return nil
@@ -3735,55 +3769,51 @@ end
 
 ----------------------------------------------------------------
 -- HasTargetEnchant: cek enchant rod, auto STOP kalau sudah dapat
+-- Pakai Inventory["Fishing Rods"][i].Metadata.EnchantId / EnchantId2
 ----------------------------------------------------------------
 local function HasTargetEnchant()
     local data = GetMainData()
     if not data then return false end
 
-    local inv   = data.Inventory
+    local inv = data.Inventory
     if not inv then return false end
 
-    local rods  = inv.Rods     -- sesuaikan kalau nama beda
+    local rods = inv["Fishing Rods"]
     if typeof(rods) ~= "table" then return false end
 
     local targetName = _G.RAY_EnchantTargetName
     if not targetName or targetName == "" then return false end
 
-    -- cari rod yang lagi di-equip
+    local equippedUUID = data.EquippedId
+    if not equippedUUID or equippedUUID == "" then
+        return false
+    end
+
+    -- cari rod yang UUID-nya sama dengan EquippedId
     local equippedRod
     for _, rod in pairs(rods) do
-        if rod.Equipped or rod.equipped or rod.IsEquipped then
+        if rod.UUID == equippedUUID then
             equippedRod = rod
             break
         end
     end
     if not equippedRod then
-        for _, rod in pairs(rods) do
-            equippedRod = rod
-            break
-        end
-    end
-    if not equippedRod then return false end
-
-    local function checkEnchantEntry(enchantEntry)
-        if not enchantEntry then return false end
-        local name = enchantEntry.Name or enchantEntry.name
-        return name == targetName
+        return false
     end
 
-    local e1    = equippedRod.Enchant or equippedRod.enchant
-    local eList = equippedRod.Enchants or equippedRod.enchants
+    local meta = equippedRod.Metadata
+    if typeof(meta) ~= "table" then
+        return false
+    end
 
-    if e1 and checkEnchantEntry(e1) then
+    local eid1 = meta.EnchantId
+    local eid2 = meta.EnchantId2
+
+    local name1 = eid1 and getEnchantNameFromId(eid1)
+    local name2 = eid2 and getEnchantNameFromId(eid2)
+
+    if name1 == targetName or name2 == targetName then
         return true
-    end
-
-    if typeof(eList) == "table" then
-        for _, e in pairs(eList) do
-            if checkEnchantEntry(e) then
-                return true
-            end
-        end
     end
 
     return false
@@ -3809,7 +3839,7 @@ local function DoAltarEnchantOnce()
             task.wait(0.1)
         end
 
-        -- 3) roll enchant
+        -- 3) roll enchant via controller
         local ok, err = pcall(function()
             EnchantingController:Activate(second)
                 :catch(function(msg)
@@ -4350,4 +4380,3 @@ UIS.InputBegan:Connect(function(input)
         EnchantRightPanel.Visible = false
     end
 end)
-
