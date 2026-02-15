@@ -2966,7 +2966,7 @@ if BackpackPage then
     end
 
     ----------------------------------------------------------------
-    -- ADVANCE DIVING GEAR
+    -- ADVANCE DIVING GEAR (TOGGLE ON = EQUIP, OFF = UNEQUIP)
     ----------------------------------------------------------------
     do
         local row = makeGearRow("Advance Diving Gear")
@@ -2990,8 +2990,12 @@ if BackpackPage then
         local divingOn = _G.RAY_AdvanceDivingOn
 
         local function refreshDiving()
-            pill.BackgroundColor3 = divingOn and (ACCENT or Color3.fromRGB(0,200,150)) or (MUTED or Color3.fromRGB(70,70,90))
-            knob.Position         = divingOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+            pill.BackgroundColor3 = divingOn
+                and (ACCENT or Color3.fromRGB(0,200,150))
+                or  (MUTED or Color3.fromRGB(70,70,90))
+            knob.Position = divingOn
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
         end
 
         local function GetEquipTankRF()
@@ -3007,20 +3011,29 @@ if BackpackPage then
         end
 
         pill.MouseButton1Click:Connect(function()
-            local rf = GetEquipTankRF()
-            if not rf then
-                warn("[Threeblox] EquipOxygenTank RF not found")
-                return
-            end
-
             local newState = not divingOn
+
             if newState then
+                -- ON: equip tank
+                local rf = GetEquipTankRF()
+                if not rf then
+                    warn("[Threeblox] EquipOxygenTank RF not found")
+                    return
+                end
+
                 local ok, res = pcall(function()
                     return rf:InvokeServer(575) -- id tank
                 end)
                 if not ok then
                     warn("[Threeblox] Equip tank failed:", res)
                     return
+                end
+            else
+                -- OFF: unequip via Events.unequip (kalau ada)
+                if Events and Events.unequip then
+                    pcall(function()
+                        Events.unequip:FireServer()
+                    end)
                 end
             end
 
@@ -3060,8 +3073,12 @@ if BackpackPage then
         local radarOn = _G.RAY_FishingRadarOn
 
         local function refreshRadar()
-            pillRadar.BackgroundColor3 = radarOn and (ACCENT or Color3.fromRGB(0,200,150)) or (MUTED or Color3.fromRGB(70,70,90))
-            knobRadar.Position         = radarOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+            pillRadar.BackgroundColor3 = radarOn
+                and (ACCENT or Color3.fromRGB(0,200,150))
+                or  (MUTED or Color3.fromRGB(70,70,90))
+            knobRadar.Position = radarOn
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
         end
 
         local function GetRadarRF()
@@ -3103,6 +3120,7 @@ if BackpackPage then
         refreshRadar()
     end
 end
+
 
 ----------------------------------------------------------------
 -- STATE GLOBAL POTION
