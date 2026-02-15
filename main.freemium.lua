@@ -759,6 +759,8 @@ if InfoPage then
     end
 
     AddChangeLine("(+) Added New GUI layout")
+    AddChangeLine("(+) Remove Blatant")
+    AddChangeLine("(+) Improve Instant")
 end
 
 ----------------------------------------------------------------
