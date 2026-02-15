@@ -3627,8 +3627,7 @@ local StoneList = {10, 125, 558, 246}
 -----------------------------
 -- BACKEND: REMOTE & REPLION
 -----------------------------
--- Net, Replion, Players, UIS sudah ada di atas file (lihat block MODULES & NET)
--- Tinggal pakai saja, sama seperti Potion. [file:145][web:10]
+-- Net, Replion, Player, UIS sudah didefinisikan di block MODULES & NET. [file:145][web:10]
 
 local RE_ActivateEnchantingAltar = Net:WaitForChild("RE/ActivateEnchantingAltar") -- [web:186]
 
@@ -3648,8 +3647,7 @@ local CF_Altar_Slot2 = CFrame.new(
 
 local function TpAltar(slot)
     local cf  = slot == 2 and CF_Altar_Slot2 or CF_Altar_Slot1
-    local lp  = Player
-    local chr = lp.Character or lp.CharacterAdded:Wait()
+    local chr = Player.Character or Player.CharacterAdded:Wait()
     local hrp = chr:FindFirstChild("HumanoidRootPart")
     if hrp then
         hrp.CFrame = cf
@@ -3669,7 +3667,7 @@ local function GetMainData()
     return r.Data
 end
 
--- placeholder dulu, nanti diganti cek beneran ke data enchant Replion. [file:145][web:172]
+-- sementara: belum baca enchant beneran dari Replion
 local function HasTargetEnchant()
     return false
 end
@@ -3700,12 +3698,13 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------------------
--- SECTION "ENCHANT PRESET" + PANEL KANAN (PERSIS POLA POTION)
+-- SECTION "ENCHANT PRESET" + PANEL KANAN (SAMA POLA POTION)
 ----------------------------------------------------------------
 
-local BackpackPage = Pages and Pages["Backpack"]
+local BackpackPage = Pages and Pages.Backpack
 if BackpackPage then
-    local EnchantPresetSection = CreateSectionDropdownBackpackPage(BackpackPage, "Enchant Preset")
+    -- PENTING: sama seperti Auto Sell / Potion, tanpa argumen BackpackPage
+    local EnchantPresetSection = CreateSectionDropdownBackpackPage("Enchant Preset")
 
     local layout = Instance.new("UIListLayout")
     layout.Parent    = EnchantPresetSection
@@ -3749,7 +3748,7 @@ if BackpackPage then
     end
 
     ----------------------------------------------------------------
-    -- PANEL KANAN: STONE LIST (NEMPEL MAIN, SAMA KAYAK POTION)
+    -- PANEL KANAN: STONE LIST (NEMPEL MAIN)
     ----------------------------------------------------------------
     local StoneRightPanel = Instance.new("Frame")
     StoneRightPanel.Name                   = "StoneRightPanel"
