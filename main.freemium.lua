@@ -277,61 +277,6 @@ local Events = {
 
 
 ----------------------------------------------------------------
--- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
-----------------------------------------------------------------
-local Replion = require(ReplicatedStorage.Packages.Replion)
-
-local SpawnTotemRemote = Net:WaitForChild("RE/SpawnTotem")
-
-local TotemTypeId = {
-    Mutasi = 2,
-    Shiny  = 3,
-    Lucky  = 1,
-}
-
-local TOTEM_DURATION = 3600
-
-_G.RAYAutoTotemOn       = _G.RAYAutoTotemOn or false
-_G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"
-
-local function GetTotemDataReplion()
-    local ok, data = pcall(function()
-        local r = Replion.Client:WaitReplion("Data")
-        return r.Data
-    end)
-    if not ok or not data then return nil end
-    return data
-end
-
-local function findTotemUuidByType(jenis)
-    local targetId = TotemTypeId[jenis]
-    if not targetId then return nil end
-
-    local data = GetTotemDataReplion()
-    if not data then return nil end
-
-    local inv = data.Inventory
-    local totems = inv and inv.Totems
-    if typeof(totems) ~= "table" then return nil end
-
-    for _, entry in pairs(totems) do
-        if entry.Id == targetId then
-            return entry.UUID
-        end
-    end
-    return nil
-end
-
-function SpawnTotemUUID(uuid)
-    if not uuid then return end
-    pcall(function()
-        SpawnTotemRemote:FireServer(uuid)
-        -- SpawnTotemRemote:FireServer({UUID = uuid}) -- kalau butuh table
-    end)
-end
-
-
-----------------------------------------------------------------
 -- MEGALODON HUNT TELEPORT
 ----------------------------------------------------------------
 function TeleportToMegalodon()
@@ -3409,12 +3354,13 @@ _G.RAYAutoTotemOn       = _G.RAYAutoTotemOn       or false
 _G.RAYAutoTotemMixOn    = _G.RAYAutoTotemMixOn    or false
 _G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"  -- "Lucky" / "Mutasi" / "Shiny"
 
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local UIS = game:GetService("UserInputService")
+-- di header kamu sudah ada:
+-- local Players = game:GetService("Players")
+-- local UIS = game:GetService("UserInputService")
+-- local ReplicatedStorage = game:GetService("ReplicatedStorage")
+-- local Player = Players.LocalPlayer
 
-local lp = Players.LocalPlayer
+-- kalau di game kamu pakai Replion + SpawnTotemRemote:
 local Replion = require(ReplicatedStorage.Packages.Replion)
 
 local SpawnTotemRemote = ReplicatedStorage
@@ -3655,7 +3601,7 @@ if BackpackPage then
         label.Font                  = Enum.Font.Gotham
         label.TextSize              = 13
         label.TextXAlignment        = Enum.TextXAlignment.Left
-        label.TextColor3            = TEXT or THEME_TEXT
+        label.TextColor3            = THEME_TEXT
         label.Text                  = title
 
         return row
@@ -3677,7 +3623,9 @@ if BackpackPage then
         return btn
     end
 
+    ------------------------------------------------------------
     -- TOGGLE AUTO TOTEM (1x cast)
+    ------------------------------------------------------------
     do
         local row = makeRow("Enable Auto Totem (1x Cast)")
 
@@ -3761,9 +3709,9 @@ if BackpackPage then
     local function floatTweenTo(targetPos, duration)
         duration = duration or 1.5
 
-        if not lp.Character then return false end
-        local hrp = lp.Character:FindFirstChild("HumanoidRootPart")
-        local hum = lp.Character:FindFirstChildOfClass("Humanoid")
+        if not Player.Character then return false end
+        local hrp = Player.Character:FindFirstChild("HumanoidRootPart")
+        local hum = Player.Character:FindFirstChildOfClass("Humanoid")
         if not hrp or not hum then return false end
 
         hum:ChangeState(Enum.HumanoidStateType.Physics)
@@ -3801,14 +3749,14 @@ if BackpackPage then
     end
 
     local function PlaceMixedTotems()
-        if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
+        if not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then
             if NotifyFeature then
                 NotifyFeature("Character belum siap", false)
             end
             return
         end
 
-        local hrp = lp.Character.HumanoidRootPart
+        local hrp = Player.Character.HumanoidRootPart
         local origin = hrp.Position
         local positions = getTotemPositions(origin, 100)
 
@@ -3943,8 +3891,8 @@ if BackpackPage then
         box.PlaceholderText = jenis.." ["..tostring(id).."]"
         Instance.new("UICorner", box).CornerRadius = UDim.new(0,6)
 
-        -- textbox ini cuma display nama, tidak mengubah logic
         box.FocusLost:Connect(function()
+            -- selalu reset ke nama default
             box.Text = jenis.." ["..tostring(id).."]"
         end)
     end
@@ -4026,4 +3974,3 @@ if BackpackPage then
         end)
     end
 end
-
