@@ -3717,3 +3717,539 @@ if BackpackPage then
         end)
     end
 end
+
+----------------------------------------------------------------
+-- SECTION "GEAR PRESET"
+----------------------------------------------------------------
+
+local BackpackPage = Pages and Pages["Backpack"]
+if BackpackPage then
+    local GearPresetSection = CreateSectionDropdown(BackpackPage, "Gear Preset")
+
+    local gpLayout = Instance.new("UIListLayout")
+    gpLayout.Parent    = GearPresetSection
+    gpLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    gpLayout.Padding   = UDim.new(0, 6)
+
+    -- helper row (mapping gaya baru)
+    local function makeGearRow(title)
+        local row = Instance.new("Frame")
+        row.Parent                  = GearPresetSection
+        row.Size                    = UDim2.new(1,0,0,36)
+        row.BackgroundTransparency  = 1
+
+        local label = Instance.new("TextLabel")
+        label.Parent                = row
+        label.Size                  = UDim2.new(1,-100,1,0)
+        label.Position              = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency= 1
+        label.Font                  = Enum.Font.Gotham
+        label.TextSize              = 13
+        label.TextXAlignment        = Enum.TextXAlignment.Left
+        label.TextColor3            = TEXT or THEME_TEXT
+        label.Text                  = title
+
+        return row
+    end
+
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+    ----------------------------------------------------------------
+    -- ADVANCE DIVING GEAR
+    ----------------------------------------------------------------
+    do
+        local row = makeGearRow("Advance Diving Gear")
+
+        local pill = Instance.new("TextButton", row)
+        pill.Size                   = UDim2.new(0,50,0,24)
+        pill.Position               = UDim2.new(1,-80,0.5,-12)
+        pill.BackgroundColor3       = MUTED or Color3.fromRGB(70,70,90)
+        pill.BackgroundTransparency = 0.1
+        pill.Text                   = ""
+        pill.AutoButtonColor        = false
+        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+        local knob = Instance.new("Frame", pill)
+        knob.Size                     = UDim2.new(0,18,0,18)
+        knob.Position                 = UDim2.new(0,3,0.5,-9)
+        knob.BackgroundColor3         = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+        _G.RAY_AdvanceDivingOn = _G.RAY_AdvanceDivingOn or false
+        local divingOn = _G.RAY_AdvanceDivingOn
+
+        local function refreshDiving()
+            pill.BackgroundColor3 = divingOn and (ACCENT or Color3.fromRGB(0,200,150)) or (MUTED or Color3.fromRGB(70,70,90))
+            knob.Position         = divingOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+        end
+
+        local function GetEquipTankRF()
+            local ok, rf = pcall(function()
+                return ReplicatedStorage
+                    :WaitForChild("Packages")
+                    :WaitForChild("_Index")
+                    :WaitForChild("sleitnick_net@0.2.0")
+                    :WaitForChild("net")
+                    :WaitForChild("RF/EquipOxygenTank")
+            end)
+            return ok and rf or nil
+        end
+
+        pill.MouseButton1Click:Connect(function()
+            local rf = GetEquipTankRF()
+            if not rf then
+                warn("[Threeblox] EquipOxygenTank RF not found")
+                return
+            end
+
+            local newState = not divingOn
+            if newState then
+                local ok, res = pcall(function()
+                    return rf:InvokeServer(575) -- id tank
+                end)
+                if not ok then
+                    warn("[Threeblox] Equip tank failed:", res)
+                    return
+                end
+            end
+
+            divingOn = newState
+            _G.RAY_AdvanceDivingOn = divingOn
+            refreshDiving()
+            if NotifyFeature then
+                NotifyFeature("Advance Diving Gear", divingOn)
+            end
+        end)
+
+        refreshDiving()
+    end
+
+    ----------------------------------------------------------------
+    -- FISHING RADAR (DI DALAM GEAR PRESET)
+    ----------------------------------------------------------------
+    do
+        local rowRadar = makeGearRow("Fishing Radar")
+
+        local pillRadar = Instance.new("TextButton", rowRadar)
+        pillRadar.Size                   = UDim2.new(0,50,0,24)
+        pillRadar.Position               = UDim2.new(1,-80,0.5,-12)
+        pillRadar.BackgroundColor3       = MUTED or Color3.fromRGB(70,70,90)
+        pillRadar.BackgroundTransparency = 0.1
+        pillRadar.Text                   = ""
+        pillRadar.AutoButtonColor        = false
+        Instance.new("UICorner", pillRadar).CornerRadius = UDim.new(0,999)
+
+        local knobRadar = Instance.new("Frame", pillRadar)
+        knobRadar.Size                     = UDim2.new(0,18,0,18)
+        knobRadar.Position                 = UDim2.new(0,3,0.5,-9)
+        knobRadar.BackgroundColor3         = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knobRadar).CornerRadius = UDim.new(0,999)
+
+        _G.RAY_FishingRadarOn = _G.RAY_FishingRadarOn or false
+        local radarOn = _G.RAY_FishingRadarOn
+
+        local function refreshRadar()
+            pillRadar.BackgroundColor3 = radarOn and (ACCENT or Color3.fromRGB(0,200,150)) or (MUTED or Color3.fromRGB(70,70,90))
+            knobRadar.Position         = radarOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+        end
+
+        local function GetRadarRF()
+            local ok, rf = pcall(function()
+                return ReplicatedStorage
+                    :WaitForChild("Packages")
+                    :WaitForChild("_Index")
+                    :WaitForChild("sleitnick_net@0.2.0")
+                    :WaitForChild("net")
+                    :WaitForChild("RF/UpdateFishingRadar")
+            end)
+            return ok and rf or nil
+        end
+
+        pillRadar.MouseButton1Click:Connect(function()
+            local rf = GetRadarRF()
+            if not rf then
+                warn("[Threeblox] UpdateFishingRadar RF not found")
+                return
+            end
+
+            local newState = not radarOn
+            local ok, res = pcall(function()
+                return rf:InvokeServer(newState)
+            end)
+
+            if ok then
+                radarOn = newState
+                _G.RAY_FishingRadarOn = radarOn
+                refreshRadar()
+                if NotifyFeature then
+                    NotifyFeature("Fishing Radar", radarOn)
+                end
+            else
+                warn("[Threeblox] Radar toggle failed:", res)
+            end
+        end)
+
+        refreshRadar()
+    end
+end
+
+----------------------------------------------------------------
+-- STATE GLOBAL POTION
+----------------------------------------------------------------
+_G.RAYSelectedPotionType = _G.RAYSelectedPotionType or "Luck I Potion"
+_G.RAYPotionQty          = _G.RAYPotionQty          or 1
+
+----------------------------------------------------------------
+-- BACKEND HELPER
+----------------------------------------------------------------
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Replion = require(ReplicatedStorage.Packages.Replion)
+
+local ConsumePotionRF = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RF/ConsumePotion")
+
+----------------------------------------------------------------
+-- MAPPING NAMA POTION -> ID DI INVENTORY
+----------------------------------------------------------------
+local PotionTypeId = {
+    ["Luck I Potion"]     = 1,
+    ["Luck II Potion"]    = 6,
+    ["Mutation I Potion"] = 4,
+    ["Love I Potion"]     = 15,
+    ["Cave Crystal"]      = 14,
+}
+
+local function GetDataReplion()
+    local ok, data = pcall(function()
+        local r = Replion.Client:WaitReplion("Data")
+        return r.Data
+    end)
+    if not ok or not data then return nil end
+    return data
+end
+
+local function findPotionUuidByType(potionName)
+    local targetId = PotionTypeId[potionName]
+    if not targetId then return nil end
+
+    local data = GetDataReplion()
+    if not data then return nil end
+
+    local inv = data.Inventory
+    local potions = inv and inv.Potions   -- sesuaikan nama tabel, asumsi "Potions"
+    if typeof(potions) ~= "table" then return nil end
+
+    for _, entry in pairs(potions) do
+        if entry.Id == targetId then
+            return entry.UUID
+        end
+    end
+    return nil
+end
+
+local function ConsumePotionUUID(uuid, qty)
+    if not uuid then return end
+    local args = {uuid, qty or 1}
+    pcall(function()
+        ConsumePotionRF:InvokeServer(unpack(args))
+    end)
+end
+
+local function ConsumeSelectedPotion()
+    local potionName = _G.RAYSelectedPotionType or "Luck I Potion"
+    local qty = tonumber(_G.RAYPotionQty) or 1
+    if qty < 1 then qty = 1 end
+
+    local uuid = findPotionUuidByType(potionName)
+    if not uuid then
+        if NotifyFeature then
+            NotifyFeature("Potion "..potionName.." tidak ditemukan", false)
+        end
+        return
+    end
+
+    ConsumePotionUUID(uuid, qty)
+
+    if NotifyFeature then
+        NotifyFeature("Consume "..potionName.." x"..qty, true)
+    end
+end
+
+----------------------------------------------------------------
+-- SECTION "POTION PRESET" + PANEL KANAN LIST POTION
+----------------------------------------------------------------
+
+local BackpackPage = Pages and Pages["Backpack"]
+if BackpackPage then
+    local PotionPresetSection = CreateSectionDropdown(BackpackPage, "Potion Preset")
+
+    local ppLayout = Instance.new("UIListLayout")
+    ppLayout.Parent    = PotionPresetSection
+    ppLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    ppLayout.Padding   = UDim.new(0, 6)
+
+    local function makePotionRow(title)
+        local row = Instance.new("Frame")
+        row.Parent                  = PotionPresetSection
+        row.Size                    = UDim2.new(1,0,0,36)
+        row.BackgroundTransparency  = 1
+
+        local label = Instance.new("TextLabel")
+        label.Parent                = row
+        label.Size                  = UDim2.new(1,-110,1,0)
+        label.Position              = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency= 1
+        label.Font                  = Enum.Font.Gotham
+        label.TextSize              = 13
+        label.TextXAlignment        = Enum.TextXAlignment.Left
+        label.TextColor3            = TEXT or THEME_TEXT
+        label.Text                  = title
+
+        return row
+    end
+
+    ----------------------------------------------------------------
+    -- PANEL KANAN LIST POTION (NEMPEL MAIN)
+    ----------------------------------------------------------------
+    local PotionRightPanel = Instance.new("Frame")
+    PotionRightPanel.Name = "PotionRightPanel"
+    PotionRightPanel.Size = UDim2.new(0, 220, 1, -46)
+    PotionRightPanel.AnchorPoint = Vector2.new(1, 0)
+    PotionRightPanel.Position = UDim2.new(1, -10, 0, 40)
+    PotionRightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
+    PotionRightPanel.BackgroundTransparency = 0.25
+    PotionRightPanel.BorderSizePixel = 0
+    PotionRightPanel.Visible = false
+    PotionRightPanel.ZIndex = 10
+    PotionRightPanel.Parent = Main  -- sama seperti SkinAnimationRightPanel
+
+    Instance.new("UICorner", PotionRightPanel).CornerRadius = UDim.new(0, 10)
+    local prStroke = Instance.new("UIStroke", PotionRightPanel)
+    prStroke.Color = THEME_MAIN
+    prStroke.Transparency = 0.5
+
+    local prTitle = Instance.new("TextLabel")
+    prTitle.Parent = PotionRightPanel
+    prTitle.Size = UDim2.new(1, -10, 0, 24)
+    prTitle.Position = UDim2.new(0, 5, 0, 6)
+    prTitle.BackgroundTransparency = 1
+    prTitle.Font = Enum.Font.GothamBold
+    prTitle.TextSize = 16
+    prTitle.TextXAlignment = Enum.TextXAlignment.Left
+    prTitle.TextColor3 = THEME_TEXT
+    prTitle.ZIndex = 11
+    prTitle.Text = "Potion List"
+
+    local prInfo = Instance.new("TextLabel")
+    prInfo.Parent = PotionRightPanel
+    prInfo.Size = UDim2.new(1, -10, 0, 18)
+    prInfo.Position = UDim2.new(0, 5, 0, 30)
+    prInfo.BackgroundTransparency = 1
+    prInfo.Font = Enum.Font.Gotham
+    prInfo.TextSize = 12
+    prInfo.TextXAlignment = Enum.TextXAlignment.Left
+    prInfo.TextColor3 = Color3.fromRGB(200,200,200)
+    prInfo.ZIndex = 11
+    prInfo.Text = "Pilih potion dan set quantity."
+
+    local prScroll = Instance.new("ScrollingFrame")
+    prScroll.Parent = PotionRightPanel
+    prScroll.Size = UDim2.new(1, -10, 1, -70)
+    prScroll.Position = UDim2.new(0, 5, 0, 54)
+    prScroll.BackgroundTransparency = 1
+    prScroll.BorderSizePixel = 0
+    prScroll.ScrollBarThickness = 3
+    prScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    prScroll.CanvasSize = UDim2.new(0,0,0,0)
+    prScroll.ScrollBarImageColor3 = THEME_MAIN
+    prScroll.ZIndex = 10
+
+    local prList = Instance.new("UIListLayout", prScroll)
+    prList.SortOrder = Enum.SortOrder.LayoutOrder
+    prList.Padding = UDim.new(0,4)
+
+    ----------------------------------------------------------------
+    -- ENTRY LIST POTION (NAMA SAMA DENGAN MAPPING)
+    ----------------------------------------------------------------
+    local POTION_NAMES = {
+        "Luck I Potion",
+        "Luck II Potion",
+        "Mutation I Potion",
+        "Love I Potion",
+        "Cave Crystal",
+    }
+
+    local SelectedPotionRow = nil
+
+    local function CreatePotionEntry(potionName)
+        local row = Instance.new("Frame")
+        row.Parent = prScroll
+        row.Size = UDim2.new(1, -4, 0, 24)
+        row.BackgroundTransparency = 1
+        row.BorderSizePixel = 0
+        row.ZIndex = 11
+
+        local line = Instance.new("Frame")
+        line.Name = "Highlight"
+        line.Parent = row
+        line.Size = UDim2.new(0, 3, 1, 0)
+        line.Position = UDim2.new(0, 0, 0, 0)
+        line.BackgroundColor3 = THEME_MAIN or Color3.fromRGB(170, 90, 255)
+        line.BorderSizePixel = 0
+        line.Visible = (_G.RAYSelectedPotionType == potionName)
+        line.ZIndex = 12
+
+        local btn = Instance.new("TextButton")
+        btn.Parent = row
+        btn.Size = UDim2.new(1, -6, 1, 0)
+        btn.Position = UDim2.new(0, 4, 0, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(30,30,50)
+        btn.BorderSizePixel = 0
+        btn.TextColor3 = THEME_TEXT
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 12
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.Text = "  " .. potionName
+        btn.AutoButtonColor = true
+        btn.ZIndex = 11
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+        if _G.RAYSelectedPotionType == potionName then
+            SelectedPotionRow = row
+        end
+
+        btn.MouseButton1Click:Connect(function()
+            _G.RAYSelectedPotionType = potionName
+
+            for _, child in ipairs(prScroll:GetChildren()) do
+                if child:IsA("Frame") and child:FindFirstChild("Highlight") then
+                    child.Highlight.Visible = (child == row)
+                end
+            end
+
+            if NotifyFeature then
+                NotifyFeature("Selected "..potionName, true)
+            end
+        end)
+    end
+
+    local function rebuildPotionPanel()
+        for _, c in ipairs(prScroll:GetChildren()) do
+            if c:IsA("Frame") and c ~= prList then
+                c:Destroy()
+            end
+        end
+        SelectedPotionRow = nil
+        for _, name in ipairs(POTION_NAMES) do
+            CreatePotionEntry(name)
+        end
+    end
+
+    rebuildPotionPanel()
+
+    ----------------------------------------------------------------
+    -- ROW: QUANTITY INPUT + BUTTON CONSUME
+    ----------------------------------------------------------------
+    do
+        local row = makePotionRow("Potion Quantity")
+
+        -- TextBox untuk quantity
+        local qtyBox = Instance.new("TextBox")
+        qtyBox.Parent = row
+        qtyBox.Size = UDim2.new(0,60,0,24)
+        qtyBox.Position = UDim2.new(1,-150,0.5,-12)
+        qtyBox.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+        qtyBox.BackgroundTransparency = 0.1
+        qtyBox.Text = tostring(_G.RAYPotionQty or 1)
+        qtyBox.TextColor3 = THEME_TEXT
+        qtyBox.Font = Enum.Font.Gotham
+        qtyBox.TextSize = 12
+        qtyBox.ClearTextOnFocus = false
+        Instance.new("UICorner", qtyBox).CornerRadius = UDim.new(0,8)
+
+        qtyBox.FocusLost:Connect(function(enterPressed)
+            local n = tonumber(qtyBox.Text)
+            if not n or n < 1 then
+                n = 1
+                qtyBox.Text = "1"
+            end
+            _G.RAYPotionQty = n
+            if enterPressed and NotifyFeature then
+                NotifyFeature("Set potion qty: "..n, true)
+            end
+        end)
+
+        -- tombol "Use"
+        local useBtn = Instance.new("TextButton")
+        useBtn.Parent = row
+        useBtn.Size = UDim2.new(0,80,0,24)
+        useBtn.Position = UDim2.new(1,-60,0.5,-12)
+        useBtn.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+        useBtn.BackgroundTransparency = 0.1
+        useBtn.Text = "Use"
+        useBtn.TextColor3 = THEME_TEXT
+        useBtn.Font = Enum.Font.GothamBold
+        useBtn.TextSize = 12
+        useBtn.AutoButtonColor = true
+        Instance.new("UICorner", useBtn).CornerRadius = UDim.new(0,8)
+
+        useBtn.MouseButton1Click:Connect(function()
+            ConsumeSelectedPotion()
+        end)
+    end
+
+    ----------------------------------------------------------------
+    -- ROW BUKA PANEL POTION LIST
+    ----------------------------------------------------------------
+    do
+        local row = makePotionRow("Potion List Panel")
+
+        local btn = Instance.new("TextButton")
+        btn.Parent = row
+        btn.Size = UDim2.new(0,120,0,24)
+        btn.Position = UDim2.new(1,-136,0.5,-12)
+        btn.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+        btn.BackgroundTransparency = 0.1
+        btn.Text = "Open"
+        btn.TextColor3 = THEME_TEXT
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 12
+        btn.AutoButtonColor = true
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+
+        btn.MouseButton1Click:Connect(function()
+            PotionRightPanel.Visible = not PotionRightPanel.Visible
+            if PotionRightPanel.Visible then
+                rebuildPotionPanel()
+            end
+        end)
+    end
+
+    ----------------------------------------------------------------
+    -- CLOSE PANEL DARI KLIK DI LUAR (OPSIONAL)
+    ----------------------------------------------------------------
+    UIS.InputBegan:Connect(function(input)
+        if not PotionRightPanel.Visible then return end
+
+        if input.UserInputType ~= Enum.UserInputType.MouseButton1
+        and input.UserInputType ~= Enum.UserInputType.Touch then
+            return
+        end
+
+        local pos = input.Position
+        local absPos = PotionRightPanel.AbsolutePosition
+        local absSize = PotionRightPanel.AbsoluteSize
+
+        local inside =
+            pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
+            pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
+
+        if not inside then
+            PotionRightPanel.Visible = false
+        end
+    end)
+end
