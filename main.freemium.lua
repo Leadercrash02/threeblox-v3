@@ -759,6 +759,9 @@ if InfoPage then
     end
 
     AddChangeLine("(+) Added New GUI layout")
+    AddChangeLine("(+) Improve Enchant Preset")
+    AddChangeLine("(+) Improve Totem MIX")
+    AddChangeLine("(+) FREE NO BUY")
 end
 
 ----------------------------------------------------------------
