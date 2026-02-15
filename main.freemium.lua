@@ -2612,14 +2612,14 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------------------
--- AUTO TOTEM 🗿 (STRUCTUR BARU + PANEL KANAN + RECAST BOLEH)
+-- STATE GLOBAL AUTO TOTEM
 ----------------------------------------------------------------
-
--- STATE GLOBAL
 _G.RAYAutoTotemOn       = _G.RAYAutoTotemOn       or false
-_G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"  -- "Lucky" / "Mutasi" / "Shiny"
+_G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"  -- "Lucky"/"Mutasi"/"Shiny"/"Love"
 
--- BACKEND HELPER
+----------------------------------------------------------------
+-- BACKEND AUTO TOTEM
+----------------------------------------------------------------
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Replion = require(ReplicatedStorage.Packages.Replion)
 
@@ -2630,12 +2630,14 @@ local SpawnTotemRemote = ReplicatedStorage
     :WaitForChild("net")
     :WaitForChild("RE/SpawnTotem")
 
+-- durasi totem (kalau mau dipakai di auto recast)
 local TOTEM_DURATION = 3600
 
 local TotemTypeId = {
     Mutasi = 2,
     Shiny  = 3,
     Lucky  = 1,
+    Love   = 17,  -- Love Totem
 }
 
 local function GetTotemDataReplion()
@@ -2670,7 +2672,7 @@ local function SpawnTotemUUID(uuid)
     if not uuid then return end
     pcall(function()
         SpawnTotemRemote:FireServer(uuid)
-        -- kalau butuh table:
+        -- kalau butuh bentuk table:
         -- SpawnTotemRemote:FireServer({UUID = uuid})
     end)
 end
@@ -2725,7 +2727,7 @@ if BackpackPage then
     end
 
     ------------------------------------------------------------
-    -- PANEL KANAN: LIST TOTEM (MIRIP FAV RARITY PANEL)
+    -- PANEL KANAN: LIST TOTEM (SAMA STYLE PANEL LAIN)
     ------------------------------------------------------------
     local TotemRightPanel = Instance.new("Frame")
     TotemRightPanel.Name = "TotemRightPanel"
@@ -2737,7 +2739,7 @@ if BackpackPage then
     TotemRightPanel.BorderSizePixel = 0
     TotemRightPanel.Visible = false
     TotemRightPanel.ZIndex = 10
-    TotemRightPanel.Parent = BackpackPage
+    TotemRightPanel.Parent = Main or BackpackPage
 
     Instance.new("UICorner", TotemRightPanel).CornerRadius = UDim.new(0, 10)
     local trStroke = Instance.new("UIStroke", TotemRightPanel)
@@ -2784,14 +2786,12 @@ if BackpackPage then
     trList.SortOrder = Enum.SortOrder.LayoutOrder
     trList.Padding = UDim.new(0,4)
 
-    local TO_TYPES = { "Lucky", "Mutasi", "Shiny" }
+    local TO_TYPES = { "Lucky", "Mutasi", "Shiny", "Love" }
 
     local function rebuildTotemPanel()
         for _, c in ipairs(trScroll:GetChildren()) do
-            if c:IsA("TextButton") or c:IsA("Frame") then
-                if c ~= trList then
-                    c:Destroy()
-                end
+            if c:IsA("Frame") and c ~= trList then
+                c:Destroy()
             end
         end
 
@@ -2810,7 +2810,6 @@ if BackpackPage then
             line.Parent = row
             line.Size = UDim2.new(0, 3, 1, 0)
             line.Position = UDim2.new(0, 0, 0, 0)
-            -- ungu
             line.BackgroundColor3 = Color3.fromRGB(160,110,255)
             line.BorderSizePixel = 0
             line.Visible = (_G.RAYSelectedTotemType == jenis)
@@ -2820,7 +2819,9 @@ if BackpackPage then
             btn.Parent = row
             btn.Size = UDim2.new(1, -6, 1, 0)
             btn.Position = UDim2.new(0, 4, 0, 0)
-            btn.BackgroundColor3 = (_G.RAYSelectedTotemType == jenis) and Color3.fromRGB(40,40,70) or Color3.fromRGB(30,30,50)
+            btn.BackgroundColor3 = (_G.RAYSelectedTotemType == jenis)
+                and Color3.fromRGB(40,40,70)
+                or  Color3.fromRGB(30,30,50)
             btn.BorderSizePixel = 0
             btn.TextColor3 = THEME_TEXT
             btn.Font = Enum.Font.Gotham
@@ -2851,7 +2852,7 @@ if BackpackPage then
     rebuildTotemPanel()
 
     ------------------------------------------------------------
-    -- ROW TOGGLE AUTO TOTEM (CAST SETIAP ON)
+    -- ROW TOGGLE AUTO TOTEM (1x CAST SAAT ON)
     ------------------------------------------------------------
     do
         local row = makeRow("Enable Auto Totem (1x Cast)")
@@ -2904,7 +2905,6 @@ if BackpackPage then
             refresh()
 
             if _G.RAYAutoTotemOn then
-                -- setiap ON selalu pasang totem lagi
                 castTotemOnce()
             else
                 if NotifyFeature then
@@ -2930,6 +2930,8 @@ if BackpackPage then
         end)
     end
 end
+
+
 
 ----------------------------------------------------------------
 -- SECTION "GEAR PRESET"
