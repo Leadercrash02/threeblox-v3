@@ -277,6 +277,61 @@ local Events = {
 
 
 ----------------------------------------------------------------
+-- X1 TOTEM BACKEND (SHARED DENGAN AUTO TOTEM)
+----------------------------------------------------------------
+local Replion = require(ReplicatedStorage.Packages.Replion)
+
+local SpawnTotemRemote = Net:WaitForChild("RE/SpawnTotem")
+
+local TotemTypeId = {
+    Mutasi = 2,
+    Shiny  = 3,
+    Lucky  = 1,
+}
+
+local TOTEM_DURATION = 3600
+
+_G.RAYAutoTotemOn       = _G.RAYAutoTotemOn or false
+_G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"
+
+local function GetTotemDataReplion()
+    local ok, data = pcall(function()
+        local r = Replion.Client:WaitReplion("Data")
+        return r.Data
+    end)
+    if not ok or not data then return nil end
+    return data
+end
+
+local function findTotemUuidByType(jenis)
+    local targetId = TotemTypeId[jenis]
+    if not targetId then return nil end
+
+    local data = GetTotemDataReplion()
+    if not data then return nil end
+
+    local inv = data.Inventory
+    local totems = inv and inv.Totems
+    if typeof(totems) ~= "table" then return nil end
+
+    for _, entry in pairs(totems) do
+        if entry.Id == targetId then
+            return entry.UUID
+        end
+    end
+    return nil
+end
+
+function SpawnTotemUUID(uuid)
+    if not uuid then return end
+    pcall(function()
+        SpawnTotemRemote:FireServer(uuid)
+        -- SpawnTotemRemote:FireServer({UUID = uuid}) -- kalau butuh table
+    end)
+end
+
+
+----------------------------------------------------------------
 -- MEGALODON HUNT TELEPORT
 ----------------------------------------------------------------
 function TeleportToMegalodon()
@@ -3706,4 +3761,3 @@ if BackpackPage then
         end)
     end
 end
-
