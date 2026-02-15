@@ -3131,6 +3131,9 @@ _G.RAYPotionQty          = _G.RAYPotionQty          or 1
 ----------------------------------------------------------------
 -- BACKEND POTION
 ----------------------------------------------------------------
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Replion = require(ReplicatedStorage.Packages.Replion)
+
 local ConsumePotionRF = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
@@ -3138,12 +3141,22 @@ local ConsumePotionRF = ReplicatedStorage
     :WaitForChild("net")
     :WaitForChild("RF/ConsumePotion")
 
+local ConsumeCaveCrystalRF = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RF/ConsumeCaveCrystal")
+
+----------------------------------------------------------------
+-- MAPPING NAMA POTION -> ID DI INVENTORY (TANPA CAVE CRYSTAL)
+----------------------------------------------------------------
 local PotionTypeId = {
     ["Luck I Potion"]     = 1,
     ["Luck II Potion"]    = 6,
     ["Mutation I Potion"] = 4,
     ["Love I Potion"]     = 15,
-    ["Cave Crystal"]      = 14,
+    -- Cave Crystal pakai remote khusus, tidak perlu ID di sini
 }
 
 local function GetDataReplion()
@@ -3163,7 +3176,7 @@ local function findPotionUuidByType(potionName)
     if not data then return nil end
 
     local inv = data.Inventory
-    local potions = inv and inv.Potions
+    local potions = inv and inv.Potions   -- asumsi potions tersimpan di sini
     if typeof(potions) ~= "table" then return nil end
 
     for _, entry in pairs(potions) do
@@ -3187,6 +3200,20 @@ local function ConsumeSelectedPotion()
     local qty = tonumber(_G.RAYPotionQty) or 1
     if qty < 1 then qty = 1 end
 
+    -- KHUSUS CAVE CRYSTAL: pakai RF/ConsumeCaveCrystal (tanpa UUID)
+    if potionName == "Cave Crystal" then
+        for i = 1, qty do
+            pcall(function()
+                ConsumeCaveCrystalRF:InvokeServer()
+            end)
+        end
+        if NotifyFeature then
+            NotifyFeature("Consume Cave Crystal x"..qty, true)
+        end
+        return
+    end
+
+    -- POTION BIASA
     local uuid = findPotionUuidByType(potionName)
     if not uuid then
         if NotifyFeature then
@@ -3229,7 +3256,7 @@ if BackpackPage then
         label.Font                  = Enum.Font.Gotham
         label.TextSize              = 13
         label.TextXAlignment        = Enum.TextXAlignment.Left
-        label.TextColor3            = THEME_TEXT
+        label.TextColor3            = TEXT or THEME_TEXT
         label.Text                  = title
 
         return row
@@ -3295,12 +3322,15 @@ if BackpackPage then
     prList.SortOrder = Enum.SortOrder.LayoutOrder
     prList.Padding = UDim.new(0,4)
 
+    ----------------------------------------------------------------
+    -- ENTRY LIST POTION (NAMA SAMA DENGAN MAPPING/UI)
+    ----------------------------------------------------------------
     local POTION_NAMES = {
         "Luck I Potion",
         "Luck II Potion",
         "Mutation I Potion",
         "Love I Potion",
-        "Cave Crystal",
+        "Cave Crystal",   -- tetap muncul di panel kanan
     }
 
     local function CreatePotionEntry(potionName)
@@ -3467,3 +3497,4 @@ if BackpackPage then
         end
     end)
 end
+
