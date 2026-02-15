@@ -3347,20 +3347,15 @@ UIS.InputBegan:Connect(function(input)
 end)
 
 ----------------------------------------------------------------
--- BACKEND GLOBAL: DATA, REPLION, REMOTE, HELPER
+-- AUTO TOTEM 🗿 (STRUCTUR BARU + PANEL KANAN + RECAST BOLEH)
 ----------------------------------------------------------------
 
+-- STATE GLOBAL
 _G.RAYAutoTotemOn       = _G.RAYAutoTotemOn       or false
-_G.RAYAutoTotemMixOn    = _G.RAYAutoTotemMixOn    or false
 _G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"  -- "Lucky" / "Mutasi" / "Shiny"
 
--- di header kamu sudah ada:
--- local Players = game:GetService("Players")
--- local UIS = game:GetService("UserInputService")
--- local ReplicatedStorage = game:GetService("ReplicatedStorage")
--- local Player = Players.LocalPlayer
-
--- kalau di game kamu pakai Replion + SpawnTotemRemote:
+-- BACKEND HELPER
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Replion = require(ReplicatedStorage.Packages.Replion)
 
 local SpawnTotemRemote = ReplicatedStorage
@@ -3369,6 +3364,8 @@ local SpawnTotemRemote = ReplicatedStorage
     :WaitForChild("sleitnick_net@0.2.0")
     :WaitForChild("net")
     :WaitForChild("RE/SpawnTotem")
+
+local TOTEM_DURATION = 3600
 
 local TotemTypeId = {
     Mutasi = 2,
@@ -3408,24 +3405,26 @@ local function SpawnTotemUUID(uuid)
     if not uuid then return end
     pcall(function()
         SpawnTotemRemote:FireServer(uuid)
+        -- kalau butuh table:
+        -- SpawnTotemRemote:FireServer({UUID = uuid})
     end)
 end
 
 ----------------------------------------------------------------
--- AUTO TOTEM 🗿 (PANEL KANAN + TOGGLE SINGLE)
+-- PANEL KANAN AUTO TOTEM (NEMPEL MAIN, GAYA SAMA SKIN)
 ----------------------------------------------------------------
 
 local TotemRightPanel = Instance.new("Frame")
 TotemRightPanel.Name = "AutoTotemRightPanel"
-TotemRightPanel.Size = UDim2.new(0, 220, 1, -46)
+TotemRightPanel.Size = UDim2.new(0, 220, 1, -46)   -- tinggi = tinggi Main - TitleBar
 TotemRightPanel.AnchorPoint = Vector2.new(1, 0)
-TotemRightPanel.Position = UDim2.new(1, -10, 0, 40)
+TotemRightPanel.Position = UDim2.new(1, -10, 0, 40) -- nempel kanan Main, di bawah TitleBar
 TotemRightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
 TotemRightPanel.BackgroundTransparency = 0.25
 TotemRightPanel.BorderSizePixel = 0
 TotemRightPanel.Visible = false
 TotemRightPanel.ZIndex = 10
-TotemRightPanel.Parent = Main
+TotemRightPanel.Parent = Main          -- parent ke Main
 
 Instance.new("UICorner", TotemRightPanel).CornerRadius = UDim.new(0, 10)
 local atStroke = Instance.new("UIStroke", TotemRightPanel)
@@ -3497,6 +3496,7 @@ local function CreateTotemEntry(jenis)
     line.Parent = row
     line.Size = UDim2.new(0, 3, 1, 0)
     line.Position = UDim2.new(0, 0, 0, 0)
+    -- UNGU
     line.BackgroundColor3 = Color3.fromRGB(160,110,255)
     line.BorderSizePixel = 0
     line.Visible = (_G.RAYSelectedTotemType == jenis)
@@ -3553,6 +3553,9 @@ end
 
 UpdateTotemLabel()
 
+----------------------------------------------------------------
+-- CLOSE PANEL (KLIK DI LUAR PANEL)
+----------------------------------------------------------------
 UIS.InputBegan:Connect(function(input)
     if not TotemRightPanel.Visible then return end
 
@@ -3575,7 +3578,7 @@ UIS.InputBegan:Connect(function(input)
 end)
 
 ----------------------------------------------------------------
--- SECTION "AUTO TOTEM" DI BACKPACK (SINGLE + MIX TOGGLE)
+-- SECTION "AUTO TOTEM" DI BACKPACK (TOGGLE + OPEN PANEL)
 ----------------------------------------------------------------
 
 local BackpackPage = Pages and Pages["Backpack"]
@@ -3601,7 +3604,7 @@ if BackpackPage then
         label.Font                  = Enum.Font.Gotham
         label.TextSize              = 13
         label.TextXAlignment        = Enum.TextXAlignment.Left
-        label.TextColor3            = THEME_TEXT
+        label.TextColor3            = TEXT or THEME_TEXT
         label.Text                  = title
 
         return row
@@ -3624,7 +3627,7 @@ if BackpackPage then
     end
 
     ------------------------------------------------------------
-    -- TOGGLE AUTO TOTEM (1x cast)
+    -- ROW TOGGLE AUTO TOTEM (CAST SETIAP ON)
     ------------------------------------------------------------
     do
         local row = makeRow("Enable Auto Totem (1x Cast)")
@@ -3677,6 +3680,7 @@ if BackpackPage then
             refresh()
 
             if _G.RAYAutoTotemOn then
+                -- setiap ON selalu pasang totem lagi
                 castTotemOnce()
             else
                 if NotifyFeature then
@@ -3688,7 +3692,9 @@ if BackpackPage then
         refresh()
     end
 
-    -- BUTTON BUKA PANEL TOTEM LIST
+    ------------------------------------------------------------
+    -- ROW BUKA PANEL TOTEM LIST (KANAN)
+    ------------------------------------------------------------
     do
         local row = makeRow("Totem List Panel")
         local btn = makeSmallButton(row, "Open")
@@ -3699,278 +3705,5 @@ if BackpackPage then
             end
         end)
     end
-
-    ----------------------------------------------------------------
-    -- AUTO TOTEM MIX: FLOAT TWEEN, RADIUS 100, DELAY FIX 1s
-    ----------------------------------------------------------------
-
-    local MIX_TYPES = { "Lucky", "Mutasi", "Shiny" }
-
-    local function floatTweenTo(targetPos, duration)
-        duration = duration or 1.5
-
-        if not Player.Character then return false end
-        local hrp = Player.Character:FindFirstChild("HumanoidRootPart")
-        local hum = Player.Character:FindFirstChildOfClass("Humanoid")
-        if not hrp or not hum then return false end
-
-        hum:ChangeState(Enum.HumanoidStateType.Physics)
-        hrp.Anchored = true
-
-        local finishCFrame = CFrame.new(targetPos + Vector3.new(0, 3, 0), targetPos + Vector3.new(0,3,-10))
-
-        local tweenInfo = TweenInfo.new(
-            duration,
-            Enum.EasingStyle.Quad,
-            Enum.EasingDirection.InOut
-        )
-
-        local tween = TweenService:Create(hrp, tweenInfo, {CFrame = finishCFrame})
-        tween:Play()
-        tween.Completed:Wait()
-
-        hrp.Anchored = false
-        hum:ChangeState(Enum.HumanoidStateType.RunningNoPhysics)
-
-        return true
-    end
-
-    local function getTotemPositions(origin, radius)
-        radius = radius or 100
-        local positions = {}
-
-        for i = 0, 2 do
-            local angle = (math.pi * 2 / 3) * i
-            local offset = Vector3.new(math.cos(angle), 0, math.sin(angle)) * radius
-            table.insert(positions, origin + offset)
-        end
-
-        return positions
-    end
-
-    local function PlaceMixedTotems()
-        if not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then
-            if NotifyFeature then
-                NotifyFeature("Character belum siap", false)
-            end
-            return
-        end
-
-        local hrp = Player.Character.HumanoidRootPart
-        local origin = hrp.Position
-        local positions = getTotemPositions(origin, 100)
-
-        for i, jenis in ipairs(MIX_TYPES) do
-            local uuid = findTotemUuidByType(jenis)
-            if uuid then
-                local targetPos = positions[i]
-
-                local ok = floatTweenTo(targetPos, 1.2)
-                if not ok then
-                    if NotifyFeature then
-                        NotifyFeature("Gagal melayang ke posisi untuk "..jenis, false)
-                    end
-                else
-                    local dist = (targetPos - origin).Magnitude
-
-                    task.wait(1) -- delay fix 1 detik
-
-                    SpawnTotemUUID(uuid)
-                    if NotifyFeature then
-                        NotifyFeature(string.format("Spawn %s Totem (Mix, jarak %.1f)", jenis, dist), true)
-                    end
-                    task.wait(0.2)
-                end
-            else
-                if NotifyFeature then
-                    NotifyFeature("Totem "..jenis.." tidak ditemukan", false)
-                end
-            end
-        end
-
-        floatTweenTo(origin, 1.2)
-        if NotifyFeature then
-            NotifyFeature("Auto Totem Mix selesai", true)
-        end
-    end
-
-    ----------------------------------------------------------------
-    -- PANEL KANAN AUTO TOTEM MIX (TEXTBOX NAMA TOTEM)
-    ----------------------------------------------------------------
-
-    local TotemMixRightPanel = Instance.new("Frame")
-    TotemMixRightPanel.Name = "AutoTotemMixRightPanel"
-    TotemMixRightPanel.Size = UDim2.new(0, 220, 1, -46)
-    TotemMixRightPanel.AnchorPoint = Vector2.new(1, 0)
-    TotemMixRightPanel.Position = UDim2.new(1, -10, 0, 40)
-    TotemMixRightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
-    TotemMixRightPanel.BackgroundTransparency = 0.25
-    TotemMixRightPanel.BorderSizePixel = 0
-    TotemMixRightPanel.Visible = false
-    TotemMixRightPanel.ZIndex = 10
-    TotemMixRightPanel.Parent = Main
-
-    Instance.new("UICorner", TotemMixRightPanel).CornerRadius = UDim.new(0, 10)
-    local tmStroke = Instance.new("UIStroke", TotemMixRightPanel)
-    tmStroke.Color = THEME_MAIN
-    tmStroke.Transparency = 0.5
-
-    local tmTitle = Instance.new("TextLabel")
-    tmTitle.Parent = TotemMixRightPanel
-    tmTitle.Size = UDim2.new(1, -10, 0, 24)
-    tmTitle.Position = UDim2.new(0, 5, 0, 6)
-    tmTitle.BackgroundTransparency = 1
-    tmTitle.Font = Enum.Font.GothamBold
-    tmTitle.TextSize = 16
-    tmTitle.TextXAlignment = Enum.TextXAlignment.Left
-    tmTitle.TextColor3 = THEME_TEXT
-    tmTitle.ZIndex = 11
-    tmTitle.Text = "Auto Totem Mix (BETA)"
-
-    local tmInfo = Instance.new("TextLabel")
-    tmInfo.Parent = TotemMixRightPanel
-    tmInfo.Size = UDim2.new(1, -10, 0, 18)
-    tmInfo.Position = UDim2.new(0, 5, 0, 30)
-    tmInfo.BackgroundTransparency = 1
-    tmInfo.Font = Enum.Font.Gotham
-    tmInfo.TextSize = 12
-    tmInfo.TextXAlignment = Enum.TextXAlignment.Left
-    tmInfo.TextColor3 = Color3.fromRGB(200,200,200)
-    tmInfo.ZIndex = 11
-    tmInfo.Text = "Pattern: Lucky, Mutasi, Shiny (segitiga, radius ~100)."
-
-    local tmScroll = Instance.new("ScrollingFrame")
-    tmScroll.Parent = TotemMixRightPanel
-    tmScroll.Size = UDim2.new(1, -10, 1, -70)
-    tmScroll.Position = UDim2.new(0, 5, 0, 54)
-    tmScroll.BackgroundTransparency = 1
-    tmScroll.BorderSizePixel = 0
-    tmScroll.ScrollBarThickness = 3
-    tmScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    tmScroll.CanvasSize = UDim2.new(0,0,0,0)
-    tmScroll.ScrollBarImageColor3 = THEME_MAIN
-    tmScroll.ZIndex = 10
-
-    local tmList = Instance.new("UIListLayout", tmScroll)
-    tmList.SortOrder = Enum.SortOrder.LayoutOrder
-    tmList.Padding = UDim.new(0,4)
-
-    local function CreateMixTextBox(jenis, index)
-        local id = TotemTypeId[jenis]
-
-        local row = Instance.new("Frame")
-        row.Parent = tmScroll
-        row.Size = UDim2.new(1, -4, 0, 28)
-        row.BackgroundTransparency = 1
-        row.BorderSizePixel = 0
-        row.ZIndex = 11
-
-        local label = Instance.new("TextLabel")
-        label.Parent = row
-        label.Size = UDim2.new(0.45, 0, 1, 0)
-        label.Position = UDim2.new(0, 0, 0, 0)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 12
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = THEME_TEXT
-        label.Text = string.format("#%d Totem:", index)
-
-        local box = Instance.new("TextBox")
-        box.Parent = row
-        box.Size = UDim2.new(0.5, 0, 1, 0)
-        box.Position = UDim2.new(0.45, 0, 0, 0)
-        box.BackgroundColor3 = Color3.fromRGB(25,25,40)
-        box.BorderSizePixel = 0
-        box.Font = Enum.Font.Gotham
-        box.TextSize = 12
-        box.TextColor3 = THEME_TEXT
-        box.ClearTextOnFocus = false
-        box.TextXAlignment = Enum.TextXAlignment.Left
-        box.Text = jenis.." ["..tostring(id).."]"
-        box.PlaceholderText = jenis.." ["..tostring(id).."]"
-        Instance.new("UICorner", box).CornerRadius = UDim.new(0,6)
-
-        box.FocusLost:Connect(function()
-            -- selalu reset ke nama default
-            box.Text = jenis.." ["..tostring(id).."]"
-        end)
-    end
-
-    for i, jenis in ipairs(MIX_TYPES) do
-        CreateMixTextBox(jenis, i)
-    end
-
-    UIS.InputBegan:Connect(function(input)
-        if not TotemMixRightPanel.Visible then return end
-        if input.UserInputType ~= Enum.UserInputType.MouseButton1
-        and input.UserInputType ~= Enum.UserInputType.Touch then
-            return
-        end
-
-        local pos = input.Position
-        local absPos = TotemMixRightPanel.AbsolutePosition
-        local absSize = TotemMixRightPanel.AbsoluteSize
-
-        local inside =
-            pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
-            pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
-
-        if not inside then
-            TotemMixRightPanel.Visible = false
-        end
-    end)
-
-    -- TOGGLE AUTO TOTEM MIX DI SECTION YANG SAMA
-    do
-        local row = makeRow("Enable Auto Totem Mix (3x)")
-
-        local pill = Instance.new("TextButton")
-        pill.Parent                  = row
-        pill.Size                    = UDim2.new(0,50,0,24)
-        pill.Position                = UDim2.new(1,-80,0.5,-12)
-        pill.BackgroundColor3        = MUTED or Color3.fromRGB(70,70,90)
-        pill.BackgroundTransparency  = 0.1
-        pill.Text                    = ""
-        pill.AutoButtonColor         = false
-        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
-
-        local knob = Instance.new("Frame")
-        knob.Parent                  = pill
-        knob.Size                    = UDim2.new(0,18,0,18)
-        knob.Position                = UDim2.new(0,3,0.5,-9)
-        knob.BackgroundColor3        = Color3.fromRGB(255,255,255)
-        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
-
-        local function refreshMix()
-            pill.BackgroundColor3 = _G.RAYAutoTotemMixOn
-                and (ACCENT or Color3.fromRGB(0,200,150))
-                or  (MUTED or Color3.fromRGB(70,70,90))
-            knob.Position = _G.RAYAutoTotemMixOn
-                and UDim2.new(1,-21,0.5,-9)
-                or  UDim2.new(0,3,0.5,-9)
-        end
-
-        pill.MouseButton1Click:Connect(function()
-            _G.RAYAutoTotemMixOn = not _G.RAYAutoTotemMixOn
-            refreshMix()
-
-            if _G.RAYAutoTotemMixOn then
-                PlaceMixedTotems()
-                _G.RAYAutoTotemMixOn = false
-                refreshMix()
-            end
-        end)
-
-        refreshMix()
-    end
-
-    -- BUTTON BUKA PANEL MIX
-    do
-        local row = makeRow("Totem Mix Panel")
-        local btn = makeSmallButton(row, "Open")
-        btn.MouseButton1Click:Connect(function()
-            TotemMixRightPanel.Visible = not TotemMixRightPanel.Visible
-        end)
-    end
 end
+
