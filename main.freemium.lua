@@ -3466,7 +3466,174 @@ local function SpawnTotemUUID(uuid)
 end
 
 ----------------------------------------------------------------
--- SECTION "AUTO TOTEM" DI BACKPACK
+-- PANEL KANAN AUTO TOTEM (NEMPEL MAIN, GAYA SAMA SKIN)
+----------------------------------------------------------------
+
+local TotemRightPanel = Instance.new("Frame")
+TotemRightPanel.Name = "AutoTotemRightPanel"
+TotemRightPanel.Size = UDim2.new(0, 220, 1, -46)   -- tinggi = tinggi Main - TitleBar
+TotemRightPanel.AnchorPoint = Vector2.new(1, 0)
+TotemRightPanel.Position = UDim2.new(1, -10, 0, 40) -- nempel kanan Main, di bawah TitleBar
+TotemRightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
+TotemRightPanel.BackgroundTransparency = 0.25
+TotemRightPanel.BorderSizePixel = 0
+TotemRightPanel.Visible = false
+TotemRightPanel.ZIndex = 10
+TotemRightPanel.Parent = Main          -- parent ke Main
+
+Instance.new("UICorner", TotemRightPanel).CornerRadius = UDim.new(0, 10)
+local atStroke = Instance.new("UIStroke", TotemRightPanel)
+atStroke.Color = THEME_MAIN
+atStroke.Transparency = 0.5
+
+local atTitle = Instance.new("TextLabel")
+atTitle.Parent = TotemRightPanel
+atTitle.Size = UDim2.new(1, -10, 0, 24)
+atTitle.Position = UDim2.new(0, 5, 0, 6)
+atTitle.BackgroundTransparency = 1
+atTitle.Font = Enum.Font.GothamBold
+atTitle.TextSize = 16
+atTitle.TextXAlignment = Enum.TextXAlignment.Left
+atTitle.TextColor3 = THEME_TEXT
+atTitle.ZIndex = 11
+atTitle.Text = "Auto Totem"
+
+local atInfo = Instance.new("TextLabel")
+atInfo.Parent = TotemRightPanel
+atInfo.Size = UDim2.new(1, -10, 0, 18)
+atInfo.Position = UDim2.new(0, 5, 0, 30)
+atInfo.BackgroundTransparency = 1
+atInfo.Font = Enum.Font.Gotham
+atInfo.TextSize = 12
+atInfo.TextXAlignment = Enum.TextXAlignment.Left
+atInfo.TextColor3 = Color3.fromRGB(200,200,200)
+atInfo.ZIndex = 11
+atInfo.Text = "Totem aktif: -"
+
+local function UpdateTotemLabel()
+    if _G.RAYSelectedTotemType then
+        atInfo.Text = "Totem aktif: " .. tostring(_G.RAYSelectedTotemType)
+    else
+        atInfo.Text = "Totem aktif: (belum dipilih)"
+    end
+end
+
+local atScroll = Instance.new("ScrollingFrame")
+atScroll.Parent = TotemRightPanel
+atScroll.Size = UDim2.new(1, -10, 1, -70)
+atScroll.Position = UDim2.new(0, 5, 0, 54)
+atScroll.BackgroundTransparency = 1
+atScroll.BorderSizePixel = 0
+atScroll.ScrollBarThickness = 3
+atScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+atScroll.CanvasSize = UDim2.new(0,0,0,0)
+atScroll.ScrollBarImageColor3 = THEME_MAIN
+atScroll.ZIndex = 10
+
+local atList = Instance.new("UIListLayout", atScroll)
+atList.SortOrder = Enum.SortOrder.LayoutOrder
+atList.Padding = UDim.new(0,4)
+
+local TOTEM_TYPES = { "Lucky", "Mutasi", "Shiny" }
+
+local function CreateTotemEntry(jenis)
+    local id = TotemTypeId[jenis]
+
+    local row = Instance.new("Frame")
+    row.Parent = atScroll
+    row.Size = UDim2.new(1, -4, 0, 24)
+    row.BackgroundTransparency = 1
+    row.BorderSizePixel = 0
+    row.ZIndex = 11
+
+    local line = Instance.new("Frame")
+    line.Name = "Highlight"
+    line.Parent = row
+    line.Size = UDim2.new(0, 3, 1, 0)
+    line.Position = UDim2.new(0, 0, 0, 0)
+    -- UNGU
+    line.BackgroundColor3 = Color3.fromRGB(160,110,255)
+    line.BorderSizePixel = 0
+    line.Visible = (_G.RAYSelectedTotemType == jenis)
+    line.ZIndex = 12
+
+    local btn = Instance.new("TextButton")
+    btn.Parent = row
+    btn.Size = UDim2.new(1, -6, 1, 0)
+    btn.Position = UDim2.new(0, 4, 0, 0)
+    btn.BackgroundColor3 = (_G.RAYSelectedTotemType == jenis) and Color3.fromRGB(40,40,70) or Color3.fromRGB(30,30,50)
+    btn.BorderSizePixel = 0
+    btn.TextColor3 = THEME_TEXT
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 12
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Text = "  "..jenis.." Totem  ["..tostring(id).."]"
+    btn.AutoButtonColor = true
+    btn.ZIndex = 11
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+    btn.MouseButton1Click:Connect(function()
+        if _G.RAYSelectedTotemType == jenis then
+            _G.RAYSelectedTotemType = nil
+            if NotifyFeature then
+                NotifyFeature("Totem "..jenis, false)
+            end
+        else
+            _G.RAYSelectedTotemType = jenis
+            if NotifyFeature then
+                NotifyFeature("Totem "..jenis, true)
+            end
+        end
+
+        UpdateTotemLabel()
+
+        for _, child in ipairs(atScroll:GetChildren()) do
+            if child:IsA("Frame") then
+                local h = child:FindFirstChild("Highlight")
+                local b = child:FindFirstChildOfClass("TextButton")
+                if h and b then
+                    local thisJenis = b.Text:match("^%s*(%w+)")
+                    local active = (_G.RAYSelectedTotemType == thisJenis)
+                    h.Visible = active
+                    b.BackgroundColor3 = active and Color3.fromRGB(40,40,70) or Color3.fromRGB(30,30,50)
+                end
+            end
+        end
+    end)
+end
+
+for _, jenis in ipairs(TOTEM_TYPES) do
+    CreateTotemEntry(jenis)
+end
+
+UpdateTotemLabel()
+
+----------------------------------------------------------------
+-- CLOSE PANEL (KLIK DI LUAR PANEL)
+----------------------------------------------------------------
+UIS.InputBegan:Connect(function(input)
+    if not TotemRightPanel.Visible then return end
+
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1
+    and input.UserInputType ~= Enum.UserInputType.Touch then
+        return
+    end
+
+    local pos = input.Position
+    local absPos = TotemRightPanel.AbsolutePosition
+    local absSize = TotemRightPanel.AbsoluteSize
+
+    local inside =
+        pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
+        pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
+
+    if not inside then
+        TotemRightPanel.Visible = false
+    end
+end)
+
+----------------------------------------------------------------
+-- SECTION "AUTO TOTEM" DI BACKPACK (TOGGLE + OPEN PANEL)
 ----------------------------------------------------------------
 
 local BackpackPage = Pages and Pages["Backpack"]
@@ -3513,132 +3680,6 @@ if BackpackPage then
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
         return btn
     end
-
-    ------------------------------------------------------------
-    -- PANEL KANAN: LIST TOTEM (MIRIP FAV RARITY PANEL)
-    ------------------------------------------------------------
-    local TotemRightPanel = Instance.new("Frame")
-    TotemRightPanel.Name = "TotemRightPanel"
-    TotemRightPanel.Size = UDim2.new(0, 220, 1, -46)
-    TotemRightPanel.AnchorPoint = Vector2.new(1, 0)
-    TotemRightPanel.Position = UDim2.new(1, -10, 0, 40)
-    TotemRightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
-    TotemRightPanel.BackgroundTransparency = 0.25
-    TotemRightPanel.BorderSizePixel = 0
-    TotemRightPanel.Visible = false
-    TotemRightPanel.ZIndex = 10
-    TotemRightPanel.Parent = BackpackPage
-
-    Instance.new("UICorner", TotemRightPanel).CornerRadius = UDim.new(0, 10)
-    local trStroke = Instance.new("UIStroke", TotemRightPanel)
-    trStroke.Color = THEME_MAIN
-    trStroke.Transparency = 0.5
-
-    local trTitle = Instance.new("TextLabel")
-    trTitle.Parent = TotemRightPanel
-    trTitle.Size = UDim2.new(1, -10, 0, 24)
-    trTitle.Position = UDim2.new(0, 5, 0, 6)
-    trTitle.BackgroundTransparency = 1
-    trTitle.Font = Enum.Font.GothamBold
-    trTitle.TextSize = 16
-    trTitle.TextXAlignment = Enum.TextXAlignment.Left
-    trTitle.TextColor3 = THEME_TEXT
-    trTitle.ZIndex = 11
-    trTitle.Text = "Totem List"
-
-    local trInfo = Instance.new("TextLabel")
-    trInfo.Parent = TotemRightPanel
-    trInfo.Size = UDim2.new(1, -10, 0, 18)
-    trInfo.Position = UDim2.new(0, 5, 0, 30)
-    trInfo.BackgroundTransparency = 1
-    trInfo.Font = Enum.Font.Gotham
-    trInfo.TextSize = 12
-    trInfo.TextXAlignment = Enum.TextXAlignment.Left
-    trInfo.TextColor3 = Color3.fromRGB(200,200,200)
-    trInfo.ZIndex = 11
-    trInfo.Text = "Pilih totem yang mau dipasang."
-
-    local trScroll = Instance.new("ScrollingFrame")
-    trScroll.Parent = TotemRightPanel
-    trScroll.Size = UDim2.new(1, -10, 1, -70)
-    trScroll.Position = UDim2.new(0, 5, 0, 54)
-    trScroll.BackgroundTransparency = 1
-    trScroll.BorderSizePixel = 0
-    trScroll.ScrollBarThickness = 3
-    trScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    trScroll.CanvasSize = UDim2.new(0,0,0,0)
-    trScroll.ScrollBarImageColor3 = THEME_MAIN
-    trScroll.ZIndex = 10
-
-    local trList = Instance.new("UIListLayout", trScroll)
-    trList.SortOrder = Enum.SortOrder.LayoutOrder
-    trList.Padding = UDim.new(0,4)
-
-    local TO_TYPES = { "Lucky", "Mutasi", "Shiny" }
-
-    local function rebuildTotemPanel()
-        for _, c in ipairs(trScroll:GetChildren()) do
-            if c:IsA("TextButton") or c:IsA("Frame") then
-                if c ~= trList then
-                    c:Destroy()
-                end
-            end
-        end
-
-        for _, jenis in ipairs(TO_TYPES) do
-            local id = TotemTypeId[jenis]
-
-            local row = Instance.new("Frame")
-            row.Parent = trScroll
-            row.Size = UDim2.new(1, -4, 0, 24)
-            row.BackgroundTransparency = 1
-            row.BorderSizePixel = 0
-            row.ZIndex = 11
-
-            local line = Instance.new("Frame")
-            line.Name = "Highlight"
-            line.Parent = row
-            line.Size = UDim2.new(0, 3, 1, 0)
-            line.Position = UDim2.new(0, 0, 0, 0)
-            -- ungu
-            line.BackgroundColor3 = Color3.fromRGB(160,110,255)
-            line.BorderSizePixel = 0
-            line.Visible = (_G.RAYSelectedTotemType == jenis)
-            line.ZIndex = 12
-
-            local btn = Instance.new("TextButton")
-            btn.Parent = row
-            btn.Size = UDim2.new(1, -6, 1, 0)
-            btn.Position = UDim2.new(0, 4, 0, 0)
-            btn.BackgroundColor3 = (_G.RAYSelectedTotemType == jenis) and Color3.fromRGB(40,40,70) or Color3.fromRGB(30,30,50)
-            btn.BorderSizePixel = 0
-            btn.TextColor3 = THEME_TEXT
-            btn.Font = Enum.Font.Gotham
-            btn.TextSize = 12
-            btn.TextXAlignment = Enum.TextXAlignment.Left
-            btn.Text = "  "..jenis.." Totem  ["..tostring(id).."]"
-            btn.AutoButtonColor = true
-            btn.ZIndex = 11
-            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-
-            btn.MouseButton1Click:Connect(function()
-                if _G.RAYSelectedTotemType == jenis then
-                    _G.RAYSelectedTotemType = nil
-                    if NotifyFeature then
-                        NotifyFeature("Totem "..jenis, false)
-                    end
-                else
-                    _G.RAYSelectedTotemType = jenis
-                    if NotifyFeature then
-                        NotifyFeature("Totem "..jenis, true)
-                    end
-                end
-                rebuildTotemPanel()
-            end)
-        end
-    end
-
-    rebuildTotemPanel()
 
     ------------------------------------------------------------
     -- ROW TOGGLE AUTO TOTEM (CAST SETIAP ON)
@@ -3707,7 +3748,7 @@ if BackpackPage then
     end
 
     ------------------------------------------------------------
-    -- ROW BUKA PANEL TOTEM LIST
+    -- ROW BUKA PANEL TOTEM LIST (KANAN)
     ------------------------------------------------------------
     do
         local row = makeRow("Totem List Panel")
@@ -3715,8 +3756,9 @@ if BackpackPage then
         btn.MouseButton1Click:Connect(function()
             TotemRightPanel.Visible = not TotemRightPanel.Visible
             if TotemRightPanel.Visible then
-                rebuildTotemPanel()
+                UpdateTotemLabel()
             end
         end)
     end
 end
+
