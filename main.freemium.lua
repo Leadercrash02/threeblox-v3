@@ -3402,15 +3402,21 @@ UIS.InputBegan:Connect(function(input)
 end)
 
 ----------------------------------------------------------------
--- AUTO TOTEM 🗿 (STRUCTUR BARU + PANEL KANAN + RECAST BOLEH)
+-- BACKEND GLOBAL: DATA, REPLION, REMOTE, HELPER
 ----------------------------------------------------------------
 
 -- STATE GLOBAL
 _G.RAYAutoTotemOn       = _G.RAYAutoTotemOn       or false
+_G.RAYAutoTotemMixOn    = _G.RAYAutoTotemMixOn    or false
 _G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"  -- "Lucky" / "Mutasi" / "Shiny"
 
--- BACKEND HELPER
+-- SERVICES & BACKEND
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UIS = game:GetService("UserInputService")
+
+local lp = Players.LocalPlayer
 local Replion = require(ReplicatedStorage.Packages.Replion)
 
 local SpawnTotemRemote = ReplicatedStorage
@@ -3419,8 +3425,6 @@ local SpawnTotemRemote = ReplicatedStorage
     :WaitForChild("sleitnick_net@0.2.0")
     :WaitForChild("net")
     :WaitForChild("RE/SpawnTotem")
-
-local TOTEM_DURATION = 3600
 
 local TotemTypeId = {
     Mutasi = 2,
@@ -3460,26 +3464,25 @@ local function SpawnTotemUUID(uuid)
     if not uuid then return end
     pcall(function()
         SpawnTotemRemote:FireServer(uuid)
-        -- kalau butuh table:
-        -- SpawnTotemRemote:FireServer({UUID = uuid})
+        -- SpawnTotemRemote:FireServer({UUID = uuid}) -- kalau butuh table
     end)
 end
 
 ----------------------------------------------------------------
--- PANEL KANAN AUTO TOTEM (NEMPEL MAIN, GAYA SAMA SKIN)
+-- AUTO TOTEM 🗿 (STRUCTUR BARU + PANEL KANAN + 1x CAST)
 ----------------------------------------------------------------
 
 local TotemRightPanel = Instance.new("Frame")
 TotemRightPanel.Name = "AutoTotemRightPanel"
-TotemRightPanel.Size = UDim2.new(0, 220, 1, -46)   -- tinggi = tinggi Main - TitleBar
+TotemRightPanel.Size = UDim2.new(0, 220, 1, -46)
 TotemRightPanel.AnchorPoint = Vector2.new(1, 0)
-TotemRightPanel.Position = UDim2.new(1, -10, 0, 40) -- nempel kanan Main, di bawah TitleBar
+TotemRightPanel.Position = UDim2.new(1, -10, 0, 40)
 TotemRightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
 TotemRightPanel.BackgroundTransparency = 0.25
 TotemRightPanel.BorderSizePixel = 0
 TotemRightPanel.Visible = false
 TotemRightPanel.ZIndex = 10
-TotemRightPanel.Parent = Main          -- parent ke Main
+TotemRightPanel.Parent = Main
 
 Instance.new("UICorner", TotemRightPanel).CornerRadius = UDim.new(0, 10)
 local atStroke = Instance.new("UIStroke", TotemRightPanel)
@@ -3551,7 +3554,6 @@ local function CreateTotemEntry(jenis)
     line.Parent = row
     line.Size = UDim2.new(0, 3, 1, 0)
     line.Position = UDim2.new(0, 0, 0, 0)
-    -- UNGU
     line.BackgroundColor3 = Color3.fromRGB(160,110,255)
     line.BorderSizePixel = 0
     line.Visible = (_G.RAYSelectedTotemType == jenis)
@@ -3608,9 +3610,6 @@ end
 
 UpdateTotemLabel()
 
-----------------------------------------------------------------
--- CLOSE PANEL (KLIK DI LUAR PANEL)
-----------------------------------------------------------------
 UIS.InputBegan:Connect(function(input)
     if not TotemRightPanel.Visible then return end
 
@@ -3681,9 +3680,7 @@ if BackpackPage then
         return btn
     end
 
-    ------------------------------------------------------------
-    -- ROW TOGGLE AUTO TOTEM (CAST SETIAP ON)
-    ------------------------------------------------------------
+    -- ROW TOGGLE AUTO TOTEM (1x CAST)
     do
         local row = makeRow("Enable Auto Totem (1x Cast)")
 
@@ -3735,7 +3732,6 @@ if BackpackPage then
             refresh()
 
             if _G.RAYAutoTotemOn then
-                -- setiap ON selalu pasang totem lagi
                 castTotemOnce()
             else
                 if NotifyFeature then
@@ -3747,9 +3743,7 @@ if BackpackPage then
         refresh()
     end
 
-    ------------------------------------------------------------
-    -- ROW BUKA PANEL TOTEM LIST (KANAN)
-    ------------------------------------------------------------
+    -- ROW BUKA PANEL TOTEM LIST
     do
         local row = makeRow("Totem List Panel")
         local btn = makeSmallButton(row, "Open")
@@ -3766,71 +3760,9 @@ end
 -- AUTO TOTEM MIX (BETA) 🗿 - FLOAT TWEEN, RADIUS 100, JEDA 1s
 ----------------------------------------------------------------
 
--- STATE GLOBAL
-_G.RAYAutoTotemMixOn    = _G.RAYAutoTotemMixOn    or false
-_G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"
 local MIX_TYPES = { "Lucky", "Mutasi", "Shiny" }
 
--- SERVICES & BACKEND
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-local lp = Players.LocalPlayer
-local Replion = require(ReplicatedStorage.Packages.Replion)
-
-local SpawnTotemRemote = ReplicatedStorage
-    :WaitForChild("Packages")
-    :WaitForChild("_Index")
-    :WaitForChild("sleitnick_net@0.2.0")
-    :WaitForChild("net")
-    :WaitForChild("RE/SpawnTotem")
-
-local TotemTypeId = {
-    Mutasi = 2,
-    Shiny  = 3,
-    Lucky  = 1,
-}
-
-local function GetTotemDataReplion()
-    local ok, data = pcall(function()
-        local r = Replion.Client:WaitReplion("Data")
-        return r.Data
-    end)
-    if not ok or not data then return nil end
-    return data
-end
-
-local function findTotemUuidByType(jenis)
-    local targetId = TotemTypeId[jenis]
-    if not targetId then return nil end
-
-    local data = GetTotemDataReplion()
-    if not data then return nil end
-
-    local inv = data.Inventory
-    local totems = inv and inv.Totems
-    if typeof(totems) ~= "table" then return nil end
-
-    for _, entry in pairs(totems) do
-        if entry.Id == targetId then
-            return entry.UUID
-        end
-    end
-    return nil
-end
-
-local function SpawnTotemUUID(uuid)
-    if not uuid then return end
-    pcall(function()
-        SpawnTotemRemote:FireServer(uuid)
-    end)
-end
-
-----------------------------------------------------------------
--- GERAK MELAYANG SMOOTH (TWEEN HUMANOIDROOTPART)
-----------------------------------------------------------------
-
+-- GERAK MELAYANG
 local function floatTweenTo(targetPos, duration)
     duration = duration or 1.5
 
@@ -3860,26 +3792,19 @@ local function floatTweenTo(targetPos, duration)
     return true
 end
 
-----------------------------------------------------------------
--- HITUNG POSISI SEGITIGA (RADIUS 100 STUD)
-----------------------------------------------------------------
-
+-- POSISI SEGITIGA
 local function getTotemPositions(origin, radius)
     radius = radius or 100
     local positions = {}
 
     for i = 0, 2 do
-        local angle = (math.pi * 2 / 3) * i -- 0, 120, 240 derajat
+        local angle = (math.pi * 2 / 3) * i
         local offset = Vector3.new(math.cos(angle), 0, math.sin(angle)) * radius
         table.insert(positions, origin + offset)
     end
 
     return positions
 end
-
-----------------------------------------------------------------
--- PLACE MIXED TOTEMS (MELAYANG + JEDA 1s)
-----------------------------------------------------------------
 
 local function PlaceMixedTotems()
     if not lp.Character or not lp.Character:FindFirstChild("HumanoidRootPart") then
@@ -3906,8 +3831,7 @@ local function PlaceMixedTotems()
             else
                 local dist = (targetPos - origin).Magnitude
 
-                -- jeda sebelum pasang totem
-                task.wait(1)
+                task.wait(1) -- jeda sebelum pasang
 
                 SpawnTotemUUID(uuid)
                 if NotifyFeature then
@@ -3929,7 +3853,7 @@ local function PlaceMixedTotems()
 end
 
 ----------------------------------------------------------------
--- PANEL KANAN AUTO TOTEM MIX (INFO PATTERN)
+-- PANEL KANAN AUTO TOTEM MIX
 ----------------------------------------------------------------
 
 local TotemMixRightPanel = Instance.new("Frame")
@@ -4053,16 +3977,15 @@ end)
 -- SECTION "AUTO TOTEM MIX (BETA)" DI BACKPACK
 ----------------------------------------------------------------
 
-local BackpackPage = Pages and Pages["Backpack"]
 if BackpackPage then
     local AutoTotemMixSection = CreateSectionDropdown(BackpackPage, "Auto Totem Mix (BETA)")
 
-    local sectionLayout = Instance.new("UIListLayout")
-    sectionLayout.Parent    = AutoTotemMixSection
-    sectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    sectionLayout.Padding   = UDim.new(0, 6)
+    local sectionLayout2 = Instance.new("UIListLayout")
+    sectionLayout2.Parent    = AutoTotemMixSection
+    sectionLayout2.SortOrder = Enum.SortOrder.LayoutOrder
+    sectionLayout2.Padding   = UDim.new(0, 6)
 
-    local function makeRow(title, height)
+    local function makeRow2(title, height)
         local row = Instance.new("Frame")
         row.Parent                  = AutoTotemMixSection
         row.Size                    = UDim2.new(1,0,0,height or 36)
@@ -4082,7 +4005,7 @@ if BackpackPage then
         return row
     end
 
-    local function makeSmallButton(row, text)
+    local function makeSmallButton2(row, text)
         local btn = Instance.new("TextButton")
         btn.Parent                  = row
         btn.Size                    = UDim2.new(0,160,0,24)
@@ -4098,9 +4021,9 @@ if BackpackPage then
         return btn
     end
 
-    -- TOGGLE: SEKALI ON = JALANKAN PlaceMixedTotems
+    -- TOGGLE: SEKALI ON = PlaceMixedTotems
     do
-        local row = makeRow("Enable Auto Totem Mix (3x)")
+        local row = makeRow2("Enable Auto Totem Mix (3x)")
 
         local pill = Instance.new("TextButton")
         pill.Parent                  = row
@@ -4119,7 +4042,7 @@ if BackpackPage then
         knob.BackgroundColor3        = Color3.fromRGB(255,255,255)
         Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-        local function refresh()
+        local function refresh2()
             pill.BackgroundColor3 = _G.RAYAutoTotemMixOn
                 and (ACCENT or Color3.fromRGB(0,200,150))
                 or  (MUTED or Color3.fromRGB(70,70,90))
@@ -4130,22 +4053,22 @@ if BackpackPage then
 
         pill.MouseButton1Click:Connect(function()
             _G.RAYAutoTotemMixOn = not _G.RAYAutoTotemMixOn
-            refresh()
+            refresh2()
 
             if _G.RAYAutoTotemMixOn then
                 PlaceMixedTotems()
                 _G.RAYAutoTotemMixOn = false
-                refresh()
+                refresh2()
             end
         end)
 
-        refresh()
+        refresh2()
     end
 
     -- BUTTON: BUKA PANEL INFO MIX
     do
-        local row = makeRow("Totem Mix Pattern Panel")
-        local btn = makeSmallButton(row, "Open")
+        local row = makeRow2("Totem Mix Pattern Panel")
+        local btn = makeSmallButton2(row, "Open")
         btn.MouseButton1Click:Connect(function()
             TotemMixRightPanel.Visible = not TotemMixRightPanel.Visible
         end)
