@@ -3627,8 +3627,7 @@ local StoneList = {10, 125, 558, 246}
 -----------------------------
 -- BACKEND: REMOTE & REPLION
 -----------------------------
-local RE_ActivateEnchantingAltar = Net:WaitForChild("RE/ActivateEnchantingAltar")
-
+-- TETAP pakai Replion helper kamu
 local CF_Altar_Slot1 = CFrame.new(
     3232.90356, -1302.8551, 1401.0824,
     0.483647138, 0, -0.875263095,
@@ -3670,14 +3669,37 @@ local function HasTargetEnchant()
     return false
 end
 
+-- ====== BAGIAN INI YANG DIUBAH: PAKAI ENCHANTINGCONTROLLER ======
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local EnchantingController = require(ReplicatedStorage.Controllers.EnchantingController)
+
 local function DoAltarEnchantOnce()
-    pcall(function()
-        RE_ActivateEnchantingAltar:Fire()
+    local second = (_G.RAY_EnchantTargetSlot == 2)
+
+    task.spawn(function()
+        local ok, err = pcall(function()
+            EnchantingController:Activate(second)
+                :catch(function(msg)
+                    if NotifyFeature then
+                        NotifyFeature("Enchant error: "..tostring(msg), false)
+                    end
+                end)
+                :await()
+        end)
+
+        if ok then
+            if NotifyFeature then
+                NotifyFeature("Enchant roll", true)
+            end
+        else
+            warn("Enchant Activate failed:", err)
+            if NotifyFeature then
+                NotifyFeature("Enchant failed", false)
+            end
+        end
     end)
-    if NotifyFeature then
-        NotifyFeature("Enchant roll", true)
-    end
 end
+-- ===============================================================
 
 task.spawn(function()
     while true do
@@ -3751,20 +3773,20 @@ end
 ----------------------------------------------------------------
 local StoneRightPanel = Instance.new("Frame")
 StoneRightPanel.Name                   = "StoneRightPanel"
-StoneRightPanel.Size                   = UDim2.new(0, 220, 1, -46)   -- tinggi = tinggi Main - TitleBar
+StoneRightPanel.Size                   = UDim2.new(0, 220, 1, -46)
 StoneRightPanel.AnchorPoint            = Vector2.new(1, 0)
-StoneRightPanel.Position               = UDim2.new(1, -10, 0, 40)    -- nempel kanan Main, di bawah TitleBar
+StoneRightPanel.Position               = UDim2.new(1, -10, 0, 40)
 StoneRightPanel.BackgroundColor3       = CARD or Color3.fromRGB(15, 15, 25)
 StoneRightPanel.BackgroundTransparency = 0.25
 StoneRightPanel.BorderSizePixel        = 0
 StoneRightPanel.Visible                = false
 StoneRightPanel.ZIndex                 = 10
-StoneRightPanel.Parent                 = Main       -- PENTING: parent ke Main (sama seperti Skin Animation)
+StoneRightPanel.Parent                 = Main
 
 Instance.new("UICorner", StoneRightPanel).CornerRadius = UDim.new(0, 10)
 local stStroke = Instance.new("UIStroke", StoneRightPanel)
-stStroke.Color       = THEME_MAIN
-stStroke.Transparency= 0.5
+stStroke.Color        = THEME_MAIN
+stStroke.Transparency = 0.5
 
 local stTitle = Instance.new("TextLabel")
 stTitle.Parent                 = StoneRightPanel
@@ -3825,14 +3847,14 @@ local function rebuildStonePanel()
             row.ZIndex                 = 11
 
             local line = Instance.new("Frame")
-            line.Name            = "Highlight"
-            line.Parent          = row
-            line.Size            = UDim2.new(0, 3, 1, 0)
-            line.Position        = UDim2.new(0, 0, 0, 0)
-            line.BackgroundColor3= THEME_MAIN or Color3.fromRGB(170, 90, 255)
-            line.BorderSizePixel = 0
-            line.Visible         = (_G.RAY_EnchantStoneId == id)
-            line.ZIndex          = 12
+            line.Name              = "Highlight"
+            line.Parent            = row
+            line.Size              = UDim2.new(0, 3, 1, 0)
+            line.Position          = UDim2.new(0, 0, 0, 0)
+            line.BackgroundColor3  = THEME_MAIN or Color3.fromRGB(170, 90, 255)
+            line.BorderSizePixel   = 0
+            line.Visible           = (_G.RAY_EnchantStoneId == id)
+            line.ZIndex            = 12
 
             local btn = Instance.new("TextButton")
             btn.Parent                 = row
@@ -3875,12 +3897,12 @@ EnchantRightPanel.BackgroundTransparency = 0.25
 EnchantRightPanel.BorderSizePixel        = 0
 EnchantRightPanel.Visible                = false
 EnchantRightPanel.ZIndex                 = 10
-EnchantRightPanel.Parent                 = Main    -- SAMA: nempel ke Main
+EnchantRightPanel.Parent                 = Main
 
 Instance.new("UICorner", EnchantRightPanel).CornerRadius = UDim.new(0, 10)
 local enStroke = Instance.new("UIStroke", EnchantRightPanel)
-enStroke.Color       = THEME_MAIN
-enStroke.Transparency= 0.5
+enStroke.Color        = THEME_MAIN
+enStroke.Transparency = 0.5
 
 local enTitle = Instance.new("TextLabel")
 enTitle.Parent                 = EnchantRightPanel
@@ -3944,14 +3966,14 @@ function rebuildEnchantPanel()
         row.ZIndex                 = 11
 
         local line = Instance.new("Frame")
-        line.Name            = "Highlight"
-        line.Parent          = row
-        line.Size            = UDim2.new(0, 3, 1, 0)
-        line.Position        = UDim2.new(0, 0, 0, 0)
-        line.BackgroundColor3= THEME_MAIN or Color3.fromRGB(170, 90, 255)
-        line.BorderSizePixel = 0
-        line.Visible         = (_G.RAY_EnchantTargetName == name)
-        line.ZIndex          = 12
+        line.Name              = "Highlight"
+        line.Parent            = row
+        line.Size              = UDim2.new(0, 3, 1, 0)
+        line.Position          = UDim2.new(0, 0, 0, 0)
+        line.BackgroundColor3  = THEME_MAIN or Color3.fromRGB(170, 90, 255)
+        line.BorderSizePixel   = 0
+        line.Visible           = (_G.RAY_EnchantTargetName == name)
+        line.ZIndex            = 12
 
         local btn = Instance.new("TextButton")
         btn.Parent                 = row
