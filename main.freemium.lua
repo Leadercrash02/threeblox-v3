@@ -3679,13 +3679,27 @@ local EquipItemRE = RS
     :WaitForChild("net")
     :WaitForChild("RE/EquipItem")
 
+local EquipToolFromHotbarRE = RS
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RE/EquipToolFromHotbar")
+
+-- kunci di hotbar slot 2
+local function EquipFromHotbar2()
+    pcall(function()
+        EquipToolFromHotbarRE:FireServer(2)
+    end)
+end
+
 -- cari entry batu di inventory berdasarkan Id
 local function findStoneEntryById(stoneId)
     local data = GetMainData()
     if not data then return nil end
 
     local inv   = data.Inventory
-    local items = inv and inv.Items     -- SESUAIKAN kalau field beda
+    local items = inv and inv.Items     -- sesuaikan jika beda
     if typeof(items) ~= "table" then return nil end
 
     for _, entry in pairs(items) do
@@ -3729,7 +3743,7 @@ local function HasTargetEnchant()
     local inv   = data.Inventory
     if not inv then return false end
 
-    local rods  = inv.Rods     -- SESUAIKAN kalau nama beda
+    local rods  = inv.Rods     -- sesuaikan kalau nama beda
     if typeof(rods) ~= "table" then return false end
 
     local targetName = _G.RAY_EnchantTargetName
@@ -3784,14 +3798,18 @@ local function DoAltarEnchantOnce()
     local second = (_G.RAY_EnchantTargetSlot == 2)
 
     task.spawn(function()
-        -- 1) auto pegang batu by Id dari panel
+        -- 1) pastikan tool/batu di hotbar 2 dipegang
+        EquipFromHotbar2()
+        task.wait(0.1)
+
+        -- 2) equip batu by Id (opsional, buat sinkron Id panel)
         local stoneId = _G.RAY_EnchantStoneId
         if stoneId then
             EquipStoneById(stoneId)
             task.wait(0.1)
         end
 
-        -- 2) roll enchant
+        -- 3) roll enchant
         local ok, err = pcall(function()
             EnchantingController:Activate(second)
                 :catch(function(msg)
@@ -3847,6 +3865,18 @@ local layout = Instance.new("UIListLayout")
 layout.Parent    = EnchantPresetSection
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Padding   = UDim.new(0, 6)
+
+-- NOTE: wajib taruh batu di slot kanan tas (hotbar 2)
+local note = Instance.new("TextLabel")
+note.Parent                 = EnchantPresetSection
+note.Size                   = UDim2.new(1, -20, 0, 18)
+note.Position               = UDim2.new(0, 10, 0, 0)
+note.BackgroundTransparency = 1
+note.Font                   = Enum.Font.Gotham
+note.TextSize               = 11
+note.TextXAlignment         = Enum.TextXAlignment.Left
+note.TextColor3             = Color3.fromRGB(255, 200, 120)
+note.Text                   = "NOTE: Taruh batu enchant di slot kanan tas (hotbar 2)."
 
 local function makeRow(title, height)
     local row = Instance.new("Frame")
@@ -4320,3 +4350,4 @@ UIS.InputBegan:Connect(function(input)
         EnchantRightPanel.Visible = false
     end
 end)
+
