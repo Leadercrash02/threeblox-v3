@@ -1404,6 +1404,94 @@ if AutoPage then
 end
 
 ----------------------------------------------------------------
+-- SETUP GLOBAL
+----------------------------------------------------------------
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local lp = Players.LocalPlayer
+local GuiControl = require(ReplicatedStorage.Modules.GuiControl)
+
+-- cache fungsi asli (hanya sekali di seluruh script)
+_G.__RAY_OldGuiControlClose = _G.__RAY_OldGuiControlClose or GuiControl.Close
+_G.__RAY_OldGuiControlLock  = _G.__RAY_OldGuiControlLock  or GuiControl.Lock
+_G.__RAY_OldGuiControlHUD   = _G.__RAY_OldGuiControlHUD   or GuiControl.SetHUDVisibility
+
+-- guard kamera supaya cutscene nggak bisa ambil alih
+local camConn
+local function ForcePlayerCamera()
+    local cam = Workspace.CurrentCamera
+    if not cam or not lp.Character then return end
+
+    local hum = lp.Character:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    cam.CameraType = Enum.CameraType.Custom
+    cam.CameraSubject = hum
+end
+
+local function StartCameraGuard()
+    ForcePlayerCamera()
+    if camConn then camConn:Disconnect() end
+    camConn = Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(ForcePlayerCamera)
+
+    -- kalau karakter respawn, segera balikin lagi ke kamera player
+    lp.CharacterAdded:Connect(function()
+        task.delay(0.2, ForcePlayerCamera)
+    end)
+end
+
+local function StopCameraGuard()
+    if camConn then
+        camConn:Disconnect()
+        camConn = nil
+    end
+end
+
+-- manager patch biar 2 toggle (Disable Cutscene / No Cutscene Pause) nggak tabrakan
+local function ReapplyGuiPatches()
+    local disableAll = _G.RAY_DisableCutscene
+    local noPause   = _G.RAY_NoCutscenePause
+
+    -- restore default dulu
+    if _G.__RAY_OldGuiControlClose then
+        GuiControl.Close = _G.__RAY_OldGuiControlClose
+    end
+    if _G.__RAY_OldGuiControlLock then
+        GuiControl.Lock = _G.__RAY_OldGuiControlLock
+    end
+    if _G.__RAY_OldGuiControlHUD then
+        GuiControl.SetHUDVisibility = _G.__RAY_OldGuiControlHUD
+    end
+
+    StopCameraGuard()
+
+    if disableAll then
+        -- full skip: HUD nggak pernah di-hide, lock nggak jalan, close nggak jalan
+        function GuiControl.Close(skipHud)
+            return
+        end
+        function GuiControl.Lock()
+            return
+        end
+        function GuiControl.SetHUDVisibility(flag)
+            return
+        end
+
+        -- guard kamera: cutscene nggak bisa ubah kamera
+        StartCameraGuard()
+
+    elseif noPause then
+        -- versi "No Cutscene Pause": HUD boleh, cutscene boleh, tapi lock mati
+        function GuiControl.Lock()
+            return
+        end
+        -- kamera tidak dijaga, jadi cutscene masih kelihatan
+    end
+end
+
+----------------------------------------------------------------
 -- DISABLE CUTSCENE (SKIP VISUAL, MANCING LANJUT)
 ----------------------------------------------------------------
 do
@@ -1441,75 +1529,41 @@ do
     knob.BackgroundTransparency = 0
     Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-    -- status global biar ke-remember
     local enabled = _G.RAY_DisableCutscene or false
 
-    -- cache fungsi GuiControl asli biar bisa balikin
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local GuiControl = require(ReplicatedStorage.Modules.GuiControl)
-
-    _G.__RAY_OldGuiControlClose = _G.__RAY_OldGuiControlClose or GuiControl.Close
-    _G.__RAY_OldGuiControlLock  = _G.__RAY_OldGuiControlLock  or GuiControl.Lock
-    _G.__RAY_OldGuiControlHUD   = _G.__RAY_OldGuiControlHUD   or GuiControl.SetHUDVisibility
-
-    local function applyPatch()
-        -- versi fungsi biasa, bukan method :
-        function GuiControl.Close(skipHud)
-            -- no-op: jangan lakukan apa-apa, biar fishing/GUI ga ke-close
-            return
-        end
-
-        function GuiControl.Lock()
-            -- no-op: jangan kunci movement / input
-            return
-        end
-
-        function GuiControl.SetHUDVisibility(flag)
-            -- optional: biarin HUD selalu kelihatan, abaikan permintaan cutscene
-            return
-        end
-    end
-
-    local function restorePatch()
-        if _G.__RAY_OldGuiControlClose then
-            GuiControl.Close = _G.__RAY_OldGuiControlClose
-        end
-        if _G.__RAY_OldGuiControlLock then
-            GuiControl.Lock = _G.__RAY_OldGuiControlLock
-        end
-        if _G.__RAY_OldGuiControlHUD then
-            GuiControl.SetHUDVisibility = _G.__RAY_OldGuiControlHUD
-        end
-    end
-
     local function refresh()
-        pill.BackgroundColor3 = enabled and (THEME_MAIN or Color3.fromRGB(140,90,255))
-            or (MUTED or Color3.fromRGB(70,70,90))
-        knob.Position = enabled and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+        pill.BackgroundColor3 = enabled
+            and (THEME_MAIN or Color3.fromRGB(140,90,255))
+            or  (MUTED or Color3.fromRGB(70,70,90))
+
+        knob.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
     end
 
     pill.MouseButton1Click:Connect(function()
         enabled = not enabled
         _G.RAY_DisableCutscene = enabled
 
+        -- kalau ini ON, matikan flag NoCutscenePause biar nggak bingung
         if enabled then
-            applyPatch()   -- cutscene dipanggil, tapi efek HUD/lock di-skip
-        else
-            restorePatch() -- balikin perilaku normal
+            _G.RAY_NoCutscenePause = false
         end
 
+        ReapplyGuiPatches()
         refresh()
+
         if NotifyFeature then
             NotifyFeature("Disable Cutscene", enabled)
         end
     end)
 
-    -- kalau rejoin / script reload dan toggle masih ON, pasang patch lagi
+    -- init kalau sebelum reload sudah ON
     task.delay(1, function()
         if enabled then
-            applyPatch()
-            refresh()
+            ReapplyGuiPatches()
         end
+        refresh()
     end)
 
     refresh()
@@ -1553,61 +1607,44 @@ do
     knob.BackgroundTransparency = 0
     Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-    -- status global biar ke-remember
     local enabled = _G.RAY_NoCutscenePause or false
 
-    -- patch cuma bagian "lock", biar cutscene tetap kelihatan
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local GuiControl = require(ReplicatedStorage.Modules.GuiControl)
-
-    _G.__RAY_OldGuiControlLock = _G.__RAY_OldGuiControlLock or GuiControl.Lock
-
-    local function applyPatch()
-        function GuiControl.Lock()
-            -- no-op: jangan kunci movement / input
-            return
-        end
-    end
-
-    local function restorePatch()
-        if _G.__RAY_OldGuiControlLock then
-            GuiControl.Lock = _G.__RAY_OldGuiControlLock
-        end
-    end
-
     local function refresh()
-        pill.BackgroundColor3 = enabled and (THEME_MAIN or Color3.fromRGB(140,90,255))
-            or (MUTED or Color3.fromRGB(70,70,90))
-        knob.Position = enabled and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+        pill.BackgroundColor3 = enabled
+            and (THEME_MAIN or Color3.fromRGB(140,90,255))
+            or  (MUTED or Color3.fromRGB(70,70,90))
+
+        knob.Position = enabled
+            and UDim2.new(1,-21,0.5,-9)
+            or  UDim2.new(0,3,0.5,-9)
     end
 
     pill.MouseButton1Click:Connect(function()
         enabled = not enabled
         _G.RAY_NoCutscenePause = enabled
 
+        -- kalau ini ON, matikan DisableCutscene supaya mode-nya jelas
         if enabled then
-            applyPatch()    -- cutscene tetap tayang, tapi nggak nge-lock kontrol
-        else
-            restorePatch()  -- balikin lock normal
+            _G.RAY_DisableCutscene = false
         end
 
+        ReapplyGuiPatches()
         refresh()
+
         if NotifyFeature then
             NotifyFeature("No Cutscene Pause", enabled)
         end
     end)
 
-    -- kalau rejoin / script reload dan toggle masih ON, pasang patch lagi
     task.delay(1, function()
         if enabled then
-            applyPatch()
+            ReapplyGuiPatches()
         end
         refresh()
     end)
 
     refresh()
 end
-
 
 ----------------------------------------------------------------
 -- DISABLE FISH IMAGE (FISHING SUPPORT)
@@ -1647,7 +1684,6 @@ do
     knob.BackgroundTransparency = 0
     Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-    -- global state biar nyimpen
     local enabled = _G.RAY_DisableFishImage or false
     local conn
     local gui = Players.LocalPlayer:WaitForChild("PlayerGui")
@@ -1663,13 +1699,11 @@ do
     end
 
     local function attach()
-        -- kill semua yang sudah muncul sekarang
         for _, v in ipairs(gui:GetDescendants()) do
             if v.Name == "Small Notification" then
                 v:Destroy()
             end
         end
-        -- blokir semua yang baru
         conn = gui.DescendantAdded:Connect(function(v)
             if v.Name == "Small Notification" then
                 v:Destroy()
@@ -1689,9 +1723,9 @@ do
         _G.RAY_DisableFishImage = enabled
 
         if enabled then
-            attach()   -- ON: kill + blokir
+            attach()
         else
-            detach()   -- OFF: lepas blok, notifikasi baru boleh muncul lagi
+            detach()
         end
 
         refresh()
@@ -1700,15 +1734,12 @@ do
         end
     end)
 
-    -- init kalau sebelum reload sudah ON
     if enabled then
         attach()
     end
 
     refresh()
 end
-
-
 
 ----------------------------------------------------------------
 -- DISABLE ROD SKIN (FISHING SUPPORT)
@@ -1784,7 +1815,6 @@ do
         end
     end)
 
-    -- init sesuai state
     apply()
     refresh()
 end
@@ -2724,8 +2754,10 @@ local function getTierFromItem(data)
 end
 
 ----------------------------------------------------------------
--- FILTER: RARITY / NAMA / VARIANT
+-- FILTER: RARITY / NAMA / VARIANT (VERSI SEDERHANA & BERGUNA)
 ----------------------------------------------------------------
+
+-- rarity: kalau tidak ada yang dicentang, artinya semua rarity boleh
 local function passesRarityFilterFav(data)
     local tierInfo = getTierFromItem(data)
     local rName = tierInfo and tierInfo.Name
@@ -2735,21 +2767,22 @@ local function passesRarityFilterFav(data)
     local M = _G.RAYFavMythicOn
     local S = _G.RAYFavSecretOn
 
+    -- semua false => tidak pakai filter rarity (semua lolos)
     if not L and not M and not S then
-        return false
+        return true
     end
 
-    -- kalau di game-mu nama tier beda (MYTHIC, Mythical, dsb), sesuaikan sini
     if rName == "Legendary" and L then return true end
     if rName == "Mythic"    and M then return true end
     if rName == "SECRET"    and S then return true end
     return false
 end
 
+-- nama: kalau list kosong, artinya tanpa filter nama (semua lolos nama)
 local function passesNameFilterFav(data)
     local sel = _G.RAYFavSelectedNames
     if not sel or next(sel) == nil then
-        return false
+        return true
     end
     return data.Name and sel[data.Name] == true
 end
@@ -2760,9 +2793,10 @@ local function getVariantNameFromEntry(entry)
     return VariantNameById[vid]
 end
 
+-- variant: kalau "Any" atau nil, artinya tanpa filter variant (semua lolos variant)
 local function passesVariantFilterFav(entry)
     if not _G.RAYFavVariantFilter or _G.RAYFavVariantFilter == "Any" then
-        return false
+        return true
     end
     local vName = getVariantNameFromEntry(entry)
     if not vName then return false end
@@ -2770,50 +2804,27 @@ local function passesVariantFilterFav(entry)
 end
 
 ----------------------------------------------------------------
--- LOGIC SESUAI MAUMU
--- 1) Semua ikan dengan rarity yg dicentang  => auto fav
--- 2) PLUS kombinasi spesifik (rarity + nama + variant) kalau di-set
+-- LOGIC: RARITY = FILTER UTAMA, NAMA & VARIANT OPSIONAL
 ----------------------------------------------------------------
-local function matchesGlobalRarity(data)
-    -- semua ikan di rarity yang dicentang, tanpa lihat nama/variant
-    return passesRarityFilterFav(data)
-end
 
-local function matchesSpecific(data, entry)
-    -- filter spesifik cuma aktif kalau kamu memang set nama/variant
-    local hasNameFilter    = _G.RAYFavSelectedNames and next(_G.RAYFavSelectedNames) ~= nil
-    local hasVariantFilter = _G.RAYFavVariantFilter and _G.RAYFavVariantFilter ~= "Any"
-
-    if not hasNameFilter and not hasVariantFilter then
+local function shouldFavorite(data, entry)
+    if data.Type ~= "Fish" then
         return false
     end
 
-    -- tetap hormati rarity centangmu
     if not passesRarityFilterFav(data) then
         return false
     end
 
-    if hasNameFilter and not passesNameFilterFav(data) then
+    if not passesNameFilterFav(data) then
         return false
     end
 
-    if hasVariantFilter and not passesVariantFilterFav(entry) then
+    if not passesVariantFilterFav(entry) then
         return false
     end
 
     return true
-end
-
-local function shouldFavorite(data, entry)
-    -- 1) global rarity: semua Mythic/Legend/Secret yang dicentang
-    if matchesGlobalRarity(data) then
-        return true
-    end
-    -- 2) tambahan: kombinasi spesifik (rarity+nama+variant) kalau kamu set
-    if matchesSpecific(data, entry) then
-        return true
-    end
-    return false
 end
 
 ----------------------------------------------------------------
@@ -2846,11 +2857,7 @@ local function StartAutoFavorite()
             local uuid = entry.UUID
             local data = id and ItemDataById[id]
 
-            if data
-                and data.Type == "Fish"
-                and uuid
-                and shouldFavorite(data, entry)
-            then
+            if data and uuid and shouldFavorite(data, entry) then
                 FavoriteRemote:FireServer(uuid)
                 count += 1
             end
@@ -2867,7 +2874,6 @@ task.delay(1, function()
         StartAutoFavorite()
     end
 end)
-
 
 ----------------------------------------------------------------
 -- PANEL KANAN: RARITY / FISH / VARIANT (PARENT = Main)
@@ -3251,36 +3257,36 @@ if BackpackPage then
 
     local function makeRow(title, height)
         local row = Instance.new("Frame")
-        row.Parent                 = AutoFavSection
-        row.Size                   = UDim2.new(1,0,0,height or 36)
-        row.BackgroundTransparency = 1
+        row.Parent                  = AutoFavSection
+        row.Size                    = UDim2.new(1,0,0,height or 36)
+        row.BackgroundTransparency  = 1
 
         local label = Instance.new("TextLabel")
-        label.Parent                 = row
-        label.Size                   = UDim2.new(1,-110,1,0)
-        label.Position               = UDim2.new(0,16,0,0)
-        label.BackgroundTransparency = 1
-        label.Font                   = Enum.Font.Gotham
-        label.TextSize               = 13
-        label.TextXAlignment         = Enum.TextXAlignment.Left
-        label.TextColor3             = TEXT or THEME_TEXT
-        label.Text                   = title
+        label.Parent                = row
+        label.Size                  = UDim2.new(1,-110,1,0)
+        label.Position              = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency= 1
+        label.Font                  = Enum.Font.Gotham
+        label.TextSize              = 13
+        label.TextXAlignment        = Enum.TextXAlignment.Left
+        label.TextColor3            = TEXT or THEME_TEXT
+        label.Text                  = title
 
         return row
     end
 
     local function makeSmallButton(row, text)
         local btn = Instance.new("TextButton")
-        btn.Parent                 = row
-        btn.Size                   = UDim2.new(0,120,0,24)
-        btn.Position               = UDim2.new(1,-136,0.5,-12)
-        btn.BackgroundColor3       = CARD or Color3.fromRGB(40,40,60)
-        btn.BackgroundTransparency = 0.1
-        btn.Text                   = text
-        btn.TextColor3             = THEME_TEXT
-        btn.Font                   = Enum.Font.GothamBold
-        btn.TextSize               = 12
-        btn.AutoButtonColor        = true
+        btn.Parent                  = row
+        btn.Size                    = UDim2.new(0,120,0,24)
+        btn.Position                = UDim2.new(1,-136,0.5,-12)
+        btn.BackgroundColor3        = CARD or Color3.fromRGB(40,40,60)
+        btn.BackgroundTransparency  = 0.1
+        btn.Text                    = text
+        btn.TextColor3              = THEME_TEXT
+        btn.Font                    = Enum.Font.GothamBold
+        btn.TextSize                = 12
+        btn.AutoButtonColor         = true
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
         return btn
     end
@@ -3289,25 +3295,29 @@ if BackpackPage then
     do
         local row = makeRow("Enable Auto Favorite (Loop)")
         local pill = Instance.new("TextButton")
-        pill.Parent                 = row
-        pill.Size                   = UDim2.new(0,50,0,24)
-        pill.Position               = UDim2.new(1,-80,0.5,-12)
-        pill.BackgroundColor3       = MUTED or Color3.fromRGB(70,70,90)
-        pill.BackgroundTransparency = 0.1
-        pill.Text                   = ""
-        pill.AutoButtonColor        = false
+        pill.Parent                  = row
+        pill.Size                    = UDim2.new(0,50,0,24)
+        pill.Position                = UDim2.new(1,-80,0.5,-12)
+        pill.BackgroundColor3        = MUTED or Color3.fromRGB(70,70,90)
+        pill.BackgroundTransparency  = 0.1
+        pill.Text                    = ""
+        pill.AutoButtonColor         = false
         Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
 
         local knob = Instance.new("Frame")
-        knob.Parent                 = pill
-        knob.Size                   = UDim2.new(0,18,0,18)
-        knob.Position               = UDim2.new(0,3,0.5,-9)
-        knob.BackgroundColor3       = Color3.fromRGB(255,255,255)
+        knob.Parent                  = pill
+        knob.Size                    = UDim2.new(0,18,0,18)
+        knob.Position                = UDim2.new(0,3,0.5,-9)
+        knob.BackgroundColor3        = Color3.fromRGB(255,255,255)
         Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
         local function refresh()
-            pill.BackgroundColor3 = _G.RAYFavOn and (ACCENT or Color3.fromRGB(0,200,100)) or (MUTED or Color3.fromRGB(70,70,90))
-            knob.Position         = _G.RAYFavOn and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+            pill.BackgroundColor3 = _G.RAYFavOn
+                and (ACCENT or Color3.fromRGB(0,200,100))
+                or  (MUTED or Color3.fromRGB(70,70,90))
+            knob.Position = _G.RAYFavOn
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
         end
 
         pill.MouseButton1Click:Connect(function()
@@ -3390,3 +3400,323 @@ UIS.InputBegan:Connect(function(input)
         FavVariantRightPanel.Visible = false
     end
 end)
+
+----------------------------------------------------------------
+-- AUTO TOTEM 🗿 (STRUCTUR BARU + PANEL KANAN + RECAST BOLEH)
+----------------------------------------------------------------
+
+-- STATE GLOBAL
+_G.RAYAutoTotemOn       = _G.RAYAutoTotemOn       or false
+_G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"  -- "Lucky" / "Mutasi" / "Shiny"
+
+-- BACKEND HELPER
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Replion = require(ReplicatedStorage.Packages.Replion)
+
+local SpawnTotemRemote = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RE/SpawnTotem")
+
+local TOTEM_DURATION = 3600
+
+local TotemTypeId = {
+    Mutasi = 2,
+    Shiny  = 3,
+    Lucky  = 1,
+}
+
+local function GetTotemDataReplion()
+    local ok, data = pcall(function()
+        local r = Replion.Client:WaitReplion("Data")
+        return r.Data
+    end)
+    if not ok or not data then return nil end
+    return data
+end
+
+local function findTotemUuidByType(jenis)
+    local targetId = TotemTypeId[jenis]
+    if not targetId then return nil end
+
+    local data = GetTotemDataReplion()
+    if not data then return nil end
+
+    local inv = data.Inventory
+    local totems = inv and inv.Totems
+    if typeof(totems) ~= "table" then return nil end
+
+    for _, entry in pairs(totems) do
+        if entry.Id == targetId then
+            return entry.UUID
+        end
+    end
+    return nil
+end
+
+local function SpawnTotemUUID(uuid)
+    if not uuid then return end
+    pcall(function()
+        SpawnTotemRemote:FireServer(uuid)
+        -- kalau butuh table:
+        -- SpawnTotemRemote:FireServer({UUID = uuid})
+    end)
+end
+
+----------------------------------------------------------------
+-- SECTION "AUTO TOTEM" DI BACKPACK
+----------------------------------------------------------------
+
+local BackpackPage = Pages and Pages["Backpack"]
+if BackpackPage then
+    local AutoTotemSection = CreateSectionDropdown(BackpackPage, "Auto Totem")
+
+    local sectionLayout = Instance.new("UIListLayout")
+    sectionLayout.Parent    = AutoTotemSection
+    sectionLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    sectionLayout.Padding   = UDim.new(0, 6)
+
+    local function makeRow(title, height)
+        local row = Instance.new("Frame")
+        row.Parent                  = AutoTotemSection
+        row.Size                    = UDim2.new(1,0,0,height or 36)
+        row.BackgroundTransparency  = 1
+
+        local label = Instance.new("TextLabel")
+        label.Parent                = row
+        label.Size                  = UDim2.new(1,-110,1,0)
+        label.Position              = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency= 1
+        label.Font                  = Enum.Font.Gotham
+        label.TextSize              = 13
+        label.TextXAlignment        = Enum.TextXAlignment.Left
+        label.TextColor3            = TEXT or THEME_TEXT
+        label.Text                  = title
+
+        return row
+    end
+
+    local function makeSmallButton(row, text)
+        local btn = Instance.new("TextButton")
+        btn.Parent                  = row
+        btn.Size                    = UDim2.new(0,120,0,24)
+        btn.Position                = UDim2.new(1,-136,0.5,-12)
+        btn.BackgroundColor3        = CARD or Color3.fromRGB(40,40,60)
+        btn.BackgroundTransparency  = 0.1
+        btn.Text                    = text
+        btn.TextColor3              = THEME_TEXT
+        btn.Font                    = Enum.Font.GothamBold
+        btn.TextSize                = 12
+        btn.AutoButtonColor         = true
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
+        return btn
+    end
+
+    ------------------------------------------------------------
+    -- PANEL KANAN: LIST TOTEM (MIRIP FAV RARITY PANEL)
+    ------------------------------------------------------------
+    local TotemRightPanel = Instance.new("Frame")
+    TotemRightPanel.Name = "TotemRightPanel"
+    TotemRightPanel.Size = UDim2.new(0, 220, 1, -46)
+    TotemRightPanel.AnchorPoint = Vector2.new(1, 0)
+    TotemRightPanel.Position = UDim2.new(1, -10, 0, 40)
+    TotemRightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
+    TotemRightPanel.BackgroundTransparency = 0.25
+    TotemRightPanel.BorderSizePixel = 0
+    TotemRightPanel.Visible = false
+    TotemRightPanel.ZIndex = 10
+    TotemRightPanel.Parent = BackpackPage
+
+    Instance.new("UICorner", TotemRightPanel).CornerRadius = UDim.new(0, 10)
+    local trStroke = Instance.new("UIStroke", TotemRightPanel)
+    trStroke.Color = THEME_MAIN
+    trStroke.Transparency = 0.5
+
+    local trTitle = Instance.new("TextLabel")
+    trTitle.Parent = TotemRightPanel
+    trTitle.Size = UDim2.new(1, -10, 0, 24)
+    trTitle.Position = UDim2.new(0, 5, 0, 6)
+    trTitle.BackgroundTransparency = 1
+    trTitle.Font = Enum.Font.GothamBold
+    trTitle.TextSize = 16
+    trTitle.TextXAlignment = Enum.TextXAlignment.Left
+    trTitle.TextColor3 = THEME_TEXT
+    trTitle.ZIndex = 11
+    trTitle.Text = "Totem List"
+
+    local trInfo = Instance.new("TextLabel")
+    trInfo.Parent = TotemRightPanel
+    trInfo.Size = UDim2.new(1, -10, 0, 18)
+    trInfo.Position = UDim2.new(0, 5, 0, 30)
+    trInfo.BackgroundTransparency = 1
+    trInfo.Font = Enum.Font.Gotham
+    trInfo.TextSize = 12
+    trInfo.TextXAlignment = Enum.TextXAlignment.Left
+    trInfo.TextColor3 = Color3.fromRGB(200,200,200)
+    trInfo.ZIndex = 11
+    trInfo.Text = "Pilih totem yang mau dipasang."
+
+    local trScroll = Instance.new("ScrollingFrame")
+    trScroll.Parent = TotemRightPanel
+    trScroll.Size = UDim2.new(1, -10, 1, -70)
+    trScroll.Position = UDim2.new(0, 5, 0, 54)
+    trScroll.BackgroundTransparency = 1
+    trScroll.BorderSizePixel = 0
+    trScroll.ScrollBarThickness = 3
+    trScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    trScroll.CanvasSize = UDim2.new(0,0,0,0)
+    trScroll.ScrollBarImageColor3 = THEME_MAIN
+    trScroll.ZIndex = 10
+
+    local trList = Instance.new("UIListLayout", trScroll)
+    trList.SortOrder = Enum.SortOrder.LayoutOrder
+    trList.Padding = UDim.new(0,4)
+
+    local TO_TYPES = { "Lucky", "Mutasi", "Shiny" }
+
+    local function rebuildTotemPanel()
+        for _, c in ipairs(trScroll:GetChildren()) do
+            if c:IsA("TextButton") or c:IsA("Frame") then
+                if c ~= trList then
+                    c:Destroy()
+                end
+            end
+        end
+
+        for _, jenis in ipairs(TO_TYPES) do
+            local id = TotemTypeId[jenis]
+
+            local row = Instance.new("Frame")
+            row.Parent = trScroll
+            row.Size = UDim2.new(1, -4, 0, 24)
+            row.BackgroundTransparency = 1
+            row.BorderSizePixel = 0
+            row.ZIndex = 11
+
+            local line = Instance.new("Frame")
+            line.Name = "Highlight"
+            line.Parent = row
+            line.Size = UDim2.new(0, 3, 1, 0)
+            line.Position = UDim2.new(0, 0, 0, 0)
+            -- ungu
+            line.BackgroundColor3 = Color3.fromRGB(160,110,255)
+            line.BorderSizePixel = 0
+            line.Visible = (_G.RAYSelectedTotemType == jenis)
+            line.ZIndex = 12
+
+            local btn = Instance.new("TextButton")
+            btn.Parent = row
+            btn.Size = UDim2.new(1, -6, 1, 0)
+            btn.Position = UDim2.new(0, 4, 0, 0)
+            btn.BackgroundColor3 = (_G.RAYSelectedTotemType == jenis) and Color3.fromRGB(40,40,70) or Color3.fromRGB(30,30,50)
+            btn.BorderSizePixel = 0
+            btn.TextColor3 = THEME_TEXT
+            btn.Font = Enum.Font.Gotham
+            btn.TextSize = 12
+            btn.TextXAlignment = Enum.TextXAlignment.Left
+            btn.Text = "  "..jenis.." Totem  ["..tostring(id).."]"
+            btn.AutoButtonColor = true
+            btn.ZIndex = 11
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+            btn.MouseButton1Click:Connect(function()
+                if _G.RAYSelectedTotemType == jenis then
+                    _G.RAYSelectedTotemType = nil
+                    if NotifyFeature then
+                        NotifyFeature("Totem "..jenis, false)
+                    end
+                else
+                    _G.RAYSelectedTotemType = jenis
+                    if NotifyFeature then
+                        NotifyFeature("Totem "..jenis, true)
+                    end
+                end
+                rebuildTotemPanel()
+            end)
+        end
+    end
+
+    rebuildTotemPanel()
+
+    ------------------------------------------------------------
+    -- ROW TOGGLE AUTO TOTEM (CAST SETIAP ON)
+    ------------------------------------------------------------
+    do
+        local row = makeRow("Enable Auto Totem (1x Cast)")
+
+        local pill = Instance.new("TextButton")
+        pill.Parent                  = row
+        pill.Size                    = UDim2.new(0,50,0,24)
+        pill.Position                = UDim2.new(1,-80,0.5,-12)
+        pill.BackgroundColor3        = MUTED or Color3.fromRGB(70,70,90)
+        pill.BackgroundTransparency  = 0.1
+        pill.Text                    = ""
+        pill.AutoButtonColor         = false
+        Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
+
+        local knob = Instance.new("Frame")
+        knob.Parent                  = pill
+        knob.Size                    = UDim2.new(0,18,0,18)
+        knob.Position                = UDim2.new(0,3,0.5,-9)
+        knob.BackgroundColor3        = Color3.fromRGB(255,255,255)
+        Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
+
+        local function refresh()
+            pill.BackgroundColor3 = _G.RAYAutoTotemOn
+                and (ACCENT or Color3.fromRGB(0,200,150))
+                or  (MUTED or Color3.fromRGB(70,70,90))
+            knob.Position = _G.RAYAutoTotemOn
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
+        end
+
+        local function castTotemOnce()
+            local jenis = _G.RAYSelectedTotemType or "Lucky"
+            local uuid = findTotemUuidByType(jenis)
+            if not uuid then
+                if NotifyFeature then
+                    NotifyFeature("Totem "..jenis.." tidak ditemukan", false)
+                end
+                return
+            end
+
+            SpawnTotemUUID(uuid)
+
+            if NotifyFeature then
+                NotifyFeature("Spawn "..jenis.." Totem", true)
+            end
+        end
+
+        pill.MouseButton1Click:Connect(function()
+            _G.RAYAutoTotemOn = not _G.RAYAutoTotemOn
+            refresh()
+
+            if _G.RAYAutoTotemOn then
+                -- setiap ON selalu pasang totem lagi
+                castTotemOnce()
+            else
+                if NotifyFeature then
+                    NotifyFeature("Auto Totem OFF", false)
+                end
+            end
+        end)
+
+        refresh()
+    end
+
+    ------------------------------------------------------------
+    -- ROW BUKA PANEL TOTEM LIST
+    ------------------------------------------------------------
+    do
+        local row = makeRow("Totem List Panel")
+        local btn = makeSmallButton(row, "Open")
+        btn.MouseButton1Click:Connect(function()
+            TotemRightPanel.Visible = not TotemRightPanel.Visible
+            if TotemRightPanel.Visible then
+                rebuildTotemPanel()
+            end
+        end)
+    end
+end
