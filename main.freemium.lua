@@ -760,7 +760,7 @@ if InfoPage then
 
     AddChangeLine("(+) Added New GUI layout")
     AddChangeLine("(+) Remove Blatant")
-    AddChangeLine("(+) Improve Blatan")
+    AddChangeLine("(+) Improve Blanatn")
 end
 
 ----------------------------------------------------------------
@@ -3590,7 +3590,7 @@ local StoneConfig = {
             "Mutation Hunter III",
             "Reeler II",
             "Gold Digger I",
-            "Fairy Hunter I",      -- kalau ini ga ada di Enchants, tinggal hapus dari list
+            "Fairy Hunter I",      -- kalau ini ga ada di Enchants, tinggal hapus
             "Stargazer II",
             "Stormhunter II",
             "Empowered I",
@@ -3662,10 +3662,11 @@ end
 -----------------------------
 -- BACKEND: REMOTE & REPLION
 -----------------------------
-local RS        = game:GetService("ReplicatedStorage")
-local Players   = game:GetService("Players")
-local Player    = Players.LocalPlayer
-local Replion   = require(RS.Packages.Replion)
+local RS      = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local Player  = Players.LocalPlayer
+local Replion = require(RS.Packages.Replion)
+local Net     = require(RS.Packages.Net)
 
 -- CFrame altar (punya kamu)
 local CF_Altar_Slot1 = CFrame.new(
@@ -3705,7 +3706,7 @@ local function GetMainData()
 end
 
 ----------------------------------------------------------------
--- BACKEND: AUTO EQUIP BATU DI HAND (PAKAI ID -> UUID)
+-- AUTO EQUIP BATU DI HAND (PAKAI ID -> UUID)
 ----------------------------------------------------------------
 
 local EquipItemRE = RS
@@ -3722,14 +3723,12 @@ local EquipToolFromHotbarRE = RS
     :WaitForChild("net")
     :WaitForChild("RE/EquipToolFromHotbar")
 
--- kunci di hotbar slot 2
 local function EquipFromHotbar2()
     pcall(function()
         EquipToolFromHotbarRE:FireServer(2)
     end)
 end
 
--- cari entry batu di inventory berdasarkan Id
 local function findStoneEntryById(stoneId)
     local data = GetMainData()
     if not data then return nil end
@@ -3770,43 +3769,43 @@ local function EquipStoneById(stoneId)
 end
 
 ----------------------------------------------------------------
--- HasTargetEnchant: cek enchant rod, auto STOP kalau sudah dapat
--- Pakai Inventory["Fishing Rods"][i].Metadata.EnchantId / EnchantId2
+-- AUTO STOP BERDASARKAN WINNING ENCHANT (ROLLENCHANT REMOTEEVENT)
 ----------------------------------------------------------------
-local function HasTargetEnchant()
-    local data = GetMainData()
-    if not data then return false end
 
-    local inv = data.Inventory
-    if not inv then return false end
+local RollEnchantRE = Net:RemoteEvent("RollEnchant")
 
-    local rods = inv["Fishing Rods"]
-    if typeof(rods) ~= "table" then return false end
+local TargetName  = _G.RAY_EnchantTargetName
+local TargetId    = nil
 
-    local targetName = _G.RAY_EnchantTargetName
-    if not targetName or targetName == "" then return false end
-
-    -- cek SEMUA rod: kalau ada yang punya enchant target, stop
-    for _, rod in pairs(rods) do
-        local meta = rod.Metadata
-        if typeof(meta) == "table" then
-            local eid1 = meta.EnchantId
-            local eid2 = meta.EnchantId2
-
-            local name1 = eid1 and getEnchantNameFromId(eid1)
-            local name2 = eid2 and getEnchantNameFromId(eid2)
-
-            if name1 == targetName or name2 == targetName then
-                print("[EnchantDebug] Match di rod UUID", rod.UUID, "Id", rod.Id, "->", name1 or name2)
-                return true
-            end
+local function refreshTarget()
+    TargetName = _G.RAY_EnchantTargetName
+    -- kalau kamu mau pakai ID langsung: tinggal bikin tabel Name->Id
+    TargetId   = nil
+    for id, name in pairs(EnchantIdToName) do
+        if name == TargetName then
+            TargetId = id
+            break
         end
     end
-
-    return false
+    print("[EnchantDebug] TargetName =", TargetName, "TargetId =", TargetId)
 end
 
+refreshTarget()
 
+_G.RAY_EnchantTargetChanged = function()
+    refreshTarget()
+end
+
+RollEnchantRE.OnClientEvent:Connect(function(_, _, winningEnchantId, stoneId)
+    -- arg1, arg2 tidak kita pakai; arg3 = winning enchant id, arg4 = stone id
+    print("[EnchantDebug] RollEnchant winId =", winningEnchantId, "stoneId =", stoneId)
+    if _G.RAY_EnchantAutoOn and TargetId and winningEnchantId == TargetId then
+        _G.RAY_EnchantAutoOn = false
+        if NotifyFeature then
+            NotifyFeature("Stop: dapet "..tostring(TargetName), true)
+        end
+    end
+end)
 
 ----------------------------------------------------------------
 -- ENCHANTINGCONTROLLER
@@ -3817,21 +3816,21 @@ local function DoAltarEnchantOnce()
     local second = (_G.RAY_EnchantTargetSlot == 2)
 
     task.spawn(function()
-        -- 1) pastikan tool/batu di hotbar 2 dipegang
-        EquipFromHotbar2()
-        task.wait(0.1)
+        print("[EnchantDebug] DoAltarEnchantOnce, second =", second, "stoneId =", _G.RAY_EnchantStoneId)
 
-        -- 2) equip batu by Id (opsional, buat sinkron Id panel)
+        EquipFromHotbar2()
+        task.wait(0.2)
+
         local stoneId = _G.RAY_EnchantStoneId
         if stoneId then
             EquipStoneById(stoneId)
-            task.wait(0.1)
+            task.wait(0.2)
         end
 
-        -- 3) roll enchant via controller
-        local ok, err = pcall(function()
-            EnchantingController:Activate(second)
+        local ok, result = pcall(function()
+            return EnchantingController:Activate(second)
                 :catch(function(msg)
+                    warn("[EnchantDebug] Activate catch:", msg)
                     if NotifyFeature then
                         NotifyFeature("Enchant error: "..tostring(msg), false)
                     end
@@ -3839,35 +3838,30 @@ local function DoAltarEnchantOnce()
                 :await()
         end)
 
-        if ok then
+        if not ok then
+            warn("[EnchantDebug] pcall Activate error:", result)
             if NotifyFeature then
-                NotifyFeature("Enchant roll", true)
+                NotifyFeature("Enchant failed (pcall)", false)
             end
         else
-            warn("Enchant Activate failed:", err)
+            print("[EnchantDebug] Activate ok, result =", result)
             if NotifyFeature then
-                NotifyFeature("Enchant failed", false)
+                NotifyFeature("Enchant roll", true)
             end
         end
     end)
 end
 
 ----------------------------------------------------------------
--- LOOP AUTO ENCHANT: stop kalau HasTargetEnchant() true
+-- LOOP AUTO ENCHANT: TIDAK CEK INVENTORY, HANYA SPAM ACTIVATE
+-- STOP DIHOOK DARI RollEnchantRE (lihat handler di atas)
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
         if _G.RAY_EnchantAutoOn then
-            if HasTargetEnchant() then
-                _G.RAY_EnchantAutoOn = false
-                if NotifyFeature then
-                    NotifyFeature("Enchant target tercapai: "..tostring(_G.RAY_EnchantTargetName), true)
-                end
-            else
-                DoAltarEnchantOnce()
-            end
+            DoAltarEnchantOnce()
         end
-        task.wait(0.6)
+        task.wait(0.8)
     end
 end)
 
@@ -3885,7 +3879,6 @@ layout.Parent    = EnchantPresetSection
 layout.SortOrder = Enum.SortOrder.LayoutOrder
 layout.Padding   = UDim.new(0, 6)
 
--- NOTE: wajib taruh batu di slot kanan tas (hotbar 2)
 local note = Instance.new("TextLabel")
 note.Parent                 = EnchantPresetSection
 note.Size                   = UDim2.new(1, -20, 0, 18)
@@ -4039,6 +4032,9 @@ local function rebuildStonePanel()
             btn.MouseButton1Click:Connect(function()
                 _G.RAY_EnchantStoneId    = id
                 _G.RAY_EnchantTargetName = cfg.Enchants[1] or _G.RAY_EnchantTargetName
+                if _G.RAY_EnchantTargetChanged then
+                    _G.RAY_EnchantTargetChanged()
+                end
                 if NotifyFeature then
                     NotifyFeature("Enchant Stone: "..cfg.Name, true)
                 end
@@ -4157,6 +4153,9 @@ function rebuildEnchantPanel()
 
         btn.MouseButton1Click:Connect(function()
             _G.RAY_EnchantTargetName = name
+            if _G.RAY_EnchantTargetChanged then
+                _G.RAY_EnchantTargetChanged()
+            end
             if NotifyFeature then
                 NotifyFeature("Target Enchant: "..name, true)
             end
@@ -4292,6 +4291,7 @@ do
 
     pill.MouseButton1Click:Connect(function()
         _G.RAY_EnchantAutoOn = not _G.RAY_EnchantAutoOn
+        print("[EnchantDebug] AutoOn =", _G.RAY_EnchantAutoOn)
         refreshAuto()
         if NotifyFeature then
             NotifyFeature("Auto Enchant", _G.RAY_EnchantAutoOn)
