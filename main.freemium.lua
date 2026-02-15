@@ -760,7 +760,7 @@ if InfoPage then
 
     AddChangeLine("(+) Added New GUI layout")
     AddChangeLine("(+) Remove Blatant")
-    AddChangeLine("(+) Improve Instant")
+    AddChangeLine("(+) Improve Blanatn")
 end
 
 ----------------------------------------------------------------
@@ -3787,11 +3787,14 @@ local function HasTargetEnchant()
     if not targetName or targetName == "" then return false end
 
     local equippedUUID = data.EquippedId
+    local equippedType = data.EquippedType
     if not equippedUUID or equippedUUID == "" then
         return false
     end
 
-    -- cari rod yang UUID-nya sama dengan EquippedId
+    -- DEBUG: lihat rod yang lagi ke-equip
+    print("[EnchantDebug] EquippedId =", equippedUUID, "EquippedType =", equippedType)
+
     local equippedRod
     for _, rod in pairs(rods) do
         if rod.UUID == equippedUUID then
@@ -3800,26 +3803,31 @@ local function HasTargetEnchant()
         end
     end
     if not equippedRod then
+        print("[EnchantDebug] Tidak ketemu rod dengan UUID itu di Fishing Rods")
         return false
     end
 
     local meta = equippedRod.Metadata
     if typeof(meta) ~= "table" then
+        print("[EnchantDebug] Rod tidak punya Metadata")
         return false
     end
 
     local eid1 = meta.EnchantId
     local eid2 = meta.EnchantId2
-
     local name1 = eid1 and getEnchantNameFromId(eid1)
     local name2 = eid2 and getEnchantNameFromId(eid2)
 
+    print("[EnchantDebug] eid1,eid2 =", eid1, eid2, "->", name1, name2, "target =", targetName)
+
     if name1 == targetName or name2 == targetName then
+        print("[EnchantDebug] MATCH, stop")
         return true
     end
 
     return false
 end
+
 
 ----------------------------------------------------------------
 -- ENCHANTINGCONTROLLER
