@@ -3533,23 +3533,22 @@ if BackpackPage then
 end
 
 ----------------------------------------------------------------
--- ENCHANT PRESET + RIGHT PANELS
+-- ENCHANT PRESET FULL
 ----------------------------------------------------------------
 
 -----------------------------
 -- STATE GLOBAL
 -----------------------------
-_G.RAY_EnchantAutoOn      = _G.RAY_EnchantAutoOn      or false  -- toggle utama
-_G.RAY_EnchantTargetSlot  = _G.RAY_EnchantTargetSlot  or 1      -- 1 / 2
-_G.RAY_EnchantStoneId     = _G.RAY_EnchantStoneId     or 10     -- default Enchant Stone (Id 10)
+_G.RAY_EnchantAutoOn      = _G.RAY_EnchantAutoOn      or false
+_G.RAY_EnchantTargetSlot  = _G.RAY_EnchantTargetSlot  or 1
+_G.RAY_EnchantStoneId     = _G.RAY_EnchantStoneId     or 10
 _G.RAY_EnchantTargetName  = _G.RAY_EnchantTargetName  or "Leprechaun I"
 
 -----------------------------
--- KONFIGURASI BATU & ENCHANT
+-- KONFIG BATU & ENCHANT
 -----------------------------
-
 local StoneConfig = {
-    [10] = { -- Enchant Stone
+    [10] = {
         Name = "Enchant Stone",
         Slot = 1,
         Enchants = {
@@ -3569,7 +3568,7 @@ local StoneConfig = {
             "Prismatic I",
         },
     },
-    [125] = { -- Super Enchant Stone
+    [125] = {
         Name = "Super Enchant Stone",
         Slot = 1,
         Enchants = {
@@ -3580,7 +3579,7 @@ local StoneConfig = {
             "Prismatic I",
         },
     },
-    [558] = { -- Evolved Enchant Stone
+    [558] = {
         Name = "Evolved Enchant Stone",
         Slot = 1,
         Enchants = {
@@ -3599,10 +3598,10 @@ local StoneConfig = {
             "SECRET Hunter",
         },
     },
-    [246] = { -- Transcended Stone (Second Enchant / Slot 2)
-        Name = "Transcended Stone",
-        Slot = 2,
-        Second = true,
+    [246] = {
+        Name   = "Transcended Stone",
+        Slot   = 2,
+        Second = true, -- second enchant
         Enchants = {
             "Perfection",
             "Leprechaun I",
@@ -3629,23 +3628,8 @@ local StoneList = {10, 125, 558, 246}
 -- BACKEND: REMOTE & REPLION
 -----------------------------
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local Replion = require(ReplicatedStorage.Packages.Replion)
-
--- Net (sleitnick_net) / RE ActivateEnchantingAltar
-local Net = require(
-    ReplicatedStorage
-        :WaitForChild("Packages")
-        :WaitForChild("_Index")
-        :WaitForChild("sleitnick_net@0.2.0")
-).net -- RbxUtil Net [web:10]
-
 local RE_ActivateEnchantingAltar = Net["RE/ActivateEnchantingAltar"] -- RemoteEvent enchant [web:186]
 
--- CFrame TP altar
 local CF_Altar_Slot1 = CFrame.new(
     3232.90356, -1302.8551, 1401.0824,
     0.483647138, 0, -0.875263095,
@@ -3662,8 +3646,9 @@ local CF_Altar_Slot2 = CFrame.new(
 
 local function TpAltar(slot)
     local cf = slot == 2 and CF_Altar_Slot2 or CF_Altar_Slot1
-    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local lp   = Players.LocalPlayer
+    local char = lp.Character or lp.CharacterAdded:Wait()
+    local hrp  = char:FindFirstChild("HumanoidRootPart")
     if hrp then
         hrp.CFrame = cf
         if NotifyFeature then
@@ -3682,54 +3667,9 @@ local function GetMainData()
     return r.Data
 end
 
--- NOTE: struktur di bawah ini masih generic.
--- Setelah kamu punya dump data real (data.Altar / data.Inventory item yang ke-enchant),
--- tinggal sesuaikan path dan field-nya. [file:145][web:172]
+-- sementara: cek target belum dihubungkan ke data Replion yang asli
+-- nanti kalau sudah kirim structure data enchant, bagian ini tinggal di-adjust. [file:145][web:172]
 local function HasTargetEnchant()
-    local targetName = _G.RAY_EnchantTargetName
-    if not targetName or targetName == "" then
-        return false
-    end
-
-    local data = GetMainData()
-    if not data then
-        return false
-    end
-
-    local slot = _G.RAY_EnchantTargetSlot or 1
-    local altar = data.Altar
-    if not altar then
-        return false
-    end
-
-    local slotData
-    if slot == 1 then
-        slotData = altar.Slot1 or altar[1]
-    else
-        slotData = altar.Slot2 or altar[2]
-    end
-    if not slotData then
-        return false
-    end
-
-    -- asumsi utama: slotData.Enchants = list enchant utama,
-    -- slotData.SecondEnchants = list enchant kedua (kalau Transcended).
-    local enchants = slotData.Enchants
-    if slot == 2 and StoneConfig[_G.RAY_EnchantStoneId] and StoneConfig[_G.RAY_EnchantStoneId].Second then
-        enchants = slotData.SecondEnchants or enchants
-    end
-
-    if type(enchants) ~= "table" then
-        return false
-    end
-
-    for _, ench in ipairs(enchants) do
-        local name = ench.Name or ench.DisplayName or ench.Id
-        if name == targetName then
-            return true
-        end
-    end
-
     return false
 end
 
@@ -3742,7 +3682,6 @@ local function DoAltarEnchantOnce()
     end
 end
 
--- ENGINE AUTO ENCHANT
 task.spawn(function()
     while true do
         if _G.RAY_EnchantAutoOn then
@@ -3762,13 +3701,13 @@ end)
 ----------------------------------------------------------------
 -- SECTION ENCHANT PRESET (BACKPACK) + 2 PANEL KANAN
 ----------------------------------------------------------------
-
 local BackpackPage = Pages and Pages.Backpack
 if BackpackPage then
     -------------------------
     -- SECTION MAIN
     -------------------------
-    local EnchantPresetSection = CreateSectionDropdownBackpackPage and CreateSectionDropdownBackpackPage(BackpackPage, "Enchant Preset") or CreateSectionDropdown(BackpackPage, "Enchant Preset")
+    local EnchantPresetSection = CreateSectionDropdownBackpackPage(BackpackPage, "Enchant Preset")
+
 
     local layout = Instance.new("UIListLayout", EnchantPresetSection)
     layout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -4218,7 +4157,7 @@ if BackpackPage then
     end
 
     -------------------------
-    -- CLOSE PANEL DARI KLIK DI LUAR (OPSIONAL, MIRIP POTION)
+    -- CLOSE PANEL DARI KLIK DI LUAR
     -------------------------
     UIS.InputBegan:Connect(function(input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1
@@ -4227,12 +4166,13 @@ if BackpackPage then
         end
 
         local function outside(panel)
-            if not panel.Visible then return false end
-            local pos = input.Position
+            if not panel or not panel.Visible then return false end
+            local pos    = input.Position
             local absPos = panel.AbsolutePosition
-            local absSize = panel.AbsoluteSize
-            local inside = pos.X >= absPos.X and pos.X <= absPos.X + absSize.X
-                and pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
+            local absSize= panel.AbsoluteSize
+            local inside =
+                pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
+                pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
             return not inside
         end
 
