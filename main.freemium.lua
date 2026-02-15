@@ -3533,7 +3533,7 @@ if BackpackPage then
 end
 
 ----------------------------------------------------------------
--- ENCHANT PRESET FULL
+-- ENCHANT PRESET (BACKEND + UI, MIRIP POTION)
 ----------------------------------------------------------------
 
 -----------------------------
@@ -3601,7 +3601,7 @@ local StoneConfig = {
     [246] = {
         Name   = "Transcended Stone",
         Slot   = 2,
-        Second = true, -- second enchant
+        Second = true,
         Enchants = {
             "Perfection",
             "Leprechaun I",
@@ -3627,8 +3627,10 @@ local StoneList = {10, 125, 558, 246}
 -----------------------------
 -- BACKEND: REMOTE & REPLION
 -----------------------------
+-- Net, Replion, Players, UIS sudah ada di atas file (lihat block MODULES & NET)
+-- Tinggal pakai saja, sama seperti Potion. [file:145][web:10]
 
-local RE_ActivateEnchantingAltar = Net["RE/ActivateEnchantingAltar"] -- RemoteEvent enchant [web:186]
+local RE_ActivateEnchantingAltar = Net:WaitForChild("RE/ActivateEnchantingAltar") -- [web:186]
 
 local CF_Altar_Slot1 = CFrame.new(
     3232.90356, -1302.8551, 1401.0824,
@@ -3645,10 +3647,10 @@ local CF_Altar_Slot2 = CFrame.new(
 )
 
 local function TpAltar(slot)
-    local cf = slot == 2 and CF_Altar_Slot2 or CF_Altar_Slot1
-    local lp   = Players.LocalPlayer
-    local char = lp.Character or lp.CharacterAdded:Wait()
-    local hrp  = char:FindFirstChild("HumanoidRootPart")
+    local cf  = slot == 2 and CF_Altar_Slot2 or CF_Altar_Slot1
+    local lp  = Player
+    local chr = lp.Character or lp.CharacterAdded:Wait()
+    local hrp = chr:FindFirstChild("HumanoidRootPart")
     if hrp then
         hrp.CFrame = cf
         if NotifyFeature then
@@ -3667,8 +3669,7 @@ local function GetMainData()
     return r.Data
 end
 
--- sementara: cek target belum dihubungkan ke data Replion yang asli
--- nanti kalau sudah kirim structure data enchant, bagian ini tinggal di-adjust. [file:145][web:172]
+-- placeholder dulu, nanti diganti cek beneran ke data enchant Replion. [file:145][web:172]
 local function HasTargetEnchant()
     return false
 end
@@ -3699,118 +3700,113 @@ task.spawn(function()
 end)
 
 ----------------------------------------------------------------
--- SECTION ENCHANT PRESET (BACKPACK) + 2 PANEL KANAN
+-- SECTION "ENCHANT PRESET" + PANEL KANAN (PERSIS POLA POTION)
 ----------------------------------------------------------------
-local BackpackPage = Pages and Pages.Backpack
+
+local BackpackPage = Pages and Pages["Backpack"]
 if BackpackPage then
-    -------------------------
-    -- SECTION MAIN
-    -------------------------
     local EnchantPresetSection = CreateSectionDropdownBackpackPage(BackpackPage, "Enchant Preset")
 
-
-    local layout = Instance.new("UIListLayout", EnchantPresetSection)
+    local layout = Instance.new("UIListLayout")
+    layout.Parent    = EnchantPresetSection
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 6)
+    layout.Padding   = UDim.new(0, 6)
 
     local function makeRow(title, height)
         local row = Instance.new("Frame")
-        row.Parent = EnchantPresetSection
-        row.Size = UDim2.new(1, 0, 0, height or 36)
+        row.Parent                 = EnchantPresetSection
+        row.Size                   = UDim2.new(1,0,0,height or 36)
         row.BackgroundTransparency = 1
 
         local label = Instance.new("TextLabel")
-        label.Parent = row
-        label.Size = UDim2.new(1, -110, 1, 0)
-        label.Position = UDim2.new(0, 16, 0, 0)
-        label.BackgroundTransparency = 1
-        label.Font = Enum.Font.Gotham
-        label.TextSize = 13
-        label.TextXAlignment = Enum.TextXAlignment.Left
-        label.TextColor3 = TEXT or THEMETEXT
-        label.Text = title
+        label.Parent                = row
+        label.Size                  = UDim2.new(1,-110,1,0)
+        label.Position              = UDim2.new(0,16,0,0)
+        label.BackgroundTransparency= 1
+        label.Font                  = Enum.Font.Gotham
+        label.TextSize              = 13
+        label.TextXAlignment        = Enum.TextXAlignment.Left
+        label.TextColor3            = TEXT or THEME_TEXT
+        label.Text                  = title
 
         return row
     end
 
     local function makeSmallButton(row, text)
         local btn = Instance.new("TextButton")
-        btn.Parent = row
-        btn.Size = UDim2.new(0, 120, 0, 24)
-        btn.Position = UDim2.new(1, -136, 0.5, -12)
-        btn.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+        btn.Parent                 = row
+        btn.Size                   = UDim2.new(0,120,0,24)
+        btn.Position               = UDim2.new(1,-136,0.5,-12)
+        btn.BackgroundColor3       = CARD or Color3.fromRGB(40,40,60)
         btn.BackgroundTransparency = 0.1
-        btn.Text = text
-        btn.TextColor3 = THEMETEXT
-        btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 12
-        btn.AutoButtonColor = true
+        btn.Text                   = text
+        btn.TextColor3             = THEME_TEXT
+        btn.Font                   = Enum.Font.GothamBold
+        btn.TextSize               = 12
+        btn.AutoButtonColor        = true
         Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
         return btn
     end
 
-    -------------------------
-    -- PANEL KANAN: STONE LIST
-    -------------------------
+    ----------------------------------------------------------------
+    -- PANEL KANAN: STONE LIST (NEMPEL MAIN, SAMA KAYAK POTION)
+    ----------------------------------------------------------------
     local StoneRightPanel = Instance.new("Frame")
-    StoneRightPanel.Name = "StoneRightPanel"
-    StoneRightPanel.Size = UDim2.new(0, 220, 1, -46)
-    StoneRightPanel.AnchorPoint = Vector2.new(1, 0)
-    StoneRightPanel.Position = UDim2.new(1, -10, 0, 40)
-    StoneRightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
+    StoneRightPanel.Name                   = "StoneRightPanel"
+    StoneRightPanel.Size                   = UDim2.new(0, 220, 1, -46)
+    StoneRightPanel.AnchorPoint            = Vector2.new(1, 0)
+    StoneRightPanel.Position               = UDim2.new(1, -10, 0, 40)
+    StoneRightPanel.BackgroundColor3       = CARD or Color3.fromRGB(15, 15, 25)
     StoneRightPanel.BackgroundTransparency = 0.25
-    StoneRightPanel.BorderSizePixel = 0
-    StoneRightPanel.Visible = false
-    StoneRightPanel.ZIndex = 10
-    StoneRightPanel.Parent = BackpackPage
+    StoneRightPanel.BorderSizePixel        = 0
+    StoneRightPanel.Visible                = false
+    StoneRightPanel.ZIndex                 = 10
+    StoneRightPanel.Parent                 = Main or BackpackPage
 
-    do
-        local corner = Instance.new("UICorner", StoneRightPanel)
-        corner.CornerRadius = UDim.new(0, 10)
-        local stroke = Instance.new("UIStroke", StoneRightPanel)
-        stroke.Color = THEMEMAIN
-        stroke.Transparency = 0.5
-    end
+    Instance.new("UICorner", StoneRightPanel).CornerRadius = UDim.new(0, 10)
+    local stStroke = Instance.new("UIStroke", StoneRightPanel)
+    stStroke.Color        = THEME_MAIN
+    stStroke.Transparency = 0.5
 
     local stTitle = Instance.new("TextLabel")
-    stTitle.Parent = StoneRightPanel
-    stTitle.Size = UDim2.new(1, -10, 0, 24)
-    stTitle.Position = UDim2.new(0, 5, 0, 6)
+    stTitle.Parent               = StoneRightPanel
+    stTitle.Size                 = UDim2.new(1, -10, 0, 24)
+    stTitle.Position             = UDim2.new(0, 5, 0, 6)
     stTitle.BackgroundTransparency = 1
-    stTitle.Font = Enum.Font.GothamBold
-    stTitle.TextSize = 16
-    stTitle.TextXAlignment = Enum.TextXAlignment.Left
-    stTitle.TextColor3 = THEMETEXT
-    stTitle.ZIndex = 11
-    stTitle.Text = "Stone List"
+    stTitle.Font                 = Enum.Font.GothamBold
+    stTitle.TextSize             = 16
+    stTitle.TextXAlignment       = Enum.TextXAlignment.Left
+    stTitle.TextColor3           = THEME_TEXT
+    stTitle.ZIndex               = 11
+    stTitle.Text                 = "Stone List"
 
     local stInfo = Instance.new("TextLabel")
-    stInfo.Parent = StoneRightPanel
-    stInfo.Size = UDim2.new(1, -10, 0, 18)
-    stInfo.Position = UDim2.new(0, 5, 0, 30)
+    stInfo.Parent               = StoneRightPanel
+    stInfo.Size                 = UDim2.new(1, -10, 0, 18)
+    stInfo.Position             = UDim2.new(0, 5, 0, 30)
     stInfo.BackgroundTransparency = 1
-    stInfo.Font = Enum.Font.Gotham
-    stInfo.TextSize = 12
-    stInfo.TextXAlignment = Enum.TextXAlignment.Left
-    stInfo.TextColor3 = Color3.fromRGB(200,200,200)
-    stInfo.ZIndex = 11
-    stInfo.Text = "Pilih batu enchant untuk slot."
+    stInfo.Font                 = Enum.Font.Gotham
+    stInfo.TextSize             = 12
+    stInfo.TextXAlignment       = Enum.TextXAlignment.Left
+    stInfo.TextColor3           = Color3.fromRGB(200,200,200)
+    stInfo.ZIndex               = 11
+    stInfo.Text                 = "Pilih batu enchant untuk slot."
 
     local stScroll = Instance.new("ScrollingFrame")
-    stScroll.Parent = StoneRightPanel
-    stScroll.Size = UDim2.new(1, -10, 1, -70)
-    stScroll.Position = UDim2.new(0, 5, 0, 54)
+    stScroll.Parent               = StoneRightPanel
+    stScroll.Size                 = UDim2.new(1, -10, 1, -70)
+    stScroll.Position             = UDim2.new(0, 5, 0, 54)
     stScroll.BackgroundTransparency = 1
-    stScroll.BorderSizePixel = 0
-    stScroll.ScrollBarThickness = 3
-    stScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    stScroll.CanvasSize = UDim2.new(0,0,0,0)
-    stScroll.ScrollBarImageColor3 = THEMEMAIN
-    stScroll.ZIndex = 10
+    stScroll.BorderSizePixel      = 0
+    stScroll.ScrollBarThickness   = 3
+    stScroll.AutomaticCanvasSize  = Enum.AutomaticSize.Y
+    stScroll.CanvasSize           = UDim2.new(0,0,0,0)
+    stScroll.ScrollBarImageColor3 = THEME_MAIN
+    stScroll.ZIndex               = 10
 
     local stList = Instance.new("UIListLayout", stScroll)
     stList.SortOrder = Enum.SortOrder.LayoutOrder
-    stList.Padding = UDim.new(0, 4)
+    stList.Padding   = UDim.new(0, 4)
 
     local function rebuildStonePanel()
         for _, c in ipairs(stScroll:GetChildren()) do
@@ -3823,40 +3819,39 @@ if BackpackPage then
             local cfg = StoneConfig[id]
             if cfg then
                 local row = Instance.new("Frame")
-                row.Parent = stScroll
-                row.Size = UDim2.new(1, -4, 0, 24)
+                row.Parent                 = stScroll
+                row.Size                   = UDim2.new(1, -4, 0, 24)
                 row.BackgroundTransparency = 1
-                row.BorderSizePixel = 0
-                row.ZIndex = 11
+                row.BorderSizePixel        = 0
+                row.ZIndex                 = 11
 
                 local line = Instance.new("Frame")
-                line.Name = "Highlight"
-                line.Parent = row
-                line.Size = UDim2.new(0, 3, 1, 0)
-                line.Position = UDim2.new(0, 0, 0, 0)
-                line.BackgroundColor3 = THEMEMAIN or Color3.fromRGB(170, 90, 255)
-                line.BorderSizePixel = 0
-                line.ZIndex = 12
-                line.Visible = (_G.RAY_EnchantStoneId == id)
+                line.Name              = "Highlight"
+                line.Parent            = row
+                line.Size              = UDim2.new(0, 3, 1, 0)
+                line.Position          = UDim2.new(0, 0, 0, 0)
+                line.BackgroundColor3  = THEME_MAIN or Color3.fromRGB(170, 90, 255)
+                line.BorderSizePixel   = 0
+                line.Visible           = (_G.RAY_EnchantStoneId == id)
+                line.ZIndex            = 12
 
                 local btn = Instance.new("TextButton")
-                btn.Parent = row
-                btn.Size = UDim2.new(1, -6, 1, 0)
-                btn.Position = UDim2.new(0, 4, 0, 0)
-                btn.BackgroundColor3 = Color3.fromRGB(30,30,50)
-                btn.BorderSizePixel = 0
-                btn.TextColor3 = THEMETEXT
-                btn.Font = Enum.Font.Gotham
-                btn.TextSize = 12
-                btn.TextXAlignment = Enum.TextXAlignment.Left
-                btn.Text = string.format("%s (Id %d)", cfg.Name, id)
-                btn.AutoButtonColor = true
-                btn.ZIndex = 11
-
+                btn.Parent                 = row
+                btn.Size                   = UDim2.new(1, -6, 1, 0)
+                btn.Position               = UDim2.new(0, 4, 0, 0)
+                btn.BackgroundColor3       = Color3.fromRGB(30,30,50)
+                btn.BorderSizePixel        = 0
+                btn.TextColor3             = THEME_TEXT
+                btn.Font                   = Enum.Font.Gotham
+                btn.TextSize               = 12
+                btn.TextXAlignment         = Enum.TextXAlignment.Left
+                btn.Text                   = string.format("  %s (Id %d)", cfg.Name, id)
+                btn.AutoButtonColor        = true
+                btn.ZIndex                 = 11
                 Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
                 btn.MouseButton1Click:Connect(function()
-                    _G.RAY_EnchantStoneId = id
+                    _G.RAY_EnchantStoneId    = id
                     _G.RAY_EnchantTargetName = cfg.Enchants[1] or _G.RAY_EnchantTargetName
                     if NotifyFeature then
                         NotifyFeature("Enchant Stone: "..cfg.Name, true)
@@ -3869,68 +3864,65 @@ if BackpackPage then
 
     rebuildStonePanel()
 
-    -------------------------
-    -- PANEL KANAN: ENCHANT LIST
-    -------------------------
+    ----------------------------------------------------------------
+    -- PANEL KANAN: ENCHANT LIST (NEMPEL MAIN)
+    ----------------------------------------------------------------
     local EnchantRightPanel = Instance.new("Frame")
-    EnchantRightPanel.Name = "EnchantRightPanel"
-    EnchantRightPanel.Size = UDim2.new(0, 220, 1, -46)
-    EnchantRightPanel.AnchorPoint = Vector2.new(1, 0)
-    EnchantRightPanel.Position = UDim2.new(1, -10, 0, 40)
-    EnchantRightPanel.BackgroundColor3 = CARD or Color3.fromRGB(15, 15, 25)
+    EnchantRightPanel.Name                   = "EnchantRightPanel"
+    EnchantRightPanel.Size                   = UDim2.new(0, 220, 1, -46)
+    EnchantRightPanel.AnchorPoint            = Vector2.new(1, 0)
+    EnchantRightPanel.Position               = UDim2.new(1, -10, 0, 40)
+    EnchantRightPanel.BackgroundColor3       = CARD or Color3.fromRGB(15, 15, 25)
     EnchantRightPanel.BackgroundTransparency = 0.25
-    EnchantRightPanel.BorderSizePixel = 0
-    EnchantRightPanel.Visible = false
-    EnchantRightPanel.ZIndex = 10
-    EnchantRightPanel.Parent = BackpackPage
+    EnchantRightPanel.BorderSizePixel        = 0
+    EnchantRightPanel.Visible                = false
+    EnchantRightPanel.ZIndex                 = 10
+    EnchantRightPanel.Parent                 = Main or BackpackPage
 
-    do
-        local corner = Instance.new("UICorner", EnchantRightPanel)
-        corner.CornerRadius = UDim.new(0, 10)
-        local stroke = Instance.new("UIStroke", EnchantRightPanel)
-        stroke.Color = THEMEMAIN
-        stroke.Transparency = 0.5
-    end
+    Instance.new("UICorner", EnchantRightPanel).CornerRadius = UDim.new(0, 10)
+    local enStroke = Instance.new("UIStroke", EnchantRightPanel)
+    enStroke.Color        = THEME_MAIN
+    enStroke.Transparency = 0.5
 
     local enTitle = Instance.new("TextLabel")
-    enTitle.Parent = EnchantRightPanel
-    enTitle.Size = UDim2.new(1, -10, 0, 24)
-    enTitle.Position = UDim2.new(0, 5, 0, 6)
+    enTitle.Parent               = EnchantRightPanel
+    enTitle.Size                 = UDim2.new(1, -10, 0, 24)
+    enTitle.Position             = UDim2.new(0, 5, 0, 6)
     enTitle.BackgroundTransparency = 1
-    enTitle.Font = Enum.Font.GothamBold
-    enTitle.TextSize = 16
-    enTitle.TextXAlignment = Enum.TextXAlignment.Left
-    enTitle.TextColor3 = THEMETEXT
-    enTitle.ZIndex = 11
-    enTitle.Text = "Enchant List"
+    enTitle.Font                 = Enum.Font.GothamBold
+    enTitle.TextSize             = 16
+    enTitle.TextXAlignment       = Enum.TextXAlignment.Left
+    enTitle.TextColor3           = THEME_TEXT
+    enTitle.ZIndex               = 11
+    enTitle.Text                 = "Enchant List"
 
     local enInfo = Instance.new("TextLabel")
-    enInfo.Parent = EnchantRightPanel
-    enInfo.Size = UDim2.new(1, -10, 0, 18)
-    enInfo.Position = UDim2.new(0, 5, 0, 30)
+    enInfo.Parent               = EnchantRightPanel
+    enInfo.Size                 = UDim2.new(1, -10, 0, 18)
+    enInfo.Position             = UDim2.new(0, 5, 0, 30)
     enInfo.BackgroundTransparency = 1
-    enInfo.Font = Enum.Font.Gotham
-    enInfo.TextSize = 12
-    enInfo.TextXAlignment = Enum.TextXAlignment.Left
-    enInfo.TextColor3 = Color3.fromRGB(200,200,200)
-    enInfo.ZIndex = 11
-    enInfo.Text = "Pilih enchant target sesuai batu."
+    enInfo.Font                 = Enum.Font.Gotham
+    enInfo.TextSize             = 12
+    enInfo.TextXAlignment       = Enum.TextXAlignment.Left
+    enInfo.TextColor3           = Color3.fromRGB(200,200,200)
+    enInfo.ZIndex               = 11
+    enInfo.Text                 = "Pilih enchant target sesuai batu."
 
     local enScroll = Instance.new("ScrollingFrame")
-    enScroll.Parent = EnchantRightPanel
-    enScroll.Size = UDim2.new(1, -10, 1, -70)
-    enScroll.Position = UDim2.new(0, 5, 0, 54)
+    enScroll.Parent               = EnchantRightPanel
+    enScroll.Size                 = UDim2.new(1, -10, 1, -70)
+    enScroll.Position             = UDim2.new(0, 5, 0, 54)
     enScroll.BackgroundTransparency = 1
-    enScroll.BorderSizePixel = 0
-    enScroll.ScrollBarThickness = 3
-    enScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    enScroll.CanvasSize = UDim2.new(0,0,0,0)
-    enScroll.ScrollBarImageColor3 = THEMEMAIN
-    enScroll.ZIndex = 10
+    enScroll.BorderSizePixel      = 0
+    enScroll.ScrollBarThickness   = 3
+    enScroll.AutomaticCanvasSize  = Enum.AutomaticSize.Y
+    enScroll.CanvasSize           = UDim2.new(0,0,0,0)
+    enScroll.ScrollBarImageColor3 = THEME_MAIN
+    enScroll.ZIndex               = 10
 
     local enList = Instance.new("UIListLayout", enScroll)
     enList.SortOrder = Enum.SortOrder.LayoutOrder
-    enList.Padding = UDim.new(0, 4)
+    enList.Padding   = UDim.new(0, 4)
 
     local function getCurrentEnchantList()
         local cfg = StoneConfig[_G.RAY_EnchantStoneId]
@@ -3947,35 +3939,35 @@ if BackpackPage then
         local list = getCurrentEnchantList()
         for _, name in ipairs(list) do
             local row = Instance.new("Frame")
-            row.Parent = enScroll
-            row.Size = UDim2.new(1, -4, 0, 24)
+            row.Parent                 = enScroll
+            row.Size                   = UDim2.new(1, -4, 0, 24)
             row.BackgroundTransparency = 1
-            row.BorderSizePixel = 0
-            row.ZIndex = 11
+            row.BorderSizePixel        = 0
+            row.ZIndex                 = 11
 
             local line = Instance.new("Frame")
-            line.Name = "Highlight"
-            line.Parent = row
-            line.Size = UDim2.new(0, 3, 1, 0)
-            line.Position = UDim2.new(0, 0, 0, 0)
-            line.BackgroundColor3 = THEMEMAIN or Color3.fromRGB(170, 90, 255)
-            line.BorderSizePixel = 0
-            line.Visible = (_G.RAY_EnchantTargetName == name)
-            line.ZIndex = 12
+            line.Name              = "Highlight"
+            line.Parent            = row
+            line.Size              = UDim2.new(0, 3, 1, 0)
+            line.Position          = UDim2.new(0, 0, 0, 0)
+            line.BackgroundColor3  = THEME_MAIN or Color3.fromRGB(170, 90, 255)
+            line.BorderSizePixel   = 0
+            line.Visible           = (_G.RAY_EnchantTargetName == name)
+            line.ZIndex            = 12
 
             local btn = Instance.new("TextButton")
-            btn.Parent = row
-            btn.Size = UDim2.new(1, -6, 1, 0)
-            btn.Position = UDim2.new(0, 4, 0, 0)
-            btn.BackgroundColor3 = Color3.fromRGB(30,30,50)
-            btn.BorderSizePixel = 0
-            btn.TextColor3 = THEMETEXT
-            btn.Font = Enum.Font.Gotham
-            btn.TextSize = 12
-            btn.TextXAlignment = Enum.TextXAlignment.Left
-            btn.Text = name
-            btn.AutoButtonColor = true
-            btn.ZIndex = 11
+            btn.Parent                 = row
+            btn.Size                   = UDim2.new(1, -6, 1, 0)
+            btn.Position               = UDim2.new(0, 4, 0, 0)
+            btn.BackgroundColor3       = Color3.fromRGB(30,30,50)
+            btn.BorderSizePixel        = 0
+            btn.TextColor3             = THEME_TEXT
+            btn.Font                   = Enum.Font.Gotham
+            btn.TextSize               = 12
+            btn.TextXAlignment         = Enum.TextXAlignment.Left
+            btn.Text                   = "  "..name
+            btn.AutoButtonColor        = true
+            btn.ZIndex                 = 11
             Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
             btn.MouseButton1Click:Connect(function()
@@ -3990,39 +3982,39 @@ if BackpackPage then
 
     rebuildEnchantPanel()
 
-    -------------------------
+    ----------------------------------------------------------------
     -- ROW: TARGET SLOT
-    -------------------------
+    ----------------------------------------------------------------
     do
         local row = makeRow("Target Slot")
 
         local btn1 = Instance.new("TextButton")
-        btn1.Parent = row
-        btn1.Size = UDim2.new(0, 60, 0, 24)
-        btn1.Position = UDim2.new(1, -130, 0.5, -12)
-        btn1.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+        btn1.Parent                 = row
+        btn1.Size                   = UDim2.new(0, 60, 0, 24)
+        btn1.Position               = UDim2.new(1, -130, 0.5, -12)
+        btn1.BackgroundColor3       = CARD or Color3.fromRGB(40,40,60)
         btn1.BackgroundTransparency = 0.1
-        btn1.TextColor3 = THEMETEXT
-        btn1.Font = Enum.Font.Gotham
-        btn1.TextSize = 12
-        btn1.Text = "Slot 1"
-        btn1.AutoButtonColor = true
+        btn1.TextColor3             = THEME_TEXT
+        btn1.Font                   = Enum.Font.Gotham
+        btn1.TextSize               = 12
+        btn1.Text                   = "Slot 1"
+        btn1.AutoButtonColor        = true
         Instance.new("UICorner", btn1).CornerRadius = UDim.new(0,8)
 
         local btn2 = Instance.new("TextButton")
-        btn2.Parent = row
-        btn2.Size = UDim2.new(0, 60, 0, 24)
-        btn2.Position = UDim2.new(1, -65, 0.5, -12)
-        btn2.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+        btn2.Parent                 = row
+        btn2.Size                   = UDim2.new(0, 60, 0, 24)
+        btn2.Position               = UDim2.new(1, -65, 0.5, -12)
+        btn2.BackgroundColor3       = CARD or Color3.fromRGB(40,40,60)
         btn2.BackgroundTransparency = 0.1
-        btn2.TextColor3 = THEMETEXT
-        btn2.Font = Enum.Font.Gotham
-        btn2.TextSize = 12
-        btn2.Text = "Slot 2"
-        btn2.AutoButtonColor = true
+        btn2.TextColor3             = THEME_TEXT
+        btn2.Font                   = Enum.Font.Gotham
+        btn2.TextSize               = 12
+        btn2.Text                   = "Slot 2"
+        btn2.AutoButtonColor        = true
         Instance.new("UICorner", btn2).CornerRadius = UDim.new(0,8)
 
-        local function refresh()
+        local function refreshSlot()
             local slot = _G.RAY_EnchantTargetSlot or 1
             btn1.BackgroundColor3 = (slot == 1) and (ACCENT or Color3.fromRGB(0,200,150)) or (CARD or Color3.fromRGB(40,40,60))
             btn2.BackgroundColor3 = (slot == 2) and (ACCENT or Color3.fromRGB(0,200,150)) or (CARD or Color3.fromRGB(40,40,60))
@@ -4033,7 +4025,7 @@ if BackpackPage then
             if NotifyFeature then
                 NotifyFeature("Target Slot 1", true)
             end
-            refresh()
+            refreshSlot()
         end)
 
         btn2.MouseButton1Click:Connect(function()
@@ -4041,15 +4033,15 @@ if BackpackPage then
             if NotifyFeature then
                 NotifyFeature("Target Slot 2", true)
             end
-            refresh()
+            refreshSlot()
         end)
 
-        refresh()
+        refreshSlot()
     end
 
-    -------------------------
+    ----------------------------------------------------------------
     -- ROW: OPEN STONE PANEL
-    -------------------------
+    ----------------------------------------------------------------
     do
         local row = makeRow("Stone List Panel")
         local btn = makeSmallButton(row, "Open")
@@ -4061,9 +4053,9 @@ if BackpackPage then
         end)
     end
 
-    -------------------------
+    ----------------------------------------------------------------
     -- ROW: OPEN ENCHANT PANEL
-    -------------------------
+    ----------------------------------------------------------------
     do
         local row = makeRow("Enchant List Panel")
         local btn = makeSmallButton(row, "Open")
@@ -4075,76 +4067,80 @@ if BackpackPage then
         end)
     end
 
-    -------------------------
+    ----------------------------------------------------------------
     -- ROW: TOGGLE AUTO ENCHANT
-    -------------------------
+    ----------------------------------------------------------------
     do
         local row = makeRow("Auto Enchant")
 
         local pill = Instance.new("TextButton")
-        pill.Parent = row
-        pill.Size = UDim2.new(0, 50, 0, 24)
-        pill.Position = UDim2.new(1, -80, 0.5, -12)
-        pill.BackgroundColor3 = MUTED or Color3.fromRGB(70,70,90)
+        pill.Parent                 = row
+        pill.Size                   = UDim2.new(0, 50, 0, 24)
+        pill.Position               = UDim2.new(1, -80, 0.5, -12)
+        pill.BackgroundColor3       = MUTED or Color3.fromRGB(70,70,90)
         pill.BackgroundTransparency = 0.1
-        pill.Text = ""
-        pill.AutoButtonColor = false
+        pill.Text                   = ""
+        pill.AutoButtonColor        = false
         Instance.new("UICorner", pill).CornerRadius = UDim.new(0,999)
 
         local knob = Instance.new("Frame")
-        knob.Parent = pill
-        knob.Size = UDim2.new(0,18,0,18)
-        knob.Position = UDim2.new(0,3,0.5,-9)
-        knob.BackgroundColor3 = Color3.fromRGB(255,255,255)
+        knob.Parent                 = pill
+        knob.Size                   = UDim2.new(0,18,0,18)
+        knob.Position               = UDim2.new(0,3,0.5,-9)
+        knob.BackgroundColor3       = Color3.fromRGB(255,255,255)
         Instance.new("UICorner", knob).CornerRadius = UDim.new(0,999)
 
-        local function refresh()
+        local function refreshAuto()
             local on = _G.RAY_EnchantAutoOn
-            pill.BackgroundColor3 = on and (ACCENT or Color3.fromRGB(0,200,150)) or (MUTED or Color3.fromRGB(70,70,90))
-            knob.Position = on and UDim2.new(1,-21,0.5,-9) or UDim2.new(0,3,0.5,-9)
+            pill.BackgroundColor3 = on
+                and (ACCENT or Color3.fromRGB(0,200,150))
+                or  (MUTED or Color3.fromRGB(70,70,90))
+            knob.Position = on
+                and UDim2.new(1,-21,0.5,-9)
+                or  UDim2.new(0,3,0.5,-9)
         end
 
         pill.MouseButton1Click:Connect(function()
             _G.RAY_EnchantAutoOn = not _G.RAY_EnchantAutoOn
-            refresh()
+            refreshAuto()
             if NotifyFeature then
                 NotifyFeature("Auto Enchant", _G.RAY_EnchantAutoOn)
             end
         end)
 
-        refresh()
+        refreshAuto()
     end
 
-    -------------------------
+    ----------------------------------------------------------------
     -- ROW: TELEPORT ALTAR
-    -------------------------
+    ----------------------------------------------------------------
     do
         local row = makeRow("Teleport Altar")
 
         local btn1 = Instance.new("TextButton")
-        btn1.Parent = row
-        btn1.Size = UDim2.new(0, 80, 0, 24)
-        btn1.Position = UDim2.new(1, -170, 0.5, -12)
-        btn1.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+        btn1.Parent                 = row
+        btn1.Size                   = UDim2.new(0, 80, 0, 24)
+        btn1.Position               = UDim2.new(1, -170, 0.5, -12)
+        btn1.BackgroundColor3       = CARD or Color3.fromRGB(40,40,60)
         btn1.BackgroundTransparency = 0.1
-        btn1.Text = "Esoteric"
-        btn1.TextColor3 = THEMETEXT
-        btn1.Font = Enum.Font.GothamBold
-        btn1.TextSize = 12
-        btn1.AutoButtonColor = true
+        btn1.Text                   = "Esoteric"
+        btn1.TextColor3             = THEME_TEXT
+        btn1.Font                   = Enum.Font.GothamBold
+        btn1.TextSize               = 12
+        btn1.AutoButtonColor        = true
         Instance.new("UICorner", btn1).CornerRadius = UDim.new(0,8)
 
         local btn2 = Instance.new("TextButton")
-        btn2.Parent = row
-        btn2.Size = UDim2.new(0, 80, 0, 24)
-        btn2.Position = UDim2.new(1, -85, 0.5, -12)
-        btn2.BackgroundColor3 = CARD or Color3.fromRGB(40,40,60)
+        btn2.Parent                 = row
+        btn2.Size                   = UDim2.new(0, 80, 0, 24)
+        btn2.Position               = UDim2.new(1, -85, 0.5, -12)
+        btn2.BackgroundColor3       = CARD or Color3.fromRGB(40,40,60)
         btn2.BackgroundTransparency = 0.1
-        btn2.Text = "Temple"
-        btn2.TextColor3 = THEMETEXT
-        btn2.Font = Enum.Font.GothamBold
-        btn2.TextSize = 12
-        btn2.AutoButtonColor = true
+        btn2.Text                   = "Temple"
+        btn2.TextColor3             = THEME_TEXT
+        btn2.Font                   = Enum.Font.GothamBold
+        btn2.TextSize               = 12
+        btn2.AutoButtonColor        = true
         Instance.new("UICorner", btn2).CornerRadius = UDim.new(0,8)
 
         btn1.MouseButton1Click:Connect(function()
@@ -4156,9 +4152,9 @@ if BackpackPage then
         end)
     end
 
-    -------------------------
-    -- CLOSE PANEL DARI KLIK DI LUAR
-    -------------------------
+    ----------------------------------------------------------------
+    -- CLOSE PANEL DARI KLIK DI LUAR (STONE + ENCHANT)
+    ----------------------------------------------------------------
     UIS.InputBegan:Connect(function(input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1
            and input.UserInputType ~= Enum.UserInputType.Touch then
