@@ -1,21 +1,21 @@
 --==================================================
 -- SERVICES & PLAYER
 --==================================================
-local Players         = game:GetService("Players")
-local UIS             = game:GetService("UserInputService")
-local CoreGui         = game:GetService("CoreGui")
+local Players           = game:GetService("Players")
+local UIS               = game:GetService("UserInputService")
+local CoreGui           = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService    = game:GetService("TweenService")
-local Lighting        = game:GetService("Lighting")
-local StarterGui      = game:GetService("StarterGui")
-local Player          = Players.LocalPlayer
+local TweenService      = game:GetService("TweenService")
+local Lighting          = game:GetService("Lighting")
+local StarterGui        = game:GetService("StarterGui")
+local Player            = Players.LocalPlayer
 
 --==================================================
--- MODULES & NET
+-- MODULES
 --==================================================
 local Items   = require(ReplicatedStorage.Items)
 local Replion = require(ReplicatedStorage.Packages.Replion)
-
+-- Net TIDAK dideklar di sini, pakai yang di bawah
 
 --==================================================
 -- THEME
@@ -3596,9 +3596,7 @@ end
 -----------------------------
 -- BACKEND: REMOTE & REPLION
 -----------------------------
-local Replion = require(RS.Packages.Replion)
-local Net     = require(RS.Packages.Net)
-
+---
 -- CFrame altar (punya kamu)
 local CF_Altar_Slot1 = CFrame.new(
     3232.90356, -1302.8551, 1401.0824,
@@ -3640,14 +3638,14 @@ end
 -- AUTO EQUIP BATU DI HAND (PAKAI ID -> UUID)
 ----------------------------------------------------------------
 
-local EquipItemRE = RS
+local EquipItemRE = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
     :WaitForChild("sleitnick_net@0.2.0")
     :WaitForChild("net")
     :WaitForChild("RE/EquipItem")
 
-local EquipToolFromHotbarRE = RS
+local EquipToolFromHotbarRE = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
     :WaitForChild("sleitnick_net@0.2.0")
@@ -4773,3 +4771,4 @@ btn.MouseButton1Click:Connect(function()
     hrp.AssemblyAngularVelocity = Vector3.zero
     hrp.CFrame                  = tHRP.CFrame * CFrame.new(0,0,3)
 end)
+
