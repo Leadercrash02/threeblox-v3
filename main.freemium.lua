@@ -1093,8 +1093,8 @@ if AutoPage then
     end)
 end
 
-----------------------------------------------------------------
---- ALL LOGIC
+-----------------------------------------------------------------
+--- ALL LOGIC VFX (DISABLE ROD SKIN, DLL)
 ----------------------------------------------------------------
 local VFXHidden = {}
 local VFXCacheFolder = Instance.new("Folder")
@@ -1105,7 +1105,6 @@ local function HideAllVFX()
     local vfxRoot = ReplicatedStorage:FindFirstChild("VFX")
     if not vfxRoot then return end
 
-    -- simpan dan sembunyikan
     for _, obj in ipairs(vfxRoot:GetChildren()) do
         if not VFXHidden[obj] then
             VFXHidden[obj] = obj.Parent
@@ -1115,7 +1114,6 @@ local function HideAllVFX()
 end
 
 local function RestoreAllVFX()
-    -- balikin semua yang pernah kita pindahin
     for obj, oldParent in pairs(VFXHidden) do
         if obj and obj.Parent == VFXCacheFolder then
             obj.Parent = oldParent
@@ -1125,15 +1123,10 @@ local function RestoreAllVFX()
 end
 
 
-local Players           = game:GetService("Players")
-local UIS               = game:GetService("UserInputService")
-local CoreGui           = game:GetService("CoreGui")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local RunService        = game:GetService("RunService")
-local Stats             = game:GetService("Stats")
+local RunService = game:GetService("RunService")
+local Stats      = game:GetService("Stats")
 
-local lp                = Players.LocalPlayer
 
 ----------------------------------------------------------------
 -- WATER WALK UTILS (PASIF) - LOGIC SEBENARNYA
@@ -1178,7 +1171,7 @@ end
 local function StartWaterWalk()
     ClearWaterSurfaces()
 
-    local char = lp.Character or lp.CharacterAdded:Wait()
+    local char = Player.Character or Player.CharacterAdded:Wait()
     local root = char:WaitForChild("HumanoidRootPart")
 
     createWaterSurface(root)
@@ -1187,7 +1180,7 @@ local function StartWaterWalk()
         if #Surfaces == 0 then return end
         if not root or not root.Parent or not lastCenter then return end
 
-        local pos = root.Position
+        local pos  = root.Position
         local dist = (Vector3.new(pos.X, 0, pos.Z)
                     - Vector3.new(lastCenter.X, 0, lastCenter.Z)).Magnitude
         if dist > STEP_DIST then
@@ -1216,12 +1209,13 @@ local function SetWaterWalk(on)
 end
 
 -- Kalau karakter respawn dan masih ON, nyalikan lagi otomatis
-lp.CharacterAdded:Connect(function()
+Player.CharacterAdded:Connect(function()
     if waterWalkOn then
         task.wait(0.3)
         StartWaterWalk()
     end
 end)
+
 
 ----------------------------------------------------------------
 -- FISHING SUPPORT SECTION + UI WALK ON WATER
@@ -1321,30 +1315,26 @@ if AutoPage then
 end
 
 ----------------------------------------------------------------
--- SETUP GLOBAL
+-- SETUP GLOBAL (GUI CONTROL & CAMERA GUARD)
 ----------------------------------------------------------------
-local Players = game:GetService("Players")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
-
-local lp = Players.LocalPlayer
 local GuiControl = require(ReplicatedStorage.Modules.GuiControl)
+local RunService = game:GetService("RunService")
+local Stats      = game:GetService("Stats")
 
--- cache fungsi asli (hanya sekali di seluruh script)
 _G.__RAY_OldGuiControlClose = _G.__RAY_OldGuiControlClose or GuiControl.Close
 _G.__RAY_OldGuiControlLock  = _G.__RAY_OldGuiControlLock  or GuiControl.Lock
 _G.__RAY_OldGuiControlHUD   = _G.__RAY_OldGuiControlHUD   or GuiControl.SetHUDVisibility
 
--- guard kamera supaya cutscene nggak bisa ambil alih
 local camConn
+
 local function ForcePlayerCamera()
     local cam = Workspace.CurrentCamera
-    if not cam or not lp.Character then return end
+    if not cam or not Player.Character then return end
 
-    local hum = lp.Character:FindFirstChildOfClass("Humanoid")
+    local hum = Player.Character:FindFirstChildOfClass("Humanoid")
     if not hum then return end
 
-    cam.CameraType = Enum.CameraType.Custom
+    cam.CameraType   = Enum.CameraType.Custom
     cam.CameraSubject = hum
 end
 
@@ -1353,8 +1343,7 @@ local function StartCameraGuard()
     if camConn then camConn:Disconnect() end
     camConn = Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(ForcePlayerCamera)
 
-    -- kalau karakter respawn, segera balikin lagi ke kamera player
-    lp.CharacterAdded:Connect(function()
+    Player.CharacterAdded:Connect(function()
         task.delay(0.2, ForcePlayerCamera)
     end)
 end
@@ -1366,12 +1355,10 @@ local function StopCameraGuard()
     end
 end
 
--- manager patch biar 2 toggle (Disable Cutscene / No Cutscene Pause) nggak tabrakan
 local function ReapplyGuiPatches()
     local disableAll = _G.RAY_DisableCutscene
     local noPause   = _G.RAY_NoCutscenePause
 
-    -- restore default dulu
     if _G.__RAY_OldGuiControlClose then
         GuiControl.Close = _G.__RAY_OldGuiControlClose
     end
@@ -1385,7 +1372,6 @@ local function ReapplyGuiPatches()
     StopCameraGuard()
 
     if disableAll then
-        -- full skip: HUD nggak pernah di-hide, lock nggak jalan, close nggak jalan
         function GuiControl.Close(skipHud)
             return
         end
@@ -1396,19 +1382,17 @@ local function ReapplyGuiPatches()
             return
         end
 
-        -- guard kamera: cutscene nggak bisa ubah kamera
         StartCameraGuard()
 
     elseif noPause then
-        -- versi "No Cutscene Pause": HUD boleh, cutscene boleh, tapi lock mati
         function GuiControl.Lock()
             return
         end
-        -- kamera tidak dijaga, jadi cutscene masih kelihatan
     end
 end
 
-----------------------------------------------------------------
+
+-----------------------------------------------------------------
 -- DISABLE CUTSCENE (SKIP VISUAL, MANCING LANJUT)
 ----------------------------------------------------------------
 do
@@ -1462,7 +1446,6 @@ do
         enabled = not enabled
         _G.RAY_DisableCutscene = enabled
 
-        -- kalau ini ON, matikan flag NoCutscenePause biar nggak bingung
         if enabled then
             _G.RAY_NoCutscenePause = false
         end
@@ -1475,7 +1458,6 @@ do
         end
     end)
 
-    -- init kalau sebelum reload sudah ON
     task.delay(1, function()
         if enabled then
             ReapplyGuiPatches()
@@ -1540,7 +1522,6 @@ do
         enabled = not enabled
         _G.RAY_NoCutscenePause = enabled
 
-        -- kalau ini ON, matikan DisableCutscene supaya mode-nya jelas
         if enabled then
             _G.RAY_DisableCutscene = false
         end
@@ -1564,7 +1545,7 @@ do
 end
 
 ----------------------------------------------------------------
--- DISABLE FISH IMAGE (FISHING SUPPORT)
+-- DISABLE FISH IMAGE
 ----------------------------------------------------------------
 do
     local row = Instance.new("Frame")
@@ -1603,7 +1584,7 @@ do
 
     local enabled = _G.RAY_DisableFishImage or false
     local conn
-    local gui = Players.LocalPlayer:WaitForChild("PlayerGui")
+    local gui = Player:WaitForChild("PlayerGui")
 
     local function refresh()
         pill.BackgroundColor3 = enabled
@@ -1659,7 +1640,7 @@ do
 end
 
 ----------------------------------------------------------------
--- DISABLE ROD SKIN (FISHING SUPPORT)
+-- DISABLE ROD SKIN
 ----------------------------------------------------------------
 do
     local row = Instance.new("Frame")
@@ -1726,7 +1707,7 @@ do
         end
     end)
 
-    lp.CharacterAdded:Connect(function()
+    Player.CharacterAdded:Connect(function()
         if enabled then
             task.delay(0.5, HideAllVFX)
         end
@@ -1737,8 +1718,9 @@ do
 end
 
 
+
 ----------------------------------------------------------------
--- ROD FREEZE (ROD + BADAN DIEM, MANCING TETAP JALAN)
+-- ROD FREEZE
 ----------------------------------------------------------------
 do
     local row = Instance.new("Frame")
@@ -1777,20 +1759,12 @@ do
 
     local enabled = _G.RAY_RodFreeze or false
 
-    local ReplicatedStorage = game:GetService("ReplicatedStorage")
-    local Players          = game:GetService("Players")
-    local RunService       = game:GetService("RunService")
-
-    local lp = Players.LocalPlayer
-
-    -- AnimController dari Controllers (path ini sudah pasti dari log-mu)
     local AnimController = require(ReplicatedStorage.Controllers.AnimationController)
     print("[RodFreeze] AnimController =", AnimController)
 
     _G.__RAY_OldPlayAnimation = _G.__RAY_OldPlayAnimation or AnimController.PlayAnimation
     local OldPlay = _G.__RAY_OldPlayAnimation
 
-    -- anim rod dasar (all rod no-skin ikut)
     local ROD_ANIMS = {
         ["RodThrow"]         = true,
         ["ReelStart"]        = true,
@@ -1799,14 +1773,13 @@ do
         ["FishCaught"]       = true,
     }
 
-    -- koneksi heartbeat buat hard-freeze semua anim di humanoid
     local hardFreezeConn
 
     local function startHardFreeze()
         if hardFreezeConn then hardFreezeConn:Disconnect() end
 
         hardFreezeConn = RunService.Heartbeat:Connect(function()
-            local char = lp.Character
+            local char = Player.Character
             if not char then return end
 
             local hum = char:FindFirstChildWhichIsA("Humanoid")
@@ -1824,8 +1797,7 @@ do
             hardFreezeConn = nil
         end
 
-        -- optional: balikin speed ke normal (1) buat semua anim yang masih jalan
-        local char = lp.Character
+        local char = Player.Character
         if char then
             local hum = char:FindFirstChildWhichIsA("Humanoid")
             if hum then
@@ -1838,9 +1810,9 @@ do
 
     local function refresh()
         if enabled then
-            pill.BackgroundColor3 = Color3.fromRGB(0,200,100)   -- hijau ON
+            pill.BackgroundColor3 = Color3.fromRGB(0,200,100)
         else
-            pill.BackgroundColor3 = Color3.fromRGB(120,120,120) -- abu OFF
+            pill.BackgroundColor3 = Color3.fromRGB(120,120,120)
         end
 
         knob.Position = enabled
@@ -1891,7 +1863,6 @@ do
         end
     end)
 
-    -- init sesuai state global
     if enabled then
         applyPatch()
         startHardFreeze()
@@ -1902,6 +1873,7 @@ do
 
     refresh()
 end
+
 
 ----------------------------------------------------------------
 -- SKIN ANIMATION SECTION (MUNCUL DI BAWAH FISHING SUPPORT)
@@ -2222,16 +2194,12 @@ if AutoPage then
     end
 end
 
-----------------------------------------------------------------
--- AUTO SELL SECTION (BACKPACK PAGE) - DUA TOGGLE: TIME & INVENTORY
-----------------------------------------------------------------
+----------------------------------------------
+--- AUTO SELL ---
+--- ------------------------------------------
 
-local RS = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local lp = Players.LocalPlayer
-
-local Items   = require(RS.Items)
-local Replion = require(RS.Packages.Replion)
+local Items   = require(ReplicatedStorage.Items)
+local Replion = require(ReplicatedStorage.Packages.Replion)
 
 local BackpackPage = Pages["Backpack"]
 if BackpackPage then
@@ -2254,8 +2222,8 @@ if BackpackPage then
     _G.RAY_SellThreshold          = _G.RAY_SellThreshold          or "Legendary"
     _G.RAY_SellDelay              = _G.RAY_SellDelay              or 5
     _G.RAY_SellInventoryThreshold = _G.RAY_SellInventoryThreshold or 30
-    _G.RAY_SellByTime             = (_G.RAY_SellByTime ~= false)      -- default ON
-    _G.RAY_SellByInventory        = _G.RAY_SellByInventory or false   -- default OFF
+    _G.RAY_SellByTime             = (_G.RAY_SellByTime ~= false)       -- default ON
+    _G.RAY_SellByInventory        = _G.RAY_SellByInventory or false    -- default OFF
 
     ----------------------------------------------------------------
     -- HELPER ROW
@@ -2504,9 +2472,8 @@ if BackpackPage then
 end
 
 ----------------------------------------------------------------
--- HELPER: HITUNG JUMLAH IKAN DI INVENTORY (REPLION + ITEMS)
+-- HELPER: HITUNG JUMLAH IKAN DI INVENTORY
 ----------------------------------------------------------------
-
 local ItemDataById = {}
 for _, v in Items do
     if v.Data and v.Data.Id then
@@ -2523,7 +2490,7 @@ local function getFishCountInInventory()
     end
 
     local root = repl.Data
-    local inv = root and root.Inventory
+    local inv  = root and root.Inventory
     local items = inv and inv.Items
     if typeof(items) ~= "table" then
         return 0
@@ -2531,7 +2498,7 @@ local function getFishCountInInventory()
 
     local count = 0
     for _, entry in pairs(items) do
-        local id = entry.Id
+        local id   = entry.Id
         local data = id and ItemDataById[id]
         if data and data.Type == "Fish" then
             count += 1
@@ -2541,9 +2508,8 @@ local function getFishCountInInventory()
 end
 
 ----------------------------------------------------------------
--- AUTO SELL ENGINE (PAKAI TOGGLE SellByTime & SellByInventory)
+-- AUTO SELL ENGINE
 ----------------------------------------------------------------
-
 task.spawn(function()
     local lastSell = 0
 
@@ -2565,12 +2531,10 @@ task.spawn(function()
             end
         end
 
-        -- Sell by Inventory (jumlah ikan di tas)
+        -- Sell by Inventory
         if _G.RAY_SellByInventory then
             local count = getFishCountInInventory()
             local limit = tonumber(_G.RAY_SellInventoryThreshold) or 30
-            -- debug kalau perlu:
-            -- print("[AUTO SELL] fish count =", count, "limit =", limit)
 
             if count >= limit and now - lastSell >= 0.5 then
                 local ok, err = pcall(function()
@@ -2587,6 +2551,7 @@ task.spawn(function()
         task.wait(0.5)
     end
 end)
+
 
 ----------------------------------------------------------------
 -- STATE GLOBAL AUTO TOTEM
@@ -4755,8 +4720,8 @@ if not TeleportPage then
     return
 end
 
-local TeleportIslandSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
-
+-- section yang benar: TeleportPlayerSection
+local TeleportPlayerSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
 
 local tpPlayerLayout = Instance.new("UIListLayout")
 tpPlayerLayout.Parent    = TeleportPlayerSection
@@ -4817,32 +4782,32 @@ PlayerRightPanel.Parent                 = Main
 
 Instance.new("UICorner", PlayerRightPanel).CornerRadius = UDim.new(0, 10)
 local pStroke = Instance.new("UIStroke", PlayerRightPanel)
-pStroke.Color        = THEME_MAIN
-pStroke.Transparency = 0.5
+pStroke.Color       = THEME_MAIN
+pStroke.Transparency= 0.5
 
 local pTitle = Instance.new("TextLabel")
-pTitle.Parent                  = PlayerRightPanel
-pTitle.Size                    = UDim2.new(1, -10, 0, 24)
-pTitle.Position                = UDim2.new(0, 5, 0, 6)
-pTitle.BackgroundTransparency  = 1
-pTitle.Font                    = Enum.Font.GothamBold
-pTitle.TextSize                = 16
-pTitle.TextXAlignment          = Enum.TextXAlignment.Left
-pTitle.TextColor3              = THEME_TEXT
-pTitle.ZIndex                  = 11
-pTitle.Text                    = "Teleport Player"
+pTitle.Parent                 = PlayerRightPanel
+pTitle.Size                   = UDim2.new(1, -10, 0, 24)
+pTitle.Position               = UDim2.new(0, 5, 0, 6)
+pTitle.BackgroundTransparency = 1
+pTitle.Font                   = Enum.Font.GothamBold
+pTitle.TextSize               = 16
+pTitle.TextXAlignment         = Enum.TextXAlignment.Left
+pTitle.TextColor3             = THEME_TEXT
+pTitle.ZIndex                 = 11
+pTitle.Text                   = "Teleport Player"
 
 local pInfo = Instance.new("TextLabel")
-pInfo.Parent                   = PlayerRightPanel
-pInfo.Size                     = UDim2.new(1, -10, 0, 18)
-pInfo.Position                 = UDim2.new(0, 5, 0, 30)
-pInfo.BackgroundTransparency   = 1
-pInfo.Font                     = Enum.Font.Gotham
-pInfo.TextSize                 = 12
-pInfo.TextXAlignment           = Enum.TextXAlignment.Left
-pInfo.TextColor3               = Color3.fromRGB(200,200,200)
-pInfo.ZIndex                   = 11
-pInfo.Text                     = "Search & pilih player, lalu teleport."
+pInfo.Parent                 = PlayerRightPanel
+pInfo.Size                   = UDim2.new(1, -10, 0, 18)
+pInfo.Position               = UDim2.new(0, 5, 0, 30)
+pInfo.BackgroundTransparency = 1
+pInfo.Font                   = Enum.Font.Gotham
+pInfo.TextSize               = 12
+pInfo.TextXAlignment         = Enum.TextXAlignment.Left
+pInfo.TextColor3             = Color3.fromRGB(200,200,200)
+pInfo.ZIndex                 = 11
+pInfo.Text                   = "Search & pilih player, lalu teleport."
 
 -- search box
 local searchBox = Instance.new("TextBox")
@@ -4877,17 +4842,17 @@ tpBtn.ZIndex                   = 11
 Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0,8)
 
 local refreshBtn = Instance.new("TextButton")
-refreshBtn.Parent                   = PlayerRightPanel
-refreshBtn.Size                     = UDim2.new(0.5, -15, 0, 24)
-refreshBtn.Position                 = UDim2.new(0.5, 5, 0, 80)
-refreshBtn.BackgroundColor3         = CARD
-refreshBtn.BackgroundTransparency   = 0.18
-refreshBtn.AutoButtonColor          = false
-refreshBtn.Font                     = Enum.Font.Gotham
-refreshBtn.TextSize                 = 12
-refreshBtn.TextColor3               = THEME_TEXT
-refreshBtn.Text                     = "Refresh list"
-refreshBtn.ZIndex                   = 11
+refreshBtn.Parent                 = PlayerRightPanel
+refreshBtn.Size                   = UDim2.new(0.5, -15, 0, 24)
+refreshBtn.Position               = UDim2.new(0.5, 5, 0, 80)
+refreshBtn.BackgroundColor3       = CARD
+refreshBtn.BackgroundTransparency = 0.18
+refreshBtn.AutoButtonColor        = false
+refreshBtn.Font                   = Enum.Font.Gotham
+refreshBtn.TextSize               = 12
+refreshBtn.TextColor3             = THEME_TEXT
+refreshBtn.Text                   = "Refresh list"
+refreshBtn.ZIndex                 = 11
 Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0,8)
 
 -- list player
@@ -4960,22 +4925,22 @@ local function RebuildPlayerList()
     for _, plr in ipairs(all) do
         if plr ~= Player and passFilter(plr.Name, query) then
             local row = Instance.new("TextButton")
-            row.Parent                 = pScroll
-            row.Size                   = UDim2.new(1, 0, 0, 22)
-            row.BackgroundColor3       = CARD
-            row.BackgroundTransparency = 0.2
-            row.Font                   = Enum.Font.Gotham
-            row.TextSize               = 11
-            row.TextXAlignment         = Enum.TextXAlignment.Left
-            row.TextColor3             = THEME_TEXT
-            row.Text                   = "  "..plr.Name
-            row.AutoButtonColor        = false
-            row.ZIndex                 = 11
+            row.Parent                   = pScroll
+            row.Size                     = UDim2.new(1, 0, 0, 22)
+            row.BackgroundColor3         = CARD
+            row.BackgroundTransparency   = 0.2
+            row.Font                     = Enum.Font.Gotham
+            row.TextSize                 = 11
+            row.TextXAlignment           = Enum.TextXAlignment.Left
+            row.TextColor3               = THEME_TEXT
+            row.Text                     = "  "..plr.Name
+            row.AutoButtonColor          = false
+            row.ZIndex                   = 11
             Instance.new("UICorner", row).CornerRadius = UDim.new(0,4)
 
             row.MouseButton1Click:Connect(function()
-                selectedPlayerName   = plr.Name
-                tpBtn.Text           = "Teleport ke "..plr.Name
+                selectedPlayerName = plr.Name
+                tpBtn.Text         = "Teleport ke "..plr.Name
             end)
         end
     end
