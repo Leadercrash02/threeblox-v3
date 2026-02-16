@@ -4707,3 +4707,48 @@ UIS.InputBegan:Connect(function(input)
     end
 end)
 
+----------------------------------------------------------------
+-- SECTION "TELEPORT PLAYER" (KOSONG DULU)
+----------------------------------------------------------------
+
+local TeleportPage = Pages and Pages["Teleport"]
+if not TeleportPage then
+    warn("TeleportPage not found (Teleport Player)")
+    return
+end
+
+local TeleportPlayerSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
+
+local tpPlayerLayout = Instance.new("UIListLayout")
+tpPlayerLayout.Parent    = TeleportPlayerSection
+tpPlayerLayout.SortOrder = Enum.SortOrder.LayoutOrder
+tpPlayerLayout.Padding   = UDim.new(0, 6)
+
+local row = Instance.new("Frame")
+row.Parent                 = TeleportPlayerSection
+row.Size                   = UDim2.new(1,0,0,36)
+row.BackgroundTransparency = 1
+
+local label = Instance.new("TextLabel")
+label.Parent                 = row
+label.Size                   = UDim2.new(1,-110,1,0)
+label.Position               = UDim2.new(0,16,0,0)
+label.BackgroundTransparency = 1
+label.Font                   = Enum.Font.Gotham
+label.TextSize               = 13
+label.TextXAlignment         = Enum.TextXAlignment.Left
+label.TextColor3             = THEME_TEXT
+label.Text                   = "Teleport Player (coming soon)"
+
+local btn = Instance.new("TextButton")
+btn.Parent                   = row
+btn.Size                     = UDim2.new(0,110,0,24)
+btn.Position                 = UDim2.new(1,-126,0.5,-12)
+btn.BackgroundColor3         = CARD
+btn.BackgroundTransparency   = 0.1
+btn.Text                     = "Soon"
+btn.TextColor3               = THEME_TEXT
+btn.Font                     = Enum.Font.GothamBold
+btn.TextSize                 = 12
+btn.AutoButtonColor          = true
+Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
