@@ -4749,7 +4749,6 @@ end)
 -- SECTION "TELEPORT PLAYER" DI HALAMAN TELEPORT
 ----------------------------------------------------------------
 
--- pakai TeleportPage yang sudah kita ambil sebelumnya
 local TeleportPlayerSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
 
 local tpPlayerLayout = Instance.new("UIListLayout")
@@ -4771,7 +4770,7 @@ local function makeTpPlayerRow(title, height)
     label.Font                   = Enum.Font.Gotham
     label.TextSize               = 13
     label.TextXAlignment         = Enum.TextXAlignment.Left
-    label.TextColor3             = TEXT or THEME_TEXT
+    label.TextColor3             = THEME_TEXT
     label.Text                   = title
 
     return row
@@ -4782,7 +4781,7 @@ local function makeTpPlayerButton(row, text)
     btn.Parent                   = row
     btn.Size                     = UDim2.new(0,110,0,24)
     btn.Position                 = UDim2.new(1,-126,0.5,-12)
-    btn.BackgroundColor3         = CARD or Color3.fromRGB(40,40,60)
+    btn.BackgroundColor3         = CARD
     btn.BackgroundTransparency   = 0.1
     btn.Text                     = text
     btn.TextColor3               = THEME_TEXT
@@ -4794,15 +4793,15 @@ local function makeTpPlayerButton(row, text)
 end
 
 ----------------------------------------------------------------
--- PANEL KANAN: TELEPORT PLAYER LIST
+-- PANEL KANAN: TELEPORT PLAYER (SEARCH + LIST)
 ----------------------------------------------------------------
 
 local PlayerRightPanel = Instance.new("Frame")
 PlayerRightPanel.Name                   = "TeleportPlayerRightPanel"
-PlayerRightPanel.Size                   = UDim2.new(0, 220, 1, -46)
+PlayerRightPanel.Size                   = UDim2.new(0, 260, 1, -46)
 PlayerRightPanel.AnchorPoint            = Vector2.new(1, 0)
 PlayerRightPanel.Position               = UDim2.new(1, -10, 0, 40)
-PlayerRightPanel.BackgroundColor3       = CARD or Color3.fromRGB(15, 15, 25)
+PlayerRightPanel.BackgroundColor3       = CARD
 PlayerRightPanel.BackgroundTransparency = 0.25
 PlayerRightPanel.BorderSizePixel        = 0
 PlayerRightPanel.Visible                = false
@@ -4836,12 +4835,59 @@ pInfo.TextSize                 = 12
 pInfo.TextXAlignment           = Enum.TextXAlignment.Left
 pInfo.TextColor3               = Color3.fromRGB(200,200,200)
 pInfo.ZIndex                   = 11
-pInfo.Text                     = "Klik nama player untuk teleport."
+pInfo.Text                     = "Search & pilih player, lalu teleport."
 
+-- search box
+local searchBox = Instance.new("TextBox")
+searchBox.Parent                 = PlayerRightPanel
+searchBox.Size                   = UDim2.new(1, -20, 0, 22)
+searchBox.Position               = UDim2.new(0, 10, 0, 52)
+searchBox.PlaceholderText        = "Search player..."
+searchBox.Font                   = Enum.Font.Gotham
+searchBox.TextSize               = 12
+searchBox.TextXAlignment         = Enum.TextXAlignment.Left
+searchBox.TextColor3             = THEME_TEXT
+searchBox.ClearTextOnFocus       = false
+searchBox.BackgroundColor3       = Color3.fromRGB(18,20,28)
+searchBox.BackgroundTransparency = 0.1
+searchBox.Text                   = ""
+searchBox.ZIndex                 = 11
+Instance.new("UICorner", searchBox).CornerRadius = UDim.new(0,6)
+
+-- tombol teleport & refresh di bawah search
+local tpBtn = Instance.new("TextButton")
+tpBtn.Parent                   = PlayerRightPanel
+tpBtn.Size                     = UDim2.new(0.5, -15, 0, 24)
+tpBtn.Position                 = UDim2.new(0, 10, 0, 80)
+tpBtn.BackgroundColor3         = ACCENT
+tpBtn.BackgroundTransparency   = 0.08
+tpBtn.AutoButtonColor          = false
+tpBtn.Font                     = Enum.Font.Gotham
+tpBtn.TextSize                 = 12
+tpBtn.TextColor3               = THEME_TEXT
+tpBtn.Text                     = "Teleport ke player"
+tpBtn.ZIndex                   = 11
+Instance.new("UICorner", tpBtn).CornerRadius = UDim.new(0,8)
+
+local refreshBtn = Instance.new("TextButton")
+refreshBtn.Parent                   = PlayerRightPanel
+refreshBtn.Size                     = UDim2.new(0.5, -15, 0, 24)
+refreshBtn.Position                 = UDim2.new(0.5, 5, 0, 80)
+refreshBtn.BackgroundColor3         = CARD
+refreshBtn.BackgroundTransparency   = 0.18
+refreshBtn.AutoButtonColor          = false
+refreshBtn.Font                     = Enum.Font.Gotham
+refreshBtn.TextSize                 = 12
+refreshBtn.TextColor3               = THEME_TEXT
+refreshBtn.Text                     = "Refresh list"
+refreshBtn.ZIndex                   = 11
+Instance.new("UICorner", refreshBtn).CornerRadius = UDim.new(0,8)
+
+-- list player
 local pScroll = Instance.new("ScrollingFrame")
 pScroll.Parent                 = PlayerRightPanel
-pScroll.Size                   = UDim2.new(1, -10, 1, -70)
-pScroll.Position               = UDim2.new(0, 5, 0, 54)
+pScroll.Size                   = UDim2.new(1, -20, 1, -112)
+pScroll.Position               = UDim2.new(0, 10, 0, 110)
 pScroll.BackgroundTransparency = 1
 pScroll.BorderSizePixel        = 0
 pScroll.ScrollBarThickness     = 3
@@ -4852,11 +4898,20 @@ pScroll.ZIndex                 = 10
 
 local pList = Instance.new("UIListLayout", pScroll)
 pList.SortOrder = Enum.SortOrder.LayoutOrder
-pList.Padding   = UDim.new(0,4)
+pList.Padding   = UDim.new(0,2)
 
 ----------------------------------------------------------------
--- LOGIC TELEPORT KE PLAYER
+-- LOGIC TELEPORT PLAYER
 ----------------------------------------------------------------
+
+local selectedPlayerName = nil
+
+local function passFilter(name, q)
+    if q == "" then return true end
+    name = string.lower(name)
+    q    = string.lower(q)
+    return string.find(name, q, 1, true) ~= nil
+end
 
 local function TpToPlayer(targetPlr)
     if not targetPlr or targetPlr == Player then return end
@@ -4869,9 +4924,9 @@ local function TpToPlayer(targetPlr)
     local hrp  = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
 
-    -- sedikit offset supaya tidak nempel di badan target
-    local offset = targetHRP.CFrame * CFrame.new(3, 0, 0)
-    hrp.CFrame = offset
+    hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
+    hrp.AssemblyAngularVelocity = Vector3.new(0,0,0)
+    hrp.CFrame                  = targetHRP.CFrame + Vector3.new(0,0,3)
 
     if NotifyFeature then
         NotifyFeature("Teleport ke "..targetPlr.Name, true)
@@ -4880,79 +4935,82 @@ end
 
 local function ClearPlayerList()
     for _, c in ipairs(pScroll:GetChildren()) do
-        if c:IsA("Frame") then
+        if c:IsA("Frame") or c:IsA("TextButton") then
             c:Destroy()
         end
     end
 end
 
-local function CreatePlayerEntry(plr)
-    if not plr or plr == Player then return end
-
-    local row = Instance.new("Frame")
-    row.Parent                 = pScroll
-    row.Size                   = UDim2.new(1, -4, 0, 24)
-    row.BackgroundTransparency = 1
-    row.BorderSizePixel        = 0
-    row.ZIndex                 = 11
-
-    local line = Instance.new("Frame")
-    line.Name              = "Highlight"
-    line.Parent            = row
-    line.Size              = UDim2.new(0, 3, 1, 0)
-    line.Position          = UDim2.new(0, 0, 0, 0)
-    line.BackgroundColor3  = THEME_MAIN or Color3.fromRGB(170, 90, 255)
-    line.BorderSizePixel   = 0
-    line.Visible           = false
-    line.ZIndex            = 12
-
-    local btn = Instance.new("TextButton")
-    btn.Parent                 = row
-    btn.Size                   = UDim2.new(1, -6, 1, 0)
-    btn.Position               = UDim2.new(0, 4, 0, 0)
-    btn.BackgroundColor3       = Color3.fromRGB(30,30,50)
-    btn.BorderSizePixel        = 0
-    btn.TextColor3             = THEME_TEXT
-    btn.Font                   = Enum.Font.Gotham
-    btn.TextSize               = 12
-    btn.TextXAlignment         = Enum.TextXAlignment.Left
-    btn.Text                   = "  "..plr.Name
-    btn.AutoButtonColor        = true
-    btn.ZIndex                 = 11
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-
-    btn.MouseButton1Click:Connect(function()
-        TpToPlayer(plr)
-
-        for _, child in ipairs(pScroll:GetChildren()) do
-            if child:IsA("Frame") and child:FindFirstChild("Highlight") then
-                child.Highlight.Visible = (child == row)
-            end
-        end
-    end)
-end
-
-local function RebuildPlayerPanel()
+local function RebuildPlayerList()
     ClearPlayerList()
-    local all = Players:GetPlayers()
+
+    local query = searchBox.Text or ""
+    local all   = Players:GetPlayers()
     table.sort(all, function(a, b)
         return a.Name < b.Name
     end)
+
     for _, plr in ipairs(all) do
-        CreatePlayerEntry(plr)
+        if plr ~= Player and passFilter(plr.Name, query) then
+            local row = Instance.new("TextButton")
+            row.Parent                 = pScroll
+            row.Size                   = UDim2.new(1, 0, 0, 22)
+            row.BackgroundColor3       = CARD
+            row.BackgroundTransparency = 0.2
+            row.Font                   = Enum.Font.Gotham
+            row.TextSize               = 11
+            row.TextXAlignment         = Enum.TextXAlignment.Left
+            row.TextColor3             = THEME_TEXT
+            row.Text                   = "  "..plr.Name
+            row.AutoButtonColor        = false
+            row.ZIndex                 = 11
+            Instance.new("UICorner", row).CornerRadius = UDim.new(0,4)
+
+            row.MouseButton1Click:Connect(function()
+                selectedPlayerName   = plr.Name
+                tpBtn.Text           = "Teleport ke "..plr.Name
+            end)
+        end
+    end
+
+    if not selectedPlayerName then
+        tpBtn.Text = "Teleport ke player"
     end
 end
 
--- update list kalau ada yang join/leave
-Players.PlayerAdded:Connect(function(plr)
+searchBox:GetPropertyChangedSignal("Text"):Connect(function()
     if PlayerRightPanel.Visible then
-        RebuildPlayerPanel()
+        RebuildPlayerList()
     end
 end)
 
-Players.PlayerRemoving:Connect(function(plr)
+Players.PlayerAdded:Connect(function()
     if PlayerRightPanel.Visible then
-        RebuildPlayerPanel()
+        RebuildPlayerList()
+    end
+end)
+
+Players.PlayerRemoving:Connect(function()
+    if PlayerRightPanel.Visible then
+        RebuildPlayerList()
+    end
+end)
+
+tpBtn.MouseButton1Click:Connect(function()
+    if not selectedPlayerName then return end
+
+    local target = Players:FindFirstChild(selectedPlayerName)
+    if not target then return end
+
+    TpToPlayer(target)
+end)
+
+refreshBtn.MouseButton1Click:Connect(function()
+    selectedPlayerName = nil
+    searchBox.Text     = ""
+    RebuildPlayerList()
+    if NotifyFeature then
+        NotifyFeature("Refresh player list", false)
     end
 end)
 
@@ -4966,13 +5024,15 @@ do
     btn.MouseButton1Click:Connect(function()
         PlayerRightPanel.Visible = not PlayerRightPanel.Visible
         if PlayerRightPanel.Visible then
-            RebuildPlayerPanel()
+            selectedPlayerName = nil
+            searchBox.Text     = ""
+            RebuildPlayerList()
         end
     end)
 end
 
 ----------------------------------------------------------------
--- CLOSE PANEL DARI KLIK DI LUAR (PLAYER PANEL)
+-- CLOSE PANEL DARI KLIK DI LUAR
 ----------------------------------------------------------------
 
 UIS.InputBegan:Connect(function(input)
