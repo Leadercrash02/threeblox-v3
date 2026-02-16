@@ -4714,15 +4714,17 @@ end)
 -- SECTION "TELEPORT PLAYER" DI HALAMAN TELEPORT
 ----------------------------------------------------------------
 
--- pakai yang sudah ada di atas, JANGAN redeclare Players/UIS/Main lagi
 local TeleportPage = Pages["Teleport"]
+print("DEBUG_TP_PLAYER: TeleportPage =", TeleportPage)
+
 if not TeleportPage then
     warn("[TeleportPlayer] TeleportPage not found")
     return
 end
 
--- kasih nama unik, jangan bentrok dengan variable lain
 local TeleportPlayerSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
+print("DEBUG_TP_PLAYER: TeleportPlayerSection =", TeleportPlayerSection)
+
 assert(TeleportPlayerSection, "[TeleportPlayer] Section creation failed")
 
 local tpPlayerLayout = Instance.new("UIListLayout")
@@ -4886,14 +4888,25 @@ local function passFilter(name, q)
 end
 
 local function TpToPlayer(targetPlr)
-    if not targetPlr or targetPlr == Player then return end
+    print("DEBUG_TP_PLAYER: TpToPlayer called with", targetPlr, targetPlr and targetPlr.Name)
+
+    if not targetPlr or targetPlr == Player then
+        print("DEBUG_TP_PLAYER: invalid targetPlr")
+        return
+    end
 
     local targetChar = targetPlr.Character or targetPlr.CharacterAdded:Wait()
+    print("DEBUG_TP_PLAYER: targetChar =", targetChar)
+
     local targetHRP  = targetChar:FindFirstChild("HumanoidRootPart")
+    print("DEBUG_TP_PLAYER: targetHRP =", targetHRP)
     if not targetHRP then return end
 
     local char = Player.Character or Player.CharacterAdded:Wait()
+    print("DEBUG_TP_PLAYER: local char =", char)
+
     local hrp  = char:FindFirstChild("HumanoidRootPart")
+    print("DEBUG_TP_PLAYER: local hrp =", hrp)
     if not hrp then return end
 
     hrp.AssemblyLinearVelocity  = Vector3.new(0,0,0)
@@ -4906,6 +4919,7 @@ local function TpToPlayer(targetPlr)
 end
 
 local function ClearPlayerList()
+    print("DEBUG_TP_PLAYER: ClearPlayerList")
     for _, c in ipairs(pScroll:GetChildren()) do
         if c:IsA("Frame") or c:IsA("TextButton") then
             c:Destroy()
@@ -4914,16 +4928,24 @@ local function ClearPlayerList()
 end
 
 local function RebuildPlayerList()
+    print("DEBUG_TP_PLAYER: RebuildPlayerList start")
+
     ClearPlayerList()
 
     local query = searchBox.Text or ""
+    print("DEBUG_TP_PLAYER: query =", query)
+
     local all   = Players:GetPlayers()
+    print("DEBUG_TP_PLAYER: players count =", #all)
+
     table.sort(all, function(a, b)
         return a.Name < b.Name
     end)
 
     for _, plr in ipairs(all) do
         if plr ~= Player and passFilter(plr.Name, query) then
+            print("DEBUG_TP_PLAYER: add row for", plr.Name)
+
             local row = Instance.new("TextButton")
             row.Parent                   = pScroll
             row.Size                     = UDim2.new(1, 0, 0, 22)
@@ -4941,6 +4963,7 @@ local function RebuildPlayerList()
             row.MouseButton1Click:Connect(function()
                 selectedPlayerName = plr.Name
                 tpBtn.Text         = "Teleport ke "..plr.Name
+                print("DEBUG_TP_PLAYER: selectedPlayerName =", selectedPlayerName)
             end)
         end
     end
@@ -4948,36 +4971,46 @@ local function RebuildPlayerList()
     if not selectedPlayerName then
         tpBtn.Text = "Teleport ke player"
     end
+
+    print("DEBUG_TP_PLAYER: RebuildPlayerList done")
 end
 
 searchBox:GetPropertyChangedSignal("Text"):Connect(function()
     if PlayerRightPanel.Visible then
+        print("DEBUG_TP_PLAYER: search changed -> rebuild")
         RebuildPlayerList()
     end
 end)
 
-Players.PlayerAdded:Connect(function()
+Players.PlayerAdded:Connect(function(plr)
     if PlayerRightPanel.Visible then
+        print("DEBUG_TP_PLAYER: PlayerAdded", plr.Name)
         RebuildPlayerList()
     end
 end)
 
-Players.PlayerRemoving:Connect(function()
+Players.PlayerRemoving:Connect(function(plr)
     if PlayerRightPanel.Visible then
+        print("DEBUG_TP_PLAYER: PlayerRemoving", plr.Name)
         RebuildPlayerList()
     end
 end)
 
 tpBtn.MouseButton1Click:Connect(function()
+    print("DEBUG_TP_PLAYER: tpBtn clicked, selected =", selectedPlayerName)
+
     if not selectedPlayerName then return end
 
     local target = Players:FindFirstChild(selectedPlayerName)
+    print("DEBUG_TP_PLAYER: target =", target)
+
     if not target then return end
 
     TpToPlayer(target)
 end)
 
 refreshBtn.MouseButton1Click:Connect(function()
+    print("DEBUG_TP_PLAYER: refreshBtn clicked")
     selectedPlayerName = nil
     searchBox.Text     = ""
     RebuildPlayerList()
@@ -4995,6 +5028,7 @@ do
     local btn = makeTpPlayerButton(row, "Open")
     btn.MouseButton1Click:Connect(function()
         PlayerRightPanel.Visible = not PlayerRightPanel.Visible
+        print("DEBUG_TP_PLAYER: panel visible =", PlayerRightPanel.Visible)
         if PlayerRightPanel.Visible then
             selectedPlayerName = nil
             searchBox.Text     = ""
@@ -5024,6 +5058,7 @@ UIS.InputBegan:Connect(function(input)
         pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
 
     if not inside then
+        print("DEBUG_TP_PLAYER: click outside -> close panel")
         PlayerRightPanel.Visible = false
     end
 end)
