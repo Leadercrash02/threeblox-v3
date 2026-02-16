@@ -2198,9 +2198,6 @@ end
 --- AUTO SELL ---
 --- ------------------------------------------
 
-local Items   = require(ReplicatedStorage.Items)
-local Replion = require(ReplicatedStorage.Packages.Replion)
-
 local BackpackPage = Pages["Backpack"]
 if BackpackPage then
     local layout = Instance.new("UIListLayout", BackpackPage)
