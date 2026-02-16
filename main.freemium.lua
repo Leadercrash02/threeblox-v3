@@ -759,6 +759,7 @@ if InfoPage then
     end
 
     AddChangeLine("(+) Added New GUI layout")
+    AddChangeLine("(+) Added New GUI layout")
 
 end
 
