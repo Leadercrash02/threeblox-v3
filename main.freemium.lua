@@ -1,21 +1,12 @@
 --==================================================
 -- SERVICES & PLAYER
 --==================================================
-local Players           = game:GetService("Players")
-local UIS               = game:GetService("UserInputService")
-local CoreGui           = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService      = game:GetService("TweenService")
-local Lighting          = game:GetService("Lighting")
-local StarterGui        = game:GetService("StarterGui")
-local Player            = Players.LocalPlayer
 
---==================================================
--- MODULES
---==================================================
-local Items   = require(ReplicatedStorage.Items)
-local Replion = require(ReplicatedStorage.Packages.Replion)
--- Net TIDAK dideklar di sini, pakai yang di bawah
+local Player = Players.LocalPlayer
 
 --==================================================
 -- THEME
@@ -252,6 +243,11 @@ task.delay(2.5, function()
     if Notify then Notify:Destroy() end
 end)
 
+----------------------------------------------------------------
+-- MODULES & NET
+----------------------------------------------------------------
+local Items   = require(ReplicatedStorage.Items)
+local Replion = require(ReplicatedStorage.Packages.Replion)
 
 local Net = ReplicatedStorage
     :WaitForChild("Packages")
@@ -2563,6 +2559,11 @@ _G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"  -- "Lucky"/"Mutasi
 ----------------------------------------------------------------
 -- BACKEND AUTO TOTEM
 ----------------------------------------------------------------
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players           = game:GetService("Players")
+local UIS               = game:GetService("UserInputService")
+
+local Replion = require(ReplicatedStorage.Packages.Replion)
 
 local SpawnTotemRemote = ReplicatedStorage
     :WaitForChild("Packages")
@@ -3103,6 +3104,8 @@ _G.RAYPotionQty          = _G.RAYPotionQty          or 1
 ----------------------------------------------------------------
 -- BACKEND POTION
 ----------------------------------------------------------------
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Replion = require(ReplicatedStorage.Packages.Replion)
 
 local ConsumePotionRF = ReplicatedStorage
     :WaitForChild("Packages")
@@ -3596,7 +3599,12 @@ end
 -----------------------------
 -- BACKEND: REMOTE & REPLION
 -----------------------------
----
+local RS      = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local Player  = Players.LocalPlayer
+local Replion = require(RS.Packages.Replion)
+local Net     = require(RS.Packages.Net)
+
 -- CFrame altar (punya kamu)
 local CF_Altar_Slot1 = CFrame.new(
     3232.90356, -1302.8551, 1401.0824,
@@ -3638,14 +3646,14 @@ end
 -- AUTO EQUIP BATU DI HAND (PAKAI ID -> UUID)
 ----------------------------------------------------------------
 
-local EquipItemRE = ReplicatedStorage
+local EquipItemRE = RS
     :WaitForChild("Packages")
     :WaitForChild("_Index")
     :WaitForChild("sleitnick_net@0.2.0")
     :WaitForChild("net")
     :WaitForChild("RE/EquipItem")
 
-local EquipToolFromHotbarRE = ReplicatedStorage
+local EquipToolFromHotbarRE = RS
     :WaitForChild("Packages")
     :WaitForChild("_Index")
     :WaitForChild("sleitnick_net@0.2.0")
@@ -4697,78 +4705,5 @@ UIS.InputBegan:Connect(function(input)
     if not inside then
         IslandRightPanel.Visible = false
     end
-end)
-
-----------------------------------------------------------------
--- SECTION "TELEPORT PLAYER" (SIMPLE VERSION)
-----------------------------------------------------------------
-
-local TeleportPage = Pages and Pages["Teleport"]
-if not TeleportPage then
-    warn("TeleportPage not found (Teleport Player)")
-    return
-end
-
-local TeleportPlayerSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
-
-local tpPlayerLayout = Instance.new("UIListLayout")
-tpPlayerLayout.Parent    = TeleportPlayerSection
-tpPlayerLayout.SortOrder = Enum.SortOrder.LayoutOrder
-tpPlayerLayout.Padding   = UDim.new(0, 6)
-
-local row = Instance.new("Frame")
-row.Parent                 = TeleportPlayerSection
-row.Size                   = UDim2.new(1,0,0,36)
-row.BackgroundTransparency = 1
-
-local label = Instance.new("TextLabel")
-label.Parent                 = row
-label.Size                   = UDim2.new(1,-110,1,0)
-label.Position               = UDim2.new(0,16,0,0)
-label.BackgroundTransparency = 1
-label.Font                   = Enum.Font.Gotham
-label.TextSize               = 13
-label.TextXAlignment         = Enum.TextXAlignment.Left
-label.TextColor3             = THEME_TEXT
-label.Text                   = "Teleport Player (simple)"
-
-local btn = Instance.new("TextButton")
-btn.Parent                   = row
-btn.Size                     = UDim2.new(0,110,0,24)
-btn.Position                 = UDim2.new(1,-126,0.5,-12)
-btn.BackgroundColor3         = CARD
-btn.BackgroundTransparency   = 0.1
-btn.Text                     = "TP 1st"
-btn.TextColor3               = THEME_TEXT
-btn.Font                     = Enum.Font.GothamBold
-btn.TextSize                 = 12
-btn.AutoButtonColor          = true
-Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
-
-btn.MouseButton1Click:Connect(function()
-    -- pakai Players & Player yang SUDAH dideklarasi di atas script
-    local all = Players:GetPlayers()
-    if #all < 2 then return end
-
-    local target = nil
-    for _, plr in ipairs(all) do
-        if plr ~= Player then
-            target = plr
-            break
-        end
-    end
-    if not target then return end
-
-    local tChar = target.Character or target.CharacterAdded:Wait()
-    local tHRP  = tChar:FindFirstChild("HumanoidRootPart")
-    if not tHRP then return end
-
-    local char = Player.Character or Player.CharacterAdded:Wait()
-    local hrp  = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-
-    hrp.AssemblyLinearVelocity  = Vector3.zero
-    hrp.AssemblyAngularVelocity = Vector3.zero
-    hrp.CFrame                  = tHRP.CFrame * CFrame.new(0,0,3)
 end)
 
