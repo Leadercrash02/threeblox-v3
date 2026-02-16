@@ -4674,7 +4674,7 @@ if TeleportPage then
         label.Font                   = Enum.Font.Gotham
         label.TextSize               = 13
         label.TextXAlignment         = Enum.TextXAlignment.Left
-        label.TextColor3             = TEXT or THEME_TEXT
+        label.TextColor3             = THEME_TEXT
         label.Text                   = title
 
         return row
@@ -4741,7 +4741,7 @@ if TeleportPage then
     irList.Padding = UDim.new(0,4)
 
     ----------------------------------------------------------------
-    -- ENTRY LIST ISLAND (PAKAI DEFAULT_SPOT_ORDER)
+    -- ENTRY LIST ISLAND (DEFAULT_SPOT_ORDER)
     ----------------------------------------------------------------
     local function CreateIslandEntry(spotName)
         local row = Instance.new("Frame")
@@ -4808,7 +4808,7 @@ if TeleportPage then
     rebuildIslandPanel()
 
     ----------------------------------------------------------------
-    -- ROW: TELEPORT SELECTED (MIRIP USE POTION)
+    -- ROW: TELEPORT SELECTED
     ----------------------------------------------------------------
     do
         local row = makeTeleportIslandRow("Teleport Selected Island")
@@ -4832,7 +4832,7 @@ if TeleportPage then
     end
 
     ----------------------------------------------------------------
-    -- ROW: BUKA PANEL ISLAND LIST (MIRIP POTION LIST PANEL)
+    -- ROW: OPEN ISLAND LIST PANEL
     ----------------------------------------------------------------
     do
         local row = makeTeleportIslandRow("Island List Panel")
@@ -4859,25 +4859,32 @@ if TeleportPage then
     end
 
     ----------------------------------------------------------------
-    -- CLOSE PANEL DARI KLIK DI LUAR
+    -- CLOSE PANEL DARI KLIK DI LUAR (STONE + ENCHANT + ISLAND)
     ----------------------------------------------------------------
     UIS.InputBegan:Connect(function(input)
-        if not IslandRightPanel.Visible then return end
-
         if input.UserInputType ~= Enum.UserInputType.MouseButton1
-        and input.UserInputType ~= Enum.UserInputType.Touch then
+           and input.UserInputType ~= Enum.UserInputType.Touch then
             return
         end
 
-        local pos = input.Position
-        local absPos = IslandRightPanel.AbsolutePosition
-        local absSize = IslandRightPanel.AbsoluteSize
+        local function outside(panel)
+            if not panel or not panel.Visible then return false end
+            local pos    = input.Position
+            local absPos = panel.AbsolutePosition
+            local absSize= panel.AbsoluteSize
+            local inside =
+                pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
+                pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
+            return not inside
+        end
 
-        local inside =
-            pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
-            pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
-
-        if not inside then
+        if outside(StoneRightPanel) then
+            StoneRightPanel.Visible = false
+        end
+        if outside(EnchantRightPanel) then
+            EnchantRightPanel.Visible = false
+        end
+        if outside(IslandRightPanel) then
             IslandRightPanel.Visible = false
         end
     end)
