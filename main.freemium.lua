@@ -4749,6 +4749,9 @@ end)
 -- SECTION "TELEPORT PLAYER" DI HALAMAN TELEPORT
 ----------------------------------------------------------------
 
+print("DEBUG TeleportPlayer: TeleportPage =", TeleportPage, "CreateSectionDropdown =", CreateSectionDropdown)
+
+
 local TeleportPlayerSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
 
 local tpPlayerLayout = Instance.new("UIListLayout")
