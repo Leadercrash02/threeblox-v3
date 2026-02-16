@@ -759,8 +759,7 @@ if InfoPage then
     end
 
     AddChangeLine("(+) Added New GUI layout")
-    AddChangeLine("(+) Remove Blatant")
-    AddChangeLine("(+) Improve Blanatn")
+
 end
 
 ----------------------------------------------------------------
@@ -4682,7 +4681,7 @@ if TeleportPage then
     end
 
     ----------------------------------------------------------------
-    -- PANEL KANAN LIST ISLAND (COPY POLA POTION)
+    -- PANEL KANAN LIST ISLAND
     ----------------------------------------------------------------
     local IslandRightPanel = Instance.new("Frame")
     IslandRightPanel.Name = "IslandRightPanel"
@@ -4809,7 +4808,7 @@ if TeleportPage then
     rebuildIslandPanel()
 
     ----------------------------------------------------------------
-    -- ROW: TELEPORT SELECTED (MIRIP BUTTON USE POTION)
+    -- ROW: TELEPORT SELECTED (MIRIP USE POTION)
     ----------------------------------------------------------------
     do
         local row = makeTeleportIslandRow("Teleport Selected Island")
@@ -4860,7 +4859,7 @@ if TeleportPage then
     end
 
     ----------------------------------------------------------------
-    -- CLOSE PANEL DARI KLIK DI LUAR (COPY DARI POTION)
+    -- CLOSE PANEL DARI KLIK DI LUAR
     ----------------------------------------------------------------
     UIS.InputBegan:Connect(function(input)
         if not IslandRightPanel.Visible then return end
