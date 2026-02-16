@@ -4708,7 +4708,7 @@ UIS.InputBegan:Connect(function(input)
 end)
 
 --==================================================
--- TELEPORT PLAYER (SAME STYLE AS TELEPORT ISLAND)
+-- TELEPORT PLAYER (RIGHT PANEL • SAME AS TP ISLAND)
 --==================================================
 
 local Players = game:GetService("Players")
@@ -4722,7 +4722,7 @@ if not TeleportPage then
 end
 
 --------------------------------------------------
--- DROPDOWN DI PAGE TELEPORT
+-- DROPDOWN ENTRY DI PAGE TELEPORT
 --------------------------------------------------
 
 local holderPlayer = Instance.new("Frame")
@@ -4747,7 +4747,7 @@ rowPlayer.Text                     = "  🧍‍♂️ Teleport to Player  >"
 Instance.new("UICorner", rowPlayer).CornerRadius = UDim.new(0,8)
 
 --------------------------------------------------
--- PANEL KANAN UNTUK LIST PLAYER
+-- RIGHT PANEL ROOT (SAMA PERSIS MODEL ISLAND)
 --------------------------------------------------
 
 local PlayerRightPanel = Instance.new("Frame")
@@ -4760,12 +4760,17 @@ PlayerRightPanel.BackgroundTransparency = 0.25
 PlayerRightPanel.BorderSizePixel        = 0
 PlayerRightPanel.Visible                = false
 PlayerRightPanel.ZIndex                 = 10
-PlayerRightPanel.Parent                 = Main
+PlayerRightPanel.Parent                 = Main -- sama seperti TP Island
 
 Instance.new("UICorner", PlayerRightPanel).CornerRadius = UDim.new(0, 10)
+
 local pStroke = Instance.new("UIStroke", PlayerRightPanel)
-pStroke.Color       = THEME_MAIN
-pStroke.Transparency= 0.5
+pStroke.Color        = THEME_MAIN
+pStroke.Transparency = 0.5
+
+--------------------------------------------------
+-- TITLE
+--------------------------------------------------
 
 local pTitle = Instance.new("TextLabel")
 pTitle.Parent                 = PlayerRightPanel
@@ -4790,7 +4795,7 @@ pInfo.TextColor3             = Color3.fromRGB(200,200,200)
 pInfo.Text                   = "Klik nama player untuk teleport."
 
 --------------------------------------------------
--- SCROLL LIST PLAYER
+-- SCROLL PLAYER LIST
 --------------------------------------------------
 
 local pScroll = Instance.new("ScrollingFrame")
@@ -4801,7 +4806,6 @@ pScroll.BackgroundTransparency = 1
 pScroll.BorderSizePixel        = 0
 pScroll.ScrollBarThickness     = 3
 pScroll.AutomaticCanvasSize    = Enum.AutomaticSize.Y
-pScroll.CanvasSize             = UDim2.new(0,0,0,0)
 pScroll.ScrollBarImageColor3   = THEME_MAIN
 pScroll.ZIndex                 = 10
 
@@ -4810,7 +4814,7 @@ pList.SortOrder = Enum.SortOrder.LayoutOrder
 pList.Padding   = UDim.new(0,4)
 
 --------------------------------------------------
--- LOGIC TELEPORT
+-- TELEPORT CORE
 --------------------------------------------------
 
 local function TpToPlayer(targetPlr)
@@ -4826,11 +4830,15 @@ local function TpToPlayer(targetPlr)
 
     hrp.AssemblyLinearVelocity  = Vector3.zero
     hrp.AssemblyAngularVelocity = Vector3.zero
-    hrp.CFrame                  = targetHRP.CFrame * CFrame.new(0,0,3)
+    hrp.CFrame = targetHRP.CFrame * CFrame.new(0,0,3)
 end
 
+--------------------------------------------------
+-- BUILD LIST
+--------------------------------------------------
+
 local function ClearPlayerList()
-    for _, c in ipairs(pScroll:GetChildren()) do
+    for _,c in ipairs(pScroll:GetChildren()) do
         if c:IsA("Frame") then
             c:Destroy()
         end
@@ -4844,22 +4852,18 @@ local function CreatePlayerEntry(plr)
     row.Parent                 = pScroll
     row.Size                   = UDim2.new(1, -4, 0, 24)
     row.BackgroundTransparency = 1
-    row.BorderSizePixel        = 0
-    row.ZIndex                 = 11
 
     local btn = Instance.new("TextButton")
-    btn.Parent                 = row
-    btn.Size                   = UDim2.new(1, -6, 1, 0)
-    btn.Position               = UDim2.new(0, 4, 0, 0)
-    btn.BackgroundColor3       = Color3.fromRGB(30,30,50)
-    btn.BorderSizePixel        = 0
-    btn.TextColor3             = THEME_TEXT
-    btn.Font                   = Enum.Font.Gotham
-    btn.TextSize               = 12
-    btn.TextXAlignment         = Enum.TextXAlignment.Left
-    btn.Text                   = "  "..plr.Name
-    btn.AutoButtonColor        = true
-    btn.ZIndex                 = 11
+    btn.Parent           = row
+    btn.Size             = UDim2.new(1, -6, 1, 0)
+    btn.Position         = UDim2.new(0, 4, 0, 0)
+    btn.BackgroundColor3 = CARD
+    btn.BorderSizePixel  = 0
+    btn.TextColor3       = THEME_TEXT
+    btn.Font             = Enum.Font.Gotham
+    btn.TextSize         = 12
+    btn.TextXAlignment   = Enum.TextXAlignment.Left
+    btn.Text             = "  "..plr.Name
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
     btn.MouseButton1Click:Connect(function()
@@ -4878,6 +4882,10 @@ local function RebuildPlayerList()
     end
 end
 
+--------------------------------------------------
+-- EVENTS
+--------------------------------------------------
+
 Players.PlayerAdded:Connect(function()
     if PlayerRightPanel.Visible then
         RebuildPlayerList()
@@ -4891,7 +4899,7 @@ Players.PlayerRemoving:Connect(function()
 end)
 
 --------------------------------------------------
--- TOGGLE BUKA PANEL DARI ROW DI PAGE
+-- OPEN PANEL
 --------------------------------------------------
 
 rowPlayer.MouseButton1Click:Connect(function()
@@ -4902,7 +4910,7 @@ rowPlayer.MouseButton1Click:Connect(function()
 end)
 
 --------------------------------------------------
--- CLOSE PANEL KALAU KLIK DI LUAR
+-- CLOSE OUTSIDE CLICK
 --------------------------------------------------
 
 UIS.InputBegan:Connect(function(input)
@@ -4913,9 +4921,9 @@ UIS.InputBegan:Connect(function(input)
         return
     end
 
-    local pos    = input.Position
-    local absPos = PlayerRightPanel.AbsolutePosition
-    local absSize= PlayerRightPanel.AbsoluteSize
+    local pos     = input.Position
+    local absPos  = PlayerRightPanel.AbsolutePosition
+    local absSize = PlayerRightPanel.AbsoluteSize
 
     local inside =
         pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
