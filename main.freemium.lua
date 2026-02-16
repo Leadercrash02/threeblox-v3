@@ -4749,10 +4749,14 @@ end)
 -- SECTION "TELEPORT PLAYER" DI HALAMAN TELEPORT
 ----------------------------------------------------------------
 
-print("DEBUG TeleportPlayer: TeleportPage =", TeleportPage, "CreateSectionDropdown =", CreateSectionDropdown)
-
+local TeleportPage = Pages and Pages["Teleport"]
+if not TeleportPage then
+    warn("TeleportPage not found (Teleport Player)")
+    return
+end
 
 local TeleportPlayerSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
+
 
 local tpPlayerLayout = Instance.new("UIListLayout")
 tpPlayerLayout.Parent    = TeleportPlayerSection
