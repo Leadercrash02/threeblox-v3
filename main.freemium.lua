@@ -4755,7 +4755,7 @@ if not TeleportPage then
     return
 end
 
-local TeleportPlayerSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
+local TeleportIslandSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
 
 
 local tpPlayerLayout = Instance.new("UIListLayout")
