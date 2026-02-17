@@ -4933,6 +4933,35 @@ UIS.InputBegan:Connect(function(input)
 end)
 
 ----------------------------------------------------------------
+-- HEADER / SECTION TITLE "AUTO EVENT" (SEJAJAR)
+----------------------------------------------------------------
+
+AutoEventHeader = AutoEventHeader or Instance.new("Frame")
+AutoEventHeader.Name                   = "AutoEventHeader"
+AutoEventHeader.Parent                 = TeleportPage
+AutoEventHeader.Size                   = UDim2.new(1,0,0,30)
+AutoEventHeader.BackgroundTransparency = 1
+
+local aeTitleLabel = Instance.new("TextLabel")
+aeTitleLabel.Parent                 = AutoEventHeader
+aeTitleLabel.Size                   = UDim2.new(1,-32,1,0)
+aeTitleLabel.Position               = UDim2.new(0,16,0,0)
+aeTitleLabel.BackgroundTransparency = 1
+aeTitleLabel.Font                   = Enum.Font.GothamBold
+aeTitleLabel.TextSize               = 13
+aeTitleLabel.TextXAlignment         = Enum.TextXAlignment.Left
+aeTitleLabel.TextColor3             = TEXT or THEME_TEXT
+aeTitleLabel.Text                   = "Auto Event"
+
+local aeLine = Instance.new("Frame")
+aeLine.Parent                 = AutoEventHeader
+aeLine.Size                   = UDim2.new(1,-32,0,1)
+aeLine.Position               = UDim2.new(0,16,1,-2)
+aeLine.BackgroundColor3       = THEME_MAIN
+aeLine.BackgroundTransparency = 0.3
+aeLine.BorderSizePixel        = 0
+
+----------------------------------------------------------------
 -- SECTION "AUTO EVENT" DI HALAMAN TELEPORT (HEMAT LOCAL)
 ----------------------------------------------------------------
 
