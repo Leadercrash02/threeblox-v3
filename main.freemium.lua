@@ -4979,7 +4979,6 @@ local function makeAutoEventButton(row, text)
     return btn
 end
 
-
 ----------------------------------------------------------------
 -- PANEL KANAN: AUTO EVENT RIGHT PANEL
 ----------------------------------------------------------------
@@ -5041,7 +5040,6 @@ local aeList = Instance.new("UIListLayout", aeScroll)
 aeList.SortOrder = Enum.SortOrder.LayoutOrder
 aeList.Padding   = UDim.new(0,4)
 
-
 ----------------------------------------------------------------
 -- ENTRY LIST EVENT (GHOST SHARK & MEGALODON)
 ----------------------------------------------------------------
@@ -5092,7 +5090,7 @@ local function CreateAutoEventEntry(labelText, callback)
     end)
 end
 
--- Ghost Shark (pakai TeleportToSharkHunt + cek _G.SharkHuntActive)
+-- Ghost Shark
 CreateAutoEventEntry("Ghost Shark Hunt", function()
     if _G.SharkHuntActive and TeleportToSharkHunt then
         TeleportToSharkHunt()
@@ -5106,7 +5104,7 @@ CreateAutoEventEntry("Ghost Shark Hunt", function()
     end
 end)
 
--- Megalodon (pakai TeleportToMegalodon)
+-- Megalodon
 CreateAutoEventEntry("Megalodon Hunt", function()
     if TeleportToMegalodon then
         TeleportToMegalodon()
@@ -5120,7 +5118,6 @@ CreateAutoEventEntry("Megalodon Hunt", function()
     end
 end)
 
-
 ----------------------------------------------------------------
 -- ROW DI SECTION AUTO EVENT UNTUK BUKA PANEL
 ----------------------------------------------------------------
@@ -5132,7 +5129,6 @@ do
         AutoEventRightPanel.Visible = not AutoEventRightPanel.Visible
     end)
 end
-
 
 ----------------------------------------------------------------
 -- CLOSE PANEL AUTO EVENT DARI KLIK DI LUAR
