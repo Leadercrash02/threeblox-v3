@@ -3524,7 +3524,7 @@ local StoneConfig = {
             "Mutation Hunter III",
             "Reeler II",
             "Gold Digger I",
-            "Fairy Hunter I",      -- kalau ini ga ada di Enchants, tinggal hapus
+            "Fairy Hunter I",
             "Stargazer II",
             "Stormhunter II",
             "Empowered I",
@@ -3597,8 +3597,10 @@ end
 -- BACKEND: REMOTE & REPLION
 -----------------------------
 
-local Replion = require(RS.Packages.Replion)
-local Net     = require(RS.Packages.Net)
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Replion = require(ReplicatedStorage.Packages.Replion)
+local Net     = require(ReplicatedStorage.Packages.Net)
 
 -- CFrame altar (punya kamu)
 local CF_Altar_Slot1 = CFrame.new(
@@ -3641,14 +3643,14 @@ end
 -- AUTO EQUIP BATU DI HAND (PAKAI ID -> UUID)
 ----------------------------------------------------------------
 
-local EquipItemRE = RS
+local EquipItemRE = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
     :WaitForChild("sleitnick_net@0.2.0")
     :WaitForChild("net")
     :WaitForChild("RE/EquipItem")
 
-local EquipToolFromHotbarRE = RS
+local EquipToolFromHotbarRE = ReplicatedStorage
     :WaitForChild("Packages")
     :WaitForChild("_Index")
     :WaitForChild("sleitnick_net@0.2.0")
@@ -3711,7 +3713,6 @@ local TargetId    = nil
 
 local function refreshTarget()
     TargetName = _G.RAY_EnchantTargetName
-    -- kalau kamu mau pakai ID langsung: tinggal bikin tabel Name->Id
     TargetId   = nil
     for id, name in pairs(EnchantIdToName) do
         if name == TargetName then
@@ -3729,7 +3730,6 @@ _G.RAY_EnchantTargetChanged = function()
 end
 
 RollEnchantRE.OnClientEvent:Connect(function(_, _, winningEnchantId, stoneId)
-    -- arg1, arg2 tidak kita pakai; arg3 = winning enchant id, arg4 = stone id
     print("[EnchantDebug] RollEnchant winId =", winningEnchantId, "stoneId =", stoneId)
     if _G.RAY_EnchantAutoOn and TargetId and winningEnchantId == TargetId then
         _G.RAY_EnchantAutoOn = false
@@ -3742,7 +3742,7 @@ end)
 ----------------------------------------------------------------
 -- ENCHANTINGCONTROLLER
 ----------------------------------------------------------------
-local EnchantingController = require(RS.Controllers.EnchantingController)
+local EnchantingController = require(ReplicatedStorage.Controllers.EnchantingController)
 
 local function DoAltarEnchantOnce()
     local second = (_G.RAY_EnchantTargetSlot == 2)
@@ -3785,8 +3785,7 @@ local function DoAltarEnchantOnce()
 end
 
 ----------------------------------------------------------------
--- LOOP AUTO ENCHANT: TIDAK CEK INVENTORY, HANYA SPAM ACTIVATE
--- STOP DIHOOK DARI RollEnchantRE (lihat handler di atas)
+-- LOOP AUTO ENCHANT
 ----------------------------------------------------------------
 task.spawn(function()
     while true do
@@ -4301,6 +4300,7 @@ UIS.InputBegan:Connect(function(input)
         EnchantRightPanel.Visible = false
     end
 end)
+
 
 ----------------------------------------------------------------
 -- DATA: TELEPORT ISLAND (MAP NAME -> CFrame)
