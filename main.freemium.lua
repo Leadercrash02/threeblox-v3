@@ -3475,14 +3475,6 @@ end
 -----------------------------
 -- STATE GLOBAL
 -----------------------------
-    RollEnchantRE.OnClientEvent:Connect(function(a1, a2, a3, a4, a5)
-    print("[DEBUG RollEnchant RAW] a1 =", a1, "(", typeof(a1), ")")
-    print("[DEBUG RollEnchant RAW] a2 =", a2, "(", typeof(a2), ")")
-    print("[DEBUG RollEnchant RAW] a3 =", a3, "(", typeof(a3), ")")
-    print("[DEBUG RollEnchant RAW] a4 =", a4, "(", typeof(a4), ")")
-    print("[DEBUG RollEnchant RAW] a5 =", a5, "(", typeof(a5), ")")
-end)
-
 _G.RAY_EnchantAutoOn      = _G.RAY_EnchantAutoOn      or false
 _G.RAY_EnchantTargetSlot  = _G.RAY_EnchantTargetSlot  or 1      -- 1 = altar slot 1, 2 = altar slot 2
 _G.RAY_EnchantStoneId     = _G.RAY_EnchantStoneId     or 10     -- Id batu dari StoneConfig
@@ -3569,7 +3561,7 @@ local StoneConfig = {
 local StoneList = {10, 125, 558, 246}
 
 ----------------------------------------------------------------
--- MAPPING ENCHANT ID -> NAMA (URUT ABJAD NAMA)
+-- MAPPING ENCHANT ID -> NAMA
 ----------------------------------------------------------------
 
 local EnchantIdToName = {
@@ -3610,7 +3602,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Replion = require(ReplicatedStorage.Packages.Replion)
 local Net     = require(ReplicatedStorage.Packages.Net)
 
--- CFrame altar (punya kamu)
+-- CFrame altar
 local CF_Altar_Slot1 = CFrame.new(
     3232.90356, -1302.8551, 1401.0824,
     0.483647138, 0, -0.875263095,
@@ -3716,6 +3708,15 @@ end
 
 local RollEnchantRE = Net:RemoteEvent("RollEnchant")
 
+-- DEBUG RAW ARGS
+RollEnchantRE.OnClientEvent:Connect(function(a1, a2, a3, a4, a5)
+    print("[DEBUG RollEnchant RAW] a1 =", a1, "(", typeof(a1), ")")
+    print("[DEBUG RollEnchant RAW] a2 =", a2, "(", typeof(a2), ")")
+    print("[DEBUG RollEnchant RAW] a3 =", a3, "(", typeof(a3), ")")
+    print("[DEBUG RollEnchant RAW] a4 =", a4, "(", typeof(a4), ")")
+    print("[DEBUG RollEnchant RAW] a5 =", a5, "(", typeof(a5), ")")
+end)
+
 local TargetName  = _G.RAY_EnchantTargetName
 local TargetId    = nil
 
@@ -3737,6 +3738,7 @@ _G.RAY_EnchantTargetChanged = function()
     refreshTarget()
 end
 
+-- SEMENTARA: handler stop masih versi ID di arg3
 RollEnchantRE.OnClientEvent:Connect(function(_, _, winningEnchantId, stoneId)
     print("[EnchantDebug] RollEnchant winId =", winningEnchantId, "stoneId =", stoneId)
     if _G.RAY_EnchantAutoOn and TargetId and winningEnchantId == TargetId then
@@ -3750,6 +3752,7 @@ end)
 ----------------------------------------------------------------
 -- ENCHANTINGCONTROLLER
 ----------------------------------------------------------------
+
 local EnchantingController = require(ReplicatedStorage.Controllers.EnchantingController)
 
 local function DoAltarEnchantOnce()
@@ -3795,6 +3798,7 @@ end
 ----------------------------------------------------------------
 -- LOOP AUTO ENCHANT
 ----------------------------------------------------------------
+
 task.spawn(function()
     while true do
         if _G.RAY_EnchantAutoOn then
@@ -3803,6 +3807,14 @@ task.spawn(function()
         task.wait(0.8)
     end
 end)
+
+----------------------------------------------------------------
+-- SECTION "ENCHANT PRESET" + PANEL KANAN
+----------------------------------------------------------------
+
+-- (seluruh bagian UI yang kamu kirim di bawah ini biarkan sama seperti versi terakhirmu,
+-- karena tidak terkait dengan error debug; cukup tempel setelah blok di atas)
+
 
 ----------------------------------------------------------------
 -- SECTION "ENCHANT PRESET" + PANEL KANAN
