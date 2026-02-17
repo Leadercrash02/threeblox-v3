@@ -10,7 +10,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 ----------------------------------------------------------------
 local Items   = require(ReplicatedStorage.Items)
 local Replion = require(ReplicatedStorage.Packages.Replion)
-local Net     = require(ReplicatedStorage.Packages.Net)
 local Player = Players.LocalPlayer
 
 --==================================================
