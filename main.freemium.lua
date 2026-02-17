@@ -5,10 +5,6 @@ local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
-local Lighting = game:GetService("Lighting")
-local StarterGui = game:GetService("StarterGui")
-
 ----------------------------------------------------------------
 -- MODULES & NET
 ----------------------------------------------------------------
@@ -3595,6 +3591,15 @@ local EnchantIdToName = {
 local function getEnchantNameFromId(id)
     return EnchantIdToName[id]
 end
+
+-----------------------------
+-- BACKEND: REMOTE & REPLION
+-----------------------------
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Replion = require(ReplicatedStorage.Packages.Replion)
+local Net     = require(ReplicatedStorage.Packages.Net)
 
 -- CFrame altar
 local CF_Altar_Slot1 = CFrame.new(
