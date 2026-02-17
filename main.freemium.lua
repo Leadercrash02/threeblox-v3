@@ -3759,7 +3759,7 @@ local function DoAltarEnchantOnce()
             task.wait(0.2)
         end
 
-        local ok, result = pcall(function()
+        local ok, _ = pcall(function()
             return EnchantingController:Activate(second)
                 :catch(function(msg)
                     if NotifyFeature then
@@ -3780,6 +3780,19 @@ local function DoAltarEnchantOnce()
         end
     end)
 end
+
+----------------------------------------------------------------
+-- LOOP AUTO ENCHANT (SPAM SAMPAI DAPET TARGET)
+----------------------------------------------------------------
+
+task.spawn(function()
+    while true do
+        if _G.RAY_EnchantAutoOn then
+            DoAltarEnchantOnce()
+        end
+        task.wait(0.8) -- delay antar cast, atur sesuka kamu
+    end
+end)
 
 ----------------------------------------------------------------
 -- SECTION "ENCHANT PRESET" + PANEL KANAN
@@ -4217,10 +4230,7 @@ do
         if NotifyFeature then
             NotifyFeature("Auto Enchant", _G.RAY_EnchantAutoOn)
         end
-
-        if _G.RAY_EnchantAutoOn then
-            DoAltarEnchantOnce()
-        end
+        -- loop global yang di atas akan baca flag ini
     end)
 
     refreshAuto()
@@ -4296,8 +4306,6 @@ UIS.InputBegan:Connect(function(input)
         EnchantRightPanel.Visible = false
     end
 end)
-
-
 
 ----------------------------------------------------------------
 -- DATA: TELEPORT ISLAND (MAP NAME -> CFrame)
