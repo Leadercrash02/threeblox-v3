@@ -5,7 +5,12 @@ local Players = game:GetService("Players")
 local UIS = game:GetService("UserInputService")
 local CoreGui = game:GetService("CoreGui")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
+----------------------------------------------------------------
+-- MODULES & NET
+----------------------------------------------------------------
+local Items   = require(ReplicatedStorage.Items)
+local Replion = require(ReplicatedStorage.Packages.Replion)
+local Net     = require(ReplicatedStorage.Packages.Net)
 local Player = Players.LocalPlayer
 
 --==================================================
@@ -243,11 +248,7 @@ task.delay(2.5, function()
     if Notify then Notify:Destroy() end
 end)
 
-----------------------------------------------------------------
--- MODULES & NET
-----------------------------------------------------------------
-local Items   = require(ReplicatedStorage.Items)
-local Replion = require(ReplicatedStorage.Packages.Replion)
+
 
 local Net = ReplicatedStorage
     :WaitForChild("Packages")
@@ -3559,7 +3560,7 @@ local StoneConfig = {
 local StoneList = {10, 125, 558, 246}
 
 ----------------------------------------------------------------
--- MAPPING ENCHANT ID -> NAMA (URUT ABJAD NAMA)
+-- MAPPING ENCHANT ID -> NAMA
 ----------------------------------------------------------------
 
 local EnchantIdToName = {
@@ -3600,7 +3601,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Replion = require(ReplicatedStorage.Packages.Replion)
 local Net     = require(ReplicatedStorage.Packages.Net)
 
--- CFrame altar (punya kamu)
+-- CFrame altar
 local CF_Altar_Slot1 = CFrame.new(
     3232.90356, -1302.8551, 1401.0824,
     0.483647138, 0, -0.875263095,
@@ -3718,7 +3719,6 @@ local function refreshTarget()
             break
         end
     end
-    print("[EnchantDebug] TargetName =", TargetName, "TargetId =", TargetId)
 end
 
 refreshTarget()
@@ -3727,11 +3727,11 @@ _G.RAY_EnchantTargetChanged = function()
     refreshTarget()
 end
 
--- masih pakai mapping EnchantIdToName & TargetId yang tadi
+-- a1 = roll/session id
+-- a2 = winningEnchantId
+-- a3 = stoneId
+-- a4 = isSecond
 RollEnchantRE.OnClientEvent:Connect(function(a1, winningEnchantId, stoneId, isSecond)
-    print("[EnchantDebug] RollEnchant winId =", winningEnchantId, "stoneId =", stoneId, "second =", isSecond)
-    print("[EnchantDebug] TargetId =", TargetId, "TargetName =", TargetName)
-
     if _G.RAY_EnchantAutoOn and TargetId and winningEnchantId == TargetId then
         _G.RAY_EnchantAutoOn = false
         if NotifyFeature then
@@ -3740,18 +3740,16 @@ RollEnchantRE.OnClientEvent:Connect(function(a1, winningEnchantId, stoneId, isSe
     end
 end)
 
-
 ----------------------------------------------------------------
 -- ENCHANTINGCONTROLLER
 ----------------------------------------------------------------
+
 local EnchantingController = require(ReplicatedStorage.Controllers.EnchantingController)
 
 local function DoAltarEnchantOnce()
     local second = (_G.RAY_EnchantTargetSlot == 2)
 
     task.spawn(function()
-        print("[EnchantDebug] DoAltarEnchantOnce, second =", second, "stoneId =", _G.RAY_EnchantStoneId)
-
         EquipFromHotbar2()
         task.wait(0.2)
 
@@ -3764,7 +3762,6 @@ local function DoAltarEnchantOnce()
         local ok, result = pcall(function()
             return EnchantingController:Activate(second)
                 :catch(function(msg)
-                    warn("[EnchantDebug] Activate catch:", msg)
                     if NotifyFeature then
                         NotifyFeature("Enchant error: "..tostring(msg), false)
                     end
@@ -3773,30 +3770,16 @@ local function DoAltarEnchantOnce()
         end)
 
         if not ok then
-            warn("[EnchantDebug] pcall Activate error:", result)
             if NotifyFeature then
                 NotifyFeature("Enchant failed (pcall)", false)
             end
         else
-            print("[EnchantDebug] Activate ok, result =", result)
             if NotifyFeature then
                 NotifyFeature("Enchant roll", true)
             end
         end
     end)
 end
-
-----------------------------------------------------------------
--- LOOP AUTO ENCHANT
-----------------------------------------------------------------
-task.spawn(function()
-    while true do
-        if _G.RAY_EnchantAutoOn then
-            DoAltarEnchantOnce()
-        end
-        task.wait(0.8)
-    end
-end)
 
 ----------------------------------------------------------------
 -- SECTION "ENCHANT PRESET" + PANEL KANAN
@@ -3862,6 +3845,7 @@ end
 ----------------------------------------------------------------
 -- PANEL KANAN: STONE LIST
 ----------------------------------------------------------------
+
 local StoneRightPanel = Instance.new("Frame")
 StoneRightPanel.Name                   = "StoneRightPanel"
 StoneRightPanel.Size                   = UDim2.new(0, 220, 1, -46)
@@ -3876,8 +3860,8 @@ StoneRightPanel.Parent                 = Main
 
 Instance.new("UICorner", StoneRightPanel).CornerRadius = UDim.new(0, 10)
 local stStroke = Instance.new("UIStroke", StoneRightPanel)
-stStroke.Color        = THEME_MAIN
-stStroke.Transparency = 0.5
+stStroke.Color       = THEME_MAIN
+stStroke.Transparency= 0.5
 
 local stTitle = Instance.new("TextLabel")
 stTitle.Parent                 = StoneRightPanel
@@ -3981,6 +3965,7 @@ end
 ----------------------------------------------------------------
 -- PANEL KANAN: ENCHANT LIST
 ----------------------------------------------------------------
+
 local EnchantRightPanel = Instance.new("Frame")
 EnchantRightPanel.Name                   = "EnchantRightPanel"
 EnchantRightPanel.Size                   = UDim2.new(0, 220, 1, -46)
@@ -3995,8 +3980,8 @@ EnchantRightPanel.Parent                 = Main
 
 Instance.new("UICorner", EnchantRightPanel).CornerRadius = UDim.new(0, 10)
 local enStroke = Instance.new("UIStroke", EnchantRightPanel)
-enStroke.Color        = THEME_MAIN
-enStroke.Transparency = 0.5
+enStroke.Color       = THEME_MAIN
+enStroke.Transparency= 0.5
 
 local enTitle = Instance.new("TextLabel")
 enTitle.Parent                 = EnchantRightPanel
@@ -4103,6 +4088,7 @@ rebuildEnchantPanel()
 ----------------------------------------------------------------
 -- ROW: TARGET SLOT (altar slot 1 / 2)
 ----------------------------------------------------------------
+
 do
     local row = makeRow("Target Slot")
 
@@ -4164,6 +4150,7 @@ end
 ----------------------------------------------------------------
 -- ROW: OPEN STONE PANEL
 ----------------------------------------------------------------
+
 do
     local row = makeRow("Stone List Panel")
     local btn = makeSmallButton(row, "Open")
@@ -4178,6 +4165,7 @@ end
 ----------------------------------------------------------------
 -- ROW: OPEN ENCHANT PANEL
 ----------------------------------------------------------------
+
 do
     local row = makeRow("Enchant List Panel")
     local btn = makeSmallButton(row, "Open")
@@ -4192,6 +4180,7 @@ end
 ----------------------------------------------------------------
 -- ROW: TOGGLE AUTO ENCHANT
 ----------------------------------------------------------------
+
 do
     local row = makeRow("Auto Enchant")
 
@@ -4224,10 +4213,13 @@ do
 
     pill.MouseButton1Click:Connect(function()
         _G.RAY_EnchantAutoOn = not _G.RAY_EnchantAutoOn
-        print("[EnchantDebug] AutoOn =", _G.RAY_EnchantAutoOn)
         refreshAuto()
         if NotifyFeature then
             NotifyFeature("Auto Enchant", _G.RAY_EnchantAutoOn)
+        end
+
+        if _G.RAY_EnchantAutoOn then
+            DoAltarEnchantOnce()
         end
     end)
 
@@ -4237,6 +4229,7 @@ end
 ----------------------------------------------------------------
 -- ROW: TELEPORT ALTAR
 ----------------------------------------------------------------
+
 do
     local row = makeRow("Teleport Altar")
 
@@ -4278,6 +4271,7 @@ end
 ----------------------------------------------------------------
 -- CLOSE PANEL DARI KLIK DI LUAR (STONE + ENCHANT)
 ----------------------------------------------------------------
+
 UIS.InputBegan:Connect(function(input)
     if input.UserInputType ~= Enum.UserInputType.MouseButton1
        and input.UserInputType ~= Enum.UserInputType.Touch then
@@ -4302,6 +4296,7 @@ UIS.InputBegan:Connect(function(input)
         EnchantRightPanel.Visible = false
     end
 end)
+
 
 
 ----------------------------------------------------------------
