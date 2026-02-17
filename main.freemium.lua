@@ -3475,6 +3475,14 @@ end
 -----------------------------
 -- STATE GLOBAL
 -----------------------------
+    RollEnchantRE.OnClientEvent:Connect(function(a1, a2, a3, a4, a5)
+    print("[DEBUG RollEnchant RAW] a1 =", a1, "(", typeof(a1), ")")
+    print("[DEBUG RollEnchant RAW] a2 =", a2, "(", typeof(a2), ")")
+    print("[DEBUG RollEnchant RAW] a3 =", a3, "(", typeof(a3), ")")
+    print("[DEBUG RollEnchant RAW] a4 =", a4, "(", typeof(a4), ")")
+    print("[DEBUG RollEnchant RAW] a5 =", a5, "(", typeof(a5), ")")
+end)
+
 _G.RAY_EnchantAutoOn      = _G.RAY_EnchantAutoOn      or false
 _G.RAY_EnchantTargetSlot  = _G.RAY_EnchantTargetSlot  or 1      -- 1 = altar slot 1, 2 = altar slot 2
 _G.RAY_EnchantStoneId     = _G.RAY_EnchantStoneId     or 10     -- Id batu dari StoneConfig
