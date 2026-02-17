@@ -4511,36 +4511,36 @@ tpLayout.Padding   = UDim.new(0, 6)
 
 local function makeTpIslandRow(title, height)
     local row = Instance.new("Frame")
-    row.Parent                  = TeleportIslandSection
-    row.Size                    = UDim2.new(1,0,0,height or 36)
-    row.BackgroundTransparency  = 1
+    row.Parent                 = TeleportIslandSection
+    row.Size                   = UDim2.new(1,0,0,height or 36)
+    row.BackgroundTransparency = 1
 
     local label = Instance.new("TextLabel")
-    label.Parent                 = row
-    label.Size                   = UDim2.new(1,-110,1,0)
-    label.Position               = UDim2.new(0,16,0,0)
-    label.BackgroundTransparency = 1
-    label.Font                   = Enum.Font.Gotham
-    label.TextSize               = 13
-    label.TextXAlignment         = Enum.TextXAlignment.Left
-    label.TextColor3             = TEXT or THEME_TEXT
-    label.Text                   = title
+    label.Parent                = row
+    label.Size                  = UDim2.new(1,-110,1,0)
+    label.Position              = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency= 1
+    label.Font                  = Enum.Font.Gotham
+    label.TextSize              = 13
+    label.TextXAlignment        = Enum.TextXAlignment.Left
+    label.TextColor3            = TEXT or THEME_TEXT
+    label.Text                  = title
 
     return row
 end
 
 local function makeTpIslandButton(row, text)
     local btn = Instance.new("TextButton")
-    btn.Parent                   = row
-    btn.Size                     = UDim2.new(0,110,0,24)
-    btn.Position                 = UDim2.new(1,-126,0.5,-12)
-    btn.BackgroundColor3         = CARD or Color3.fromRGB(40,40,60)
-    btn.BackgroundTransparency   = 0.1
-    btn.Text                     = text
-    btn.TextColor3               = THEME_TEXT
-    btn.Font                     = Enum.Font.GothamBold
-    btn.TextSize                 = 12
-    btn.AutoButtonColor          = true
+    btn.Parent                  = row
+    btn.Size                    = UDim2.new(0,110,0,24)
+    btn.Position                = UDim2.new(1,-126,0.5,-12)
+    btn.BackgroundColor3        = CARD or Color3.fromRGB(40,40,60)
+    btn.BackgroundTransparency  = 0.1
+    btn.Text                    = text
+    btn.TextColor3              = THEME_TEXT
+    btn.Font                    = Enum.Font.GothamBold
+    btn.TextSize                = 12
+    btn.AutoButtonColor         = true
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
     return btn
 end
@@ -4558,7 +4558,7 @@ IslandRightPanel.BackgroundColor3       = CARD or Color3.fromRGB(15, 15, 25)
 IslandRightPanel.BackgroundTransparency = 0.25
 IslandRightPanel.BorderSizePixel        = 0
 IslandRightPanel.Visible                = false
-IslandRightPanel.ZIndex                 = 10
+IslandRightPanel.ZIndex                = 10
 IslandRightPanel.Parent                 = Main
 
 Instance.new("UICorner", IslandRightPanel).CornerRadius = UDim.new(0, 10)
@@ -4567,40 +4567,40 @@ iStroke.Color        = THEME_MAIN
 iStroke.Transparency = 0.5
 
 local iTitle = Instance.new("TextLabel")
-iTitle.Parent                  = IslandRightPanel
-iTitle.Size                    = UDim2.new(1, -10, 0, 24)
-iTitle.Position                = UDim2.new(0, 5, 0, 6)
-iTitle.BackgroundTransparency  = 1
-iTitle.Font                    = Enum.Font.GothamBold
-iTitle.TextSize                = 16
-iTitle.TextXAlignment          = Enum.TextXAlignment.Left
-iTitle.TextColor3              = THEME_TEXT
-iTitle.ZIndex                  = 11
-iTitle.Text                    = "Teleport Island"
+iTitle.Parent                 = IslandRightPanel
+iTitle.Size                   = UDim2.new(1, -10, 0, 24)
+iTitle.Position               = UDim2.new(0, 5, 0, 6)
+iTitle.BackgroundTransparency = 1
+iTitle.Font                   = Enum.Font.GothamBold
+iTitle.TextSize               = 16
+iTitle.TextXAlignment         = Enum.TextXAlignment.Left
+iTitle.TextColor3             = THEME_TEXT
+iTitle.ZIndex                 = 11
+iTitle.Text                   = "Teleport Island"
 
 local iInfo = Instance.new("TextLabel")
-iInfo.Parent                   = IslandRightPanel
-iInfo.Size                     = UDim2.new(1, -10, 0, 18)
-iInfo.Position                 = UDim2.new(0, 5, 0, 30)
-iInfo.BackgroundTransparency   = 1
-iInfo.Font                     = Enum.Font.Gotham
-iInfo.TextSize                 = 12
-iInfo.TextXAlignment           = Enum.TextXAlignment.Left
-iInfo.TextColor3               = Color3.fromRGB(200,200,200)
-iInfo.ZIndex                   = 11
-iInfo.Text                     = "Pilih lokasi island untuk teleport."
+iInfo.Parent                  = IslandRightPanel
+iInfo.Size                    = UDim2.new(1, -10, 0, 18)
+iInfo.Position                = UDim2.new(0, 5, 0, 30)
+iInfo.BackgroundTransparency  = 1
+iInfo.Font                    = Enum.Font.Gotham
+iInfo.TextSize                = 12
+iInfo.TextXAlignment          = Enum.TextXAlignment.Left
+iInfo.TextColor3              = Color3.fromRGB(200,200,200)
+iInfo.ZIndex                  = 11
+iInfo.Text                    = "Pilih lokasi island untuk teleport."
 
 local iScroll = Instance.new("ScrollingFrame")
-iScroll.Parent                 = IslandRightPanel
-iScroll.Size                   = UDim2.new(1, -10, 1, -70)
-iScroll.Position               = UDim2.new(0, 5, 0, 54)
-iScroll.BackgroundTransparency = 1
-iScroll.BorderSizePixel        = 0
-iScroll.ScrollBarThickness     = 3
-iScroll.AutomaticCanvasSize    = Enum.AutomaticSize.Y
-iScroll.CanvasSize             = UDim2.new(0,0,0,0)
-iScroll.ScrollBarImageColor3   = THEME_MAIN
-iScroll.ZIndex                 = 10
+iScroll.Parent                = IslandRightPanel
+iScroll.Size                  = UDim2.new(1, -10, 1, -70)
+iScroll.Position              = UDim2.new(0, 5, 0, 54)
+iScroll.BackgroundTransparency= 1
+iScroll.BorderSizePixel       = 0
+iScroll.ScrollBarThickness    = 3
+iScroll.AutomaticCanvasSize   = Enum.AutomaticSize.Y
+iScroll.CanvasSize            = UDim2.new(0,0,0,0)
+iScroll.ScrollBarImageColor3  = THEME_MAIN
+iScroll.ZIndex                = 10
 
 local iList = Instance.new("UIListLayout", iScroll)
 iList.SortOrder = Enum.SortOrder.LayoutOrder
@@ -4623,35 +4623,35 @@ end
 
 local function CreateIslandEntry(islandName, cf)
     local row = Instance.new("Frame")
-    row.Parent                  = iScroll
-    row.Size                    = UDim2.new(1, -4, 0, 24)
-    row.BackgroundTransparency  = 1
-    row.BorderSizePixel         = 0
-    row.ZIndex                  = 11
+    row.Parent                 = iScroll
+    row.Size                   = UDim2.new(1, -4, 0, 24)
+    row.BackgroundTransparency = 1
+    row.BorderSizePixel        = 0
+    row.ZIndex                 = 11
 
     local line = Instance.new("Frame")
-    line.Name                   = "Highlight"
-    line.Parent                 = row
-    line.Size                   = UDim2.new(0, 3, 1, 0)
-    line.Position               = UDim2.new(0, 0, 0, 0)
-    line.BackgroundColor3       = THEME_MAIN or Color3.fromRGB(170, 90, 255)
-    line.BorderSizePixel        = 0
-    line.Visible                = false
-    line.ZIndex                 = 12
+    line.Name                  = "Highlight"
+    line.Parent                = row
+    line.Size                  = UDim2.new(0, 3, 1, 0)
+    line.Position              = UDim2.new(0, 0, 0, 0)
+    line.BackgroundColor3      = THEME_MAIN or Color3.fromRGB(170, 90, 255)
+    line.BorderSizePixel       = 0
+    line.Visible               = false
+    line.ZIndex                = 12
 
     local btn = Instance.new("TextButton")
-    btn.Parent                  = row
-    btn.Size                    = UDim2.new(1, -6, 1, 0)
-    btn.Position                = UDim2.new(0, 4, 0, 0)
-    btn.BackgroundColor3        = Color3.fromRGB(30,30,50)
-    btn.BorderSizePixel         = 0
-    btn.TextColor3              = THEME_TEXT
-    btn.Font                    = Enum.Font.Gotham
-    btn.TextSize                = 12
-    btn.TextXAlignment          = Enum.TextXAlignment.Left
-    btn.Text                    = "  "..islandName
-    btn.AutoButtonColor         = true
-    btn.ZIndex                  = 11
+    btn.Parent                 = row
+    btn.Size                   = UDim2.new(1, -6, 1, 0)
+    btn.Position               = UDim2.new(0, 4, 0, 0)
+    btn.BackgroundColor3       = Color3.fromRGB(30,30,50)
+    btn.BorderSizePixel        = 0
+    btn.TextColor3             = THEME_TEXT
+    btn.Font                   = Enum.Font.Gotham
+    btn.TextSize               = 12
+    btn.TextXAlignment         = Enum.TextXAlignment.Left
+    btn.Text                   = "  "..islandName
+    btn.AutoButtonColor        = true
+    btn.ZIndex                 = 11
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
     btn.MouseButton1Click:Connect(function()
@@ -4700,36 +4700,36 @@ tpPlayerLayout.Padding   = UDim.new(0, 6)
 
 local function makeTpPlayerRow(title, height)
     local row = Instance.new("Frame")
-    row.Parent                  = TeleportPlayerSection
-    row.Size                    = UDim2.new(1,0,0,height or 36)
-    row.BackgroundTransparency  = 1
+    row.Parent                 = TeleportPlayerSection
+    row.Size                   = UDim2.new(1,0,0,height or 36)
+    row.BackgroundTransparency = 1
 
     local label = Instance.new("TextLabel")
-    label.Parent                 = row
-    label.Size                   = UDim2.new(1,-110,1,0)
-    label.Position               = UDim2.new(0,16,0,0)
-    label.BackgroundTransparency = 1
-    label.Font                   = Enum.Font.Gotham
-    label.TextSize               = 13
-    label.TextXAlignment         = Enum.TextXAlignment.Left
-    label.TextColor3             = TEXT or THEME_TEXT
-    label.Text                   = title
+    label.Parent                = row
+    label.Size                  = UDim2.new(1,-110,1,0)
+    label.Position              = UDim2.new(0,16,0,0)
+    label.BackgroundTransparency= 1
+    label.Font                  = Enum.Font.Gotham
+    label.TextSize              = 13
+    label.TextXAlignment        = Enum.TextXAlignment.Left
+    label.TextColor3            = TEXT or THEME_TEXT
+    label.Text                  = title
 
     return row
 end
 
 local function makeTpPlayerButton(row, text)
     local btn = Instance.new("TextButton")
-    btn.Parent                   = row
-    btn.Size                     = UDim2.new(0,110,0,24)
-    btn.Position                 = UDim2.new(1,-126,0.5,-12)
-    btn.BackgroundColor3         = CARD or Color3.fromRGB(40,40,60)
-    btn.BackgroundTransparency   = 0.1
-    btn.Text                     = text
-    btn.TextColor3               = THEME_TEXT
-    btn.Font                     = Enum.Font.GothamBold
-    btn.TextSize                 = 12
-    btn.AutoButtonColor          = true
+    btn.Parent                  = row
+    btn.Size                    = UDim2.new(0,110,0,24)
+    btn.Position                = UDim2.new(1,-126,0.5,-12)
+    btn.BackgroundColor3        = CARD or Color3.fromRGB(40,40,60)
+    btn.BackgroundTransparency  = 0.1
+    btn.Text                    = text
+    btn.TextColor3              = THEME_TEXT
+    btn.Font                    = Enum.Font.GothamBold
+    btn.TextSize                = 12
+    btn.AutoButtonColor         = true
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
     return btn
 end
@@ -4747,7 +4747,7 @@ TeleportPlayerRightPanel.BackgroundColor3       = CARD or Color3.fromRGB(15, 15,
 TeleportPlayerRightPanel.BackgroundTransparency = 0.25
 TeleportPlayerRightPanel.BorderSizePixel        = 0
 TeleportPlayerRightPanel.Visible                = false
-TeleportPlayerRightPanel.ZIndex                 = 10
+TeleportPlayerRightPanel.ZIndex                = 10
 TeleportPlayerRightPanel.Parent                 = Main
 
 Instance.new("UICorner", TeleportPlayerRightPanel).CornerRadius = UDim.new(0, 10)
@@ -4756,40 +4756,40 @@ tpPStroke.Color        = THEME_MAIN
 tpPStroke.Transparency = 0.5
 
 local tpPTitle = Instance.new("TextLabel")
-tpPTitle.Parent                  = TeleportPlayerRightPanel
-tpPTitle.Size                    = UDim2.new(1, -10, 0, 24)
-tpPTitle.Position                = UDim2.new(0, 5, 0, 6)
-tpPTitle.BackgroundTransparency  = 1
-tpPTitle.Font                    = Enum.Font.GothamBold
-tpPTitle.TextSize                = 16
-tpPTitle.TextXAlignment          = Enum.TextXAlignment.Left
-tpPTitle.TextColor3              = THEME_TEXT
-tpPTitle.ZIndex                  = 11
-tpPTitle.Text                    = "Teleport Player"
+tpPTitle.Parent                 = TeleportPlayerRightPanel
+tpPTitle.Size                   = UDim2.new(1, -10, 0, 24)
+tpPTitle.Position               = UDim2.new(0, 5, 0, 6)
+tpPTitle.BackgroundTransparency = 1
+tpPTitle.Font                   = Enum.Font.GothamBold
+tpPTitle.TextSize               = 16
+tpPTitle.TextXAlignment         = Enum.TextXAlignment.Left
+tpPTitle.TextColor3             = THEME_TEXT
+tpPTitle.ZIndex                 = 11
+tpPTitle.Text                   = "Teleport Player"
 
 local tpPInfo = Instance.new("TextLabel")
-tpPInfo.Parent                   = TeleportPlayerRightPanel
-tpPInfo.Size                     = UDim2.new(1, -10, 0, 18)
-tpPInfo.Position                 = UDim2.new(0, 5, 0, 30)
-tpPInfo.BackgroundTransparency   = 1
-tpPInfo.Font                     = Enum.Font.Gotham
-tpPInfo.TextSize                 = 12
-tpPInfo.TextXAlignment           = Enum.TextXAlignment.Left
-tpPInfo.TextColor3               = Color3.fromRGB(200,200,200)
-tpPInfo.ZIndex                   = 11
-tpPInfo.Text                     = "Pilih player untuk teleport ke posisi mereka."
+tpPInfo.Parent                  = TeleportPlayerRightPanel
+tpPInfo.Size                    = UDim2.new(1, -10, 0, 18)
+tpPInfo.Position                = UDim2.new(0, 5, 0, 30)
+tpPInfo.BackgroundTransparency  = 1
+tpPInfo.Font                    = Enum.Font.Gotham
+tpPInfo.TextSize                = 12
+tpPInfo.TextXAlignment          = Enum.TextXAlignment.Left
+tpPInfo.TextColor3              = Color3.fromRGB(200,200,200)
+tpPInfo.ZIndex                  = 11
+tpPInfo.Text                    = "Pilih player untuk teleport ke posisi mereka."
 
 local tpPScroll = Instance.new("ScrollingFrame")
-tpPScroll.Parent                 = TeleportPlayerRightPanel
-tpPScroll.Size                   = UDim2.new(1, -10, 1, -70)
-tpPScroll.Position               = UDim2.new(0, 5, 0, 54)
-tpPScroll.BackgroundTransparency = 1
-tpPScroll.BorderSizePixel        = 0
-tpPScroll.ScrollBarThickness     = 3
-tpPScroll.AutomaticCanvasSize    = Enum.AutomaticSize.Y
-tpPScroll.CanvasSize             = UDim2.new(0,0,0,0)
-tpPScroll.ScrollBarImageColor3   = THEME_MAIN
-tpPScroll.ZIndex                 = 10
+tpPScroll.Parent                = TeleportPlayerRightPanel
+tpPScroll.Size                  = UDim2.new(1, -10, 1, -70)
+tpPScroll.Position              = UDim2.new(0, 5, 0, 54)
+tpPScroll.BackgroundTransparency= 1
+tpPScroll.BorderSizePixel       = 0
+tpPScroll.ScrollBarThickness    = 3
+tpPScroll.AutomaticCanvasSize   = Enum.AutomaticSize.Y
+tpPScroll.CanvasSize            = UDim2.new(0,0,0,0)
+tpPScroll.ScrollBarImageColor3  = THEME_MAIN
+tpPScroll.ZIndex                = 10
 
 local tpPList = Instance.new("UIListLayout", tpPScroll)
 tpPList.SortOrder = Enum.SortOrder.LayoutOrder
@@ -4812,7 +4812,7 @@ local function TpToPlayer(targetPlayer)
     local targetHRP = targetChar:FindFirstChild("HumanoidRootPart")
     if not targetHRP then return end
 
-    myHRP.CFrame = targetHRP.CFrame
+    myHRP.CFrame = targetHRP.CFrame  -- pakai HRP.CFrame buat teleport [web:24][web:32][web:49]
 
     if NotifyFeature then
         NotifyFeature("Teleport to: ".. targetPlayer.Name, true)
@@ -4821,36 +4821,36 @@ end
 
 local function CreatePlayerEntry(plr)
     local row = Instance.new("Frame")
-    row.Parent                  = tpPScroll
-    row.Size                    = UDim2.new(1, -4, 0, 24)
-    row.BackgroundTransparency  = 1
-    row.BorderSizePixel         = 0
-    row.ZIndex                  = 11
-    row.Name                    = "PlayerRow_"..plr.Name
+    row.Parent                 = tpPScroll
+    row.Size                   = UDim2.new(1, -4, 0, 24)
+    row.BackgroundTransparency = 1
+    row.BorderSizePixel        = 0
+    row.ZIndex                 = 11
+    row.Name                   = "PlayerRow_"..plr.Name
 
     local line = Instance.new("Frame")
-    line.Name                   = "Highlight"
-    line.Parent                 = row
-    line.Size                   = UDim2.new(0, 3, 1, 0)
-    line.Position               = UDim2.new(0, 0, 0, 0)
-    line.BackgroundColor3       = THEME_MAIN or Color3.fromRGB(170, 90, 255)
-    line.BorderSizePixel        = 0
-    line.Visible                = false
-    line.ZIndex                 = 12
+    line.Name                  = "Highlight"
+    line.Parent                = row
+    line.Size                  = UDim2.new(0, 3, 1, 0)
+    line.Position              = UDim2.new(0, 0, 0, 0)
+    line.BackgroundColor3      = THEME_MAIN or Color3.fromRGB(170, 90, 255)
+    line.BorderSizePixel       = 0
+    line.Visible               = false
+    line.ZIndex                = 12
 
     local btn = Instance.new("TextButton")
-    btn.Parent                  = row
-    btn.Size                    = UDim2.new(1, -6, 1, 0)
-    btn.Position                = UDim2.new(0, 4, 0, 0)
-    btn.BackgroundColor3        = Color3.fromRGB(30,30,50)
-    btn.BorderSizePixel         = 0
-    btn.TextColor3              = THEME_TEXT
-    btn.Font                    = Enum.Font.Gotham
-    btn.TextSize                = 12
-    btn.TextXAlignment          = Enum.TextXAlignment.Left
-    btn.Text                    = "  ".. plr.Name
-    btn.AutoButtonColor         = true
-    btn.ZIndex                  = 11
+    btn.Parent                 = row
+    btn.Size                   = UDim2.new(1, -6, 1, 0)
+    btn.Position               = UDim2.new(0, 4, 0, 0)
+    btn.BackgroundColor3       = Color3.fromRGB(30,30,50)
+    btn.BorderSizePixel        = 0
+    btn.TextColor3             = THEME_TEXT
+    btn.Font                   = Enum.Font.Gotham
+    btn.TextSize               = 12
+    btn.TextXAlignment         = Enum.TextXAlignment.Left
+    btn.Text                   = "  ".. plr.Name
+    btn.AutoButtonColor        = true
+    btn.ZIndex                 = 11
     Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
 
     btn.MouseButton1Click:Connect(function()
@@ -4864,6 +4864,7 @@ local function CreatePlayerEntry(plr)
     end)
 end
 
+-- isi awal dari Players
 for _, plr in ipairs(Players:GetPlayers()) do
     if plr ~= Player then
         CreatePlayerEntry(plr)
@@ -4928,233 +4929,5 @@ UIS.InputBegan:Connect(function(input)
 
     if clickedOutside(TeleportPlayerRightPanel) then
         TeleportPlayerRightPanel.Visible = false
-    end
-end)
-
-----------------------------------------------------------------
--- SECTION "AUTO EVENT" DI HALAMAN TELEPORT
-----------------------------------------------------------------
-
-print(
-    "[DBG AutoEvent] core =",
-    "Pages:", Pages,
-    "TeleportPage:", TeleportPage,
-    "Main:", Main,
-    "CreateSectionDropdown:", CreateSectionDropdown,
-    "UIS:", UIS,
-    "Players:", Players,
-    "Player:", Player,
-    "THEME_MAIN:", THEME_MAIN,
-    "THEME_TEXT:", THEME_TEXT,
-    "CARD:", CARD,
-    "NotifyFeature:", NotifyFeature
-)
-
-if type(CreateSectionDropdown) ~= "function" then
-    warn("[AutoEvent] CreateSectionDropdown nil")
-    return
-end
-
-local AutoEventSection = CreateSectionDropdown(TeleportPage, "Auto Event")
-
-local aeLayout = Instance.new("UIListLayout")
-aeLayout.Parent    = AutoEventSection
-aeLayout.SortOrder = Enum.SortOrder.LayoutOrder
-aeLayout.Padding   = UDim.new(0, 6)
-
-local function makeAutoEventRow(title, height)
-    local row = Instance.new("Frame")
-    row.Parent                  = AutoEventSection
-    row.Size                    = UDim2.new(1,0,0,height or 36)
-    row.BackgroundTransparency  = 1
-
-    local label = Instance.new("TextLabel")
-    label.Parent                 = row
-    label.Size                   = UDim2.new(1,-110,1,0)
-    label.Position               = UDim2.new(0,16,0,0)
-    label.BackgroundTransparency = 1
-    label.Font                   = Enum.Font.Gotham
-    label.TextSize               = 13
-    label.TextXAlignment         = Enum.TextXAlignment.Left
-    label.TextColor3             = THEME_TEXT
-    label.Text                   = title
-
-    return row
-end
-
-local function makeAutoEventButton(row, text)
-    local btn = Instance.new("TextButton")
-    btn.Parent                   = row
-    btn.Size                     = UDim2.new(0,110,0,24)
-    btn.Position                 = UDim2.new(1,-126,0.5,-12)
-    btn.BackgroundColor3         = CARD or Color3.fromRGB(40,40,60)
-    btn.BackgroundTransparency   = 0.1
-    btn.Text                     = text
-    btn.TextColor3               = THEME_TEXT
-    btn.Font                     = Enum.Font.GothamBold
-    btn.TextSize                 = 12
-    btn.AutoButtonColor          = true
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,8)
-    return btn
-end
-
-----------------------------------------------------------------
--- PANEL KANAN: AUTO EVENT RIGHT PANEL
-----------------------------------------------------------------
-
-local AutoEventRightPanel = Instance.new("Frame")
-AutoEventRightPanel.Name                   = "AutoEventRightPanel"
-AutoEventRightPanel.Size                   = UDim2.new(0, 220, 1, -46)
-AutoEventRightPanel.AnchorPoint            = Vector2.new(1, 0)
-AutoEventRightPanel.Position               = UDim2.new(1, -10, 0, 40)
-AutoEventRightPanel.BackgroundColor3       = CARD or Color3.fromRGB(15, 15, 25)
-AutoEventRightPanel.BackgroundTransparency = 0.25
-AutoEventRightPanel.BorderSizePixel        = 0
-AutoEventRightPanel.Visible                = false
-AutoEventRightPanel.ZIndex                 = 10
-AutoEventRightPanel.Parent                 = Main
-
-Instance.new("UICorner", AutoEventRightPanel).CornerRadius = UDim.new(0, 10)
-local aeStroke = Instance.new("UIStroke", AutoEventRightPanel)
-aeStroke.Color        = THEME_MAIN
-aeStroke.Transparency = 0.5
-
-local aeTitle = Instance.new("TextLabel")
-aeTitle.Parent                  = AutoEventRightPanel
-aeTitle.Size                    = UDim2.new(1, -10, 0, 24)
-aeTitle.Position                = UDim2.new(0, 5, 0, 6)
-aeTitle.BackgroundTransparency  = 1
-aeTitle.Font                    = Enum.Font.GothamBold
-aeTitle.TextSize                = 16
-aeTitle.TextXAlignment          = Enum.TextXAlignment.Left
-aeTitle.TextColor3              = THEME_TEXT
-aeTitle.ZIndex                  = 11
-aeTitle.Text                    = "Auto Event"
-
-local aeInfo = Instance.new("TextLabel")
-aeInfo.Parent                   = AutoEventRightPanel
-aeInfo.Size                     = UDim2.new(1, -10, 0, 18)
-aeInfo.Position                 = UDim2.new(0, 5, 0, 30)
-aeInfo.BackgroundTransparency   = 1
-aeInfo.Font                     = Enum.Font.Gotham
-aeInfo.TextSize                 = 12
-aeInfo.TextXAlignment           = Enum.TextXAlignment.Left
-aeInfo.TextColor3               = Color3.fromRGB(200,200,200)
-aeInfo.ZIndex                   = 11
-aeInfo.Text                     = "Pilih event yang mau di-auto-kan."
-
-local aeScroll = Instance.new("ScrollingFrame")
-aeScroll.Parent                 = AutoEventRightPanel
-aeScroll.Size                   = UDim2.new(1, -10, 1, -70)
-aeScroll.Position               = UDim2.new(0, 5, 0, 54)
-aeScroll.BackgroundTransparency = 1
-aeScroll.BorderSizePixel        = 0
-aeScroll.ScrollBarThickness     = 3
-aeScroll.AutomaticCanvasSize    = Enum.AutomaticSize.Y
-aeScroll.CanvasSize             = UDim2.new(0,0,0,0)
-aeScroll.ScrollBarImageColor3   = THEME_MAIN
-aeScroll.ZIndex                 = 10
-
-local aeList = Instance.new("UIListLayout", aeScroll)
-aeList.SortOrder = Enum.SortOrder.LayoutOrder
-aeList.Padding   = UDim.new(0,4)
-
-----------------------------------------------------------------
--- DATA EVENT + ENTRY LIST AUTO EVENT
-----------------------------------------------------------------
-
-local AUTO_EVENTS = {
-    "Heartfelt Island Hearts",
-    "Kohana Volcano Eruption",
-    "Pirate Cove Leviathan",
-    "Temple Guardian",
-    "Weather Machine",
-}
-
-local function CreateAutoEventEntry(eventName)
-    local row = Instance.new("Frame")
-    row.Parent                  = aeScroll
-    row.Size                    = UDim2.new(1, -4, 0, 24)
-    row.BackgroundTransparency  = 1
-    row.BorderSizePixel         = 0
-    row.ZIndex                  = 11
-
-    local line = Instance.new("Frame")
-    line.Name                   = "Highlight"
-    line.Parent                 = row
-    line.Size                   = UDim2.new(0, 3, 1, 0)
-    line.Position               = UDim2.new(0, 0, 0, 0)
-    line.BackgroundColor3       = THEME_MAIN or Color3.fromRGB(170, 90, 255)
-    line.BorderSizePixel        = 0
-    line.Visible                = false
-    line.ZIndex                 = 12
-
-    local btn = Instance.new("TextButton")
-    btn.Parent                  = row
-    btn.Size                    = UDim2.new(1, -6, 1, 0)
-    btn.Position                = UDim2.new(0, 4, 0, 0)
-    btn.BackgroundColor3        = Color3.fromRGB(30,30,50)
-    btn.BorderSizePixel         = 0
-    btn.TextColor3              = THEME_TEXT
-    btn.Font                    = Enum.Font.Gotham
-    btn.TextSize                = 12
-    btn.TextXAlignment          = Enum.TextXAlignment.Left
-    btn.Text                    = "  " .. eventName
-    btn.AutoButtonColor         = true
-    btn.ZIndex                  = 11
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-
-    btn.MouseButton1Click:Connect(function()
-        -- Di sini isi logika Auto Event (teleport / remote, dsb.)
-        if NotifyFeature then
-            NotifyFeature("Selected Auto Event: "..eventName, true)
-        end
-
-        for _, child in ipairs(aeScroll:GetChildren()) do
-            if child:IsA("Frame") and child:FindFirstChild("Highlight") then
-                child.Highlight.Visible = (child == row)
-            end
-        end
-    end)
-end
-
-for _, ev in ipairs(AUTO_EVENTS) do
-    CreateAutoEventEntry(ev)
-end
-
-----------------------------------------------------------------
--- ROW DI SECTION TELEPORT UNTUK BUKA PANEL AUTO EVENT
-----------------------------------------------------------------
-
-do
-    local row = makeAutoEventRow("Auto Event Panel")
-    local btn = makeAutoEventButton(row, "Open")
-    btn.MouseButton1Click:Connect(function()
-        AutoEventRightPanel.Visible = not AutoEventRightPanel.Visible
-    end)
-end
-
-----------------------------------------------------------------
--- CLOSE PANEL AUTO EVENT DARI KLIK DI LUAR
-----------------------------------------------------------------
-
-UIS.InputBegan:Connect(function(input)
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1
-    and input.UserInputType ~= Enum.UserInputType.Touch then
-        return
-    end
-
-    if not AutoEventRightPanel.Visible then return end
-
-    local pos    = input.Position
-    local absPos = AutoEventRightPanel.AbsolutePosition
-    local absSize= AutoEventRightPanel.AbsoluteSize
-
-    local inside =
-        pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
-        pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
-
-    if not inside then
-        AutoEventRightPanel.Visible = false
     end
 end)
