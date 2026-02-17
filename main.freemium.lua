@@ -1882,10 +1882,10 @@ local Controllers = ReplicatedStorage:WaitForChild("Controllers")
 local Modules     = ReplicatedStorage:WaitForChild("Modules")
 
 local AnimControllerModule = Controllers:WaitForChild("AnimationController")
-local AnimationsModule      = Modules:WaitForChild("Animations")
+local AnimationsModule     = Modules:WaitForChild("Animations")
 
-local AnimModule       = require(AnimControllerModule)
-local Animations_upvr  = require(AnimationsModule)
+local AnimModule      = require(AnimControllerModule)
+local Animations_upvr = require(AnimationsModule)
 local oldGetAnimationData = AnimModule.GetAnimationData
 
 if type(oldGetAnimationData) ~= "function" then
@@ -1917,16 +1917,19 @@ function AnimModule:SetSkinOverrideEnabled(enabled)
     OverrideEnabled = not not enabled
 end
 
+-- FIX: override boleh nabrak default maupun skin bawaan
 AnimModule.GetAnimationData = function(self, animName)
     local baseData, baseKey = oldGetAnimationData(self, animName)
     if not baseData then
         return nil, nil
     end
 
-    if not OverrideEnabled or not SelectedAnimSkin or not baseData.Variants then
+    -- kalau override OFF / belum pilih skin, pakai anim hasil bawaan game (default / skin resmi)
+    if not OverrideEnabled or not SelectedAnimSkin then
         return baseData, baseKey
     end
 
+    -- paksa pakai skin yang dipilih di panel: "<SelectedAnimSkin> - <animName>"
     local overrideKey  = ("%s - %s"):format(SelectedAnimSkin, animName)
     local overrideData = Animations_upvr[overrideKey]
 
@@ -1934,10 +1937,9 @@ AnimModule.GetAnimationData = function(self, animName)
         return overrideData, overrideKey
     end
 
+    -- kalau tidak ada entry override, fallback ke anim bawaan
     return baseData, baseKey
 end
-
-
 
 ----------------------------------------------------------------
 -- PANEL KANAN MENEMPEL KE MAIN (HANYA LIST SKIN)
@@ -2193,6 +2195,7 @@ if AutoPage then
         end)
     end
 end
+
 
 ----------------------------------------------
 --- AUTO SELL ---
@@ -2559,11 +2562,6 @@ _G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"  -- "Lucky"/"Mutasi
 ----------------------------------------------------------------
 -- BACKEND AUTO TOTEM
 ----------------------------------------------------------------
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players           = game:GetService("Players")
-local UIS               = game:GetService("UserInputService")
-
-local Replion = require(ReplicatedStorage.Packages.Replion)
 
 local SpawnTotemRemote = ReplicatedStorage
     :WaitForChild("Packages")
@@ -3104,8 +3102,7 @@ _G.RAYPotionQty          = _G.RAYPotionQty          or 1
 ----------------------------------------------------------------
 -- BACKEND POTION
 ----------------------------------------------------------------
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Replion = require(ReplicatedStorage.Packages.Replion)
+
 
 local ConsumePotionRF = ReplicatedStorage
     :WaitForChild("Packages")
@@ -3599,9 +3596,7 @@ end
 -----------------------------
 -- BACKEND: REMOTE & REPLION
 -----------------------------
-local RS      = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local Player  = Players.LocalPlayer
+
 local Replion = require(RS.Packages.Replion)
 local Net     = require(RS.Packages.Net)
 
