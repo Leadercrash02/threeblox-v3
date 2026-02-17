@@ -4980,7 +4980,7 @@ local function makeAutoEventButton(row, text)
 end
 
 ----------------------------------------------------------------
--- PANEL KANAN: AUTO EVENT RIGHT PANEL
+-- PANEL KANAN: AUTO EVENT RIGHT PANEL (TANPA LOGIC)
 ----------------------------------------------------------------
 
 local AutoEventRightPanel = Instance.new("Frame")
@@ -5022,7 +5022,7 @@ aeInfo.TextSize                 = 12
 aeInfo.TextXAlignment           = Enum.TextXAlignment.Left
 aeInfo.TextColor3               = Color3.fromRGB(200,200,200)
 aeInfo.ZIndex                   = 11
-aeInfo.Text                     = "Pilih event untuk teleport / auto event."
+aeInfo.Text                     = "Panel Auto Event (belum ada logic)."
 
 local aeScroll = Instance.new("ScrollingFrame")
 aeScroll.Parent                 = AutoEventRightPanel
@@ -5039,84 +5039,6 @@ aeScroll.ZIndex                 = 10
 local aeList = Instance.new("UIListLayout", aeScroll)
 aeList.SortOrder = Enum.SortOrder.LayoutOrder
 aeList.Padding   = UDim.new(0,4)
-
-----------------------------------------------------------------
--- ENTRY LIST EVENT (GHOST SHARK & MEGALODON)
-----------------------------------------------------------------
-
-local function CreateAutoEventEntry(labelText, callback)
-    local row = Instance.new("Frame")
-    row.Parent                  = aeScroll
-    row.Size                    = UDim2.new(1, -4, 0, 24)
-    row.BackgroundTransparency  = 1
-    row.BorderSizePixel         = 0
-    row.ZIndex                  = 11
-
-    local line = Instance.new("Frame")
-    line.Name                   = "Highlight"
-    line.Parent                 = row
-    line.Size                   = UDim2.new(0, 3, 1, 0)
-    line.Position               = UDim2.new(0, 0, 0, 0)
-    line.BackgroundColor3       = THEME_MAIN or Color3.fromRGB(170, 90, 255)
-    line.BorderSizePixel        = 0
-    line.Visible                = false
-    line.ZIndex                 = 12
-
-    local btn = Instance.new("TextButton")
-    btn.Parent                  = row
-    btn.Size                    = UDim2.new(1, -6, 1, 0)
-    btn.Position                = UDim2.new(0, 4, 0, 0)
-    btn.BackgroundColor3        = Color3.fromRGB(30,30,50)
-    btn.BorderSizePixel         = 0
-    btn.TextColor3              = THEME_TEXT
-    btn.Font                    = Enum.Font.Gotham
-    btn.TextSize                = 12
-    btn.TextXAlignment          = Enum.TextXAlignment.Left
-    btn.Text                    = "  ".. labelText
-    btn.AutoButtonColor         = true
-    btn.ZIndex                  = 11
-    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
-
-    btn.MouseButton1Click:Connect(function()
-        if callback then
-            callback()
-        end
-
-        for _, child in ipairs(aeScroll:GetChildren()) do
-            if child:IsA("Frame") and child:FindFirstChild("Highlight") then
-                child.Highlight.Visible = (child == row)
-            end
-        end
-    end)
-end
-
--- Ghost Shark
-CreateAutoEventEntry("Ghost Shark Hunt", function()
-    if _G.SharkHuntActive and TeleportToSharkHunt then
-        TeleportToSharkHunt()
-        if NotifyFeature then
-            NotifyFeature("Teleport: Ghost Shark Hunt", true)
-        end
-    else
-        if NotifyFeature then
-            NotifyFeature("Ghost Shark Hunt belum aktif.", false)
-        end
-    end
-end)
-
--- Megalodon
-CreateAutoEventEntry("Megalodon Hunt", function()
-    if TeleportToMegalodon then
-        TeleportToMegalodon()
-        if NotifyFeature then
-            NotifyFeature("Teleport: Megalodon Hunt", true)
-        end
-    else
-        if NotifyFeature then
-            NotifyFeature("Teleport Megalodon belum siap.", false)
-        end
-    end
-end)
 
 ----------------------------------------------------------------
 -- ROW DI SECTION AUTO EVENT UNTUK BUKA PANEL
