@@ -4980,101 +4980,14 @@ local function makeAutoEventButton(row, text)
 end
 
 ----------------------------------------------------------------
--- PANEL KANAN: AUTO EVENT RIGHT PANEL (TANPA LOGIC)
-----------------------------------------------------------------
-
-local AutoEventRightPanel = Instance.new("Frame")
-AutoEventRightPanel.Name                   = "AutoEventRightPanel"
-AutoEventRightPanel.Size                   = UDim2.new(0, 220, 1, -46)
-AutoEventRightPanel.AnchorPoint            = Vector2.new(1, 0)
-AutoEventRightPanel.Position               = UDim2.new(1, -10, 0, 40)
-AutoEventRightPanel.BackgroundColor3       = CARD or Color3.fromRGB(15, 15, 25)
-AutoEventRightPanel.BackgroundTransparency = 0.25
-AutoEventRightPanel.BorderSizePixel        = 0
-AutoEventRightPanel.Visible                = false
-AutoEventRightPanel.ZIndex                 = 10
-AutoEventRightPanel.Parent                 = Main
-
-Instance.new("UICorner", AutoEventRightPanel).CornerRadius = UDim.new(0, 10)
-local aeStroke = Instance.new("UIStroke", AutoEventRightPanel)
-aeStroke.Color       = THEME_MAIN
-aeStroke.Transparency= 0.5
-
-local aeTitle = Instance.new("TextLabel")
-aeTitle.Parent                  = AutoEventRightPanel
-aeTitle.Size                    = UDim2.new(1, -10, 0, 24)
-aeTitle.Position                = UDim2.new(0, 5, 0, 6)
-aeTitle.BackgroundTransparency  = 1
-aeTitle.Font                    = Enum.Font.GothamBold
-aeTitle.TextSize                = 16
-aeTitle.TextXAlignment          = Enum.TextXAlignment.Left
-aeTitle.TextColor3              = THEME_TEXT
-aeTitle.ZIndex                  = 11
-aeTitle.Text                    = "Auto Event"
-
-local aeInfo = Instance.new("TextLabel")
-aeInfo.Parent                   = AutoEventRightPanel
-aeInfo.Size                     = UDim2.new(1, -10, 0, 18)
-aeInfo.Position                 = UDim2.new(0, 5, 0, 30)
-aeInfo.BackgroundTransparency   = 1
-aeInfo.Font                     = Enum.Font.Gotham
-aeInfo.TextSize                 = 12
-aeInfo.TextXAlignment           = Enum.TextXAlignment.Left
-aeInfo.TextColor3               = Color3.fromRGB(200,200,200)
-aeInfo.ZIndex                   = 11
-aeInfo.Text                     = "Panel Auto Event (belum ada logic)."
-
-local aeScroll = Instance.new("ScrollingFrame")
-aeScroll.Parent                 = AutoEventRightPanel
-aeScroll.Size                   = UDim2.new(1, -10, 1, -70)
-aeScroll.Position               = UDim2.new(0, 5, 0, 54)
-aeScroll.BackgroundTransparency = 1
-aeScroll.BorderSizePixel        = 0
-aeScroll.ScrollBarThickness     = 3
-aeScroll.AutomaticCanvasSize    = Enum.AutomaticSize.Y
-aeScroll.CanvasSize             = UDim2.new(0,0,0,0)
-aeScroll.ScrollBarImageColor3   = THEME_MAIN
-aeScroll.ZIndex                 = 10
-
-local aeList = Instance.new("UIListLayout", aeScroll)
-aeList.SortOrder = Enum.SortOrder.LayoutOrder
-aeList.Padding   = UDim.new(0,4)
-
-----------------------------------------------------------------
--- ROW DI SECTION AUTO EVENT UNTUK BUKA PANEL
+-- ROW DI SECTION AUTO EVENT (BELUM ADA LOGIC)
 ----------------------------------------------------------------
 
 do
     local row = makeAutoEventRow("Auto Event Panel")
     local btn = makeAutoEventButton(row, "Open")
     btn.MouseButton1Click:Connect(function()
-        AutoEventRightPanel.Visible = not AutoEventRightPanel.Visible
+        -- nanti diisi logic buka panel kanan
+        print("Auto Event Panel clicked")
     end)
 end
-
-----------------------------------------------------------------
--- CLOSE PANEL AUTO EVENT DARI KLIK DI LUAR
-----------------------------------------------------------------
-
-UIS.InputBegan:Connect(function(input)
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1
-    and input.UserInputType ~= Enum.UserInputType.Touch then
-        return
-    end
-
-    if not AutoEventRightPanel.Visible then
-        return
-    end
-
-    local pos = input.Position
-    local absPos  = AutoEventRightPanel.AbsolutePosition
-    local absSize = AutoEventRightPanel.AbsoluteSize
-
-    local inside =
-        pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
-        pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
-
-    if not inside then
-        AutoEventRightPanel.Visible = false
-    end
-end)
