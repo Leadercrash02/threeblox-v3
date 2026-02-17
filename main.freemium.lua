@@ -4933,17 +4933,21 @@ UIS.InputBegan:Connect(function(input)
 end)
 
 ----------------------------------------------------------------
--- SECTION "AUTO EVENT" DI HALAMAN TELEPORT
+-- SECTION "AUTO EVENT" DI HALAMAN TELEPORT (HEMAT LOCAL)
 ----------------------------------------------------------------
 
-local AutoEventSection = CreateSectionDropdown(TeleportPage, "Auto Event")
+AutoEventSection = AutoEventSection or Instance.new("Frame")
+AutoEventSection.Name                   = "Section_AutoEvent"
+AutoEventSection.BackgroundTransparency = 1
+AutoEventSection.Size                   = UDim2.new(1,0,0,36)
+AutoEventSection.Parent                 = TeleportPage
 
-local autoEventLayout = Instance.new("UIListLayout")
-autoEventLayout.Parent    = AutoEventSection
-autoEventLayout.SortOrder = Enum.SortOrder.LayoutOrder
-autoEventLayout.Padding   = UDim.new(0, 6)
+AutoEventLayout = AutoEventLayout or Instance.new("UIListLayout")
+AutoEventLayout.Parent    = AutoEventSection
+AutoEventLayout.SortOrder = Enum.SortOrder.LayoutOrder
+AutoEventLayout.Padding   = UDim.new(0, 6)
 
-local function makeAutoEventRow(title, height)
+function MakeAutoEventRow(title, height)
     local row = Instance.new("Frame")
     row.Parent                  = AutoEventSection
     row.Size                    = UDim2.new(1,0,0,height or 36)
@@ -4963,12 +4967,12 @@ local function makeAutoEventRow(title, height)
     return row
 end
 
-local function makeAutoEventButton(row, text)
+function MakeAutoEventButton(row, text)
     local btn = Instance.new("TextButton")
     btn.Parent                  = row
     btn.Size                    = UDim2.new(0,110,0,24)
     btn.Position                = UDim2.new(1,-126,0.5,-12)
-    btn.BackgroundColor3        = CARD or Color3.fromRGB(40,40,60)
+    btn.BackgroundColor3        = CARD or Color3.fromRGB(25,25,35)
     btn.BackgroundTransparency  = 0.1
     btn.Text                    = text
     btn.TextColor3              = THEME_TEXT
@@ -4980,14 +4984,174 @@ local function makeAutoEventButton(row, text)
 end
 
 ----------------------------------------------------------------
--- ROW DI SECTION AUTO EVENT (BELUM ADA LOGIC)
+-- PANEL KANAN: AUTO EVENT RIGHT PANEL
+----------------------------------------------------------------
+
+AutoEventRightPanel = AutoEventRightPanel or Instance.new("Frame")
+AutoEventRightPanel.Name                   = "AutoEventRightPanel"
+AutoEventRightPanel.Size                   = UDim2.new(0, 220, 1, -46)
+AutoEventRightPanel.AnchorPoint            = Vector2.new(1, 0)
+AutoEventRightPanel.Position               = UDim2.new(1, -10, 0, 40)
+AutoEventRightPanel.BackgroundColor3       = CARD or Color3.fromRGB(15, 15, 25)
+AutoEventRightPanel.BackgroundTransparency = 0.25
+AutoEventRightPanel.BorderSizePixel        = 0
+AutoEventRightPanel.Visible                = false
+AutoEventRightPanel.ZIndex                 = 10
+AutoEventRightPanel.Parent                 = Main
+
+if not AutoEventRightPanel:FindFirstChildOfClass("UICorner") then
+    Instance.new("UICorner", AutoEventRightPanel).CornerRadius = UDim.new(0, 10)
+    local s = Instance.new("UIStroke", AutoEventRightPanel)
+    s.Color = THEME_MAIN
+    s.Transparency = 0.5
+end
+
+local aeTitle = Instance.new("TextLabel")
+aeTitle.Parent                  = AutoEventRightPanel
+aeTitle.Size                    = UDim2.new(1, -10, 0, 24)
+aeTitle.Position                = UDim2.new(0, 5, 0, 6)
+aeTitle.BackgroundTransparency  = 1
+aeTitle.Font                    = Enum.Font.GothamBold
+aeTitle.TextSize                = 16
+aeTitle.TextXAlignment          = Enum.TextXAlignment.Left
+aeTitle.TextColor3              = THEME_TEXT
+aeTitle.ZIndex                  = 11
+aeTitle.Text                    = "Auto Event"
+
+local aeInfo = Instance.new("TextLabel")
+aeInfo.Parent                   = AutoEventRightPanel
+aeInfo.Size                     = UDim2.new(1, -10, 0, 18)
+aeInfo.Position                 = UDim2.new(0, 5, 0, 30)
+aeInfo.BackgroundTransparency   = 1
+aeInfo.Font                     = Enum.Font.Gotham
+aeInfo.TextSize                 = 12
+aeInfo.TextXAlignment           = Enum.TextXAlignment.Left
+aeInfo.TextColor3               = Color3.fromRGB(200,200,200)
+aeInfo.ZIndex                   = 11
+aeInfo.Text                     = "Pilih event untuk teleport."
+
+AEScroll = AEScroll or Instance.new("ScrollingFrame")
+AEScroll.Parent                 = AutoEventRightPanel
+AEScroll.Size                   = UDim2.new(1, -10, 1, -70)
+AEScroll.Position               = UDim2.new(0, 5, 0, 54)
+AEScroll.BackgroundTransparency = 1
+AEScroll.BorderSizePixel        = 0
+AEScroll.ScrollBarThickness     = 3
+AEScroll.AutomaticCanvasSize    = Enum.AutomaticSize.Y
+AEScroll.CanvasSize             = UDim2.new(0,0,0,0)
+AEScroll.ScrollBarImageColor3   = THEME_MAIN
+AEScroll.ZIndex                 = 10
+
+if not AEScroll:FindFirstChildOfClass("UIListLayout") then
+    local layout = Instance.new("UIListLayout", AEScroll)
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding   = UDim.new(0,4)
+end
+
+----------------------------------------------------------------
+-- ENTRY LIST EVENT (GHOST SHARK & MEGALODON)
+----------------------------------------------------------------
+
+local function CreateAutoEventEntry(labelText, callback)
+    local row = Instance.new("Frame")
+    row.Parent                  = AEScroll
+    row.Size                    = UDim2.new(1, -4, 0, 24)
+    row.BackgroundTransparency  = 1
+    row.BorderSizePixel         = 0
+    row.ZIndex                  = 11
+
+    local line = Instance.new("Frame")
+    line.Name                   = "Highlight"
+    line.Parent                 = row
+    line.Size                   = UDim2.new(0, 3, 1, 0)
+    line.Position               = UDim2.new(0, 0, 0, 0)
+    line.BackgroundColor3       = THEME_MAIN
+    line.BorderSizePixel        = 0
+    line.Visible                = false
+    line.ZIndex                 = 12
+
+    local btn = Instance.new("TextButton")
+    btn.Parent                  = row
+    btn.Size                    = UDim2.new(1, -6, 1, 0)
+    btn.Position                = UDim2.new(0, 4, 0, 0)
+    btn.BackgroundColor3        = Color3.fromRGB(30,30,50)
+    btn.BorderSizePixel         = 0
+    btn.TextColor3              = THEME_TEXT
+    btn.Font                    = Enum.Font.Gotham
+    btn.TextSize                = 12
+    btn.TextXAlignment          = Enum.TextXAlignment.Left
+    btn.Text                    = "  ".. labelText
+    btn.AutoButtonColor         = true
+    btn.ZIndex                  = 11
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0,6)
+
+    btn.MouseButton1Click:Connect(function()
+        if callback then
+            callback()
+        end
+        for _, child in ipairs(AEScroll:GetChildren()) do
+            if child:IsA("Frame") and child:FindFirstChild("Highlight") then
+                child.Highlight.Visible = (child == row)
+            end
+        end
+    end)
+end
+
+-- Ghost Shark
+CreateAutoEventEntry("Ghost Shark Hunt", function()
+    if _G.SharkHuntActive and _G.TeleportToSharkHunt then
+        _G.TeleportToSharkHunt()
+        NotifyFeature("Teleport: Ghost Shark Hunt", true)
+    else
+        NotifyFeature("Ghost Shark Hunt belum aktif.", false)
+    end
+end)
+
+-- Megalodon
+CreateAutoEventEntry("Megalodon Hunt", function()
+    if _G.TeleportToMegalodon then
+        _G.TeleportToMegalodon()
+        NotifyFeature("Teleport: Megalodon Hunt", true)
+    else
+        NotifyFeature("Teleport Megalodon belum siap.", false)
+    end
+end)
+
+----------------------------------------------------------------
+-- ROW DI SECTION AUTO EVENT UNTUK BUKA PANEL
 ----------------------------------------------------------------
 
 do
-    local row = makeAutoEventRow("Auto Event Panel")
-    local btn = makeAutoEventButton(row, "Open")
+    local row = MakeAutoEventRow("Auto Event Panel")
+    local btn = MakeAutoEventButton(row, "Open")
     btn.MouseButton1Click:Connect(function()
-        -- nanti diisi logic buka panel kanan
-        print("Auto Event Panel clicked")
+        AutoEventRightPanel.Visible = not AutoEventRightPanel.Visible
     end)
 end
+
+----------------------------------------------------------------
+-- CLOSE PANEL AUTO EVENT DARI KLIK DI LUAR
+----------------------------------------------------------------
+
+UIS.InputBegan:Connect(function(input)
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1
+    and input.UserInputType ~= Enum.UserInputType.Touch then
+        return
+    end
+
+    if not AutoEventRightPanel.Visible then
+        return
+    end
+
+    local pos    = input.Position
+    local absPos = AutoEventRightPanel.AbsolutePosition
+    local absSize= AutoEventRightPanel.AbsoluteSize
+
+    local inside =
+        pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
+        pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
+
+    if not inside then
+        AutoEventRightPanel.Visible = false
+    end
+end)
