@@ -3189,8 +3189,8 @@ local ANCIENT_RUIN_CF = CFrame.new(6082.87842, -585.924316, 4633.71631, -0.68147
 -- Konfigurasi Timer (100% SAMA PERSIS)
 local LOCHNESS_EVENT_HOURS_UTC = {0, 4, 8, 12, 16, 20}
 local LOCHNESS_EVENT_MINUTE = 0
-local LOCHNESS_OFFSET_MINUTES = -180     -- -3 menit
-local LOCHNESS_OFFSET_SECONDS = -1       -- -1 detik
+local LOCHNESS_OFFSET_MINUTES = 0
+local LOCHNESS_OFFSET_SECONDS = 0
 
 -- State
 _G.LochNessAutoTeleport = false
