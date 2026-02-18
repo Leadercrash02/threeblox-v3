@@ -3196,6 +3196,10 @@ local LOCHNESS_OFFSET_SECONDS = -1 -- -1 detik koreksi
 -- State
 _G.LochNessEventActive = false
 _G.LochNessTimeRemaining = 0
+_G.LochNessAutoTeleport = false
+_G.LochNessAutoCycle = false -- NEW: Auto cycle mode
+_G.LochNessSavedPosition = nil -- NEW: Posisi sebelum teleport
+_G.LochNessIsAtEvent = false -- NEW: Status apakah sedang di event
 
 -- Helper format waktu
 local function FormatTimeLochNess(seconds)
@@ -3281,7 +3285,43 @@ local function TeleportToAncientRuin()
     hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
     
     char:PivotTo(ANCIENT_RUIN_CF)
+    _G.LochNessIsAtEvent = true
     if NotifyFeature then NotifyFeature("Teleported to Ancient Ruin (Loch Ness)", true) end
+end
+
+-- Teleport balik ke posisi tersimpan
+local function TeleportBackFromEvent()
+    if not _G.LochNessSavedPosition then
+        if NotifyFeature then NotifyFeature("No saved position to return!", false) end
+        return
+    end
+    
+    local char = Player.Character or Player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    
+    local cf = CFrame.new(_G.LochNessSavedPosition.Position, _G.LochNessSavedPosition.Position + _G.LochNessSavedPosition.LookVector)
+    char:PivotTo(cf)
+    _G.LochNessIsAtEvent = false
+    if NotifyFeature then NotifyFeature("Returned to previous position", true) end
+end
+
+-- Simpan posisi saat ini
+local function SaveCurrentPositionForLochNess()
+    local char = Player.Character
+    if not char then return false end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    
+    _G.LochNessSavedPosition = {
+        Position = hrp.CFrame.Position,
+        LookVector = hrp.CFrame.LookVector,
+        Time = os.time()
+    }
+    return true
 end
 
 -- UI Elements untuk Loch Ness Event
@@ -3355,7 +3395,7 @@ TeleportBtn.AutoButtonColor = true
 
 CreateCorner(TeleportBtn, 8)
 
--- Auto Teleport Toggle
+-- Auto Teleport Toggle (Simple)
 local AutoTeleportRow = Instance.new("Frame", LochNessSection)
 AutoTeleportRow.Size = UDim2.new(1, 0, 0, 36)
 AutoTeleportRow.BackgroundTransparency = 1
@@ -3384,12 +3424,47 @@ AutoToggleBtn.TextSize = 12
 
 CreateCorner(AutoToggleBtn, 8)
 
+-- NEW: Auto Event Cycle Toggle (TP ke event, balik setelah 10 menit)
+local AutoCycleRow = Instance.new("Frame", LochNessSection)
+AutoCycleRow.Size = UDim2.new(1, 0, 0, 36)
+AutoCycleRow.BackgroundTransparency = 1
+
+CreateLabel(AutoCycleRow, {
+    Size = UDim2.new(1, -130, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Auto Event Cycle (Go + Return)"
+})
+
+local AutoCycleBtn = Instance.new("TextButton", AutoCycleRow)
+AutoCycleBtn.Name = "LochNessAutoCycle"
+AutoCycleBtn.Size = UDim2.new(0, 110, 0, 26)
+AutoCycleBtn.Position = UDim2.new(1, -126, 0.5, -13)
+AutoCycleBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
+AutoCycleBtn.BackgroundTransparency = 0.1
+AutoCycleBtn.Text = "OFF"
+AutoCycleBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+AutoCycleBtn.Font = Enum.Font.GothamBold
+AutoCycleBtn.TextSize = 12
+
+CreateCorner(AutoCycleBtn, 8)
+
 -- State untuk auto teleport
 _G.LochNessAutoTeleport = false
 
 AutoToggleBtn.MouseButton1Click:Connect(function()
     _G.LochNessAutoTeleport = not _G.LochNessAutoTeleport
     if _G.LochNessAutoTeleport then
+        -- Matikan auto cycle jika auto teleport dinyalakan
+        _G.LochNessAutoCycle = false
+        AutoCycleBtn.Text = "OFF"
+        AutoCycleBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
+        AutoCycleBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+        
         AutoToggleBtn.Text = "ON"
         AutoToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 60, 30)
         AutoToggleBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
@@ -3399,6 +3474,28 @@ AutoToggleBtn.MouseButton1Click:Connect(function()
         AutoToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
         AutoToggleBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
         if NotifyFeature then NotifyFeature("Loch Ness Auto Teleport: OFF", false) end
+    end
+end)
+
+-- NEW: Auto Cycle Toggle Handler
+AutoCycleBtn.MouseButton1Click:Connect(function()
+    _G.LochNessAutoCycle = not _G.LochNessAutoCycle
+    if _G.LochNessAutoCycle then
+        -- Matikan auto teleport simple jika auto cycle dinyalakan
+        _G.LochNessAutoTeleport = false
+        AutoToggleBtn.Text = "OFF"
+        AutoToggleBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
+        AutoToggleBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+        
+        AutoCycleBtn.Text = "ON"
+        AutoCycleBtn.BackgroundColor3 = Color3.fromRGB(30, 60, 30)
+        AutoCycleBtn.TextColor3 = Color3.fromRGB(100, 255, 100)
+        if NotifyFeature then NotifyFeature("Loch Ness Auto Cycle: ON (Will save position, TP to event, return after 10 min)", true) end
+    else
+        AutoCycleBtn.Text = "OFF"
+        AutoCycleBtn.BackgroundColor3 = Color3.fromRGB(60, 30, 30)
+        AutoCycleBtn.TextColor3 = Color3.fromRGB(255, 100, 100)
+        if NotifyFeature then NotifyFeature("Loch Ness Auto Cycle: OFF", false) end
     end
 end)
 
@@ -3430,11 +3527,35 @@ task.spawn(function()
             if _G.LochNessAutoTeleport and timeLeft > (LOCHNESS_EVENT_DURATION - 5) then
                 TeleportToAncientRuin()
             end
+            
+            -- NEW: Auto Cycle Logic
+            if _G.LochNessAutoCycle then
+                -- Jika baru aktif dan belum di event, simpan posisi dan TP ke event
+                if timeLeft > (LOCHNESS_EVENT_DURATION - 5) and not _G.LochNessIsAtEvent then
+                    if SaveCurrentPositionForLochNess() then
+                        if NotifyFeature then NotifyFeature("Saved current position. Teleporting to Loch Ness Event...", true) end
+                        task.wait(0.5)
+                        TeleportToAncientRuin()
+                    end
+                end
+                
+                -- Jika event hampir selesai (kurang dari 10 detik) dan masih di event, balik
+                if timeLeft <= 10 and _G.LochNessIsAtEvent then
+                    if NotifyFeature then NotifyFeature("Event ending soon. Returning to saved position...", true) end
+                    task.wait(0.5)
+                    TeleportBackFromEvent()
+                end
+            end
         else
             TimeDisplay.TextColor3 = Color3.fromRGB(0, 255, 140) -- Cyan saat menunggu
             StatusIndicator.BackgroundColor3 = Color3.fromRGB(255, 50, 50) -- Merah
             TeleportBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
             TeleportBtn.TextColor3 = Color3.fromRGB(180, 180, 180)
+            
+            -- Reset flag isAtEvent saat waiting
+            if _G.LochNessIsAtEvent and not _G.LochNessAutoCycle then
+                _G.LochNessIsAtEvent = false
+            end
         end
         
         task.wait(0.5)
