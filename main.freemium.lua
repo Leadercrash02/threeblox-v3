@@ -641,6 +641,7 @@ if InfoPage then
 
     AddChangeLine("(+) Added New GUI layout")
     AddChangeLine("(+) Added New GUI layout")
+    AddChangeLine("(+) Added New GUI layout")
 end
 
 --==================================================
