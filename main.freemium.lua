@@ -3452,6 +3452,7 @@ task.spawn(function()
         task.wait(0.5)
     end
 end)
+
 --==================================================
 -- SAVED POSITIONS LOGIC
 --==================================================
@@ -3668,21 +3669,59 @@ end)
 RefreshSavedPositionsList()
 
 --==================================================
--- CLOSE PANELS ON OUTSIDE CLICK
+-- CLOSE PANELS ON OUTSIDE CLICK (FIXED)
 --==================================================
+
+-- List semua panel yang perlu di-track
+local AllPanels = {IslandPanel, PlayerPanel, EventHuntPanel, SavedPosPanel}
+
+-- Fungsi cek posisi di dalam panel
+local function IsInsidePanel(panel, pos)
+    if not panel or not panel.Visible then return false end
+    local absPos = panel.AbsolutePosition
+    local absSize = panel.AbsoluteSize
+    return (pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and 
+            pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y)
+end
+
+-- Fungsi cek posisi di dalam section dropdown (untuk menghindari nutup panel saat klik dropdown)
+local function IsInsideSection(section, pos)
+    if not section then return false end
+    local absPos = section.AbsolutePosition
+    local absSize = section.AbsoluteSize
+    return (pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and 
+            pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y)
+end
+
+-- Input handler yang lebih robust
 UIS.InputBegan:Connect(function(input)
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
+    -- Cuma proses mouse/touch
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1 and 
+       input.UserInputType ~= Enum.UserInputType.Touch then 
+        return 
+    end
     
     local pos = input.Position
     
-    local function outside(panel)
-        if not panel or not panel.Visible then return false end
-        local absPos, absSize = panel.AbsolutePosition, panel.AbsoluteSize
-        return not (pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y)
+    -- Cek kalo klik di dalam panel manapun, jangan tutup apa-apa
+    for _, panel in ipairs(AllPanels) do
+        if IsInsidePanel(panel, pos) then
+            return -- Klik di dalam panel, abort
+        end
     end
     
-    if outside(IslandPanel) then IslandPanel.Visible = false end
-    if outside(PlayerPanel) then PlayerPanel.Visible = false end
-    if outside(EventHuntPanel) then EventHuntPanel.Visible = false end
-    if outside(SavedPosPanel) then SavedPosPanel.Visible = false end
+    -- Cek kalo klik di dalam section dropdown, juga jangan tutup
+    local sections = {IslandSection, PlayerSection, EventHuntSection, LochNessSection, SavedPosSection}
+    for _, section in ipairs(sections) do
+        if IsInsideSection(section, pos) then
+            return -- Klik di dalam section, abort
+        end
+    end
+    
+    -- Klik di luar semua panel dan section, tutup semua panel
+    for _, panel in ipairs(AllPanels) do
+        if panel and panel.Visible then
+            panel.Visible = false
+        end
+    end
 end)
