@@ -3092,155 +3092,83 @@ local function TeleportToMegalodon()
 end
 
 --==================================================
--- EVENT HUNT SECTION (UI)
+-- EVENT HUNT SECTION (DENGAN PANEL KANAN)
 --==================================================
 local EventHuntSection = CreateSectionDropdown(TeleportPage, "Event Hunt")
 Instance.new("UIListLayout", EventHuntSection).SortOrder = Enum.SortOrder.LayoutOrder
 EventHuntSection.UIListLayout.Padding = UDim.new(0, 6)
 
--- Ghost Shark Hunt Row
-do
-    local row = Instance.new("Frame", EventHuntSection)
-    row.Size = UDim2.new(1, 0, 0, 36)
-    row.BackgroundTransparency = 1
-    
-    CreateLabel(row, {
-        Size = UDim2.new(1, -120, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = THEME.TEXT,
-        Text = "Ghost Shark Hunt"
-    })
-    
-    local statusLabel = CreateLabel(row, {
-        Size = UDim2.new(0, 80, 0, 20),
-        Position = UDim2.new(1, -210, 0.5, -10),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Center,
-        TextColor3 = Color3.fromRGB(255, 180, 120),
-        Text = "Inactive"
-    })
-    
-    local tpBtn = Instance.new("TextButton", row)
-    tpBtn.Size = UDim2.new(0, 90, 0, 24)
-    tpBtn.Position = UDim2.new(1, -106, 0.5, -12)
-    tpBtn.BackgroundColor3 = THEME.CARD
-    tpBtn.BackgroundTransparency = 0.1
-    tpBtn.Text = "Teleport"
-    tpBtn.TextColor3 = THEME.TEXT
-    tpBtn.Font = Enum.Font.GothamBold
-    tpBtn.TextSize = 12
-    tpBtn.AutoButtonColor = true
-    
-    CreateCorner(tpBtn, 8)
-    
-    -- Update status loop
-    task.spawn(function()
-        while row and row.Parent do
-            if _G.GhostSharkHuntActive then
-                statusLabel.Text = "ACTIVE"
-                statusLabel.TextColor3 = Color3.fromRGB(120, 255, 150)
-                tpBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
-            else
-                statusLabel.Text = "Inactive"
-                statusLabel.TextColor3 = Color3.fromRGB(255, 180, 120)
-                tpBtn.BackgroundColor3 = THEME.CARD
-            end
-            task.wait(0.5)
-        end
-    end)
-    
-    tpBtn.MouseButton1Click:Connect(function()
-        if not _G.GhostSharkHuntActive then
-            if NotifyFeature then NotifyFeature("Ghost Shark Hunt not active!", false) end
-            return
-        end
-        TeleportToGhostShark()
-        if NotifyFeature then NotifyFeature("Teleported to Ghost Shark Hunt", true) end
-    end)
-end
+local EventHuntPanel, EventHuntScroll = CreateTeleportPanel("Event Hunt", "Pilih hunt event untuk teleport.")
 
--- Megalodon Hunt Row
-do
-    local row = Instance.new("Frame", EventHuntSection)
-    row.Size = UDim2.new(1, 0, 0, 36)
-    row.BackgroundTransparency = 1
-    
-    CreateLabel(row, {
-        Size = UDim2.new(1, -120, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = THEME.TEXT,
-        Text = "Megalodon Hunt"
-    })
-    
-    local statusLabel = CreateLabel(row, {
-        Size = UDim2.new(0, 80, 0, 20),
-        Position = UDim2.new(1, -210, 0.5, -10),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 11,
-        TextXAlignment = Enum.TextXAlignment.Center,
-        TextColor3 = Color3.fromRGB(255, 180, 120),
-        Text = "Inactive"
-    })
-    
-    local tpBtn = Instance.new("TextButton", row)
-    tpBtn.Size = UDim2.new(0, 90, 0, 24)
-    tpBtn.Position = UDim2.new(1, -106, 0.5, -12)
-    tpBtn.BackgroundColor3 = THEME.CARD
-    tpBtn.BackgroundTransparency = 0.1
-    tpBtn.Text = "Teleport"
-    tpBtn.TextColor3 = THEME.TEXT
-    tpBtn.Font = Enum.Font.GothamBold
-    tpBtn.TextSize = 12
-    tpBtn.AutoButtonColor = true
-    
-    CreateCorner(tpBtn, 8)
-    
-    -- Check Megalodon existence loop
-    task.spawn(function()
-        while row and row.Parent do
-            local exists = false
-            for _, obj in ipairs(workspace:GetDescendants()) do
-                if obj:IsA("BasePart") and obj.Name == "Megalodon Hunt" then
-                    exists = true
-                    break
+-- Create Ghost Shark Entry
+CreateListEntry(EventHuntScroll, "Ghost Shark Hunt", function()
+    if not _G.GhostSharkHuntActive then
+        if NotifyFeature then NotifyFeature("Ghost Shark Hunt not active!", false) end
+        return
+    end
+    TeleportToGhostShark()
+    if NotifyFeature then NotifyFeature("Teleported to Ghost Shark Hunt", true) end
+end)
+
+-- Create Megalodon Entry
+CreateListEntry(EventHuntScroll, "Megalodon Hunt", function()
+    if not _G.MegalodonHuntActive then
+        if NotifyFeature then NotifyFeature("Megalodon Hunt not found!", false) end
+        return
+    end
+    TeleportToMegalodon()
+    if NotifyFeature then NotifyFeature("Teleported to Megalodon Hunt", true) end
+end)
+
+-- Update entry colors based on status
+task.spawn(function()
+    while true do
+        for _, entry in ipairs(EventHuntScroll:GetChildren()) do
+            if entry:IsA("Frame") then
+                local btn = entry:FindFirstChildOfClass("TextButton")
+                local hl = entry:FindFirstChild("Highlight")
+                if btn and hl then
+                    local isGhostShark = btn.Text:find("Ghost Shark")
+                    local isMegalodon = btn.Text:find("Megalodon")
+                    
+                    if isGhostShark then
+                        if _G.GhostSharkHuntActive then
+                            btn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+                            hl.Visible = true
+                        else
+                            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+                            hl.Visible = false
+                        end
+                    elseif isMegalodon then
+                        -- Check Megalodon existence
+                        local exists = false
+                        for _, obj in ipairs(workspace:GetDescendants()) do
+                            if obj:IsA("BasePart") and obj.Name == "Megalodon Hunt" then
+                                exists = true
+                                break
+                            end
+                        end
+                        _G.MegalodonHuntActive = exists
+                        
+                        if exists then
+                            btn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+                            hl.Visible = true
+                        else
+                            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+                            hl.Visible = false
+                        end
+                    end
                 end
             end
-            
-            _G.MegalodonHuntActive = exists
-            
-            if exists then
-                statusLabel.Text = "ACTIVE"
-                statusLabel.TextColor3 = Color3.fromRGB(120, 255, 150)
-                tpBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
-            else
-                statusLabel.Text = "Inactive"
-                statusLabel.TextColor3 = Color3.fromRGB(255, 180, 120)
-                tpBtn.BackgroundColor3 = THEME.CARD
-            end
-            task.wait(1)
         end
-    end)
-    
-    tpBtn.MouseButton1Click:Connect(function()
-        if not _G.MegalodonHuntActive then
-            if NotifyFeature then NotifyFeature("Megalodon Hunt not found!", false) end
-            return
-        end
-        TeleportToMegalodon()
-        if NotifyFeature then NotifyFeature("Teleported to Megalodon Hunt", true) end
-    end)
-end
+        task.wait(1)
+    end
+end)
+
+-- Open Panel Button
+CreateSectionRow(EventHuntSection, "Event Hunt Panel", "Open", function()
+    EventHuntPanel.Visible = not EventHuntPanel.Visible
+end)
 
 --==================================================
 -- CLOSE PANELS ON OUTSIDE CLICK
@@ -3258,4 +3186,5 @@ UIS.InputBegan:Connect(function(input)
     
     if outside(IslandPanel) then IslandPanel.Visible = false end
     if outside(PlayerPanel) then PlayerPanel.Visible = false end
+    if outside(EventHuntPanel) then EventHuntPanel.Visible = false end
 end)
