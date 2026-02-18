@@ -2736,6 +2736,11 @@ _G.GhostSharkHuntActive = _G.GhostSharkHuntActive or false
 _G.MegalodonHuntActive = _G.MegalodonHuntActive or false
 
 --==================================================
+-- SAVED POSITIONS DATA
+--==================================================
+_G.RAY_SavedPositions = _G.RAY_SavedPositions or {}
+
+--==================================================
 -- TELEPORT PAGE
 --==================================================
 local TeleportPage = Pages["Teleport"]
@@ -3171,6 +3176,221 @@ CreateSectionRow(EventHuntSection, "Event Hunt Panel", "Open", function()
 end)
 
 --==================================================
+-- SAVED POSITIONS LOGIC
+--==================================================
+
+local function GetCurrentPosition()
+    local char = Player.Character
+    if not char then return nil end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return nil end
+    return hrp.CFrame
+end
+
+local function SavePosition(name)
+    local cf = GetCurrentPosition()
+    if not cf then
+        if NotifyFeature then NotifyFeature("Failed to save position!", false) end
+        return false
+    end
+    
+    _G.RAY_SavedPositions[name] = {
+        Position = cf.Position,
+        LookVector = cf.LookVector,
+        UpVector = cf.UpVector,
+        Time = os.time()
+    }
+    
+    if NotifyFeature then NotifyFeature("Saved position: " .. name, true) end
+    return true
+end
+
+local function TeleportToSaved(name)
+    local data = _G.RAY_SavedPositions[name]
+    if not data then
+        if NotifyFeature then NotifyFeature("Position not found: " .. name, false) end
+        return
+    end
+    
+    local hrp = (Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    local cf = CFrame.new(data.Position, data.Position + data.LookVector)
+    hrp.CFrame = cf
+    
+    if NotifyFeature then NotifyFeature("Teleported to: " .. name, true) end
+end
+
+local function DeleteSavedPosition(name)
+    _G.RAY_SavedPositions[name] = nil
+    if NotifyFeature then NotifyFeature("Deleted position: " .. name, true) end
+end
+
+-- Auto teleport ke posisi terakhir saat execute
+task.spawn(function()
+    task.wait(2)
+    
+    local lastSaved = nil
+    local lastTime = 0
+    
+    for name, data in pairs(_G.RAY_SavedPositions) do
+        if data.Time and data.Time > lastTime then
+            lastTime = data.Time
+            lastSaved = name
+        end
+    end
+    
+    if lastSaved then
+        TeleportToSaved(lastSaved)
+    end
+end)
+
+--==================================================
+-- SAVED POSITIONS SECTION
+--==================================================
+
+local SavedPosSection = CreateSectionDropdown(TeleportPage, "Saved Positions")
+Instance.new("UIListLayout", SavedPosSection).SortOrder = Enum.SortOrder.LayoutOrder
+SavedPosSection.UIListLayout.Padding = UDim.new(0, 6)
+
+local SavedPosPanel, SavedPosScroll = CreateTeleportPanel("Saved Positions", "Pilih posisi tersimpan untuk teleport.")
+
+-- Helper untuk count table
+local function TableCount(tbl)
+    local count = 0
+    for _ in pairs(tbl) do count = count + 1 end
+    return count
+end
+
+-- Refresh list function
+local function RefreshSavedPositionsList()
+    for _, child in ipairs(SavedPosScroll:GetChildren()) do
+        if child:IsA("Frame") then child:Destroy() end
+    end
+    
+    local names = {}
+    for name in pairs(_G.RAY_SavedPositions) do table.insert(names, name) end
+    table.sort(names)
+    
+    for _, name in ipairs(names) do
+        local row = Instance.new("Frame", SavedPosScroll)
+        row.Size = UDim2.new(1, -4, 0, 24)
+        row.BackgroundTransparency = 1
+        row.ZIndex = 11
+        
+        local line = Instance.new("Frame", row)
+        line.Name = "Highlight"
+        line.Size = UDim2.new(0, 3, 1, 0)
+        line.BackgroundColor3 = THEME.MAIN
+        line.Visible = false
+        line.ZIndex = 12
+        
+        local btn = Instance.new("TextButton", row)
+        btn.Size = UDim2.new(1, -30, 1, 0)
+        btn.Position = UDim2.new(0, 4, 0, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+        btn.TextColor3 = THEME.TEXT
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 12
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.Text = "  " .. name
+        btn.ZIndex = 11
+        
+        CreateCorner(btn, 6)
+        
+        local delBtn = Instance.new("TextButton", row)
+        delBtn.Size = UDim2.new(0, 20, 0, 20)
+        delBtn.Position = UDim2.new(1, -26, 0.5, -10)
+        delBtn.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
+        delBtn.TextColor3 = Color3.fromRGB(255, 150, 150)
+        delBtn.Font = Enum.Font.GothamBold
+        delBtn.TextSize = 12
+        delBtn.Text = "X"
+        delBtn.ZIndex = 11
+        
+        CreateCorner(delBtn, 4)
+        
+        btn.MouseButton1Click:Connect(function()
+            TeleportToSaved(name)
+            for _, child in ipairs(SavedPosScroll:GetChildren()) do
+                local hl = child:FindFirstChild("Highlight")
+                if hl then hl.Visible = (child == row) end
+            end
+        end)
+        
+        delBtn.MouseButton1Click:Connect(function()
+            DeleteSavedPosition(name)
+            RefreshSavedPositionsList()
+        end)
+    end
+end
+
+-- Save Current Position Row
+do
+    local row = Instance.new("Frame", SavedPosSection)
+    row.Size = UDim2.new(1, 0, 0, 36)
+    row.BackgroundTransparency = 1
+    
+    CreateLabel(row, {
+        Size = UDim2.new(0.5, -20, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = "Save Current Pos"
+    })
+    
+    local nameBox = Instance.new("TextBox", row)
+    nameBox.Size = UDim2.new(0.3, 0, 0, 24)
+    nameBox.Position = UDim2.new(0.5, -10, 0.5, -12)
+    nameBox.BackgroundColor3 = THEME.CARD
+    nameBox.BackgroundTransparency = 0.12
+    nameBox.Text = "Pos " .. (TableCount(_G.RAY_SavedPositions) + 1)
+    nameBox.TextColor3 = THEME.TEXT
+    nameBox.Font = Enum.Font.Gotham
+    nameBox.TextSize = 12
+    nameBox.ClearTextOnFocus = true
+    
+    CreateCorner(nameBox, 6)
+    
+    local saveBtn = Instance.new("TextButton", row)
+    saveBtn.Size = UDim2.new(0, 60, 0, 24)
+    saveBtn.Position = UDim2.new(1, -70, 0.5, -12)
+    saveBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+    saveBtn.TextColor3 = THEME.TEXT
+    saveBtn.Font = Enum.Font.GothamBold
+    saveBtn.TextSize = 12
+    saveBtn.Text = "Save"
+    
+    CreateCorner(saveBtn, 6)
+    
+    saveBtn.MouseButton1Click:Connect(function()
+        local name = nameBox.Text:gsub("^%s+", ""):gsub("%s+$", "")
+        if #name == 0 then
+            name = "Pos " .. (TableCount(_G.RAY_SavedPositions) + 1)
+        end
+        
+        if SavePosition(name) then
+            RefreshSavedPositionsList()
+            nameBox.Text = "Pos " .. (TableCount(_G.RAY_SavedPositions) + 1)
+        end
+    end)
+end
+
+-- Open Panel Button
+CreateSectionRow(SavedPosSection, "Saved Positions Panel", "Open", function()
+    SavedPosPanel.Visible = not SavedPosPanel.Visible
+    if SavedPosPanel.Visible then
+        RefreshSavedPositionsList()
+    end
+end)
+
+-- Initial refresh
+RefreshSavedPositionsList()
+
+--==================================================
 -- CLOSE PANELS ON OUTSIDE CLICK
 --==================================================
 UIS.InputBegan:Connect(function(input)
@@ -3187,4 +3407,5 @@ UIS.InputBegan:Connect(function(input)
     if outside(IslandPanel) then IslandPanel.Visible = false end
     if outside(PlayerPanel) then PlayerPanel.Visible = false end
     if outside(EventHuntPanel) then EventHuntPanel.Visible = false end
+    if outside(SavedPosPanel) then SavedPosPanel.Visible = false end
 end)
