@@ -2730,6 +2730,12 @@ local IslandTeleportCF = {
 }
 
 --==================================================
+-- EVENT HUNT STATE
+--==================================================
+_G.GhostSharkHuntActive = _G.GhostSharkHuntActive or false
+_G.MegalodonHuntActive = _G.MegalodonHuntActive or false
+
+--==================================================
 -- TELEPORT PAGE
 --==================================================
 local TeleportPage = Pages["Teleport"]
@@ -2941,6 +2947,300 @@ end)
 CreateSectionRow(PlayerSection, "Teleport Player Panel", "Open", function()
     PlayerPanel.Visible = not PlayerPanel.Visible
 end)
+
+--==================================================
+-- EVENT HUNT LOGIC (GHOST SHARK + MEGALODON)
+--==================================================
+
+-- Ghost Shark Hunt Logic
+local function getSharkHuntModel()
+    local props = Workspace:FindFirstChild("Props")
+    if not props then return nil end
+    local model = props:FindFirstChild("Shark Hunt") or props:FindFirstChild("Ghost Shark Hunt")
+    if model and model:IsA("Model") then
+        return model
+    end
+    return nil
+end
+
+local ghostSharkFloor
+
+local function ensureFloorUnderShark()
+    local model = getSharkHuntModel()
+    if not model then return nil, nil end
+
+    if not model.PrimaryPart then
+        local anyPart = model:FindFirstChildWhichIsA("BasePart", true)
+        if anyPart then
+            model.PrimaryPart = anyPart
+        end
+    end
+    local anchor = model.PrimaryPart
+    if not anchor then return nil, nil end
+
+    if not ghostSharkFloor or not ghostSharkFloor.Parent then
+        ghostSharkFloor = Instance.new("Part")
+        ghostSharkFloor.Name = "SharkHuntFloor_Client"
+        ghostSharkFloor.Anchored = true
+        ghostSharkFloor.CanCollide = true
+        ghostSharkFloor.Transparency = 1
+        ghostSharkFloor.Size = Vector3.new(80, 1, 80)
+        ghostSharkFloor.Material = Enum.Material.SmoothPlastic
+        ghostSharkFloor.Parent = Workspace
+    end
+
+    local yOffset = -2
+    ghostSharkFloor.CFrame = CFrame.new(
+        Vector3.new(anchor.Position.X, anchor.Position.Y + yOffset, anchor.Position.Z)
+    )
+
+    return anchor, ghostSharkFloor
+end
+
+local function TeleportToGhostShark()
+    local anchor, floor = ensureFloorUnderShark()
+    if not anchor or not floor then
+        warn("[SharkHunt] Failed to setup floor/anchor")
+        return
+    end
+
+    local char = Player.Character or Player.CharacterAdded:Wait()
+    local root = char:WaitForChild("HumanoidRootPart")
+
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+    local basePos = floor.Position + Vector3.new(0, floor.Size.Y/2 + 4, 0)
+    local lookDir = anchor.CFrame.LookVector
+    local cf = CFrame.new(basePos, basePos + lookDir)
+
+    char:PivotTo(cf)
+end
+
+-- Auto-detect Ghost Shark via Replion
+local function safeConnectGhostSharkReplion()
+    local ok, ReplionPkg = pcall(function()
+        return require(ReplicatedStorage.Packages.Replion)
+    end)
+
+    if not ok or not ReplionPkg or not ReplionPkg.Client then
+        warn("[SharkHunt] Replion Client not found")
+        return
+    end
+
+    local Client = ReplionPkg.Client
+    local success, eventsReplion = pcall(function()
+        return Client:WaitReplion("Events")
+    end)
+
+    if not success or not eventsReplion then
+        warn("[SharkHunt] WaitReplion('Events') failed")
+        return
+    end
+
+    local SharkHuntEventName = "Shark Hunt"
+
+    local function OnEventInserted(index, eventName)
+        if eventName == SharkHuntEventName then
+            _G.GhostSharkHuntActive = true
+            if NotifyFeature then NotifyFeature("Ghost Shark Hunt Spawned!", true) end
+        end
+    end
+
+    local function OnEventRemoved(index, eventName)
+        if eventName == SharkHuntEventName then
+            _G.GhostSharkHuntActive = false
+            if NotifyFeature then NotifyFeature("Ghost Shark Hunt Ended", false) end
+        end
+    end
+
+    eventsReplion:OnArrayInsert("Events", OnEventInserted)
+    eventsReplion:OnArrayRemove("Events", OnEventRemoved)
+
+    local current = eventsReplion:Get("Events") or {}
+    for i, name in ipairs(current) do
+        OnEventInserted(i, name)
+    end
+end
+
+task.spawn(safeConnectGhostSharkReplion)
+
+-- Megalodon Hunt Logic
+local function TeleportToMegalodon()
+    local anchor
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Name == "Megalodon Hunt" then
+            anchor = obj
+            break
+        end
+    end
+    if not anchor then
+        return
+    end
+
+    local char = Player.Character or Player.CharacterAdded:Wait()
+    local root = char:WaitForChild("HumanoidRootPart")
+
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+    local basePos = anchor.Position + Vector3.new(0, 5, 0)
+    local lookDir = anchor.CFrame.LookVector
+
+    local cf = CFrame.new(basePos, basePos + lookDir)
+    char:PivotTo(cf)
+end
+
+--==================================================
+-- EVENT HUNT SECTION (UI)
+--==================================================
+local EventHuntSection = CreateSectionDropdown(TeleportPage, "Event Hunt")
+Instance.new("UIListLayout", EventHuntSection).SortOrder = Enum.SortOrder.LayoutOrder
+EventHuntSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Ghost Shark Hunt Row
+do
+    local row = Instance.new("Frame", EventHuntSection)
+    row.Size = UDim2.new(1, 0, 0, 36)
+    row.BackgroundTransparency = 1
+    
+    CreateLabel(row, {
+        Size = UDim2.new(1, -120, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = "Ghost Shark Hunt"
+    })
+    
+    local statusLabel = CreateLabel(row, {
+        Size = UDim2.new(0, 80, 0, 20),
+        Position = UDim2.new(1, -210, 0.5, -10),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        TextSize = 11,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextColor3 = Color3.fromRGB(255, 180, 120),
+        Text = "Inactive"
+    })
+    
+    local tpBtn = Instance.new("TextButton", row)
+    tpBtn.Size = UDim2.new(0, 90, 0, 24)
+    tpBtn.Position = UDim2.new(1, -106, 0.5, -12)
+    tpBtn.BackgroundColor3 = THEME.CARD
+    tpBtn.BackgroundTransparency = 0.1
+    tpBtn.Text = "Teleport"
+    tpBtn.TextColor3 = THEME.TEXT
+    tpBtn.Font = Enum.Font.GothamBold
+    tpBtn.TextSize = 12
+    tpBtn.AutoButtonColor = true
+    
+    CreateCorner(tpBtn, 8)
+    
+    -- Update status loop
+    task.spawn(function()
+        while row and row.Parent do
+            if _G.GhostSharkHuntActive then
+                statusLabel.Text = "ACTIVE"
+                statusLabel.TextColor3 = Color3.fromRGB(120, 255, 150)
+                tpBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+            else
+                statusLabel.Text = "Inactive"
+                statusLabel.TextColor3 = Color3.fromRGB(255, 180, 120)
+                tpBtn.BackgroundColor3 = THEME.CARD
+            end
+            task.wait(0.5)
+        end
+    end)
+    
+    tpBtn.MouseButton1Click:Connect(function()
+        if not _G.GhostSharkHuntActive then
+            if NotifyFeature then NotifyFeature("Ghost Shark Hunt not active!", false) end
+            return
+        end
+        TeleportToGhostShark()
+        if NotifyFeature then NotifyFeature("Teleported to Ghost Shark Hunt", true) end
+    end)
+end
+
+-- Megalodon Hunt Row
+do
+    local row = Instance.new("Frame", EventHuntSection)
+    row.Size = UDim2.new(1, 0, 0, 36)
+    row.BackgroundTransparency = 1
+    
+    CreateLabel(row, {
+        Size = UDim2.new(1, -120, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = "Megalodon Hunt"
+    })
+    
+    local statusLabel = CreateLabel(row, {
+        Size = UDim2.new(0, 80, 0, 20),
+        Position = UDim2.new(1, -210, 0.5, -10),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        TextSize = 11,
+        TextXAlignment = Enum.TextXAlignment.Center,
+        TextColor3 = Color3.fromRGB(255, 180, 120),
+        Text = "Inactive"
+    })
+    
+    local tpBtn = Instance.new("TextButton", row)
+    tpBtn.Size = UDim2.new(0, 90, 0, 24)
+    tpBtn.Position = UDim2.new(1, -106, 0.5, -12)
+    tpBtn.BackgroundColor3 = THEME.CARD
+    tpBtn.BackgroundTransparency = 0.1
+    tpBtn.Text = "Teleport"
+    tpBtn.TextColor3 = THEME.TEXT
+    tpBtn.Font = Enum.Font.GothamBold
+    tpBtn.TextSize = 12
+    tpBtn.AutoButtonColor = true
+    
+    CreateCorner(tpBtn, 8)
+    
+    -- Check Megalodon existence loop
+    task.spawn(function()
+        while row and row.Parent do
+            local exists = false
+            for _, obj in ipairs(workspace:GetDescendants()) do
+                if obj:IsA("BasePart") and obj.Name == "Megalodon Hunt" then
+                    exists = true
+                    break
+                end
+            end
+            
+            _G.MegalodonHuntActive = exists
+            
+            if exists then
+                statusLabel.Text = "ACTIVE"
+                statusLabel.TextColor3 = Color3.fromRGB(120, 255, 150)
+                tpBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+            else
+                statusLabel.Text = "Inactive"
+                statusLabel.TextColor3 = Color3.fromRGB(255, 180, 120)
+                tpBtn.BackgroundColor3 = THEME.CARD
+            end
+            task.wait(1)
+        end
+    end)
+    
+    tpBtn.MouseButton1Click:Connect(function()
+        if not _G.MegalodonHuntActive then
+            if NotifyFeature then NotifyFeature("Megalodon Hunt not found!", false) end
+            return
+        end
+        TeleportToMegalodon()
+        if NotifyFeature then NotifyFeature("Teleported to Megalodon Hunt", true) end
+    end)
+end
 
 --==================================================
 -- CLOSE PANELS ON OUTSIDE CLICK
