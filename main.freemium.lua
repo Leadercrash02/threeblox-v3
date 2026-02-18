@@ -3175,18 +3175,283 @@ CreateSectionRow(EventHuntSection, "Event Hunt Panel", "Open", function()
     EventHuntPanel.Visible = not EventHuntPanel.Visible
 end)
 
-local diffToStart = nextStart - now + OFFSET_MINUTES + OFFSET_SECONDS
+--==================================================
+-- LOCH NESS EVENT SECTION (100% SAMA LOGIC TIMER)
+--==================================================
 
-if diffToStart <= 0 then
-    -- sudah lewat start → hitung ulang ke slot berikutnya
-    nextStart = getNextEventStartUTC()
-    diffToStart = nextStart - now + OFFSET_MINUTES + OFFSET_SECONDS
+local LochNessSection = CreateSectionDropdown(TeleportPage, "Loch Ness Event")
+Instance.new("UIListLayout", LochNessSection).SortOrder = Enum.SortOrder.LayoutOrder
+LochNessSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Koordinat Ancient Ruin untuk Loch Ness Event
+local ANCIENT_RUIN_CF = CFrame.new(6082.87842, -585.924316, 4633.71631, -0.681475937, 0, 0.731840551, 0, 1, 0, -0.731840551, 0, -0.681475937)
+
+-- Konfigurasi Timer (100% SAMA PERSIS)
+local LOCHNESS_EVENT_HOURS_UTC = {0, 4, 8, 12, 16, 20}
+local LOCHNESS_EVENT_MINUTE = 0
+local LOCHNESS_OFFSET_MINUTES = -180     -- -3 menit
+local LOCHNESS_OFFSET_SECONDS = -1       -- -1 detik
+
+-- State
+_G.LochNessAutoTeleport = false
+_G.LochNessSavedPosition = nil
+
+-- Helper format waktu (100% SAMA)
+local function FormatTimeLochNess(seconds)
+    seconds = math.max(0, math.floor(seconds))
+    local h = math.floor(seconds / 3600)
+    local m = math.floor((seconds % 3600) / 60)
+    local s = seconds % 60
+    return string.format("%02d:%02d:%02d", h, m, s)
 end
 
-titleLabel.Text = "Next Group Fishing (UTC)"
-timeLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
-timeLabel.Text = formatDiff(diffToStart)
+-- Hitung next event start UTC (100% SAMA LOGIC)
+local function GetNextLochNessStartUTC()
+    local nowUTC = os.date("!*t", os.time())
+    local nowMinutes = nowUTC.hour * 60 + nowUTC.min
+    
+    local targetHour = nil
+    local dayOffset = 0
+    
+    for _, hour in ipairs(LOCHNESS_EVENT_HOURS_UTC) do
+        local eventMinutes = hour * 60 + LOCHNESS_EVENT_MINUTE
+        if eventMinutes > nowMinutes then
+            targetHour = hour
+            dayOffset = 0
+            break
+        end
+    end
+    
+    if not targetHour then
+        targetHour = LOCHNESS_EVENT_HOURS_UTC[1]
+        dayOffset = 1
+    end
+    
+    local target = {
+        year = nowUTC.year,
+        month = nowUTC.month,
+        day = nowUTC.day + dayOffset,
+        hour = targetHour,
+        min = LOCHNESS_EVENT_MINUTE,
+        sec = 0,
+        isdst = false,
+    }
+    
+    return os.time(target)
+end
 
+-- Teleport ke Ancient Ruin
+local function TeleportToAncientRuin()
+    local char = Player.Character or Player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    
+    char:PivotTo(ANCIENT_RUIN_CF)
+    if NotifyFeature then NotifyFeature("Teleported to Ancient Ruin (Loch Ness)", true) end
+end
+
+-- Simpan posisi saat ini
+local function SaveCurrentPositionForLochNess()
+    local char = Player.Character
+    if not char then return false end
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return false end
+    
+    _G.LochNessSavedPosition = {
+        Position = hrp.CFrame.Position,
+        LookVector = hrp.CFrame.LookVector,
+        Time = os.time()
+    }
+    return true
+end
+
+--==================================================
+-- TOGGLE KNOB HELPER
+--==================================================
+local function CreateToggleKnob(parent, defaultState, onToggle)
+    local toggleFrame = Instance.new("Frame", parent)
+    toggleFrame.Name = "ToggleKnob"
+    toggleFrame.Size = UDim2.new(0, 50, 0, 26)
+    toggleFrame.Position = UDim2.new(1, -66, 0.5, -13)
+    toggleFrame.BackgroundColor3 = defaultState and Color3.fromRGB(60, 180, 60) or Color3.fromRGB(80, 80, 80)
+    toggleFrame.BorderSizePixel = 0
+    
+    local corner = Instance.new("UICorner", toggleFrame)
+    corner.CornerRadius = UDim.new(1, 0)
+    
+    local knob = Instance.new("Frame", toggleFrame)
+    knob.Name = "Knob"
+    knob.Size = UDim2.new(0, 22, 0, 22)
+    knob.Position = defaultState and UDim2.new(1, -24, 0.5, -11) or UDim2.new(0, 2, 0.5, -11)
+    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    knob.BorderSizePixel = 0
+    
+    local knobCorner = Instance.new("UICorner", knob)
+    knobCorner.CornerRadius = UDim.new(1, 0)
+    
+    local state = defaultState
+    
+    local function UpdateVisual()
+        local targetPos = state and UDim2.new(1, -24, 0.5, -11) or UDim2.new(0, 2, 0.5, -11)
+        local targetColor = state and Color3.fromRGB(60, 180, 60) or Color3.fromRGB(80, 80, 80)
+        
+        game:GetService("TweenService"):Create(knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Position = targetPos
+        }):Play()
+        
+        game:GetService("TweenService"):Create(toggleFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            BackgroundColor3 = targetColor
+        }):Play()
+    end
+    
+    local clickBtn = Instance.new("TextButton", toggleFrame)
+    clickBtn.Name = "ClickArea"
+    clickBtn.Size = UDim2.new(1, 0, 1, 0)
+    clickBtn.BackgroundTransparency = 1
+    clickBtn.Text = ""
+    
+    clickBtn.MouseButton1Click:Connect(function()
+        state = not state
+        UpdateVisual()
+        if onToggle then onToggle(state) end
+    end)
+    
+    return toggleFrame, function(newState) 
+        state = newState
+        UpdateVisual()
+    end
+end
+
+--==================================================
+-- UI ELEMENTS
+--==================================================
+
+-- Timer Display Row
+local TimerRow = Instance.new("Frame", LochNessSection)
+TimerRow.Size = UDim2.new(1, 0, 0, 40)
+TimerRow.BackgroundTransparency = 1
+
+local TimerLabel = CreateLabel(TimerRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Next Event:"
+})
+
+local TimeDisplay = Instance.new("TextLabel", TimerRow)
+TimeDisplay.Name = "LochNessTimeDisplay"
+TimeDisplay.Size = UDim2.new(0.35, 0, 0, 28)
+TimeDisplay.Position = UDim2.new(0.4, 0, 0.5, -14)
+TimeDisplay.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+TimeDisplay.BackgroundTransparency = 0.2
+TimeDisplay.Font = Enum.Font.GothamBold
+TimeDisplay.TextSize = 16
+TimeDisplay.TextColor3 = Color3.fromRGB(0, 255, 140)
+TimeDisplay.Text = "00:00:00"
+
+CreateCorner(TimeDisplay, 6)
+
+-- Teleport Button Row
+local TeleportRow = Instance.new("Frame", LochNessSection)
+TeleportRow.Size = UDim2.new(1, 0, 0, 36)
+TeleportRow.BackgroundTransparency = 1
+
+CreateLabel(TeleportRow, {
+    Size = UDim2.new(1, -130, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Teleport to Ancient Ruin"
+})
+
+local TeleportBtn = Instance.new("TextButton", TeleportRow)
+TeleportBtn.Name = "LochNessTeleportBtn"
+TeleportBtn.Size = UDim2.new(0, 110, 0, 26)
+TeleportBtn.Position = UDim2.new(1, -126, 0.5, -13)
+TeleportBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+TeleportBtn.BackgroundTransparency = 0.1
+TeleportBtn.Text = "Teleport"
+TeleportBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TeleportBtn.Font = Enum.Font.GothamBold
+TeleportBtn.TextSize = 12
+TeleportBtn.AutoButtonColor = true
+
+CreateCorner(TeleportBtn, 8)
+
+-- Auto Teleport Toggle Row (Auto TP saat event baru mulai)
+local AutoTeleportRow = Instance.new("Frame", LochNessSection)
+AutoTeleportRow.Size = UDim2.new(1, 0, 0, 36)
+AutoTeleportRow.BackgroundTransparency = 1
+
+CreateLabel(AutoTeleportRow, {
+    Size = UDim2.new(1, -70, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Auto Teleport"
+})
+
+local AutoTeleportToggle, SetAutoTeleportState = CreateToggleKnob(AutoTeleportRow, false, function(state)
+    _G.LochNessAutoTeleport = state
+    if NotifyFeature then 
+        NotifyFeature("Loch Ness Auto Teleport: " .. (state and "ON" or "OFF"), state) 
+    end
+end)
+
+-- Teleport button click
+TeleportBtn.MouseButton1Click:Connect(function()
+    TeleportToAncientRuin()
+end)
+
+--==================================================
+-- MAIN TIMER LOOP (100% SAMA PERSIS KAYA GROUP FISHING)
+--==================================================
+
+task.spawn(function()
+    while true do
+        local now = os.time()
+        local nextStart = GetNextLochNessStartUTC()
+
+        -- selisih ke start + koreksi offset menit & detik
+        local diffToStart = nextStart - now + LOCHNESS_OFFSET_MINUTES + LOCHNESS_OFFSET_SECONDS
+
+        if diffToStart <= 0 then
+            -- sudah lewat start → hitung ulang ke slot berikutnya
+            nextStart = GetNextLochNessStartUTC()
+            diffToStart = nextStart - now + LOCHNESS_OFFSET_MINUTES + LOCHNESS_OFFSET_SECONDS
+            
+            -- Auto teleport saat event baru mulai (dalam 5 detik pertama)
+            if _G.LochNessAutoTeleport and diffToStart > (4 * 3600 - 5) then
+                if SaveCurrentPositionForLochNess() then
+                    if NotifyFeature then 
+                        NotifyFeature("Loch Ness Event started! Teleporting...", true) 
+                    end
+                    task.wait(0.5)
+                    TeleportToAncientRuin()
+                end
+            end
+        end
+
+        TimerLabel.Text = "Next Event:"
+        TimeDisplay.TextColor3 = Color3.fromRGB(0, 255, 140)
+        TimeDisplay.Text = FormatTimeLochNess(diffToStart)
+
+        task.wait(0.5)
+    end
+end)
 --==================================================
 -- SAVED POSITIONS LOGIC
 --==================================================
