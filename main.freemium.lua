@@ -3176,28 +3176,67 @@ CreateSectionRow(EventHuntSection, "Event Hunt Panel", "Open", function()
 end)
 
 --==================================================
--- LOCH NESS EVENT SECTION (100% SAMA LOGIC TIMER)
+-- LOCH NESS EVENT SECTION (FIXED TIMER + STATE)
 --==================================================
 
-local LochNessSection = CreateSectionDropdown(TeleportPage, "Loch Ness Event")
+local LochNessSection = CreateSectionDropdown(TeleportPage, "Lochnes Event")
 Instance.new("UIListLayout", LochNessSection).SortOrder = Enum.SortOrder.LayoutOrder
 LochNessSection.UIListLayout.Padding = UDim.new(0, 6)
 
--- Koordinat Ancient Ruin untuk Loch Ness Event
+-- Koordinat Ancient Ruin
 local ANCIENT_RUIN_CF = CFrame.new(6082.87842, -585.924316, 4633.71631, -0.681475937, 0, 0.731840551, 0, 1, 0, -0.731840551, 0, -0.681475937)
 
--- Konfigurasi Timer (100% SAMA PERSIS)
-local LOCHNESS_EVENT_HOURS_UTC = {0, 4, 8, 12, 16, 20}
-local LOCHNESS_EVENT_MINUTE = 0
-local LOCHNESS_OFFSET_MINUTES = 0
-local LOCHNESS_OFFSET_SECONDS = 0
+-- KONFIGURASI EVENT (sesuai game mechanics)
+local EVENT_DURATION_MINUTES = 10        -- Event berlangsung 10 menit
+local EVENT_COUNTDOWN_MINUTES = 10     -- Countdown sebelum event mulai
+local EVENT_HOURS_UTC = {0, 4, 8, 12, 16, 20}
 
--- State
-_G.LochNessAutoTeleport = false
-_G.LochNessSavedPosition = nil
+-- State Machine
+local EVENT_STATE = {
+    IDLE = "IDLE",           -- Menunggu countdown
+    ACTIVE = "ACTIVE",       -- Event sedang berlangsung (0-10 menit)
+    ENDED = "ENDED"          -- Event selesai, menunggu next cycle
+}
 
--- Helper format waktu (100% SAMA)
-local function FormatTimeLochNess(seconds)
+-- Global State
+_G.LochNessState = {
+    CurrentState = EVENT_STATE.IDLE,
+    NextEventTime = 0,
+    EventEndTime = 0,
+    IsAutoTeleported = false,     -- Sudah auto-TP ke event?
+    IsReturned = false,           -- Sudah balik ke posisi awal?
+    SavedPosition = nil,
+    AutoTeleportEnabled = false
+}
+
+--==================================================
+-- HELPER FUNCTIONS
+--================================================
+
+local function GetNextEventStartUTC()
+    local nowUTC = os.date("!*t", os.time())
+    local nowMinutes = nowUTC.hour * 60 + nowUTC.min
+    
+    for _, hour in ipairs(EVENT_HOURS_UTC) do
+        local eventMinutes = hour * 60
+        if eventMinutes > nowMinutes then
+            local target = {
+                year = nowUTC.year, month = nowUTC.month, day = nowUTC.day,
+                hour = hour, min = 0, sec = 0, isdst = false
+            }
+            return os.time(target)
+        end
+    end
+    
+    -- Next day first slot
+    local target = {
+        year = nowUTC.year, month = nowUTC.month, day = nowUTC.day + 1,
+        hour = EVENT_HOURS_UTC[1], min = 0, sec = 0, isdst = false
+    }
+    return os.time(target)
+end
+
+local function FormatTime(seconds)
     seconds = math.max(0, math.floor(seconds))
     local h = math.floor(seconds / 3600)
     local m = math.floor((seconds % 3600) / 60)
@@ -3205,62 +3244,13 @@ local function FormatTimeLochNess(seconds)
     return string.format("%02d:%02d:%02d", h, m, s)
 end
 
--- Hitung next event start UTC (100% SAMA LOGIC)
-local function GetNextLochNessStartUTC()
-    local nowUTC = os.date("!*t", os.time())
-    local nowMinutes = nowUTC.hour * 60 + nowUTC.min
-    
-    local targetHour = nil
-    local dayOffset = 0
-    
-    for _, hour in ipairs(LOCHNESS_EVENT_HOURS_UTC) do
-        local eventMinutes = hour * 60 + LOCHNESS_EVENT_MINUTE
-        if eventMinutes > nowMinutes then
-            targetHour = hour
-            dayOffset = 0
-            break
-        end
-    end
-    
-    if not targetHour then
-        targetHour = LOCHNESS_EVENT_HOURS_UTC[1]
-        dayOffset = 1
-    end
-    
-    local target = {
-        year = nowUTC.year,
-        month = nowUTC.month,
-        day = nowUTC.day + dayOffset,
-        hour = targetHour,
-        min = LOCHNESS_EVENT_MINUTE,
-        sec = 0,
-        isdst = false,
-    }
-    
-    return os.time(target)
-end
-
--- Teleport ke Ancient Ruin
-local function TeleportToAncientRuin()
-    local char = Player.Character or Player.CharacterAdded:Wait()
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp then return end
-    
-    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-    
-    char:PivotTo(ANCIENT_RUIN_CF)
-    if NotifyFeature then NotifyFeature("Teleported to Ancient Ruin (Loch Ness)", true) end
-end
-
--- Simpan posisi saat ini
-local function SaveCurrentPositionForLochNess()
+local function SaveCurrentPosition()
     local char = Player.Character
     if not char then return false end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return false end
     
-    _G.LochNessSavedPosition = {
+    _G.LochNessState.SavedPosition = {
         Position = hrp.CFrame.Position,
         LookVector = hrp.CFrame.LookVector,
         Time = os.time()
@@ -3268,68 +3258,132 @@ local function SaveCurrentPositionForLochNess()
     return true
 end
 
---==================================================
--- TOGGLE KNOB HELPER
---==================================================
-local function CreateToggleKnob(parent, defaultState, onToggle)
-    local toggleFrame = Instance.new("Frame", parent)
-    toggleFrame.Name = "ToggleKnob"
-    toggleFrame.Size = UDim2.new(0, 50, 0, 26)
-    toggleFrame.Position = UDim2.new(1, -66, 0.5, -13)
-    toggleFrame.BackgroundColor3 = defaultState and Color3.fromRGB(60, 180, 60) or Color3.fromRGB(80, 80, 80)
-    toggleFrame.BorderSizePixel = 0
+local function TeleportToAncientRuin()
+    local char = Player.Character or Player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
     
-    local corner = Instance.new("UICorner", toggleFrame)
-    corner.CornerRadius = UDim.new(1, 0)
+    hrp.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    char:PivotTo(ANCIENT_RUIN_CF)
     
-    local knob = Instance.new("Frame", toggleFrame)
-    knob.Name = "Knob"
-    knob.Size = UDim2.new(0, 22, 0, 22)
-    knob.Position = defaultState and UDim2.new(1, -24, 0.5, -11) or UDim2.new(0, 2, 0.5, -11)
-    knob.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    knob.BorderSizePixel = 0
-    
-    local knobCorner = Instance.new("UICorner", knob)
-    knobCorner.CornerRadius = UDim.new(1, 0)
-    
-    local state = defaultState
-    
-    local function UpdateVisual()
-        local targetPos = state and UDim2.new(1, -24, 0.5, -11) or UDim2.new(0, 2, 0.5, -11)
-        local targetColor = state and Color3.fromRGB(60, 180, 60) or Color3.fromRGB(80, 80, 80)
-        
-        game:GetService("TweenService"):Create(knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Position = targetPos
-        }):Play()
-        
-        game:GetService("TweenService"):Create(toggleFrame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            BackgroundColor3 = targetColor
-        }):Play()
+    if NotifyFeature then 
+        NotifyFeature("Teleported to Ancient Ruin!", true) 
+    end
+end
+
+local function ReturnToSavedPosition()
+    local data = _G.LochNessState.SavedPosition
+    if not data then 
+        if NotifyFeature then NotifyFeature("No saved position!", false) end
+        return 
     end
     
-    local clickBtn = Instance.new("TextButton", toggleFrame)
-    clickBtn.Name = "ClickArea"
-    clickBtn.Size = UDim2.new(1, 0, 1, 0)
-    clickBtn.BackgroundTransparency = 1
-    clickBtn.Text = ""
+    local char = Player.Character or Player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
     
-    clickBtn.MouseButton1Click:Connect(function()
-        state = not state
-        UpdateVisual()
-        if onToggle then onToggle(state) end
-    end)
+    local cf = CFrame.new(data.Position, data.Position + data.LookVector)
+    hrp.CFrame = cf
     
-    return toggleFrame, function(newState) 
-        state = newState
-        UpdateVisual()
+    if NotifyFeature then 
+        NotifyFeature("Returned to saved position!", true) 
     end
 end
 
 --==================================================
--- UI ELEMENTS
---==================================================
+-- STATE MACHINE LOGIC
+--================================================
 
--- Timer Display Row
+local function UpdateState()
+    local now = os.time()
+    local state = _G.LochNessState
+    
+    if state.CurrentState == EVENT_STATE.IDLE then
+        -- Cek apakah sudah waktunya mulai event
+        if now >= state.NextEventTime then
+            state.CurrentState = EVENT_STATE.ACTIVE
+            state.EventEndTime = now + (EVENT_DURATION_MINUTES * 60)
+            state.IsAutoTeleported = false
+            state.IsReturned = false
+            return "EVENT_START"
+        end
+        
+    elseif state.CurrentState == EVENT_STATE.ACTIVE then
+        -- Cek apakah event sudah selesai
+        if now >= state.EventEndTime then
+            state.CurrentState = EVENT_STATE.ENDED
+            return "EVENT_END"
+        end
+        
+    elseif state.CurrentState == EVENT_STATE.ENDED then
+        -- Reset ke cycle berikutnya
+        state.NextEventTime = GetNextEventStartUTC()
+        state.CurrentState = EVENT_STATE.IDLE
+        state.IsAutoTeleported = false
+        state.IsReturned = false
+        return "RESET"
+    end
+    
+    return nil
+end
+
+local function GetDisplayTime()
+    local now = os.time()
+    local state = _G.LochNessState
+    
+    if state.CurrentState == EVENT_STATE.IDLE then
+        -- Countdown ke event berikutnya
+        local diff = state.NextEventTime - now
+        return "Next Event:", diff, Color3.fromRGB(0, 255, 140) -- Hijau
+        
+    elseif state.CurrentState == EVENT_STATE.ACTIVE then
+        -- Event sedang berlangsung, tampilkan sisa waktu
+        local remaining = state.EventEndTime - now
+        return "Event Ends:", remaining, Color3.fromRGB(255, 140, 0) -- Oranye
+        
+    elseif state.CurrentState == EVENT_STATE.ENDED then
+        -- Event selesai, tunggu reset
+        return "Event Ended!", 0, Color3.fromRGB(255, 80, 80) -- Merah
+    end
+end
+
+--==================================================
+-- AUTO ACTIONS
+--================================================
+
+local function HandleAutoActions()
+    local state = _G.LochNessState
+    
+    -- Auto Teleport saat event MULAI (dan belum pernah TP)
+    if state.CurrentState == EVENT_STATE.ACTIVE 
+       and state.AutoTeleportEnabled 
+       and not state.IsAutoTeleported then
+        
+        if SaveCurrentPosition() then
+            task.wait(0.5)
+            TeleportToAncientRuin()
+            state.IsAutoTeleported = true
+        end
+    end
+    
+    -- Auto Return saat event SELESAI (dan sudah pernah TP tapi belum balik)
+    if state.CurrentState == EVENT_STATE.ENDED 
+       and state.AutoTeleportEnabled 
+       and state.IsAutoTeleported 
+       and not state.IsReturned then
+        
+        task.wait(1) -- Jeda sebentar sebelum balik
+        ReturnToSavedPosition()
+        state.IsReturned = true
+    end
+end
+
+--==================================================
+-- UI ELEMENTS (sama struktur, beda logic)
+--================================================
+
+-- Timer Display
 local TimerRow = Instance.new("Frame", LochNessSection)
 TimerRow.Size = UDim2.new(1, 0, 0, 40)
 TimerRow.BackgroundTransparency = 1
@@ -3355,10 +3409,21 @@ TimeDisplay.Font = Enum.Font.GothamBold
 TimeDisplay.TextSize = 16
 TimeDisplay.TextColor3 = Color3.fromRGB(0, 255, 140)
 TimeDisplay.Text = "00:00:00"
-
 CreateCorner(TimeDisplay, 6)
 
--- Teleport Button Row
+-- Status Indicator (baru)
+local StatusLabel = CreateLabel(TimerRow, {
+    Size = UDim2.new(0.25, 0, 0, 20),
+    Position = UDim2.new(0.75, -5, 0.5, -10),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 11,
+    TextXAlignment = Enum.TextXAlignment.Center,
+    TextColor3 = Color3.fromRGB(100, 100, 100),
+    Text = "IDLE"
+})
+
+-- Teleport Button (manual)
 local TeleportRow = Instance.new("Frame", LochNessSection)
 TeleportRow.Size = UDim2.new(1, 0, 0, 36)
 TeleportRow.BackgroundTransparency = 1
@@ -3375,20 +3440,56 @@ CreateLabel(TeleportRow, {
 })
 
 local TeleportBtn = Instance.new("TextButton", TeleportRow)
-TeleportBtn.Name = "LochNessTeleportBtn"
 TeleportBtn.Size = UDim2.new(0, 110, 0, 26)
 TeleportBtn.Position = UDim2.new(1, -126, 0.5, -13)
 TeleportBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
-TeleportBtn.BackgroundTransparency = 0.1
 TeleportBtn.Text = "Teleport"
 TeleportBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 TeleportBtn.Font = Enum.Font.GothamBold
 TeleportBtn.TextSize = 12
-TeleportBtn.AutoButtonColor = true
-
 CreateCorner(TeleportBtn, 8)
 
--- Auto Teleport Toggle Row (Auto TP saat event baru mulai)
+TeleportBtn.MouseButton1Click:Connect(function()
+    -- Kalau event aktif, save dulu baru TP
+    if _G.LochNessState.CurrentState == EVENT_STATE.ACTIVE then
+        if not _G.LochNessState.SavedPosition then
+            SaveCurrentPosition()
+        end
+    end
+    TeleportToAncientRuin()
+end)
+
+-- Return Button (baru - manual return)
+local ReturnRow = Instance.new("Frame", LochNessSection)
+ReturnRow.Size = UDim2.new(1, 0, 0, 36)
+ReturnRow.BackgroundTransparency = 1
+
+CreateLabel(ReturnRow, {
+    Size = UDim2.new(1, -130, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Return to Saved Pos"
+})
+
+local ReturnBtn = Instance.new("TextButton", ReturnRow)
+ReturnBtn.Size = UDim2.new(0, 110, 0, 26)
+ReturnBtn.Position = UDim2.new(1, -126, 0.5, -13)
+ReturnBtn.BackgroundColor3 = Color3.fromRGB(70, 40, 40)
+ReturnBtn.Text = "Return"
+ReturnBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ReturnBtn.Font = Enum.Font.GothamBold
+ReturnBtn.TextSize = 12
+CreateCorner(ReturnBtn, 8)
+
+ReturnBtn.MouseButton1Click:Connect(function()
+    ReturnToSavedPosition()
+end)
+
+-- Auto Teleport Toggle
 local AutoTeleportRow = Instance.new("Frame", LochNessSection)
 AutoTeleportRow.Size = UDim2.new(1, 0, 0, 36)
 AutoTeleportRow.BackgroundTransparency = 1
@@ -3401,55 +3502,234 @@ CreateLabel(AutoTeleportRow, {
     TextSize = 13,
     TextXAlignment = Enum.TextXAlignment.Left,
     TextColor3 = THEME.TEXT,
-    Text = "Auto Teleport"
+    Text = "Auto TP + Return"
 })
 
 local AutoTeleportToggle, SetAutoTeleportState = CreateToggleKnob(AutoTeleportRow, false, function(state)
-    _G.LochNessAutoTeleport = state
+    _G.LochNessState.AutoTeleportEnabled = state
     if NotifyFeature then 
-        NotifyFeature("Loch Ness Auto Teleport: " .. (state and "ON" or "OFF"), state) 
+        NotifyFeature("Loch Ness Auto: " .. (state and "ON" or "OFF"), state) 
     end
 end)
 
--- Teleport button click
-TeleportBtn.MouseButton1Click:Connect(function()
-    TeleportToAncientRuin()
-end)
+--==================================================
+-- MAIN LOOP (FIXED)
+--================================================
 
---==================================================
--- MAIN TIMER LOOP (100% SAMA PERSIS KAYA GROUP FISHING)
---==================================================
+-- Init
+_G.LochNessState.NextEventTime = GetNextEventStartUTC()
 
 task.spawn(function()
     while true do
-        local now = os.time()
-        local nextStart = GetNextLochNessStartUTC()
-
-        -- selisih ke start + koreksi offset menit & detik
-        local diffToStart = nextStart - now + LOCHNESS_OFFSET_MINUTES + LOCHNESS_OFFSET_SECONDS
-
-        if diffToStart <= 0 then
-            -- sudah lewat start → hitung ulang ke slot berikutnya
-            nextStart = GetNextLochNessStartUTC()
-            diffToStart = nextStart - now + LOCHNESS_OFFSET_MINUTES + LOCHNESS_OFFSET_SECONDS
-            
-            -- Auto teleport saat event baru mulai (dalam 5 detik pertama)
-            if _G.LochNessAutoTeleport and diffToStart > (4 * 3600 - 5) then
-                if SaveCurrentPositionForLochNess() then
-                    if NotifyFeature then 
-                        NotifyFeature("Loch Ness Event started! Teleporting...", true) 
-                    end
-                    task.wait(0.5)
-                    TeleportToAncientRuin()
-                end
+        -- Update state machine
+        local stateChange = UpdateState()
+        
+        -- Handle auto actions berdasarkan state
+        HandleAutoActions()
+        
+        -- Update UI
+        local labelText, timeValue, color = GetDisplayTime()
+        TimerLabel.Text = labelText
+        TimeDisplay.Text = FormatTime(timeValue)
+        TimeDisplay.TextColor3 = color
+        
+        -- Update status indicator
+        local state = _G.LochNessState.CurrentState
+        StatusLabel.Text = state
+        if state == EVENT_STATE.IDLE then
+            StatusLabel.TextColor3 = Color3.fromRGB(100, 200, 100)
+        elseif state == EVENT_STATE.ACTIVE then
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+        else
+            StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        end
+        
+        -- Debug notification untuk state change
+        if stateChange and NotifyFeature then
+            if stateChange == "EVENT_START" then
+                NotifyFeature("Loch Ness Event STARTED!", true)
+            elseif stateChange == "EVENT_END" then
+                NotifyFeature("Loch Ness Event ENDED!", false)
             end
         end
-
-        TimerLabel.Text = "Next Event:"
-        TimeDisplay.TextColor3 = Color3.fromRGB(0, 255, 140)
-        TimeDisplay.Text = FormatTimeLochNess(diffToStart)
-
+        
         task.wait(0.5)
+    end
+end)
+
+--==================================================
+-- CLAIM PIRATE CHEST SECTION (BARU - DI BAWAH LOCH NESS)
+--==================================================
+
+local ClaimChestSection = CreateSectionDropdown(TeleportPage, "Claim Pirate Chest")
+Instance.new("UIListLayout", ClaimChestSection).SortOrder = Enum.SortOrder.LayoutOrder
+ClaimChestSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Status label untuk debug/info
+local ChestStatusLabel = CreateLabel(ClaimChestSection, {
+    Size = UDim2.new(1, -20, 0, 20),
+    Position = UDim2.new(0, 10, 0, 5),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 11,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.SUBTEXT,
+    Text = "Initializing..."
+})
+
+-- Toggle Button Row
+CreateSectionRow(ClaimChestSection, "Auto Claim Chests", "Off", function(button)
+    _G.RAYChestFarmOn = not _G.RAYChestFarmOn
+    
+    if _G.RAYChestFarmOn then
+        button.Text = "On"
+        button.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
+        ChestStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    else
+        button.Text = "Off"
+        button.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
+        ChestStatusLabel.TextColor3 = THEME.SUBTEXT
+        ChestStatusLabel.Text = "Paused."
+    end
+end)
+
+-- Manual Claim Button
+CreateSectionRow(ClaimChestSection, "Claim Once", "Claim", function()
+    if not _G.RAYChestFarm_ReplionReady then
+        ChestStatusLabel.Text = "Replion not ready!"
+        ChestStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    local uuids = _G.RAYChestFarm_GetUUIDs and _G.RAYChestFarm_GetUUIDs() or {}
+    if #uuids == 0 then
+        ChestStatusLabel.Text = "No chests available!"
+        ChestStatusLabel.TextColor3 = Color3.fromRGB(255, 150, 100)
+    else
+        for _, uuid in ipairs(uuids) do
+            pcall(function()
+                ClaimPirateChest:FireServer(uuid)
+            end)
+        end
+        ChestStatusLabel.Text = "Claimed " .. #uuids .. " chests!"
+        ChestStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
+    end
+end)
+
+-- Stats Row
+local StatsRow = Instance.new("Frame", ClaimChestSection)
+StatsRow.Size = UDim2.new(1, 0, 0, 50)
+StatsRow.BackgroundTransparency = 1
+
+local TotalClaimedLabel = CreateLabel(StatsRow, {
+    Size = UDim2.new(0.5, -5, 0, 20),
+    Position = UDim2.new(0, 10, 0, 5),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Claimed: 0"
+})
+
+local ChestCountLabel = CreateLabel(StatsRow, {
+    Size = UDim2.new(0.5, -5, 0, 20),
+    Position = UDim2.new(0.5, 0, 0, 5),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Active: 0"
+})
+
+--==================================================
+-- CLAIM PIRATE CHEST LOGIC
+--==================================================
+
+local Replion = require(ReplicatedStorage.Packages.Replion)
+local ClaimPirateChest = Net:WaitForChild("RE/ClaimPirateChest")
+
+-- Global functions untuk diakses manual claim
+_G.RAYChestFarm_GetUUIDs = nil
+_G.RAYChestFarm_ReplionReady = false
+_G.RAYChestFarmOn = false
+
+local chestReplion
+local totalClaimed = 0
+
+task.spawn(function()
+    -- Wait for Replion
+    local ok, r = pcall(function()
+        return Replion.Client:WaitReplion("PirateTreasureChests")
+    end)
+    
+    if not ok or not r or typeof(r.Data) ~= "table" then
+        ChestStatusLabel.Text = "Replion failed!"
+        ChestStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        warn("[RAY] Failed to get PirateTreasureChests")
+        return
+    end
+    
+    chestReplion = r
+    _G.RAYChestFarm_ReplionReady = true
+    ChestStatusLabel.Text = "Ready - Waiting..."
+    ChestStatusLabel.TextColor3 = Color3.fromRGB(100, 200, 255)
+end)
+
+local function GetAllChestUUIDs()
+    if not chestReplion then return {} end
+    local data = chestReplion.Data
+    local spawned = data and data.SpawnedChests
+    if typeof(spawned) ~= "table" then return {} end
+
+    local list = {}
+    for i, entry in ipairs(spawned) do
+        local uuid = entry.Id
+        if typeof(uuid) == "string" then
+            table.insert(list, uuid)
+        end
+    end
+    return list
+end
+
+-- Expose function untuk manual claim
+_G.RAYChestFarm_GetUUIDs = GetAllChestUUIDs
+
+-- Auto Farm Loop
+task.spawn(function()
+    while true do
+        task.wait(0.25)
+
+        if not _G.RAYChestFarmOn then
+            task.wait(0.5)
+            continue
+        end
+
+        if not chestReplion then
+            ChestStatusLabel.Text = "Waiting Replion..."
+            ChestStatusLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+            continue
+        end
+
+        local uuids = GetAllChestUUIDs()
+        ChestCountLabel.Text = "Active: " .. #uuids
+        
+        if #uuids == 0 then
+            ChestStatusLabel.Text = "No chests spawned."
+            ChestStatusLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        else
+            ChestStatusLabel.Text = "Claiming " .. #uuids .. " chests..."
+            ChestStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
+            
+            for _, uuid in ipairs(uuids) do
+                pcall(function()
+                    ClaimPirateChest:FireServer(uuid)
+                    totalClaimed = totalClaimed + 1
+                    TotalClaimedLabel.Text = "Claimed: " .. totalClaimed
+                end)
+            end
+        end
     end
 end)
 
@@ -3711,7 +3991,7 @@ UIS.InputBegan:Connect(function(input)
     end
     
     -- Cek kalo klik di dalam section dropdown, juga jangan tutup
-    local sections = {IslandSection, PlayerSection, EventHuntSection, LochNessSection, SavedPosSection}
+    local sections = {IslandSection, PlayerSection, EventHuntSection, LochNessSection, ClaimChestSection, SavedPosSection}
     for _, section in ipairs(sections) do
         if IsInsideSection(section, pos) then
             return -- Klik di dalam section, abort
