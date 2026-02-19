@@ -3489,7 +3489,7 @@ ReturnBtn.MouseButton1Click:Connect(function()
     ReturnToSavedPositionLochNess()
 end)
 
--- Auto Teleport Toggle dengan Knob
+-- Auto Teleport Toggle dengan PILL (bukan Knob)
 local AutoTeleportRow = Instance.new("Frame", LochNessSection)
 AutoTeleportRow.Size = UDim2.new(1, 0, 0, 36)
 AutoTeleportRow.BackgroundTransparency = 1
@@ -3505,11 +3505,20 @@ CreateLabel(AutoTeleportRow, {
     Text = "Auto TP + Return"
 })
 
--- PAKAI TOGGLE KNOB
-local AutoTeleportToggle, SetAutoTeleportState = CreateToggleKnob(AutoTeleportRow, false, function(state)
-    _G.LochNessState.AutoTeleportEnabled = state
-    if NotifyFeature then 
-        NotifyFeature("Loch Ness Auto: " .. (state and "ON" or "OFF"), state) 
+-- PAKAI TOGGLE PILL (sesuai yang lu punya)
+local GetAutoTeleportState, SetAutoTeleportState = CreateTogglePill(AutoTeleportRow, "Auto TP + Return", false)
+
+-- Connect ke state change
+task.spawn(function()
+    while true do
+        local currentState = GetAutoTeleportState()
+        if currentState ~= _G.LochNessState.AutoTeleportEnabled then
+            _G.LochNessState.AutoTeleportEnabled = currentState
+            if NotifyFeature then 
+                NotifyFeature("Loch Ness Auto: " .. (currentState and "ON" or "OFF"), currentState) 
+            end
+        end
+        task.wait(0.1)
     end
 end)
 
@@ -3605,7 +3614,7 @@ local ChestCountLabel = CreateLabel(StatsRow, {
     Text = "Active: 0"
 })
 
--- Toggle Button Row dengan KNOB
+-- Toggle Button Row dengan PILL
 local AutoClaimRow = Instance.new("Frame", ClaimChestSection)
 AutoClaimRow.Size = UDim2.new(1, 0, 0, 36)
 AutoClaimRow.BackgroundTransparency = 1
@@ -3621,14 +3630,21 @@ CreateLabel(AutoClaimRow, {
     Text = "Auto Claim Chests"
 })
 
--- PAKAI TOGGLE KNOB
-local AutoClaimToggle, SetAutoClaimState = CreateToggleKnob(AutoClaimRow, false, function(state)
-    _G.RAYChestFarmOn = state
-    if state then
-        ChestStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-    else
-        ChestStatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-        ChestStatusLabel.Text = "Paused."
+-- PAKAI TOGGLE PILL (sesuai yang lu punya)
+local GetAutoClaimState, SetAutoClaimState = CreateTogglePill(AutoClaimRow, "Auto Claim Chests", false)
+
+-- Connect ke state change
+task.spawn(function()
+    while true do
+        local currentState = GetAutoClaimState()
+        _G.RAYChestFarmOn = currentState
+        if currentState then
+            ChestStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+        else
+            ChestStatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+            ChestStatusLabel.Text = "Paused."
+        end
+        task.wait(0.1)
     end
 end)
 
