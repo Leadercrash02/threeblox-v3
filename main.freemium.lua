@@ -3244,7 +3244,7 @@ local function FormatTime(seconds)
     return string.format("%02d:%02d:%02d", h, m, s)
 end
 
-local function SaveCurrentPosition()
+local function SaveCurrentPositionLochNess()
     local char = Player.Character
     if not char then return false end
     local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -3272,7 +3272,7 @@ local function TeleportToAncientRuin()
     end
 end
 
-local function ReturnToSavedPosition()
+local function ReturnToSavedPositionLochNess()
     local data = _G.LochNessState.SavedPosition
     if not data then 
         if NotifyFeature then NotifyFeature("No saved position!", false) end
@@ -3360,7 +3360,7 @@ local function HandleAutoActions()
        and state.AutoTeleportEnabled 
        and not state.IsAutoTeleported then
         
-        if SaveCurrentPosition() then
+        if SaveCurrentPositionLochNess() then
             task.wait(0.5)
             TeleportToAncientRuin()
             state.IsAutoTeleported = true
@@ -3374,7 +3374,7 @@ local function HandleAutoActions()
        and not state.IsReturned then
         
         task.wait(1) -- Jeda sebentar sebelum balik
-        ReturnToSavedPosition()
+        ReturnToSavedPositionLochNess()
         state.IsReturned = true
     end
 end
@@ -3453,7 +3453,7 @@ TeleportBtn.MouseButton1Click:Connect(function()
     -- Kalau event aktif, save dulu baru TP
     if _G.LochNessState.CurrentState == EVENT_STATE.ACTIVE then
         if not _G.LochNessState.SavedPosition then
-            SaveCurrentPosition()
+            SaveCurrentPositionLochNess()
         end
     end
     TeleportToAncientRuin()
@@ -3486,10 +3486,10 @@ ReturnBtn.TextSize = 12
 CreateCorner(ReturnBtn, 8)
 
 ReturnBtn.MouseButton1Click:Connect(function()
-    ReturnToSavedPosition()
+    ReturnToSavedPositionLochNess()
 end)
 
--- Auto Teleport Toggle
+-- Auto Teleport Toggle dengan Knob
 local AutoTeleportRow = Instance.new("Frame", LochNessSection)
 AutoTeleportRow.Size = UDim2.new(1, 0, 0, 36)
 AutoTeleportRow.BackgroundTransparency = 1
@@ -3505,6 +3505,7 @@ CreateLabel(AutoTeleportRow, {
     Text = "Auto TP + Return"
 })
 
+-- PAKAI TOGGLE KNOB
 local AutoTeleportToggle, SetAutoTeleportState = CreateToggleKnob(AutoTeleportRow, false, function(state)
     _G.LochNessState.AutoTeleportEnabled = state
     if NotifyFeature then 
@@ -3534,11 +3535,11 @@ task.spawn(function()
         TimeDisplay.TextColor3 = color
         
         -- Update status indicator
-        local state = _G.LochNessState.CurrentState
-        StatusLabel.Text = state
-        if state == EVENT_STATE.IDLE then
+        local currentState = _G.LochNessState.CurrentState
+        StatusLabel.Text = currentState
+        if currentState == EVENT_STATE.IDLE then
             StatusLabel.TextColor3 = Color3.fromRGB(100, 200, 100)
-        elseif state == EVENT_STATE.ACTIVE then
+        elseif currentState == EVENT_STATE.ACTIVE then
             StatusLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
         else
             StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
@@ -3554,6 +3555,205 @@ task.spawn(function()
         end
         
         task.wait(0.5)
+    end
+end)
+
+--==================================================
+-- CLAIM PIRATE CHEST SECTION (BARU - DI BAWAH LOCH NESS)
+--==================================================
+
+local ClaimChestSection = CreateSectionDropdown(TeleportPage, "Claim Pirate Chest")
+Instance.new("UIListLayout", ClaimChestSection).SortOrder = Enum.SortOrder.LayoutOrder
+ClaimChestSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Status label untuk debug/info
+local ChestStatusLabel = CreateLabel(ClaimChestSection, {
+    Size = UDim2.new(1, -20, 0, 20),
+    Position = UDim2.new(0, 10, 0, 5),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 11,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(150, 150, 150),
+    Text = "Initializing..."
+})
+
+-- Stats Row
+local StatsRow = Instance.new("Frame", ClaimChestSection)
+StatsRow.Size = UDim2.new(1, 0, 0, 30)
+StatsRow.BackgroundTransparency = 1
+
+local TotalClaimedLabel = CreateLabel(StatsRow, {
+    Size = UDim2.new(0.5, -5, 1, 0),
+    Position = UDim2.new(0, 10, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Claimed: 0"
+})
+
+local ChestCountLabel = CreateLabel(StatsRow, {
+    Size = UDim2.new(0.5, -5, 1, 0),
+    Position = UDim2.new(0.5, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Active: 0"
+})
+
+-- Toggle Button Row dengan KNOB
+local AutoClaimRow = Instance.new("Frame", ClaimChestSection)
+AutoClaimRow.Size = UDim2.new(1, 0, 0, 36)
+AutoClaimRow.BackgroundTransparency = 1
+
+CreateLabel(AutoClaimRow, {
+    Size = UDim2.new(1, -70, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Auto Claim Chests"
+})
+
+-- PAKAI TOGGLE KNOB
+local AutoClaimToggle, SetAutoClaimState = CreateToggleKnob(AutoClaimRow, false, function(state)
+    _G.RAYChestFarmOn = state
+    if state then
+        ChestStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    else
+        ChestStatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        ChestStatusLabel.Text = "Paused."
+    end
+end)
+
+-- Manual Claim Button Row
+local ManualClaimRow = Instance.new("Frame", ClaimChestSection)
+ManualClaimRow.Size = UDim2.new(1, 0, 0, 36)
+ManualClaimRow.BackgroundTransparency = 1
+
+CreateLabel(ManualClaimRow, {
+    Size = UDim2.new(1, -130, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Claim Once (Manual)"
+})
+
+local ManualClaimBtn = Instance.new("TextButton", ManualClaimRow)
+ManualClaimBtn.Size = UDim2.new(0, 110, 0, 26)
+ManualClaimBtn.Position = UDim2.new(1, -126, 0.5, -13)
+ManualClaimBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 100)
+ManualClaimBtn.Text = "Claim"
+ManualClaimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ManualClaimBtn.Font = Enum.Font.GothamBold
+ManualClaimBtn.TextSize = 12
+CreateCorner(ManualClaimBtn, 8)
+
+ManualClaimBtn.MouseButton1Click:Connect(function()
+    if not _G.RAYChestFarm_ReplionReady then
+        ChestStatusLabel.Text = "Replion not ready!"
+        ChestStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    local uuids = _G.RAYChestFarm_GetUUIDs and _G.RAYChestFarm_GetUUIDs() or {}
+    if #uuids == 0 then
+        ChestStatusLabel.Text = "No chests available!"
+        ChestStatusLabel.TextColor3 = Color3.fromRGB(255, 150, 100)
+    else
+        for _, uuid in ipairs(uuids) do
+            pcall(function()
+                ClaimPirateChest:FireServer(uuid)
+            end)
+        end
+        ChestStatusLabel.Text = "Claimed " .. #uuids .. " chests!"
+        ChestStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 150)
+    end
+end)
+
+--==================================================
+-- CLAIM PIRATE CHEST LOGIC (ASLI DARI LU)
+--==================================================
+
+local Replion = require(ReplicatedStorage.Packages.Replion)
+local ClaimPirateChest = Net:WaitForChild("RE/ClaimPirateChest")
+
+----------------------------------------------------------------
+-- REPLION + FARM (logic sama seperti script test)
+----------------------------------------------------------------
+local chestReplion
+
+task.spawn(function()
+    local ok, r = pcall(function()
+        return Replion.Client:WaitReplion("PirateTreasureChests")
+    end)
+    if not ok or not r or typeof(r.Data) ~= "table" then
+        ChestStatusLabel.Text = "Replion failed."
+        warn("[ChestFarmQuest] Failed to get PirateTreasureChests")
+        return
+    end
+    chestReplion = r
+    ChestStatusLabel.Text = "Replion ready."
+    _G.RAYChestFarm_ReplionReady = true
+end)
+
+local function GetAllChestUUIDs()
+    if not chestReplion then return {} end
+    local data = chestReplion.Data
+    local spawned = data and data.SpawnedChests
+    if typeof(spawned) ~= "table" then return {} end
+
+    local list = {}
+    for i, entry in ipairs(spawned) do
+        -- bentuk entry berdasarkan debug: { Id = <uuid>, Location = <Vector3>, ... }
+        local uuid = entry.Id
+        local pos  = entry.Location
+        if typeof(uuid) == "string" then
+            table.insert(list, uuid)
+        end
+    end
+    return list
+end
+
+-- Expose function untuk manual claim
+_G.RAYChestFarm_GetUUIDs = GetAllChestUUIDs
+
+task.spawn(function()
+    while true do
+        task.wait(0.25)
+
+        if not _G.RAYChestFarmOn then
+            ChestStatusLabel.Text = "Paused."
+            continue
+        end
+
+        if not chestReplion then
+            ChestStatusLabel.Text = "Waiting Replion..."
+            continue
+        end
+
+        local uuids = GetAllChestUUIDs()
+        ChestCountLabel.Text = "Active: " .. #uuids
+        
+        if #uuids == 0 then
+            ChestStatusLabel.Text = "No chests spawned."
+        else
+            ChestStatusLabel.Text = "Claiming "..#uuids.." chests..."
+            for _, uuid in ipairs(uuids) do
+                pcall(function()
+                    ClaimPirateChest:FireServer(uuid)
+                end)
+            end
+        end
     end
 end)
 
@@ -3815,7 +4015,7 @@ UIS.InputBegan:Connect(function(input)
     end
     
     -- Cek kalo klik di dalam section dropdown, juga jangan tutup
-    local sections = {IslandSection, PlayerSection, EventHuntSection, LochNessSection, SavedPosSection}
+    local sections = {IslandSection, PlayerSection, EventHuntSection, LochNessSection, ClaimChestSection, SavedPosSection}
     for _, section in ipairs(sections) do
         if IsInsideSection(section, pos) then
             return -- Klik di dalam section, abort
