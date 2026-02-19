@@ -2699,7 +2699,10 @@ end
 --==================================================
 -- ISLAND TELEPORT CF DATA
 --==================================================
-local IslandTeleportCF = {
+--==================================================
+-- ISLAND TELEPORT CF DATA
+--==================================================
+IslandTeleportCF = {
     ["Arrow Artifact"] = CFrame.new(879.857178, 4.92162275, -339.661469, -0.195367768, 0, 0.980730057, 0, 1, 0, -0.980730057, 0, -0.195367768),
     ["Crescent Artifact"] = CFrame.new(1382.48401, 4.83972979, 113.104294, -0.956645668, 0, 0.291254193, 0, 1, 0, -0.291254193, 0, -0.956645668),
     ["Diamond Artifact"] = CFrame.new(1835.33704, 4.92876816, -314.988342, 0.219969183, 0, -0.975506842, 0, 1, 0, 0.975506842, 0, 0.219969183),
@@ -2732,35 +2735,36 @@ local IslandTeleportCF = {
 }
 
 --==================================================
--- EVENT HUNT STATE
+-- GLOBAL STATES
 --==================================================
 _G.GhostSharkHuntActive = _G.GhostSharkHuntActive or false
 _G.MegalodonHuntActive = _G.MegalodonHuntActive or false
-
---==================================================
--- SAVED POSITIONS DATA
---==================================================
 _G.RAY_SavedPositions = _G.RAY_SavedPositions or {}
+_G.RAYSelectedMerchantItem = _G.RAYSelectedMerchantItem or nil
+_G.RAYMerchantBuyQty = _G.RAYMerchantBuyQty or 1
+_G.RAYMerchantAutoBuy = _G.RAYMerchantAutoBuy or false
+_G.RAYChestFarmOn = _G.RAYChestFarmOn or false
+_G.ChestFarmReplionReady = false
 
 --==================================================
--- TELEPORT PAGE
+-- PAGES
 --==================================================
-local TeleportPage = Pages["Teleport"]
-if not TeleportPage then
-    warn("TeleportPage not found")
-    return
-end
+TeleportPage = Pages["Teleport"]
+ShopPage = Pages["Shop"]
+
+if not TeleportPage then warn("TeleportPage not found"); return end
+if not ShopPage then warn("ShopPage not found"); return end
 
 --==================================================
--- HELPER FUNCTIONS
+-- HELPER FUNCTIONS (REUSABLE)
 --==================================================
-local function CreateCorner(parent, radius)
+function CreateCorner(parent, radius)
     local corner = Instance.new("UICorner", parent)
     corner.CornerRadius = UDim.new(0, radius or 8)
     return corner
 end
 
-local function CreateStroke(parent, color, thickness)
+function CreateStroke(parent, color, thickness)
     local stroke = Instance.new("UIStroke", parent)
     stroke.Color = color or THEME.MAIN
     stroke.Thickness = thickness or 1
@@ -2768,18 +2772,13 @@ local function CreateStroke(parent, color, thickness)
     return stroke
 end
 
-local function CreateLabel(parent, props)
+function CreateLabel(parent, props)
     local label = Instance.new("TextLabel", parent)
-    for k, v in pairs(props) do
-        label[k] = v
-    end
+    for k, v in pairs(props) do label[k] = v end
     return label
 end
 
---==================================================
--- HELPER: CREATE TELEPORT PANEL
---==================================================
-local function CreateTeleportPanel(name, infoText)
+function CreateTeleportPanel(name, infoText)
     local panel = Instance.new("Frame", Main)
     panel.Name = name .. "RightPanel"
     panel.Size = UDim2.new(0, 220, 1, -46)
@@ -2794,29 +2793,8 @@ local function CreateTeleportPanel(name, infoText)
     CreateCorner(panel, 10)
     CreateStroke(panel, THEME.MAIN, 0.5)
     
-    CreateLabel(panel, {
-        Size = UDim2.new(1, -10, 0, 24),
-        Position = UDim2.new(0, 5, 0, 6),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 16,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = THEME.TEXT,
-        ZIndex = 11,
-        Text = name
-    })
-    
-    CreateLabel(panel, {
-        Size = UDim2.new(1, -10, 0, 18),
-        Position = UDim2.new(0, 5, 0, 30),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = Color3.fromRGB(200, 200, 200),
-        ZIndex = 11,
-        Text = infoText
-    })
+    CreateLabel(panel, {Size = UDim2.new(1, -10, 0, 24), Position = UDim2.new(0, 5, 0, 6), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, ZIndex = 11, Text = name})
+    CreateLabel(panel, {Size = UDim2.new(1, -10, 0, 18), Position = UDim2.new(0, 5, 0, 30), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = Color3.fromRGB(200, 200, 200), ZIndex = 11, Text = infoText})
     
     local scroll = Instance.new("ScrollingFrame", panel)
     scroll.Size = UDim2.new(1, -10, 1, -70)
@@ -2834,10 +2812,7 @@ local function CreateTeleportPanel(name, infoText)
     return panel, scroll
 end
 
---==================================================
--- HELPER: CREATE LIST ENTRY
---==================================================
-local function CreateListEntry(parent, text, onClick)
+function CreateListEntry(parent, text, onClick)
     local row = Instance.new("Frame", parent)
     row.Size = UDim2.new(1, -4, 0, 24)
     row.BackgroundTransparency = 1
@@ -2874,24 +2849,12 @@ local function CreateListEntry(parent, text, onClick)
     return row
 end
 
---==================================================
--- HELPER: CREATE SECTION ROW
---==================================================
-local function CreateSectionRow(parent, title, buttonText, onClick)
+function CreateSectionRow(parent, title, buttonText, onClick)
     local row = Instance.new("Frame", parent)
     row.Size = UDim2.new(1, 0, 0, 36)
     row.BackgroundTransparency = 1
     
-    CreateLabel(row, {
-        Size = UDim2.new(1, -110, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = THEME.TEXT,
-        Text = title
-    })
+    CreateLabel(row, {Size = UDim2.new(1, -110, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = title})
     
     local btn = Instance.new("TextButton", row)
     btn.Size = UDim2.new(0, 110, 0, 24)
@@ -2909,10 +2872,7 @@ local function CreateSectionRow(parent, title, buttonText, onClick)
     return row
 end
 
---==================================================
--- HELPER: CREATE TOGGLE PILL
---==================================================
-local function CreateTogglePill(parent, defaultState, onToggle)
+function CreateTogglePill(parent, defaultState, onToggle)
     local toggleFrame = Instance.new("Frame", parent)
     toggleFrame.Size = UDim2.new(0, 50, 0, 26)
     toggleFrame.Position = UDim2.new(1, -66, 0.5, -13)
@@ -2960,16 +2920,22 @@ local function CreateTogglePill(parent, defaultState, onToggle)
     return toggleFrame, SetState
 end
 
+function TableCount(tbl)
+    local count = 0
+    for _ in pairs(tbl) do count = count + 1 end
+    return count
+end
+
 --==================================================
 -- ISLAND TELEPORT
 --==================================================
-local IslandSection = CreateSectionDropdown(TeleportPage, "Teleport Island")
+IslandSection = CreateSectionDropdown(TeleportPage, "Teleport Island")
 Instance.new("UIListLayout", IslandSection).SortOrder = Enum.SortOrder.LayoutOrder
 IslandSection.UIListLayout.Padding = UDim.new(0, 6)
 
-local IslandPanel, IslandScroll = CreateTeleportPanel("Teleport Island", "Pilih lokasi island untuk teleport.")
+IslandPanel, IslandScroll = CreateTeleportPanel("Teleport Island", "Pilih lokasi island untuk teleport.")
 
-local function TpToIsland(cf, label)
+function TpToIsland(cf, label)
     local hrp = (Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
     if hrp then
         hrp.CFrame = cf
@@ -2977,7 +2943,7 @@ local function TpToIsland(cf, label)
     end
 end
 
-local islandNames = {}
+islandNames = {}
 for name in pairs(IslandTeleportCF) do table.insert(islandNames, name) end
 table.sort(islandNames)
 
@@ -2992,13 +2958,13 @@ end)
 --==================================================
 -- PLAYER TELEPORT
 --==================================================
-local PlayerSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
+PlayerSection = CreateSectionDropdown(TeleportPage, "Teleport Player")
 Instance.new("UIListLayout", PlayerSection).SortOrder = Enum.SortOrder.LayoutOrder
 PlayerSection.UIListLayout.Padding = UDim.new(0, 6)
 
-local PlayerPanel, PlayerScroll = CreateTeleportPanel("Teleport Player", "Pilih player untuk teleport ke posisi mereka.")
+PlayerPanel, PlayerScroll = CreateTeleportPanel("Teleport Player", "Pilih player untuk teleport ke posisi mereka.")
 
-local function TpToPlayer(targetPlayer)
+function TpToPlayer(targetPlayer)
     if not targetPlayer or targetPlayer == Player then return end
     
     local myHRP = (Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
@@ -3010,7 +2976,7 @@ local function TpToPlayer(targetPlayer)
     end
 end
 
-local function CreatePlayerEntry(plr)
+function CreatePlayerEntry(plr)
     CreateListEntry(PlayerScroll, plr.Name, function() TpToPlayer(plr) end).Name = "PlayerRow_" .. plr.Name
 end
 
@@ -3032,31 +2998,25 @@ CreateSectionRow(PlayerSection, "Teleport Player Panel", "Open", function()
 end)
 
 --==================================================
--- EVENT HUNT LOGIC (GHOST SHARK + MEGALODON)
+-- EVENT HUNT (GHOST SHARK + MEGALODON)
 --==================================================
+ghostSharkFloor = nil
 
--- Ghost Shark Hunt Logic
-local function getSharkHuntModel()
+function getSharkHuntModel()
     local props = Workspace:FindFirstChild("Props")
     if not props then return nil end
     local model = props:FindFirstChild("Shark Hunt") or props:FindFirstChild("Ghost Shark Hunt")
-    if model and model:IsA("Model") then
-        return model
-    end
+    if model and model:IsA("Model") then return model end
     return nil
 end
 
-local ghostSharkFloor
-
-local function ensureFloorUnderShark()
+function ensureFloorUnderShark()
     local model = getSharkHuntModel()
     if not model then return nil, nil end
 
     if not model.PrimaryPart then
         local anyPart = model:FindFirstChildWhichIsA("BasePart", true)
-        if anyPart then
-            model.PrimaryPart = anyPart
-        end
+        if anyPart then model.PrimaryPart = anyPart end
     end
     local anchor = model.PrimaryPart
     if not anchor then return nil, nil end
@@ -3072,20 +3032,13 @@ local function ensureFloorUnderShark()
         ghostSharkFloor.Parent = Workspace
     end
 
-    local yOffset = -2
-    ghostSharkFloor.CFrame = CFrame.new(
-        Vector3.new(anchor.Position.X, anchor.Position.Y + yOffset, anchor.Position.Z)
-    )
-
+    ghostSharkFloor.CFrame = CFrame.new(Vector3.new(anchor.Position.X, anchor.Position.Y - 2, anchor.Position.Z))
     return anchor, ghostSharkFloor
 end
 
-local function TeleportToGhostShark()
+function TeleportToGhostShark()
     local anchor, floor = ensureFloorUnderShark()
-    if not anchor or not floor then
-        warn("[SharkHunt] Failed to setup floor/anchor")
-        return
-    end
+    if not anchor or not floor then return end
 
     local char = Player.Character or Player.CharacterAdded:Wait()
     local root = char:WaitForChild("HumanoidRootPart")
@@ -3094,49 +3047,47 @@ local function TeleportToGhostShark()
     root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
 
     local basePos = floor.Position + Vector3.new(0, floor.Size.Y/2 + 4, 0)
-    local lookDir = anchor.CFrame.LookVector
-    local cf = CFrame.new(basePos, basePos + lookDir)
-
+    local cf = CFrame.new(basePos, basePos + anchor.CFrame.LookVector)
     char:PivotTo(cf)
 end
 
--- Auto-detect Ghost Shark via Replion
-local function safeConnectGhostSharkReplion()
-    local ok, ReplionPkg = pcall(function()
-        return require(ReplicatedStorage.Packages.Replion)
-    end)
-
-    if not ok or not ReplionPkg or not ReplionPkg.Client then
-        warn("[SharkHunt] Replion Client not found")
-        return
+function TeleportToMegalodon()
+    local anchor
+    for _, obj in ipairs(workspace:GetDescendants()) do
+        if obj:IsA("BasePart") and obj.Name == "Megalodon Hunt" then anchor = obj; break end
     end
+    if not anchor then return end
+
+    local char = Player.Character or Player.CharacterAdded:Wait()
+    local root = char:WaitForChild("HumanoidRootPart")
+
+    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+
+    local cf = CFrame.new(anchor.Position + Vector3.new(0, 5, 0), anchor.Position + Vector3.new(0, 5, 0) + anchor.CFrame.LookVector)
+    char:PivotTo(cf)
+end
+
+-- Ghost Shark Replion
+task.spawn(function()
+    local ok, ReplionPkg = pcall(function() return require(ReplicatedStorage.Packages.Replion) end)
+    if not ok or not ReplionPkg or not ReplionPkg.Client then return end
 
     local Client = ReplionPkg.Client
-    local success, eventsReplion = pcall(function()
-        return Client:WaitReplion("Events")
-    end)
-
-    if not success or not eventsReplion then
-        warn("[SharkHunt] WaitReplion('Events') failed")
-        return
-    end
-
-    local SharkHuntEventName = "Shark Hunt"
+    local success, eventsReplion = pcall(function() return Client:WaitReplion("Events") end)
+    if not success or not eventsReplion then return end
 
     local function OnEventInserted(index, eventName)
-        if eventName == SharkHuntEventName then
+        if eventName == "Shark Hunt" then
             _G.GhostSharkHuntActive = true
             if NotifyFeature then NotifyFeature("Ghost Shark Hunt Spawned!", true) end
         end
     end
 
     local function OnEventRemoved(index, eventName)
-        if eventName == SharkHuntEventName then
+        if eventName == "Shark Hunt" then
             _G.GhostSharkHuntActive = false
-            if ghostSharkFloor then
-                ghostSharkFloor:Destroy()
-                ghostSharkFloor = nil
-            end
+            if ghostSharkFloor then ghostSharkFloor:Destroy(); ghostSharkFloor = nil end
             if NotifyFeature then NotifyFeature("Ghost Shark Hunt Ended", false) end
         end
     end
@@ -3145,49 +3096,16 @@ local function safeConnectGhostSharkReplion()
     eventsReplion:OnArrayRemove("Events", OnEventRemoved)
 
     local current = eventsReplion:Get("Events") or {}
-    for i, name in ipairs(current) do
-        OnEventInserted(i, name)
-    end
-end
+    for i, name in ipairs(current) do OnEventInserted(i, name) end
+end)
 
-task.spawn(safeConnectGhostSharkReplion)
-
--- Megalodon Hunt Logic
-local function TeleportToMegalodon()
-    local anchor
-    for _, obj in ipairs(workspace:GetDescendants()) do
-        if obj:IsA("BasePart") and obj.Name == "Megalodon Hunt" then
-            anchor = obj
-            break
-        end
-    end
-    if not anchor then
-        return
-    end
-
-    local char = Player.Character or Player.CharacterAdded:Wait()
-    local root = char:WaitForChild("HumanoidRootPart")
-
-    root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-    root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
-
-    local basePos = anchor.Position + Vector3.new(0, 5, 0)
-    local lookDir = anchor.CFrame.LookVector
-
-    local cf = CFrame.new(basePos, basePos + lookDir)
-    char:PivotTo(cf)
-end
-
---==================================================
--- EVENT HUNT SECTION (DENGAN PANEL KANAN)
---==================================================
-local EventHuntSection = CreateSectionDropdown(TeleportPage, "Event Hunt")
+-- Event Hunt Section
+EventHuntSection = CreateSectionDropdown(TeleportPage, "Event Hunt")
 Instance.new("UIListLayout", EventHuntSection).SortOrder = Enum.SortOrder.LayoutOrder
 EventHuntSection.UIListLayout.Padding = UDim.new(0, 6)
 
-local EventHuntPanel, EventHuntScroll = CreateTeleportPanel("Event Hunt", "Pilih hunt event untuk teleport.")
+EventHuntPanel, EventHuntScroll = CreateTeleportPanel("Event Hunt", "Pilih hunt event untuk teleport.")
 
--- Create Ghost Shark Entry
 CreateListEntry(EventHuntScroll, "Ghost Shark Hunt", function()
     if not _G.GhostSharkHuntActive then
         if NotifyFeature then NotifyFeature("Ghost Shark Hunt not active!", false) end
@@ -3197,7 +3115,6 @@ CreateListEntry(EventHuntScroll, "Ghost Shark Hunt", function()
     if NotifyFeature then NotifyFeature("Teleported to Ghost Shark Hunt", true) end
 end)
 
--- Create Megalodon Entry
 CreateListEntry(EventHuntScroll, "Megalodon Hunt", function()
     if not _G.MegalodonHuntActive then
         if NotifyFeature then NotifyFeature("Megalodon Hunt not found!", false) end
@@ -3207,7 +3124,7 @@ CreateListEntry(EventHuntScroll, "Megalodon Hunt", function()
     if NotifyFeature then NotifyFeature("Teleported to Megalodon Hunt", true) end
 end)
 
--- Update entry colors based on status
+-- Update colors
 task.spawn(function()
     while true do
         for _, entry in ipairs(EventHuntScroll:GetChildren()) do
@@ -3215,10 +3132,7 @@ task.spawn(function()
                 local btn = entry:FindFirstChildOfClass("TextButton")
                 local hl = entry:FindFirstChild("Highlight")
                 if btn and hl then
-                    local isGhostShark = btn.Text:find("Ghost Shark")
-                    local isMegalodon = btn.Text:find("Megalodon")
-                    
-                    if isGhostShark then
+                    if btn.Text:find("Ghost Shark") then
                         if _G.GhostSharkHuntActive then
                             btn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
                             hl.Visible = true
@@ -3226,14 +3140,10 @@ task.spawn(function()
                             btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
                             hl.Visible = false
                         end
-                    elseif isMegalodon then
-                        -- Check Megalodon existence
+                    elseif btn.Text:find("Megalodon") then
                         local exists = false
                         for _, obj in ipairs(workspace:GetDescendants()) do
-                            if obj:IsA("BasePart") and obj.Name == "Megalodon Hunt" then
-                                exists = true
-                                break
-                            end
+                            if obj:IsA("BasePart") and obj.Name == "Megalodon Hunt" then exists = true; break end
                         end
                         _G.MegalodonHuntActive = exists
                         
@@ -3252,95 +3162,58 @@ task.spawn(function()
     end
 end)
 
--- Open Panel Button
 CreateSectionRow(EventHuntSection, "Event Hunt Panel", "Open", function()
     EventHuntPanel.Visible = not EventHuntPanel.Visible
 end)
 
 --==================================================
--- LOCH NESS EVENT SECTION (FIXED TIMER + STATE)
+-- LOCH NESS EVENT
 --==================================================
+ANCIENT_RUIN_CF = CFrame.new(6082.87842, -585.924316, 4633.71631, -0.681475937, 0, 0.731840551, 0, 1, 0, -0.731840551, 0, -0.681475937)
+EVENT_DURATION_MINUTES = 10
+EVENT_HOURS_UTC = {0, 4, 8, 12, 16, 20}
 
-local LochNessSection = CreateSectionDropdown(TeleportPage, "Lochnes Event")
-Instance.new("UIListLayout", LochNessSection).SortOrder = Enum.SortOrder.LayoutOrder
-LochNessSection.UIListLayout.Padding = UDim.new(0, 6)
+EVENT_STATE = {IDLE = "IDLE", ACTIVE = "ACTIVE", ENDED = "ENDED"}
 
--- Koordinat Ancient Ruin
-local ANCIENT_RUIN_CF = CFrame.new(6082.87842, -585.924316, 4633.71631, -0.681475937, 0, 0.731840551, 0, 1, 0, -0.731840551, 0, -0.681475937)
-
--- KONFIGURASI EVENT (sesuai game mechanics)
-local EVENT_DURATION_MINUTES = 10        -- Event berlangsung 10 menit
-local EVENT_HOURS_UTC = {0, 4, 8, 12, 16, 20}
-
--- State Machine
-local EVENT_STATE = {
-    IDLE = "IDLE",           -- Menunggu countdown
-    ACTIVE = "ACTIVE",       -- Event sedang berlangsung (0-10 menit)
-    ENDED = "ENDED"          -- Event selesai, menunggu next cycle
-}
-
--- Global State
 _G.LochNessState = {
     CurrentState = EVENT_STATE.IDLE,
     NextEventTime = 0,
     EventEndTime = 0,
-    IsAutoTeleported = false,     -- Sudah auto-TP ke event?
-    IsReturned = false,           -- Sudah balik ke posisi awal?
+    IsAutoTeleported = false,
+    IsReturned = false,
     SavedPosition = nil,
     AutoTeleportEnabled = false
 }
 
---==================================================
--- HELPER FUNCTIONS
---================================================
-
-local function GetNextEventStartUTC()
+function GetNextEventStartUTC()
     local nowUTC = os.date("!*t", os.time())
     local nowMinutes = nowUTC.hour * 60 + nowUTC.min
-    local nowSeconds = nowUTC.sec
     
     for _, hour in ipairs(EVENT_HOURS_UTC) do
-        local eventMinutes = hour * 60
-        if eventMinutes > nowMinutes then
-            local target = {
-                year = nowUTC.year, month = nowUTC.month, day = nowUTC.day,
-                hour = hour, min = 0, sec = 0, isdst = false
-            }
-            return os.time(target)
+        if hour * 60 > nowMinutes then
+            return os.time({year = nowUTC.year, month = nowUTC.month, day = nowUTC.day, hour = hour, min = 0, sec = 0, isdst = false})
         end
     end
     
-    -- Next day first slot
-    local target = {
-        year = nowUTC.year, month = nowUTC.month, day = nowUTC.day + 1,
-        hour = EVENT_HOURS_UTC[1], min = 0, sec = 0, isdst = false
-    }
-    return os.time(target)
+    return os.time({year = nowUTC.year, month = nowUTC.month, day = nowUTC.day + 1, hour = EVENT_HOURS_UTC[1], min = 0, sec = 0, isdst = false})
 end
 
-local function FormatTime(seconds)
+function FormatTime(seconds)
     seconds = math.max(0, math.floor(seconds))
-    local h = math.floor(seconds / 3600)
-    local m = math.floor((seconds % 3600) / 60)
-    local s = seconds % 60
-    return string.format("%02d:%02d:%02d", h, m, s)
+    return string.format("%02d:%02d:%02d", math.floor(seconds / 3600), math.floor((seconds % 3600) / 60), seconds % 60)
 end
 
-local function SaveCurrentPosition()
+function SaveCurrentPosition()
     local char = Player.Character
     if not char then return false end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return false end
     
-    _G.LochNessState.SavedPosition = {
-        Position = hrp.CFrame.Position,
-        LookVector = hrp.CFrame.LookVector,
-        Time = os.time()
-    }
+    _G.LochNessState.SavedPosition = {Position = hrp.CFrame.Position, LookVector = hrp.CFrame.LookVector, Time = os.time()}
     return true
 end
 
-local function TeleportToAncientRuin()
+function TeleportToAncientRuin()
     local char = Player.Character or Player.CharacterAdded:Wait()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
@@ -3349,12 +3222,10 @@ local function TeleportToAncientRuin()
     hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
     char:PivotTo(ANCIENT_RUIN_CF)
     
-    if NotifyFeature then 
-        NotifyFeature("Teleported to Ancient Ruin!", true) 
-    end
+    if NotifyFeature then NotifyFeature("Teleported to Ancient Ruin!", true) end
 end
 
-local function ReturnToSavedPosition()
+function ReturnToSavedPosition()
     local data = _G.LochNessState.SavedPosition
     if not data then 
         if NotifyFeature then NotifyFeature("No saved position!", false) end
@@ -3365,24 +3236,15 @@ local function ReturnToSavedPosition()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
     
-    local cf = CFrame.new(data.Position, data.Position + data.LookVector)
-    hrp.CFrame = cf
-    
-    if NotifyFeature then 
-        NotifyFeature("Returned to saved position!", true) 
-    end
+    hrp.CFrame = CFrame.new(data.Position, data.Position + data.LookVector)
+    if NotifyFeature then NotifyFeature("Returned to saved position!", true) end
 end
 
---==================================================
--- STATE MACHINE LOGIC (FIXED)
---================================================
-
-local function UpdateState()
+function UpdateLochNessState()
     local now = os.time()
     local state = _G.LochNessState
     
     if state.CurrentState == EVENT_STATE.IDLE then
-        -- Cek apakah sudah waktunya mulai event
         if now >= state.NextEventTime then
             state.CurrentState = EVENT_STATE.ACTIVE
             state.EventEndTime = now + (EVENT_DURATION_MINUTES * 60)
@@ -3390,58 +3252,38 @@ local function UpdateState()
             state.IsReturned = false
             return "EVENT_START"
         end
-        
     elseif state.CurrentState == EVENT_STATE.ACTIVE then
-        -- Cek apakah event sudah selesai
         if now >= state.EventEndTime then
             state.CurrentState = EVENT_STATE.ENDED
             return "EVENT_END"
         end
-        
     elseif state.CurrentState == EVENT_STATE.ENDED then
-        -- Reset ke cycle berikutnya
         state.NextEventTime = GetNextEventStartUTC()
         state.CurrentState = EVENT_STATE.IDLE
         state.IsAutoTeleported = false
         state.IsReturned = false
         return "RESET"
     end
-    
     return nil
 end
 
-local function GetDisplayTime()
+function GetLochNessDisplayTime()
     local now = os.time()
     local state = _G.LochNessState
     
     if state.CurrentState == EVENT_STATE.IDLE then
-        -- Countdown ke event berikutnya
-        local diff = state.NextEventTime - now
-        return "Next Event:", diff, Color3.fromRGB(0, 255, 140) -- Hijau
-        
+        return "Next Event:", state.NextEventTime - now, Color3.fromRGB(0, 255, 140)
     elseif state.CurrentState == EVENT_STATE.ACTIVE then
-        -- Event sedang berlangsung, tampilkan sisa waktu
-        local remaining = state.EventEndTime - now
-        return "Event Ends:", remaining, Color3.fromRGB(255, 140, 0) -- Oranye
-        
-    elseif state.CurrentState == EVENT_STATE.ENDED then
-        -- Event selesai, tunggu reset
-        return "Event Ended!", 0, Color3.fromRGB(255, 80, 80) -- Merah
+        return "Event Ends:", state.EventEndTime - now, Color3.fromRGB(255, 140, 0)
+    else
+        return "Event Ended!", 0, Color3.fromRGB(255, 80, 80)
     end
 end
 
---==================================================
--- AUTO ACTIONS
---================================================
-
-local function HandleAutoActions()
+function HandleLochNessAutoActions()
     local state = _G.LochNessState
     
-    -- Auto Teleport saat event MULAI (dan belum pernah TP)
-    if state.CurrentState == EVENT_STATE.ACTIVE 
-       and state.AutoTeleportEnabled 
-       and not state.IsAutoTeleported then
-        
+    if state.CurrentState == EVENT_STATE.ACTIVE and state.AutoTeleportEnabled and not state.IsAutoTeleported then
         if SaveCurrentPosition() then
             task.wait(0.5)
             TeleportToAncientRuin()
@@ -3449,39 +3291,25 @@ local function HandleAutoActions()
         end
     end
     
-    -- Auto Return saat event SELESAI (dan sudah pernah TP tapi belum balik)
-    if state.CurrentState == EVENT_STATE.ENDED 
-       and state.AutoTeleportEnabled 
-       and state.IsAutoTeleported 
-       and not state.IsReturned then
-        
-        task.wait(1) -- Jeda sebentar sebelum balik
+    if state.CurrentState == EVENT_STATE.ENDED and state.AutoTeleportEnabled and state.IsAutoTeleported and not state.IsReturned then
+        task.wait(1)
         ReturnToSavedPosition()
         state.IsReturned = true
     end
 end
 
---==================================================
--- UI ELEMENTS
---================================================
+-- Loch Ness UI
+LochNessSection = CreateSectionDropdown(TeleportPage, "Lochnes Event")
+Instance.new("UIListLayout", LochNessSection).SortOrder = Enum.SortOrder.LayoutOrder
+LochNessSection.UIListLayout.Padding = UDim.new(0, 6)
 
--- Timer Display
-local TimerRow = Instance.new("Frame", LochNessSection)
+TimerRow = Instance.new("Frame", LochNessSection)
 TimerRow.Size = UDim2.new(1, 0, 0, 40)
 TimerRow.BackgroundTransparency = 1
 
-local TimerLabel = CreateLabel(TimerRow, {
-    Size = UDim2.new(0.4, -10, 1, 0),
-    Position = UDim2.new(0, 16, 0, 0),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham,
-    TextSize = 13,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = THEME.TEXT,
-    Text = "Next Event:"
-})
+TimerLabel = CreateLabel(TimerRow, {Size = UDim2.new(0.4, -10, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Next Event:"})
 
-local TimeDisplay = Instance.new("TextLabel", TimerRow)
+TimeDisplay = Instance.new("TextLabel", TimerRow)
 TimeDisplay.Name = "LochNessTimeDisplay"
 TimeDisplay.Size = UDim2.new(0.35, 0, 0, 28)
 TimeDisplay.Position = UDim2.new(0.4, 0, 0.5, -14)
@@ -3493,35 +3321,15 @@ TimeDisplay.TextColor3 = Color3.fromRGB(0, 255, 140)
 TimeDisplay.Text = "00:00:00"
 CreateCorner(TimeDisplay, 6)
 
--- Status Indicator
-local StatusLabel = CreateLabel(TimerRow, {
-    Size = UDim2.new(0.25, 0, 0, 20),
-    Position = UDim2.new(0.75, -5, 0.5, -10),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.GothamBold,
-    TextSize = 11,
-    TextXAlignment = Enum.TextXAlignment.Center,
-    TextColor3 = Color3.fromRGB(100, 100, 100),
-    Text = "IDLE"
-})
+StatusLabel = CreateLabel(TimerRow, {Size = UDim2.new(0.25, 0, 0, 20), Position = UDim2.new(0.75, -5, 0.5, -10), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = Color3.fromRGB(100, 100, 100), Text = "IDLE"})
 
--- Teleport Button (manual)
-local TeleportRow = Instance.new("Frame", LochNessSection)
+TeleportRow = Instance.new("Frame", LochNessSection)
 TeleportRow.Size = UDim2.new(1, 0, 0, 36)
 TeleportRow.BackgroundTransparency = 1
 
-CreateLabel(TeleportRow, {
-    Size = UDim2.new(1, -130, 1, 0),
-    Position = UDim2.new(0, 16, 0, 0),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham,
-    TextSize = 13,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = THEME.TEXT,
-    Text = "Teleport to Ancient Ruin"
-})
+CreateLabel(TeleportRow, {Size = UDim2.new(1, -130, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Teleport to Ancient Ruin"})
 
-local TeleportBtn = Instance.new("TextButton", TeleportRow)
+TeleportBtn = Instance.new("TextButton", TeleportRow)
 TeleportBtn.Size = UDim2.new(0, 110, 0, 26)
 TeleportBtn.Position = UDim2.new(1, -126, 0.5, -13)
 TeleportBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
@@ -3532,32 +3340,19 @@ TeleportBtn.TextSize = 12
 CreateCorner(TeleportBtn, 8)
 
 TeleportBtn.MouseButton1Click:Connect(function()
-    -- Kalau event aktif, save dulu baru TP
-    if _G.LochNessState.CurrentState == EVENT_STATE.ACTIVE then
-        if not _G.LochNessState.SavedPosition then
-            SaveCurrentPosition()
-        end
+    if _G.LochNessState.CurrentState == EVENT_STATE.ACTIVE and not _G.LochNessState.SavedPosition then
+        SaveCurrentPosition()
     end
     TeleportToAncientRuin()
 end)
 
--- Return Button (manual return)
-local ReturnRow = Instance.new("Frame", LochNessSection)
+ReturnRow = Instance.new("Frame", LochNessSection)
 ReturnRow.Size = UDim2.new(1, 0, 0, 36)
 ReturnRow.BackgroundTransparency = 1
 
-CreateLabel(ReturnRow, {
-    Size = UDim2.new(1, -130, 1, 0),
-    Position = UDim2.new(0, 16, 0, 0),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham,
-    TextSize = 13,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = THEME.TEXT,
-    Text = "Return to Saved Pos"
-})
+CreateLabel(ReturnRow, {Size = UDim2.new(1, -130, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Return to Saved Pos"})
 
-local ReturnBtn = Instance.new("TextButton", ReturnRow)
+ReturnBtn = Instance.new("TextButton", ReturnRow)
 ReturnBtn.Size = UDim2.new(0, 110, 0, 26)
 ReturnBtn.Position = UDim2.new(1, -126, 0.5, -13)
 ReturnBtn.BackgroundColor3 = Color3.fromRGB(70, 40, 40)
@@ -3567,55 +3362,32 @@ ReturnBtn.Font = Enum.Font.GothamBold
 ReturnBtn.TextSize = 12
 CreateCorner(ReturnBtn, 8)
 
-ReturnBtn.MouseButton1Click:Connect(function()
-    ReturnToSavedPosition()
-end)
+ReturnBtn.MouseButton1Click:Connect(ReturnToSavedPosition)
 
--- Auto Teleport Toggle (Toggle Pill)
-local AutoTeleportRow = Instance.new("Frame", LochNessSection)
+AutoTeleportRow = Instance.new("Frame", LochNessSection)
 AutoTeleportRow.Size = UDim2.new(1, 0, 0, 36)
 AutoTeleportRow.BackgroundTransparency = 1
 
-CreateLabel(AutoTeleportRow, {
-    Size = UDim2.new(1, -70, 1, 0),
-    Position = UDim2.new(0, 16, 0, 0),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham,
-    TextSize = 13,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = THEME.TEXT,
-    Text = "Auto TP + Return"
-})
+CreateLabel(AutoTeleportRow, {Size = UDim2.new(1, -70, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Auto TP + Return"})
 
-local AutoTeleportToggle, SetAutoTeleportState = CreateTogglePill(AutoTeleportRow, false, function(state)
+AutoTeleportToggle, SetAutoTeleportState = CreateTogglePill(AutoTeleportRow, false, function(state)
     _G.LochNessState.AutoTeleportEnabled = state
-    if NotifyFeature then 
-        NotifyFeature("Loch Ness Auto: " .. (state and "ON" or "OFF"), state) 
-    end
+    if NotifyFeature then NotifyFeature("Loch Ness Auto: " .. (state and "ON" or "OFF"), state) end
 end)
 
---==================================================
--- MAIN LOOP (FIXED)
---================================================
-
--- Init - Set next event time immediately
+-- Loch Ness Loop
 _G.LochNessState.NextEventTime = GetNextEventStartUTC()
 
 task.spawn(function()
     while true do
-        -- Update state machine
-        local stateChange = UpdateState()
+        local stateChange = UpdateLochNessState()
+        HandleLochNessAutoActions()
         
-        -- Handle auto actions berdasarkan state
-        HandleAutoActions()
-        
-        -- Update UI
-        local labelText, timeValue, color = GetDisplayTime()
+        local labelText, timeValue, color = GetLochNessDisplayTime()
         TimerLabel.Text = labelText
         TimeDisplay.Text = FormatTime(timeValue)
         TimeDisplay.TextColor3 = color
         
-        -- Update status indicator
         local state = _G.LochNessState.CurrentState
         StatusLabel.Text = state
         if state == EVENT_STATE.IDLE then
@@ -3626,13 +3398,9 @@ task.spawn(function()
             StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
         end
         
-        -- Debug notification untuk state change
         if stateChange and NotifyFeature then
-            if stateChange == "EVENT_START" then
-                NotifyFeature("Loch Ness Event STARTED!", true)
-            elseif stateChange == "EVENT_END" then
-                NotifyFeature("Loch Ness Event ENDED!", false)
-            end
+            if stateChange == "EVENT_START" then NotifyFeature("Loch Ness Event STARTED!", true)
+            elseif stateChange == "EVENT_END" then NotifyFeature("Loch Ness Event ENDED!", false) end
         end
         
         task.wait(0.5)
@@ -3640,162 +3408,89 @@ task.spawn(function()
 end)
 
 --==================================================
--- CHEST FARM SECTION (Replion-based, Toggle Pill)
+-- CHEST FARM
 --==================================================
-
-local ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Farm")
+ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Farm")
 Instance.new("UIListLayout", ChestFarmSection).SortOrder = Enum.SortOrder.LayoutOrder
 ChestFarmSection.UIListLayout.Padding = UDim.new(0, 6)
 
--- State global
-_G.RAYChestFarmOn = _G.RAYChestFarmOn or false
-_G.ChestFarmReplionReady = false
-
--- Status row dengan toggle pill
-local ChestFarmStatusRow = Instance.new("Frame", ChestFarmSection)
+ChestFarmStatusRow = Instance.new("Frame", ChestFarmSection)
 ChestFarmStatusRow.Size = UDim2.new(1, 0, 0, 36)
 ChestFarmStatusRow.BackgroundTransparency = 1
 
-CreateLabel(ChestFarmStatusRow, {
-    Size = UDim2.new(0.5, -10, 1, 0),
-    Position = UDim2.new(0, 16, 0, 0),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham,
-    TextSize = 13,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = THEME.TEXT,
-    Text = "Auto Claim Chests"
-})
+CreateLabel(ChestFarmStatusRow, {Size = UDim2.new(0.5, -10, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Auto Claim Chests"})
 
--- Toggle pill
-local ChestFarmToggle, SetChestFarmState = CreateTogglePill(ChestFarmStatusRow, _G.RAYChestFarmOn, function(state)
+ChestFarmToggle, SetChestFarmState = CreateTogglePill(ChestFarmStatusRow, _G.RAYChestFarmOn, function(state)
     _G.RAYChestFarmOn = state
-    if NotifyFeature then 
-        NotifyFeature("Chest Farm: " .. (state and "ON" or "OFF"), state) 
-    end
+    if NotifyFeature then NotifyFeature("Chest Farm: " .. (state and "ON" or "OFF"), state) end
 end)
 
--- Status label
-local ChestFarmInfoLabel = CreateLabel(ChestFarmSection, {
-    Size = UDim2.new(1, -32, 0, 20),
-    Position = UDim2.new(0, 16, 0, 0),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham,
-    TextSize = 11,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = Color3.fromRGB(150, 150, 150),
-    Text = "Waiting Replion..."
-})
+ChestFarmInfoLabel = CreateLabel(ChestFarmSection, {Size = UDim2.new(1, -32, 0, 20), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 11, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = Color3.fromRGB(150, 150, 150), Text = "Waiting Replion..."})
 
--- Stats row
-local ChestFarmStatsRow = Instance.new("Frame", ChestFarmSection)
+ChestFarmStatsRow = Instance.new("Frame", ChestFarmSection)
 ChestFarmStatsRow.Size = UDim2.new(1, 0, 0, 24)
 ChestFarmStatsRow.BackgroundTransparency = 1
 
-local ChestCountLabel = CreateLabel(ChestFarmStatsRow, {
-    Size = UDim2.new(0.5, -10, 1, 0),
-    Position = UDim2.new(0, 16, 0, 0),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.GothamBold,
-    TextSize = 12,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = Color3.fromRGB(0, 255, 140),
-    Text = "Chests: 0"
-})
+ChestCountLabel = CreateLabel(ChestFarmStatsRow, {Size = UDim2.new(0.5, -10, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = Color3.fromRGB(0, 255, 140), Text = "Chests: 0"})
 
-------------------------------------------------------------
--- REPLION SETUP
-------------------------------------------------------------
+ClaimPirateChest = NetFolder:WaitForChild("RE/ClaimPirateChest")
+chestReplion = nil
 
-local ClaimPirateChest = NetFolder:WaitForChild("RE/ClaimPirateChest")
-
-local chestReplion
-
--- Inisialisasi Replion
 task.spawn(function()
-    local ok, r = pcall(function()
-        return Replion.Client:WaitReplion("PirateTreasureChests")
-    end)
-    
+    local ok, r = pcall(function() return Replion.Client:WaitReplion("PirateTreasureChests") end)
     if not ok or not r or typeof(r.Data) ~= "table" then
-        warn("[ChestFarm] Failed to get PirateTreasureChests")
         ChestFarmInfoLabel.Text = "Replion failed"
         ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
         return
     end
-    
     chestReplion = r
     _G.ChestFarmReplionReady = true
     ChestFarmInfoLabel.Text = "Replion connected"
     ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
-    
-    -- Debug print
-    print("[ChestFarm] Replion Data:", chestReplion.Data)
 end)
 
--- Helper get chest UUIDs
-local function GetAllChestUUIDs()
+function GetAllChestUUIDs()
     if not chestReplion then return {} end
-    local data = chestReplion.Data
-    local spawned = data and data.SpawnedChests
+    local spawned = chestReplion.Data and chestReplion.Data.SpawnedChests
     if typeof(spawned) ~= "table" then return {} end
-
     local list = {}
-    for i, entry in ipairs(spawned) do
-        local uuid = entry.Id
-        if typeof(uuid) == "string" then
-            table.insert(list, uuid)
-        end
+    for _, entry in ipairs(spawned) do
+        if typeof(entry.Id) == "string" then table.insert(list, entry.Id) end
     end
     return list
 end
 
-------------------------------------------------------------
--- FARM LOOP
-------------------------------------------------------------
-
 task.spawn(function()
     while true do
         task.wait(0.25)
-
-        -- Update status label berdasarkan state
         if not _G.ChestFarmReplionReady then
             ChestFarmInfoLabel.Text = "Connecting to Replion..."
             continue
         end
-
         if not _G.RAYChestFarmOn then
             ChestFarmInfoLabel.Text = "Paused"
             ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
             continue
         end
-
         local uuids = GetAllChestUUIDs()
         ChestCountLabel.Text = "Chests: " .. #uuids
-        
         if #uuids == 0 then
             ChestFarmInfoLabel.Text = "No chests spawned"
             ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
         else
             ChestFarmInfoLabel.Text = "Claiming " .. #uuids .. " chests..."
             ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
-            
-            for _, uuid in ipairs(uuids) do
-                pcall(function()
-                    ClaimPirateChest:FireServer(uuid)
-                end)
-            end
+            for _, uuid in ipairs(uuids) do pcall(function() ClaimPirateChest:FireServer(uuid) end) end
         end
     end
 end)
 
-print("[ChestFarm] Section loaded with Replion integration")
+print("[ChestFarm] Section loaded")
 
 --==================================================
--- SAVED POSITIONS LOGIC
+-- SAVED POSITIONS
 --==================================================
-
-local function GetCurrentPosition()
+function GetCurrentPosition()
     local char = Player.Character
     if not char then return nil end
     local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -3803,91 +3498,56 @@ local function GetCurrentPosition()
     return hrp.CFrame
 end
 
-local function SavePosition(name)
+function SavePosition(name)
     local cf = GetCurrentPosition()
     if not cf then
         if NotifyFeature then NotifyFeature("Failed to save position!", false) end
         return false
     end
-    
-    _G.RAY_SavedPositions[name] = {
-        Position = cf.Position,
-        LookVector = cf.LookVector,
-        UpVector = cf.UpVector,
-        Time = os.time()
-    }
-    
+    _G.RAY_SavedPositions[name] = {Position = cf.Position, LookVector = cf.LookVector, UpVector = cf.UpVector, Time = os.time()}
     if NotifyFeature then NotifyFeature("Saved position: " .. name, true) end
     return true
 end
 
-local function TeleportToSaved(name)
+function TeleportToSaved(name)
     local data = _G.RAY_SavedPositions[name]
     if not data then
         if NotifyFeature then NotifyFeature("Position not found: " .. name, false) end
         return
     end
-    
     local hrp = (Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
     if not hrp then return end
-    
-    local cf = CFrame.new(data.Position, data.Position + data.LookVector)
-    hrp.CFrame = cf
-    
+    hrp.CFrame = CFrame.new(data.Position, data.Position + data.LookVector)
     if NotifyFeature then NotifyFeature("Teleported to: " .. name, true) end
 end
 
-local function DeleteSavedPosition(name)
+function DeleteSavedPosition(name)
     _G.RAY_SavedPositions[name] = nil
     if NotifyFeature then NotifyFeature("Deleted position: " .. name, true) end
 end
 
--- Auto teleport ke posisi terakhir saat execute
 task.spawn(function()
     task.wait(2)
-    
-    local lastSaved = nil
-    local lastTime = 0
-    
+    local lastSaved, lastTime = nil, 0
     for name, data in pairs(_G.RAY_SavedPositions) do
-        if data.Time and data.Time > lastTime then
-            lastTime = data.Time
-            lastSaved = name
-        end
+        if data.Time and data.Time > lastTime then lastTime = data.Time; lastSaved = name end
     end
-    
-    if lastSaved then
-        TeleportToSaved(lastSaved)
-    end
+    if lastSaved then TeleportToSaved(lastSaved) end
 end)
 
---==================================================
--- SAVED POSITIONS SECTION
---==================================================
-
-local SavedPosSection = CreateSectionDropdown(TeleportPage, "Saved Positions")
+SavedPosSection = CreateSectionDropdown(TeleportPage, "Saved Positions")
 Instance.new("UIListLayout", SavedPosSection).SortOrder = Enum.SortOrder.LayoutOrder
 SavedPosSection.UIListLayout.Padding = UDim.new(0, 6)
 
-local SavedPosPanel, SavedPosScroll = CreateTeleportPanel("Saved Positions", "Pilih posisi tersimpan untuk teleport.")
+SavedPosPanel, SavedPosScroll = CreateTeleportPanel("Saved Positions", "Pilih posisi tersimpan untuk teleport.")
 
--- Helper untuk count table
-local function TableCount(tbl)
-    local count = 0
-    for _ in pairs(tbl) do count = count + 1 end
-    return count
-end
-
--- Refresh list function
-local function RefreshSavedPositionsList()
+function RefreshSavedPositionsList()
     for _, child in ipairs(SavedPosScroll:GetChildren()) do
         if child:IsA("Frame") then child:Destroy() end
     end
-    
     local names = {}
     for name in pairs(_G.RAY_SavedPositions) do table.insert(names, name) end
     table.sort(names)
-    
     for _, name in ipairs(names) do
         local row = Instance.new("Frame", SavedPosScroll)
         row.Size = UDim2.new(1, -4, 0, 24)
@@ -3941,22 +3601,12 @@ local function RefreshSavedPositionsList()
     end
 end
 
--- Save Current Position Row
 do
     local row = Instance.new("Frame", SavedPosSection)
     row.Size = UDim2.new(1, 0, 0, 36)
     row.BackgroundTransparency = 1
     
-    CreateLabel(row, {
-        Size = UDim2.new(0.5, -20, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = THEME.TEXT,
-        Text = "Save Current Pos"
-    })
+    CreateLabel(row, {Size = UDim2.new(0.5, -20, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Save Current Pos"})
     
     local nameBox = Instance.new("TextBox", row)
     nameBox.Size = UDim2.new(0.3, 0, 0, 24)
@@ -3984,10 +3634,7 @@ do
     
     saveBtn.MouseButton1Click:Connect(function()
         local name = nameBox.Text:gsub("^%s+", ""):gsub("%s+$", "")
-        if #name == 0 then
-            name = "Pos " .. (TableCount(_G.RAY_SavedPositions) + 1)
-        end
-        
+        if #name == 0 then name = "Pos " .. (TableCount(_G.RAY_SavedPositions) + 1) end
         if SavePosition(name) then
             RefreshSavedPositionsList()
             nameBox.Text = "Pos " .. (TableCount(_G.RAY_SavedPositions) + 1)
@@ -3995,471 +3642,282 @@ do
     end)
 end
 
--- Open Panel Button
 CreateSectionRow(SavedPosSection, "Saved Positions Panel", "Open", function()
     SavedPosPanel.Visible = not SavedPosPanel.Visible
-    if SavedPosPanel.Visible then
-        RefreshSavedPositionsList()
-    end
+    if SavedPosPanel.Visible then RefreshSavedPositionsList() end
 end)
 
--- Initial refresh
 RefreshSavedPositionsList()
 
 --==================================================
--- CLOSE PANELS ON OUTSIDE CLICK (FIXED)
+-- CLOSE PANELS ON OUTSIDE CLICK
 --==================================================
+AllPanels = {IslandPanel, PlayerPanel, EventHuntPanel, SavedPosPanel}
 
--- List semua panel yang perlu di-track
-local AllPanels = {IslandPanel, PlayerPanel, EventHuntPanel, SavedPosPanel}
-
--- Fungsi cek posisi di dalam panel
-local function IsInsidePanel(panel, pos)
+function IsInsidePanel(panel, pos)
     if not panel or not panel.Visible then return false end
-    local absPos = panel.AbsolutePosition
-    local absSize = panel.AbsoluteSize
-    return (pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and 
-            pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y)
+    local absPos, absSize = panel.AbsolutePosition, panel.AbsoluteSize
+    return (pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y)
 end
 
--- Fungsi cek posisi di dalam section dropdown (untuk menghindari nutup panel saat klik dropdown)
-local function IsInsideSection(section, pos)
+function IsInsideSection(section, pos)
     if not section then return false end
-    local absPos = section.AbsolutePosition
-    local absSize = section.AbsoluteSize
-    return (pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and 
-            pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y)
+    local absPos, absSize = section.AbsolutePosition, section.AbsoluteSize
+    return (pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y)
 end
 
--- Input handler yang lebih robust
 UIS.InputBegan:Connect(function(input)
-    -- Cuma proses mouse/touch
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1 and 
-       input.UserInputType ~= Enum.UserInputType.Touch then 
-        return 
-    end
-    
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
     local pos = input.Position
     
-    -- Cek kalo klik di dalam panel manapun, jangan tutup apa-apa
     for _, panel in ipairs(AllPanels) do
-        if IsInsidePanel(panel, pos) then
-            return -- Klik di dalam panel, abort
-        end
+        if IsInsidePanel(panel, pos) then return end
     end
     
-    -- Cek kalo klik di dalam section dropdown, juga jangan tutup
     local sections = {IslandSection, PlayerSection, EventHuntSection, LochNessSection, ChestFarmSection, SavedPosSection}
     for _, section in ipairs(sections) do
-        if IsInsideSection(section, pos) then
-            return -- Klik di dalam section, abort
-        end
+        if IsInsideSection(section, pos) then return end
     end
     
-    -- Klik di luar semua panel dan section, tutup semua panel
     for _, panel in ipairs(AllPanels) do
-        if panel and panel.Visible then
-            panel.Visible = false
-        end
+        if panel and panel.Visible then panel.Visible = false end
     end
 end)
 
 --==================================================
--- TRAVELING MERCHANT SYSTEM
+-- TRAVELING MERCHANT (SHOP PAGE)
 --==================================================
-_G.RAYSelectedMerchantItem = _G.RAYSelectedMerchantItem or nil
-_G.RAYMerchantBuyQty = _G.RAYMerchantBuyQty or 1
-_G.RAYMerchantAutoBuy = _G.RAYMerchantAutoBuy or false
+MerchantReplion = Replion.Client:WaitReplion("Merchant")
+MarketItemData = require(ReplicatedStorage.Shared.MarketItemData)
+PurchaseMarketItemRF = NetFolder:WaitForChild("RF/PurchaseMarketItem")
 
--- Replion & Net
-local MerchantReplion = Replion.Client:WaitReplion("Merchant")
-local MarketItemData = require(ReplicatedStorage.Shared.MarketItemData)
+MERCHANT_ITEM_MAP = {}
+for _, item in ipairs(MarketItemData) do MERCHANT_ITEM_MAP[item.Id] = item end
 
-local PurchaseMarketItemRF = NetFolder:WaitForChild("RF/PurchaseMarketItem")
-
--- Mapping Item ID ke Data
-local MERCHANT_ITEM_MAP = {}
-for _, item in ipairs(MarketItemData) do
-    MERCHANT_ITEM_MAP[item.Id] = item
-end
-
---==================================================
--- HELPER FUNCTIONS
---==================================================
-
-local function GetCurrentMerchantStock()
+function GetCurrentMerchantStock()
     local ids = MerchantReplion:GetExpect("Items") or {}
     local stock = {}
-    
     for _, id in ipairs(ids) do
         local itemData = MERCHANT_ITEM_MAP[id]
         if itemData then
-            table.insert(stock, {
-                Id = itemData.Id,
-                Name = itemData.Identifier or itemData.Name or ("Item_" .. id),
-                Price = itemData.Price or 0,
-                Currency = itemData.Currency or "Coins",
-                MaxStock = itemData.MaxStock or 1,
-                Data = itemData
-            })
+            table.insert(stock, {Id = itemData.Id, Name = itemData.Identifier or itemData.Name or ("Item_" .. id), Price = itemData.Price or 0, Currency = itemData.Currency or "Coins", MaxStock = itemData.MaxStock or 1, Data = itemData})
         end
     end
-    
     return stock
 end
 
-local function BuyMerchantItem(itemId, quantity)
+function BuyMerchantItem(itemId, quantity)
     quantity = math.max(1, tonumber(quantity) or 1)
-    
     for i = 1, quantity do
-        task.spawn(function()
-            pcall(function()
-                PurchaseMarketItemRF:InvokeServer(itemId)
-            end)
-        end)
+        task.spawn(function() pcall(function() PurchaseMarketItemRF:InvokeServer(itemId) end) end)
         task.wait(0.1)
     end
-    
     return true
 end
 
---==================================================
--- SHOP PAGE (TAMBAH INI DI ATAS)
---==================================================
-local ShopPage = Pages["Shop"]
-if not ShopPage then
-    warn("ShopPage not found")
-    return
+MerchantSection = CreateSectionDropdown(ShopPage, "🛒 Traveling Merchant")
+Instance.new("UIListLayout", MerchantSection).SortOrder = Enum.SortOrder.LayoutOrder
+MerchantSection.UIListLayout.Padding = UDim.new(0, 6)
+
+MerchantPanel, MerchantScroll = CreateTeleportPanel("Merchant Stock", "Pilih item untuk dibeli. Klik untuk select.")
+
+StatusRow = Instance.new("Frame", MerchantSection)
+StatusRow.Size = UDim2.new(1, 0, 0, 30)
+StatusRow.BackgroundTransparency = 1
+
+CreateLabel(StatusRow, {Size = UDim2.new(0.5, -10, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Merchant Status:"})
+
+MerchantStatus = CreateLabel(StatusRow, {Size = UDim2.new(0.5, -10, 1, 0), Position = UDim2.new(0.5, 0, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = Color3.fromRGB(255, 100, 100), Text = "Checking..."})
+
+SelectedRow = Instance.new("Frame", MerchantSection)
+SelectedRow.Size = UDim2.new(1, 0, 0, 30)
+SelectedRow.BackgroundTransparency = 1
+
+CreateLabel(SelectedRow, {Size = UDim2.new(0.4, -10, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Selected:"})
+
+SelectedItemLabel = CreateLabel(SelectedRow, {Size = UDim2.new(0.6, -10, 1, 0), Position = UDim2.new(0.4, 0, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = Color3.fromRGB(150, 150, 150), Text = "None"})
+
+QuantityRow = Instance.new("Frame", MerchantSection)
+QuantityRow.Size = UDim2.new(1, 0, 0, 36)
+QuantityRow.BackgroundTransparency = 1
+
+CreateLabel(QuantityRow, {Size = UDim2.new(0.5, -10, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Buy Quantity"})
+
+qtyBox = Instance.new("TextBox", QuantityRow)
+qtyBox.Size = UDim2.new(0, 60, 0, 24)
+qtyBox.Position = UDim2.new(0.5, -10, 0.5, -12)
+qtyBox.BackgroundColor3 = THEME.CARD
+qtyBox.BackgroundTransparency = 0.1
+qtyBox.Text = tostring(_G.RAYMerchantBuyQty)
+qtyBox.TextColor3 = THEME.TEXT
+qtyBox.Font = Enum.Font.Gotham
+qtyBox.TextSize = 12
+qtyBox.ClearTextOnFocus = false
+CreateCorner(qtyBox, 8)
+
+qtyBox.FocusLost:Connect(function()
+    local n = tonumber(qtyBox.Text)
+    if not n or n < 1 then n = 1; qtyBox.Text = "1" end
+    _G.RAYMerchantBuyQty = math.min(n, 99)
+end)
+
+buyBtn = Instance.new("TextButton", QuantityRow)
+buyBtn.Size = UDim2.new(0, 80, 0, 24)
+buyBtn.Position = UDim2.new(1, -90, 0.5, -12)
+buyBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
+buyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+buyBtn.Font = Enum.Font.GothamBold
+buyBtn.TextSize = 12
+buyBtn.Text = "BUY"
+CreateCorner(buyBtn, 8)
+
+buyBtn.MouseButton1Click:Connect(function()
+    if not _G.RAYSelectedMerchantItem then
+        if NotifyFeature then NotifyFeature("No item selected!", false) end
+        return
+    end
+    BuyMerchantItem(_G.RAYSelectedMerchantItem.Id, _G.RAYMerchantBuyQty or 1)
+    if NotifyFeature then NotifyFeature("Buying " .. _G.RAYSelectedMerchantItem.Name .. " x" .. (_G.RAYMerchantBuyQty or 1), true) end
+end)
+
+AutoBuyRow = Instance.new("Frame", MerchantSection)
+AutoBuyRow.Size = UDim2.new(1, 0, 0, 36)
+AutoBuyRow.BackgroundTransparency = 1
+
+CreateLabel(AutoBuyRow, {Size = UDim2.new(1, -70, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Auto Buy Selected"})
+
+AutoBuyToggle, SetAutoBuyState = CreateTogglePill(AutoBuyRow, _G.RAYMerchantAutoBuy, function(state)
+    _G.RAYMerchantAutoBuy = state
+    if NotifyFeature then NotifyFeature("Merchant Auto Buy: " .. (state and "ON" or "OFF"), state) end
+end)
+
+CreateSectionRow(MerchantSection, "Merchant Stock Panel", "Open", function()
+    MerchantPanel.Visible = not MerchantPanel.Visible
+    if MerchantPanel.Visible then rebuildMerchantPanel() end
+end)
+
+function rebuildMerchantPanel()
+    for _, c in ipairs(MerchantScroll:GetChildren()) do
+        if c:IsA("Frame") then c:Destroy() end
+    end
+    
+    local stock = GetCurrentMerchantStock()
+    
+    if #stock == 0 then
+        MerchantStatus.Text = "Not Available"
+        MerchantStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+        
+        local emptyRow = Instance.new("Frame", MerchantScroll)
+        emptyRow.Size = UDim2.new(1, -4, 0, 60)
+        emptyRow.BackgroundTransparency = 1
+        
+        CreateLabel(emptyRow, {Size = UDim2.new(1, -10, 1, 0), Position = UDim2.new(0, 5, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Center, TextColor3 = Color3.fromRGB(150, 150, 150), Text = "No merchant stock available.\nCheck back later!"})
+        
+        _G.RAYSelectedMerchantItem = nil
+        SelectedItemLabel.Text = "None"
+        SelectedItemLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        return
+    end
+    
+    MerchantStatus.Text = #stock .. " Items"
+    MerchantStatus.TextColor3 = Color3.fromRGB(0, 255, 140)
+    
+    for _, item in ipairs(stock) do
+        local row = Instance.new("Frame", MerchantScroll)
+        row.Size = UDim2.new(1, -4, 0, 40)
+        row.BackgroundTransparency = 1
+        row.ZIndex = 11
+        
+        -- GARIS UNGU DI PINGGIR
+        local line = Instance.new("Frame", row)
+        line.Name = "Highlight"
+        line.Size = UDim2.new(0, 3, 1, 0)
+        line.Position = UDim2.new(0, 0, 0, 0)
+        line.BackgroundColor3 = THEME.MAIN -- Warna ungu
+        line.BorderSizePixel = 0
+        line.Visible = (_G.RAYSelectedMerchantItem and _G.RAYSelectedMerchantItem.Id == item.Id)
+        line.ZIndex = 12
+        
+        local btn = Instance.new("TextButton", row)
+        btn.Size = UDim2.new(1, -6, 1, 0)
+        btn.Position = UDim2.new(0, 6, 0, 0)
+        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+        btn.TextColor3 = THEME.TEXT
+        btn.Font = Enum.Font.Gotham
+        btn.TextSize = 11
+        btn.TextXAlignment = Enum.TextXAlignment.Left
+        btn.TextYAlignment = Enum.TextYAlignment.Top
+        btn.Text = string.format("  %s\n  💰 %d %s", item.Name, item.Price, item.Currency)
+        btn.ZIndex = 11
+        
+        CreateCorner(btn, 6)
+        
+        if item.Currency:lower():find("robux") or item.Currency:lower():find("premium") then
+            btn.TextColor3 = Color3.fromRGB(255, 200, 100)
+        end
+        
+        btn.MouseButton1Click:Connect(function()
+            _G.RAYSelectedMerchantItem = item
+            SelectedItemLabel.Text = item.Name
+            SelectedItemLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+            
+            for _, child in ipairs(MerchantScroll:GetChildren()) do
+                if child:IsA("Frame") then
+                    local hl = child:FindFirstChild("Highlight")
+                    if hl then hl.Visible = (child == row) end
+                end
+            end
+            
+            if NotifyFeature then NotifyFeature("Selected: " .. item.Name .. " (" .. item.Price .. " " .. item.Currency .. ")", true) end
+        end)
+    end
 end
 
+rebuildMerchantPanel()
 
---==================================================
--- TRAVELING MERCHANT SECTION (SHOP PAGE)
---==================================================
-
-if ShopPage then
-    local MerchantSection = CreateSectionDropdown(ShopPage, "🛒 Traveling Merchant")
+MerchantReplion:OnChange("Items", function()
+    if MerchantPanel.Visible then rebuildMerchantPanel() end
     
-    Instance.new("UIListLayout", MerchantSection).SortOrder = Enum.SortOrder.LayoutOrder
-    MerchantSection.UIListLayout.Padding = UDim.new(0, 6)
-    
-    -- BUAT PANEL KANAN (mirip Island/Player panel)
-    local MerchantPanel, MerchantScroll = CreateTeleportPanel("Merchant Stock", "Pilih item untuk dibeli. Klik untuk select.")
-    
-    -- Status Row
-    local StatusRow = Instance.new("Frame", MerchantSection)
-    StatusRow.Size = UDim2.new(1, 0, 0, 30)
-    StatusRow.BackgroundTransparency = 1
-    
-    CreateLabel(StatusRow, {
-        Size = UDim2.new(0.5, -10, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = THEME.TEXT,
-        Text = "Merchant Status:"
-    })
-    
-    local MerchantStatus = CreateLabel(StatusRow, {
-        Size = UDim2.new(0.5, -10, 1, 0),
-        Position = UDim2.new(0.5, 0, 0, 0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = Color3.fromRGB(255, 100, 100),
-        Text = "Checking..."
-    })
-    
-    -- Selected Item Display
-    local SelectedRow = Instance.new("Frame", MerchantSection)
-    SelectedRow.Size = UDim2.new(1, 0, 0, 30)
-    SelectedRow.BackgroundTransparency = 1
-    
-    CreateLabel(SelectedRow, {
-        Size = UDim2.new(0.4, -10, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = THEME.TEXT,
-        Text = "Selected:"
-    })
-    
-    local SelectedItemLabel = CreateLabel(SelectedRow, {
-        Size = UDim2.new(0.6, -10, 1, 0),
-        Position = UDim2.new(0.4, 0, 0, 0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = Color3.fromRGB(150, 150, 150),
-        Text = "None"
-    })
-    
-    -- Quantity Row
-    local QuantityRow = Instance.new("Frame", MerchantSection)
-    QuantityRow.Size = UDim2.new(1, 0, 0, 36)
-    QuantityRow.BackgroundTransparency = 1
-    
-    CreateLabel(QuantityRow, {
-        Size = UDim2.new(0.5, -10, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = THEME.TEXT,
-        Text = "Buy Quantity"
-    })
-    
-    local qtyBox = Instance.new("TextBox", QuantityRow)
-    qtyBox.Size = UDim2.new(0, 60, 0, 24)
-    qtyBox.Position = UDim2.new(0.5, -10, 0.5, -12)
-    qtyBox.BackgroundColor3 = THEME.CARD
-    qtyBox.BackgroundTransparency = 0.1
-    qtyBox.Text = tostring(_G.RAYMerchantBuyQty)
-    qtyBox.TextColor3 = THEME.TEXT
-    qtyBox.Font = Enum.Font.Gotham
-    qtyBox.TextSize = 12
-    qtyBox.ClearTextOnFocus = false
-    
-    CreateCorner(qtyBox, 8)
-    
-    qtyBox.FocusLost:Connect(function()
-        local n = tonumber(qtyBox.Text)
-        if not n or n < 1 then 
-            n = 1
-            qtyBox.Text = "1"
-        end
-        _G.RAYMerchantBuyQty = math.min(n, 99)
-    end)
-    
-    -- Buy Button
-    local buyBtn = Instance.new("TextButton", QuantityRow)
-    buyBtn.Size = UDim2.new(0, 80, 0, 24)
-    buyBtn.Position = UDim2.new(1, -90, 0.5, -12)
-    buyBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
-    buyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    buyBtn.Font = Enum.Font.GothamBold
-    buyBtn.TextSize = 12
-    buyBtn.Text = "BUY"
-    
-    CreateCorner(buyBtn, 8)
-    
-    buyBtn.MouseButton1Click:Connect(function()
-        if not _G.RAYSelectedMerchantItem then
-            if NotifyFeature then NotifyFeature("No item selected!", false) end
-            return
-        end
-        
-        local qty = _G.RAYMerchantBuyQty or 1
-        BuyMerchantItem(_G.RAYSelectedMerchantItem.Id, qty)
-        
-        if NotifyFeature then 
-            NotifyFeature("Buying " .. _G.RAYSelectedMerchantItem.Name .. " x" .. qty, true) 
-        end
-    end)
-    
-    -- Auto Buy Toggle Row
-    local AutoBuyRow = Instance.new("Frame", MerchantSection)
-    AutoBuyRow.Size = UDim2.new(1, 0, 0, 36)
-    AutoBuyRow.BackgroundTransparency = 1
-    
-    CreateLabel(AutoBuyRow, {
-        Size = UDim2.new(1, -70, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 13,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = THEME.TEXT,
-        Text = "Auto Buy Selected"
-    })
-    
-    local AutoBuyToggle, SetAutoBuyState = CreateTogglePill(AutoBuyRow, _G.RAYMerchantAutoBuy, function(state)
-        _G.RAYMerchantAutoBuy = state
-        if NotifyFeature then
-            NotifyFeature("Merchant Auto Buy: " .. (state and "ON" or "OFF"), state)
-        end
-    end)
-    
-    -- Open Panel Button (Section Row)
-    CreateSectionRow(MerchantSection, "Merchant Stock Panel", "Open", function()
-        MerchantPanel.Visible = not MerchantPanel.Visible
-        if MerchantPanel.Visible then
-            rebuildMerchantPanel()
-        end
-    end)
-    
-    --==================================================
-    -- REBUILD MERCHANT PANEL (dengan garis ungu highlight)
-    --==================================================
-    
-    local function rebuildMerchantPanel()
-        -- Clear existing
-        for _, c in ipairs(MerchantScroll:GetChildren()) do
-            if c:IsA("Frame") then c:Destroy() end
-        end
-        
-        local stock = GetCurrentMerchantStock()
-        
-        -- Update status di section
-        if #stock == 0 then
-            MerchantStatus.Text = "Not Available"
-            MerchantStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
-            
-            -- Empty state di panel
-            local emptyRow = Instance.new("Frame", MerchantScroll)
-            emptyRow.Size = UDim2.new(1, -4, 0, 60)
-            emptyRow.BackgroundTransparency = 1
-            
-            CreateLabel(emptyRow, {
-                Size = UDim2.new(1, -10, 1, 0),
-                Position = UDim2.new(0, 5, 0, 0),
-                BackgroundTransparency = 1,
-                Font = Enum.Font.Gotham,
-                TextSize = 12,
-                TextXAlignment = Enum.TextXAlignment.Center,
-                TextColor3 = Color3.fromRGB(150, 150, 150),
-                Text = "No merchant stock available.\nCheck back later!"
-            })
-            
-            _G.RAYSelectedMerchantItem = nil
-            SelectedItemLabel.Text = "None"
-            SelectedItemLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-            
-            return
-        end
-        
+    local stock = GetCurrentMerchantStock()
+    if #stock > 0 then
         MerchantStatus.Text = #stock .. " Items"
         MerchantStatus.TextColor3 = Color3.fromRGB(0, 255, 140)
         
-        -- Build item list dengan GARIS UNGU HIGHLIGHT
-        for _, item in ipairs(stock) do
-            local row = Instance.new("Frame", MerchantScroll)
-            row.Size = UDim2.new(1, -4, 0, 40)
-            row.BackgroundTransparency = 1
-            row.ZIndex = 11
-            
-            -- GARIS UNGU DI PINGGIR (Highlight)
-            local line = Instance.new("Frame", row)
-            line.Name = "Highlight"
-            line.Size = UDim2.new(0, 3, 1, 0)
-            line.Position = UDim2.new(0, 0, 0, 0)
-            line.BackgroundColor3 = THEME.MAIN -- Warna ungu dari theme
-            line.BorderSizePixel = 0
-            line.Visible = (_G.RAYSelectedMerchantItem and _G.RAYSelectedMerchantItem.Id == item.Id)
-            line.ZIndex = 12
-            
-            -- Main button
-            local btn = Instance.new("TextButton", row)
-            btn.Size = UDim2.new(1, -6, 1, 0)
-            btn.Position = UDim2.new(0, 6, 0, 0)
-            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-            btn.TextColor3 = THEME.TEXT
-            btn.Font = Enum.Font.Gotham
-            btn.TextSize = 11
-            btn.TextXAlignment = Enum.TextXAlignment.Left
-            btn.TextYAlignment = Enum.TextYAlignment.Top
-            btn.Text = string.format("  %s\n  💰 %d %s", item.Name, item.Price, item.Currency)
-            btn.ZIndex = 11
-            
-            CreateCorner(btn, 6)
-            
-            -- Premium currency indicator
-            if item.Currency:lower():find("robux") or item.Currency:lower():find("premium") then
-                btn.TextColor3 = Color3.fromRGB(255, 200, 100)
+        if _G.RAYMerchantAutoBuy and _G.RAYSelectedMerchantItem then
+            local stillAvailable = false
+            for _, item in ipairs(stock) do
+                if item.Id == _G.RAYSelectedMerchantItem.Id then stillAvailable = true; break end
             end
             
-            -- CLICK HANDLER dengan HIGHLIGHT
-            btn.MouseButton1Click:Connect(function()
-                _G.RAYSelectedMerchantItem = item
-                SelectedItemLabel.Text = item.Name
-                SelectedItemLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
-                
-                -- Update GARIS UNGU highlight di semua rows
-                for _, child in ipairs(MerchantScroll:GetChildren()) do
-                    if child:IsA("Frame") then
-                        local hl = child:FindFirstChild("Highlight")
-                        if hl then
-                            hl.Visible = (child == row)
-                        end
-                    end
-                end
-                
-                if NotifyFeature then 
-                    NotifyFeature("Selected: " .. item.Name .. " (" .. item.Price .. " " .. item.Currency .. ")", true) 
-                end
-            end)
+            if stillAvailable then
+                BuyMerchantItem(_G.RAYSelectedMerchantItem.Id, _G.RAYMerchantBuyQty or 1)
+                if NotifyFeature then NotifyFeature("Auto-bought " .. _G.RAYSelectedMerchantItem.Name, true) end
+            end
         end
+    else
+        MerchantStatus.Text = "Not Available"
+        MerchantStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+        _G.RAYSelectedMerchantItem = nil
+        SelectedItemLabel.Text = "None"
+        SelectedItemLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
     end
-    
-    -- Initial build
-    rebuildMerchantPanel()
-    
-    -- Auto refresh on Replion change
-    MerchantReplion:OnChange("Items", function()
-        -- Update panel kalau visible
-        if MerchantPanel.Visible then
-            rebuildMerchantPanel()
-        end
-        
-        -- Update status selalu
-        local stock = GetCurrentMerchantStock()
-        if #stock > 0 then
-            MerchantStatus.Text = #stock .. " Items"
-            MerchantStatus.TextColor3 = Color3.fromRGB(0, 255, 140)
-            
-            -- Auto buy logic
-            if _G.RAYMerchantAutoBuy and _G.RAYSelectedMerchantItem then
-                local stillAvailable = false
-                for _, item in ipairs(stock) do
-                    if item.Id == _G.RAYSelectedMerchantItem.Id then
-                        stillAvailable = true
-                        break
-                    end
-                end
-                
-                if stillAvailable then
-                    BuyMerchantItem(_G.RAYSelectedMerchantItem.Id, _G.RAYMerchantBuyQty or 1)
-                    if NotifyFeature then
-                        NotifyFeature("Auto-bought " .. _G.RAYSelectedMerchantItem.Name, true)
-                    end
+end)
+
+task.spawn(function()
+    while true do
+        if _G.RAYMerchantAutoBuy and _G.RAYSelectedMerchantItem then
+            local stock = GetCurrentMerchantStock()
+            for _, item in ipairs(stock) do
+                if item.Id == _G.RAYSelectedMerchantItem.Id then
+                    BuyMerchantItem(item.Id, _G.RAYMerchantBuyQty or 1)
+                    break
                 end
             end
-        else
-            MerchantStatus.Text = "Not Available"
-            MerchantStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
-            
-            -- Clear selection kalau merchant ilang
-            _G.RAYSelectedMerchantItem = nil
-            SelectedItemLabel.Text = "None"
-            SelectedItemLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
         end
-    end)
-    
-    -- Auto buy loop backup
-    task.spawn(function()
-        while true do
-            if _G.RAYMerchantAutoBuy and _G.RAYSelectedMerchantItem then
-                local stock = GetCurrentMerchantStock()
-                for _, item in ipairs(stock) do
-                    if item.Id == _G.RAYSelectedMerchantItem.Id then
-                        BuyMerchantItem(item.Id, _G.RAYMerchantBuyQty or 1)
-                        break
-                    end
-                end
-            end
-            task.wait(3)
-        end
-    end)
-    
-    -- Tambah panel ke list AllPanels untuk close on outside click
-    table.insert(AllPanels, MerchantPanel)
-end
+        task.wait(3)
+    end
+end)
+
+table.insert(AllPanels, MerchantPanel)
 
 print("[TravelingMerchant] Section loaded with right panel + purple highlight")
