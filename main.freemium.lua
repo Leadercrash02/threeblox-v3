@@ -4124,6 +4124,16 @@ local function BuyMerchantItem(itemId, quantity)
 end
 
 --==================================================
+-- SHOP PAGE (TAMBAH INI DI ATAS)
+--==================================================
+local ShopPage = Pages["Shop"]
+if not ShopPage then
+    warn("ShopPage not found")
+    return
+end
+
+
+--==================================================
 -- TRAVELING MERCHANT SECTION (SHOP PAGE)
 --==================================================
 
