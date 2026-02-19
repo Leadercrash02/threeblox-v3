@@ -2704,7 +2704,7 @@ end
 --==================================================
 IslandTeleportCF={["Arrow Artifact"]=CFrame.new(879.857178,4.92162275,-339.661469,-0.195367768,0,0.980730057,0,1,0,-0.980730057,0,-0.195367768),["Crescent Artifact"]=CFrame.new(1382.48401,4.83972979,113.104294,-0.956645668,0,0.291254193,0,1,0,-0.291254193,0,-0.956645668),["Diamond Artifact"]=CFrame.new(1835.33704,4.92876816,-314.988342,0.219969183,0,-0.975506842,0,1,0,0.975506842,0,0.219969183),["Heartfelt Island"]=CFrame.new(1112.6106,4.84564829,2719.63818,-0.0125409178,-5.2643145e-08,-0.999921381,-1.06123528e-08,1,-5.2514185e-08,0.999921381,9.95294158e-09,-0.0125409178),["Hourglass Diamond Artifact"]=CFrame.new(1500.73413,6.37703848,-849.561951,-0.983483791,0,-0.180996269,0,1,0,0.180996269,0,-0.983483791),["Ancient Jungle"]=CFrame.new(1470.92688,4.58799648,-323.604401,-0.240510166,0,-0.97064662,0,1,0,0.97064662,0,-0.240510166),["Ancient Ruin"]=CFrame.new(6082.87842,-585.924316,4633.71631,-0.681475937,0,0.731840551,0,1,0,-0.731840551,0,-0.681475937),["Cavern Volcanic 1"]=CFrame.new(1258.64758,83.4165039,-10248.0986,0.00370242121,-1.42619994e-09,0.999993145,-5.48521122e-14,1,1.42620993e-09,-0.999993145,-5.3352817e-12,0.00370242121),["Cavern Volcanic 2"]=CFrame.new(1106.69495,86.072998,-10248.0986,-0.00201654364,-2.72424678e-08,0.999997973,-5.50374711e-11,1,2.72424128e-08,-0.999997973,-1.01846327e-13,-0.00201654364),["Coral Reefs"]=CFrame.new(-2917.92163,3.24999928,2073.65894,0.185246676,0,0.982692063,0,1,0,-0.982692063,0,0.185246676),["Crater Island"]=CFrame.new(1021.73822,22.0761662,5075.62207,0.110775813,0,-0.993845403,0,1,0,0.993845403,0,0.110775813),["Crystalline Passage"]=CFrame.new(6050.46533,-538.900208,4374.14404,-0.999980807,0,0.00619776407,0,1,0,-0.00619776407,0,-0.999980807),["Crystal Depths"]=CFrame.new(5816.59766,-905.712524,15416.5459,0.653240383,0,-0.75715059,0,1,0,0.75715059,0,0.653240383),["Esoteric Depths"]=CFrame.new(3232.90356,-1302.8551,1401.0824,0.483647138,0,-0.875263095,0,1,0,0.875263095,0,0.483647138),["Fisherman Spawn"]=CFrame.new(94.4113464,17.0335178,2832.35474,0.997892678,0,0.0648857802,0,1,0,-0.0648857802,0,0.997892678),["Kohana"]=CFrame.new(-661.520142,17.2500553,525.53125,0.379789084,-3.69101372e-08,-0.925073087,-4.96903567e-08,1,-6.03000885e-08,0.925073087,6.88685304e-08,0.379789084),["Kohana Volcano"]=CFrame.new(-615.731567,48.5698662,189.133865,0.256806821,0,0.966462731,0,1,0,-0.966462731,0,0.256806821),["Lava Basin"]=CFrame.new(893.590942,89.0328979,-10196.835,-0.435751051,6.88466599e-08,-0.90006721,-2.40178668e-08,1,8.81183837e-08,0.90006721,6.0015374e-08,-0.435751051),["Maze Room"]=CFrame.new(3439.70679,-287.844818,3390.59546,-0.96200937,0,-0.273016393,0,1,0,0.273016393,0,-0.96200937),["Pirate Cove"]=CFrame.new(3408.83179,3.73505521,3444.31812,-0.76647383,0,-0.642275512,0,1,0,0.642275512,0,-0.76647383),["Pirate Cove Leviathan"]=CFrame.new(3471.53125,-287.84317,3474.38257,-0.962593496,0,-0.270949841,0,1,0,0.270949841,0,-0.962593496),["Pirate Treasure Room"]=CFrame.new(3291.12646,-299.092438,3068.04639,0.483647138,0,-0.875263095,0,1,0,0.875263095,0,0.483647138),["Sacred Temple"]=CFrame.new(1496.13306,-22.1250019,-639.212097,0.987680018,0,0.156487122,0,1,0,-0.156487122,0,0.987680018),["Sysphus State"]=CFrame.new(-3656.59058,-134.150406,-959.743469,-0.287091494,0,0.957903147,0,1,0,-0.957903147,0,-0.287091494),["Temple Guardian"]=CFrame.new(1486.06165,127.624977,-590.121094,0.998732686,0,0.0503287315,0,1,0,-0.0503287315,0,0.998732686),["Treasure Room"]=CFrame.new(-3598.04102,-275.723602,-1640.93933,-0.203907222,0,0.978990197,0,1,0,-0.978990197,0,-0.203907222),["Tropical Grove"]=CFrame.new(-2016.4812,9.03753567,3752.35327,-0.995569646,0,0.0940273255,0,1,0,-0.0940273255,0,-0.995569646),["Underground Cellar"]=CFrame.new(2125.30005,-91.1976624,-750.400024,-0.661489964,0,-0.749954045,0,1,0,0.749954045,0,-0.661489964),["Weather Machine"]=CFrame.new(-1476.29089,3.49999928,1909.09583,-0.429490566,0,-0.903071344,0,1,0,0.903071344,0,-0.429490566)}
 
-_G.RAY=_G.RAY or{GhostSharkHuntActive=false,MegalodonHuntActive=false,SavedPositions={},SelectedMerchantItem=nil,MerchantBuyQty=1,ChestFarmOn=false,ChestFarmReplionReady=false,LochNess={CurrentState="IDLE",NextEventTime=0,EventEndTime=0,IsAutoTeleported=false,IsReturned=false,SavedPosition=nil,AutoTeleportEnabled=false}}
+_G.RAY=_G.RAY or{GhostSharkHuntActive=false,MegalodonHuntActive=false,SavedPositions={},SelectedMerchantItem=nil,MerchantBuyQty=1,ChestFarmOn=false,ChestFarmReplionReady=false,LochNess={CurrentState="IDLE",NextEventTime=0,EventEndTime=0,IsAutoTeleported=false,IsReturned=false,SavedPosition=nil,AutoTeleportEnabled=false},WeatherPreset={Selected=nil,AutoBuy=false,StatusText="Ready"}}
 
 TeleportPage,ShopPage=Pages["Teleport"],Pages["Shop"]
 if not TeleportPage or not ShopPage then warn("Pages not found")return end
@@ -2743,3 +2743,118 @@ AllPanels={IslandPanel,PlayerPanel,EventHuntPanel,SavedPosPanel}function IIP(p,p
 
 -- Traveling Merchant - Ultra minimized
 MerchantReplion=Replion.Client:WaitReplion("Merchant")MarketItemData=require(ReplicatedStorage.Shared.MarketItemData)PurchaseMarketItemRF=NetFolder:WaitForChild("RF/PurchaseMarketItem")MERCHANT_ITEM_MAP={}for _,i in ipairs(MarketItemData)do MERCHANT_ITEM_MAP[i.Id]=i end function GMS()local ids,stock=MerchantReplion:GetExpect("Items")or{},{}for _,id in ipairs(ids)do local d=MERCHANT_ITEM_MAP[id]if d then table.insert(stock,{Id=d.Id,Name=d.Identifier or d.Name or("Item_"..id),Price=d.Price or 0,Currency=d.Currency or"Coins",MaxStock=d.MaxStock or 1,Data=d})end end return stock end function BMI(id,q)q=math.max(1,tonumber(q)or 1)for i=1,q do task.spawn(function()pcall(function()PurchaseMarketItemRF:InvokeServer(id)end)end)task.wait(0.1)end return true end MerchantSection=CreateSectionDropdown(ShopPage,"Traveling Merchant")Instance.new("UIListLayout",MerchantSection).SortOrder=Enum.SortOrder.LayoutOrder MerchantSection.UIListLayout.Padding=UDim.new(0,6)MerchantPanel,MerchantScroll=CTP("Merchant Stock","Select item to purchase")StatusRow=Instance.new("Frame",MerchantSection)StatusRow.Size,StatusRow.BackgroundTransparency=UDim2.new(1,0,0,30),1 CL(StatusRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Merchant Status:"})MerchantStatus=CL(StatusRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0.5,0,0,0),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(255,100,100),Text="Checking..."})SelectedRow=Instance.new("Frame",MerchantSection)SelectedRow.Size,SelectedRow.BackgroundTransparency=UDim2.new(1,0,0,30),1 CL(SelectedRow,{Size=UDim2.new(0.4,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Selected:"})SelectedItemLabel=CL(SelectedRow,{Size=UDim2.new(0.6,-10,1,0),Position=UDim2.new(0.4,0,0,0),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(150,150,150),Text="None"})QuantityRow=Instance.new("Frame",MerchantSection)QuantityRow.Size,QuantityRow.BackgroundTransparency=UDim2.new(1,0,0,36),1 CL(QuantityRow,{Size=UDim2.new(0.4,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Buy Quantity"})qtyBox=Instance.new("TextBox",QuantityRow)qtyBox.Size,qtyBox.Position,qtyBox.BackgroundColor3,qtyBox.BackgroundTransparency,qtyBox.Text,qtyBox.TextColor3,qtyBox.Font,qtyBox.TextSize,qtyBox.ClearTextOnFocus=UDim2.new(0,60,0,24),UDim2.new(0.4,-10,0.5,-12),THEME.CARD,0.1,tostring(_G.RAY.MerchantBuyQty),THEME.TEXT,Enum.Font.Gotham,12,false CC(qtyBox,8)qtyBox.FocusLost:Connect(function()local n=tonumber(qtyBox.Text)if not n or n<1 then n=1 qtyBox.Text="1"end _G.RAY.MerchantBuyQty=math.min(n,99)end)buyBtn=Instance.new("TextButton",QuantityRow)buyBtn.Size,buyBtn.Position,buyBtn.BackgroundColor3,buyBtn.TextColor3,buyBtn.Font,buyBtn.TextSize,buyBtn.Text=UDim2.new(0,80,0,24),UDim2.new(1,-90,0.5,-12),Color3.fromRGB(40,100,40),Color3.fromRGB(255,255,255),Enum.Font.GothamBold,12,"BUY"CC(buyBtn,8)buyBtn.MouseButton1Click:Connect(function()if not _G.RAY.SelectedMerchantItem then if NotifyFeature then NotifyFeature("No item selected!",false)end return end BMI(_G.RAY.SelectedMerchantItem.Id,_G.RAY.MerchantBuyQty or 1)if NotifyFeature then NotifyFeature("Buying ".._G.RAY.SelectedMerchantItem.Name.." x"..(_G.RAY.MerchantBuyQty or 1),true)end end)CSR(MerchantSection,"Merchant Stock Panel","Open",function()MerchantPanel.Visible=not MerchantPanel.Visible if MerchantPanel.Visible then RMP()end end)function RMP()for _,c in ipairs(MerchantScroll:GetChildren())do if c:IsA("Frame")then c:Destroy()end end local stock=GMS()if#stock==0 then MerchantStatus.Text,MerchantStatus.TextColor3="Not Available",Color3.fromRGB(255,100,100)local er=Instance.new("Frame",MerchantScroll)er.Size,er.BackgroundTransparency=UDim2.new(1,-4,0,60),1 CL(er,{Size=UDim2.new(1,-10,1,0),Position=UDim2.new(0,5,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Center,TextColor3=Color3.fromRGB(150,150,150),Text="No merchant stock available.\nCheck back later!"})_G.RAY.SelectedMerchantItem,SelectedItemLabel.Text,SelectedItemLabel.TextColor3=nil,"None",Color3.fromRGB(150,150,150)return end MerchantStatus.Text,MerchantStatus.TextColor3=#stock.." Items",Color3.fromRGB(0,255,140)for _,it in ipairs(stock)do local r=Instance.new("Frame",MerchantScroll)r.Size,r.BackgroundTransparency,r.ZIndex=UDim2.new(1,-4,0,40),1,11 local l=Instance.new("Frame",r)l.Name,l.Size,l.Position,l.BackgroundColor3,l.BorderSizePixel,l.Visible,l.ZIndex="Highlight",UDim2.new(0,3,1,0),UDim2.new(0,0,0,0),THEME.MAIN,0,(_G.RAY.SelectedMerchantItem and _G.RAY.SelectedMerchantItem.Id==it.Id),12 local b=Instance.new("TextButton",r)local priceText=FN(it.Price)b.Size,b.Position,b.BackgroundColor3,b.TextColor3,b.Font,b.TextSize,b.TextXAlignment,b.TextYAlignment,b.Text,b.ZIndex=UDim2.new(1,-6,1,0),UDim2.new(0,6,0,0),Color3.fromRGB(30,30,50),THEME.TEXT,Enum.Font.Gotham,11,Enum.TextXAlignment.Left,Enum.TextYAlignment.Top,string.format("  %s\n  %s %s",it.Name,priceText,it.Currency),11 CC(b,6)if it.Currency:lower():find("robux")or it.Currency:lower():find("premium")then b.TextColor3=Color3.fromRGB(255,200,100)end b.MouseButton1Click:Connect(function()_G.RAY.SelectedMerchantItem=it SelectedItemLabel.Text,SelectedItemLabel.TextColor3=it.Name,Color3.fromRGB(0,255,140)for _,c in ipairs(MerchantScroll:GetChildren())do if c:IsA("Frame")then local h=c:FindFirstChild("Highlight")if h then h.Visible=(c==r)end end end if NotifyFeature then NotifyFeature("Selected: "..it.Name.." ("..priceText.." "..it.Currency..")",true)end end)end end RMP()MerchantReplion:OnChange("Items",function()if MerchantPanel.Visible then RMP()end local stock=GMS()if#stock>0 then MerchantStatus.Text,MerchantStatus.TextColor3=#stock.." Items",Color3.fromRGB(0,255,140)else MerchantStatus.Text,MerchantStatus.TextColor3,_G.RAY.SelectedMerchantItem,SelectedItemLabel.Text,SelectedItemLabel.TextColor3="Not Available",Color3.fromRGB(255,100,100),nil,"None",Color3.fromRGB(150,150,150)end end)table.insert(AllPanels,MerchantPanel)
+
+--==================================================
+-- WEATHER PRESET SECTION - PANEL KANAN + AUTO BUY TOGGLE
+--==================================================
+WeatherSection=CreateSectionDropdown(ShopPage,"Weather Preset")Instance.new("UIListLayout",WeatherSection).SortOrder=Enum.SortOrder.LayoutOrder WeatherSection.UIListLayout.Padding=UDim.new(0,6)
+
+-- Weather data
+WeatherList={"Sunny","Rain","Thunderstorm","Foggy","Acid Rain","Snow","Blizzard","Sandstorm","Hurricane","Meteor Shower","Solar Eclipse","Blood Moon","Starfall","Void Storm","Aurora","Rainbow","Cherry Blossom","Halloween","Christmas"}
+
+-- Initialize selected table
+_G.RAY.WeatherPreset.Selected={}
+for _,w in ipairs(WeatherList)do _G.RAY.WeatherPreset.Selected[w]=false end
+
+-- Panel kanan untuk list weather
+WeatherPanel,WeatherScroll=CTP("Weather Preset","Select weather to auto purchase")
+table.insert(AllPanels,WeatherPanel)
+
+-- Status row
+WeatherStatusRow=Instance.new("Frame",WeatherSection)WeatherStatusRow.Size,WeatherStatusRow.BackgroundTransparency=UDim2.new(1,0,0,30),1
+CL(WeatherStatusRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Status:"})
+WeatherStatusLabel=CL(WeatherStatusRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0.5,0,0,0),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(150,150,150),Text="Ready"})
+
+-- Toggle Auto Buy row (sama seperti toggle lainnya)
+WeatherAutoBuyRow=Instance.new("Frame",WeatherSection)WeatherAutoBuyRow.Size,WeatherAutoBuyRow.BackgroundTransparency=UDim2.new(1,0,0,36),1
+CL(WeatherAutoBuyRow,{Size=UDim2.new(1,-70,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Auto Buy Weather"})
+WeatherAutoBuyToggle,SetWeatherAutoBuy=CTPi(WeatherAutoBuyRow,_G.RAY.WeatherPreset.AutoBuy,function(s)_G.RAY.WeatherPreset.AutoBuy=s if NotifyFeature then NotifyFeature("Weather Auto Buy: "..(s and"ON"or"OFF"),s)end end)
+
+-- Open panel button
+CSR(WeatherSection,"Weather Preset Panel","Open",function()WeatherPanel.Visible=not WeatherPanel.Visible end)
+
+-- Create weather entries dengan garis ungu saat dipilih
+function CreateWeatherEntry(name)
+    local r=Instance.new("Frame",WeatherScroll)
+    r.Size,r.BackgroundTransparency,r.ZIndex=UDim2.new(1,-4,0,28),1,11
+    
+    -- Garis ungu di kiri (highlight)
+    local hl=Instance.new("Frame",r)
+    hl.Name,hl.Size,hl.Position,hl.BackgroundColor3,hl.BorderSizePixel,hl.Visible,hl.ZIndex="Highlight",UDim2.new(0,3,1,0),UDim2.new(0,0,0,0),THEME.MAIN,0,false,12
+    
+    local b=Instance.new("TextButton",r)
+    b.Size,b.Position,b.BackgroundColor3,b.TextColor3,b.Font,b.TextSize,b.TextXAlignment,b.Text,b.ZIndex=UDim2.new(1,-6,1,0),UDim2.new(0,6,0,0),Color3.fromRGB(30,30,50),THEME.TEXT,Enum.Font.Gotham,12,Enum.TextXAlignment.Left,"  "..name,11
+    CC(b,6)
+    
+    -- Update visual berdasarkan selected state
+    local function updateVisual()
+        if _G.RAY.WeatherPreset.Selected[name]then
+            hl.Visible=true
+            b.BackgroundColor3=Color3.fromRGB(40,70,40)
+            b.TextColor3=Color3.fromRGB(0,255,140)
+        else
+            hl.Visible=false
+            b.BackgroundColor3=Color3.fromRGB(30,30,50)
+            b.TextColor3=THEME.TEXT
+        end
+    end
+    
+    updateVisual()
+    
+    b.MouseButton1Click:Connect(function()
+        _G.RAY.WeatherPreset.Selected[name]=not _G.RAY.WeatherPreset.Selected[name]
+        updateVisual()
+        
+        -- Update status label dengan jumlah terpilih
+        local c=0
+        for _,on in pairs(_G.RAY.WeatherPreset.Selected)do if on then c=c+1 end end
+        WeatherStatusLabel.Text=c.." selected"
+        WeatherStatusLabel.TextColor3=c>0 and Color3.fromRGB(0,255,140)or Color3.fromRGB(150,150,150)
+        
+        if NotifyFeature then NotifyFeature(((_G.RAY.WeatherPreset.Selected[name])and"Selected"or"Deselected")..": "..name,true)end
+    end)
+    
+    return r
+end
+
+-- Populate weather list
+for _,name in ipairs(WeatherList)do CreateWeatherEntry(name)end
+
+-- Auto buy loop dengan 0.1 detik wait (spam cepat)
+task.spawn(function()
+    while true do
+        task.wait(0.1) -- Spam cepat 0.1 detik
+        
+        if not _G.RAY.WeatherPreset.AutoBuy then
+            WeatherStatusLabel.Text="Auto Buy: OFF"
+            WeatherStatusLabel.TextColor3=Color3.fromRGB(150,150,150)
+            continue
+        end
+        
+        local c=0
+        for _,on in pairs(_G.RAY.WeatherPreset.Selected)do if on then c=c+1 end end
+        
+        if c==0 then
+            WeatherStatusLabel.Text="No weather selected"
+            WeatherStatusLabel.TextColor3=Color3.fromRGB(255,200,100)
+            continue
+        end
+        
+        WeatherStatusLabel.Text="Auto Buying "..c.." weather..."
+        WeatherStatusLabel.TextColor3=Color3.fromRGB(0,255,140)
+        
+        -- Purchase loop
+        for name,on in pairs(_G.RAY.WeatherPreset.Selected)do
+            if on then
+                pcall(function()
+                    local RS=game:GetService("ReplicatedStorage")
+                    local rf=RS:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net"):WaitForChild("RF/PurchaseWeatherEvent")
+                    rf:InvokeServer(name)
+                end)
+            end
+        end
+    end
+end)
+
+-- Tambah WeatherSection ke close detection
+table.insert(AllPanels,WeatherPanel)
