@@ -2697,6 +2697,9 @@ end
 --==================================================
 -- TELEPORT DATA
 --==================================================
+--==================================================
+-- ISLAND TELEPORT CF DATA
+--==================================================
 local IslandTeleportCF = {
     ["Arrow Artifact"] = CFrame.new(879.857178, 4.92162275, -339.661469, -0.195367768, 0, 0.980730057, 0, 1, 0, -0.980730057, 0, -0.195367768),
     ["Crescent Artifact"] = CFrame.new(1382.48401, 4.83972979, 113.104294, -0.956645668, 0, 0.291254193, 0, 1, 0, -0.291254193, 0, -0.956645668),
@@ -2747,6 +2750,31 @@ local TeleportPage = Pages["Teleport"]
 if not TeleportPage then
     warn("TeleportPage not found")
     return
+end
+
+--==================================================
+-- HELPER FUNCTIONS
+--==================================================
+local function CreateCorner(parent, radius)
+    local corner = Instance.new("UICorner", parent)
+    corner.CornerRadius = UDim.new(0, radius or 8)
+    return corner
+end
+
+local function CreateStroke(parent, color, thickness)
+    local stroke = Instance.new("UIStroke", parent)
+    stroke.Color = color or THEME.MAIN
+    stroke.Thickness = thickness or 1
+    stroke.Transparency = 0.5
+    return stroke
+end
+
+local function CreateLabel(parent, props)
+    local label = Instance.new("TextLabel", parent)
+    for k, v in pairs(props) do
+        label[k] = v
+    end
+    return label
 end
 
 --==================================================
@@ -2880,6 +2908,57 @@ local function CreateSectionRow(parent, title, buttonText, onClick)
     btn.MouseButton1Click:Connect(onClick)
     
     return row
+end
+
+--==================================================
+-- HELPER: CREATE TOGGLE PILL
+--==================================================
+local function CreateTogglePill(parent, defaultState, onToggle)
+    local toggleFrame = Instance.new("Frame", parent)
+    toggleFrame.Size = UDim2.new(0, 50, 0, 26)
+    toggleFrame.Position = UDim2.new(1, -66, 0.5, -13)
+    toggleFrame.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    toggleFrame.BorderSizePixel = 0
+    CreateCorner(toggleFrame, 13)
+    
+    local circle = Instance.new("Frame", toggleFrame)
+    circle.Size = UDim2.new(0, 20, 0, 20)
+    circle.Position = UDim2.new(0, 3, 0.5, -10)
+    circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    circle.BorderSizePixel = 0
+    CreateCorner(circle, 10)
+    
+    local isOn = defaultState or false
+    
+    local function UpdateVisual()
+        if isOn then
+            toggleFrame.BackgroundColor3 = Color3.fromRGB(0, 170, 100)
+            circle:TweenPosition(UDim2.new(0, 27, 0.5, -10), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+        else
+            toggleFrame.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+            circle:TweenPosition(UDim2.new(0, 3, 0.5, -10), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.2, true)
+        end
+    end
+    
+    UpdateVisual()
+    
+    local clickArea = Instance.new("TextButton", toggleFrame)
+    clickArea.Size = UDim2.new(1, 0, 1, 0)
+    clickArea.BackgroundTransparency = 1
+    clickArea.Text = ""
+    
+    clickArea.MouseButton1Click:Connect(function()
+        isOn = not isOn
+        UpdateVisual()
+        if onToggle then onToggle(isOn) end
+    end)
+    
+    local function SetState(newState)
+        isOn = newState
+        UpdateVisual()
+    end
+    
+    return toggleFrame, SetState
 end
 
 --==================================================
@@ -3055,6 +3134,10 @@ local function safeConnectGhostSharkReplion()
     local function OnEventRemoved(index, eventName)
         if eventName == SharkHuntEventName then
             _G.GhostSharkHuntActive = false
+            if ghostSharkFloor then
+                ghostSharkFloor:Destroy()
+                ghostSharkFloor = nil
+            end
             if NotifyFeature then NotifyFeature("Ghost Shark Hunt Ended", false) end
         end
     end
@@ -3188,7 +3271,6 @@ local ANCIENT_RUIN_CF = CFrame.new(6082.87842, -585.924316, 4633.71631, -0.68147
 
 -- KONFIGURASI EVENT (sesuai game mechanics)
 local EVENT_DURATION_MINUTES = 10        -- Event berlangsung 10 menit
-local EVENT_COUNTDOWN_MINUTES = 10     -- Countdown sebelum event mulai
 local EVENT_HOURS_UTC = {0, 4, 8, 12, 16, 20}
 
 -- State Machine
@@ -3216,6 +3298,7 @@ _G.LochNessState = {
 local function GetNextEventStartUTC()
     local nowUTC = os.date("!*t", os.time())
     local nowMinutes = nowUTC.hour * 60 + nowUTC.min
+    local nowSeconds = nowUTC.sec
     
     for _, hour in ipairs(EVENT_HOURS_UTC) do
         local eventMinutes = hour * 60
@@ -3292,7 +3375,7 @@ local function ReturnToSavedPosition()
 end
 
 --==================================================
--- STATE MACHINE LOGIC
+-- STATE MACHINE LOGIC (FIXED)
 --================================================
 
 local function UpdateState()
@@ -3380,7 +3463,7 @@ local function HandleAutoActions()
 end
 
 --==================================================
--- UI ELEMENTS (sama struktur, beda logic)
+-- UI ELEMENTS
 --================================================
 
 -- Timer Display
@@ -3411,7 +3494,7 @@ TimeDisplay.TextColor3 = Color3.fromRGB(0, 255, 140)
 TimeDisplay.Text = "00:00:00"
 CreateCorner(TimeDisplay, 6)
 
--- Status Indicator (baru)
+-- Status Indicator
 local StatusLabel = CreateLabel(TimerRow, {
     Size = UDim2.new(0.25, 0, 0, 20),
     Position = UDim2.new(0.75, -5, 0.5, -10),
@@ -3459,7 +3542,7 @@ TeleportBtn.MouseButton1Click:Connect(function()
     TeleportToAncientRuin()
 end)
 
--- Return Button (baru - manual return)
+-- Return Button (manual return)
 local ReturnRow = Instance.new("Frame", LochNessSection)
 ReturnRow.Size = UDim2.new(1, 0, 0, 36)
 ReturnRow.BackgroundTransparency = 1
@@ -3489,7 +3572,7 @@ ReturnBtn.MouseButton1Click:Connect(function()
     ReturnToSavedPosition()
 end)
 
--- Auto Teleport Toggle
+-- Auto Teleport Toggle (Toggle Pill)
 local AutoTeleportRow = Instance.new("Frame", LochNessSection)
 AutoTeleportRow.Size = UDim2.new(1, 0, 0, 36)
 AutoTeleportRow.BackgroundTransparency = 1
@@ -3505,7 +3588,7 @@ CreateLabel(AutoTeleportRow, {
     Text = "Auto TP + Return"
 })
 
-local AutoTeleportToggle, SetAutoTeleportState = CreateToggleKnob(AutoTeleportRow, false, function(state)
+local AutoTeleportToggle, SetAutoTeleportState = CreateTogglePill(AutoTeleportRow, false, function(state)
     _G.LochNessState.AutoTeleportEnabled = state
     if NotifyFeature then 
         NotifyFeature("Loch Ness Auto: " .. (state and "ON" or "OFF"), state) 
@@ -3516,7 +3599,7 @@ end)
 -- MAIN LOOP (FIXED)
 --================================================
 
--- Init
+-- Init - Set next event time immediately
 _G.LochNessState.NextEventTime = GetNextEventStartUTC()
 
 task.spawn(function()
@@ -3556,6 +3639,158 @@ task.spawn(function()
         task.wait(0.5)
     end
 end)
+
+--==================================================
+-- CHEST FARM SECTION (Replion-based, Toggle Pill)
+--==================================================
+
+local ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Farm")
+Instance.new("UIListLayout", ChestFarmSection).SortOrder = Enum.SortOrder.LayoutOrder
+ChestFarmSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- State global
+_G.RAYChestFarmOn = _G.RAYChestFarmOn or false
+_G.ChestFarmReplionReady = false
+
+-- Status row dengan toggle pill
+local ChestFarmStatusRow = Instance.new("Frame", ChestFarmSection)
+ChestFarmStatusRow.Size = UDim2.new(1, 0, 0, 36)
+ChestFarmStatusRow.BackgroundTransparency = 1
+
+CreateLabel(ChestFarmStatusRow, {
+    Size = UDim2.new(0.5, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Auto Claim Chests"
+})
+
+-- Toggle pill
+local ChestFarmToggle, SetChestFarmState = CreateTogglePill(ChestFarmStatusRow, _G.RAYChestFarmOn, function(state)
+    _G.RAYChestFarmOn = state
+    if NotifyFeature then 
+        NotifyFeature("Chest Farm: " .. (state and "ON" or "OFF"), state) 
+    end
+end)
+
+-- Status label
+local ChestFarmInfoLabel = CreateLabel(ChestFarmSection, {
+    Size = UDim2.new(1, -32, 0, 20),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 11,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(150, 150, 150),
+    Text = "Waiting Replion..."
+})
+
+-- Stats row
+local ChestFarmStatsRow = Instance.new("Frame", ChestFarmSection)
+ChestFarmStatsRow.Size = UDim2.new(1, 0, 0, 24)
+ChestFarmStatsRow.BackgroundTransparency = 1
+
+local ChestCountLabel = CreateLabel(ChestFarmStatsRow, {
+    Size = UDim2.new(0.5, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(0, 255, 140),
+    Text = "Chests: 0"
+})
+
+------------------------------------------------------------
+-- REPLION SETUP
+------------------------------------------------------------
+
+local ClaimPirateChest = NetFolder:WaitForChild("RE/ClaimPirateChest")
+
+local chestReplion
+
+-- Inisialisasi Replion
+task.spawn(function()
+    local ok, r = pcall(function()
+        return Replion.Client:WaitReplion("PirateTreasureChests")
+    end)
+    
+    if not ok or not r or typeof(r.Data) ~= "table" then
+        warn("[ChestFarm] Failed to get PirateTreasureChests")
+        ChestFarmInfoLabel.Text = "Replion failed"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    chestReplion = r
+    _G.ChestFarmReplionReady = true
+    ChestFarmInfoLabel.Text = "Replion connected"
+    ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    
+    -- Debug print
+    print("[ChestFarm] Replion Data:", chestReplion.Data)
+end)
+
+-- Helper get chest UUIDs
+local function GetAllChestUUIDs()
+    if not chestReplion then return {} end
+    local data = chestReplion.Data
+    local spawned = data and data.SpawnedChests
+    if typeof(spawned) ~= "table" then return {} end
+
+    local list = {}
+    for i, entry in ipairs(spawned) do
+        local uuid = entry.Id
+        if typeof(uuid) == "string" then
+            table.insert(list, uuid)
+        end
+    end
+    return list
+end
+
+------------------------------------------------------------
+-- FARM LOOP
+------------------------------------------------------------
+
+task.spawn(function()
+    while true do
+        task.wait(0.25)
+
+        -- Update status label berdasarkan state
+        if not _G.ChestFarmReplionReady then
+            ChestFarmInfoLabel.Text = "Connecting to Replion..."
+            continue
+        end
+
+        if not _G.RAYChestFarmOn then
+            ChestFarmInfoLabel.Text = "Paused"
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+            continue
+        end
+
+        local uuids = GetAllChestUUIDs()
+        ChestCountLabel.Text = "Chests: " .. #uuids
+        
+        if #uuids == 0 then
+            ChestFarmInfoLabel.Text = "No chests spawned"
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+        else
+            ChestFarmInfoLabel.Text = "Claiming " .. #uuids .. " chests..."
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+            
+            for _, uuid in ipairs(uuids) do
+                pcall(function()
+                    ClaimPirateChest:FireServer(uuid)
+                end)
+            end
+        end
+    end
+end)
+
+print("[ChestFarm] Section loaded with Replion integration")
 
 --==================================================
 -- SAVED POSITIONS LOGIC
@@ -3815,7 +4050,7 @@ UIS.InputBegan:Connect(function(input)
     end
     
     -- Cek kalo klik di dalam section dropdown, juga jangan tutup
-    local sections = {IslandSection, PlayerSection, EventHuntSection, LochNessSection, SavedPosSection}
+    local sections = {IslandSection, PlayerSection, EventHuntSection, LochNessSection, ChestFarmSection, SavedPosSection}
     for _, section in ipairs(sections) do
         if IsInsideSection(section, pos) then
             return -- Klik di dalam section, abort
