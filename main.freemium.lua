@@ -340,7 +340,6 @@ local PAGE_CONFIG = {
     {Name = "Fishing", Icon = "rbxassetid://12644442470"},
     {Name = "Backpack", Icon = "rbxassetid://6870729295"},
     {Name = "Teleport", Icon = "rbxassetid://6031075931"},
-    {Name = "Quest", Icon = "rbxassetid://14228191542"},
     {Name = "Shop", Icon = "rbxassetid://6031265976"},
     {Name = "Misc", Icon = "rbxassetid://6034509993"},
 }
@@ -4064,3 +4063,393 @@ UIS.InputBegan:Connect(function(input)
         end
     end
 end)
+
+--==================================================
+-- TRAVELING MERCHANT SYSTEM
+--==================================================
+_G.RAYSelectedMerchantItem = _G.RAYSelectedMerchantItem or nil
+_G.RAYMerchantBuyQty = _G.RAYMerchantBuyQty or 1
+_G.RAYMerchantAutoBuy = _G.RAYMerchantAutoBuy or false
+
+-- Replion & Net
+local MerchantReplion = Replion.Client:WaitReplion("Merchant")
+local MarketItemData = require(ReplicatedStorage.Shared.MarketItemData)
+
+local PurchaseMarketItemRF = NetFolder:WaitForChild("RF/PurchaseMarketItem")
+
+-- Mapping Item ID ke Data
+local MERCHANT_ITEM_MAP = {}
+for _, item in ipairs(MarketItemData) do
+    MERCHANT_ITEM_MAP[item.Id] = item
+end
+
+--==================================================
+-- HELPER FUNCTIONS
+--==================================================
+
+local function GetCurrentMerchantStock()
+    local ids = MerchantReplion:GetExpect("Items") or {}
+    local stock = {}
+    
+    for _, id in ipairs(ids) do
+        local itemData = MERCHANT_ITEM_MAP[id]
+        if itemData then
+            table.insert(stock, {
+                Id = itemData.Id,
+                Name = itemData.Identifier or itemData.Name or ("Item_" .. id),
+                Price = itemData.Price or 0,
+                Currency = itemData.Currency or "Coins",
+                MaxStock = itemData.MaxStock or 1,
+                Data = itemData
+            })
+        end
+    end
+    
+    return stock
+end
+
+local function BuyMerchantItem(itemId, quantity)
+    quantity = math.max(1, tonumber(quantity) or 1)
+    
+    for i = 1, quantity do
+        task.spawn(function()
+            pcall(function()
+                PurchaseMarketItemRF:InvokeServer(itemId)
+            end)
+        end)
+        task.wait(0.1)
+    end
+    
+    return true
+end
+
+--==================================================
+-- TRAVELING MERCHANT SECTION (SHOP PAGE)
+--==================================================
+
+if ShopPage then
+    local MerchantSection = CreateSectionDropdown(ShopPage, "🛒 Traveling Merchant")
+    
+    Instance.new("UIListLayout", MerchantSection).SortOrder = Enum.SortOrder.LayoutOrder
+    MerchantSection.UIListLayout.Padding = UDim.new(0, 6)
+    
+    -- BUAT PANEL KANAN (mirip Island/Player panel)
+    local MerchantPanel, MerchantScroll = CreateTeleportPanel("Merchant Stock", "Pilih item untuk dibeli. Klik untuk select.")
+    
+    -- Status Row
+    local StatusRow = Instance.new("Frame", MerchantSection)
+    StatusRow.Size = UDim2.new(1, 0, 0, 30)
+    StatusRow.BackgroundTransparency = 1
+    
+    CreateLabel(StatusRow, {
+        Size = UDim2.new(0.5, -10, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = "Merchant Status:"
+    })
+    
+    local MerchantStatus = CreateLabel(StatusRow, {
+        Size = UDim2.new(0.5, -10, 1, 0),
+        Position = UDim2.new(0.5, 0, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = Color3.fromRGB(255, 100, 100),
+        Text = "Checking..."
+    })
+    
+    -- Selected Item Display
+    local SelectedRow = Instance.new("Frame", MerchantSection)
+    SelectedRow.Size = UDim2.new(1, 0, 0, 30)
+    SelectedRow.BackgroundTransparency = 1
+    
+    CreateLabel(SelectedRow, {
+        Size = UDim2.new(0.4, -10, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = "Selected:"
+    })
+    
+    local SelectedItemLabel = CreateLabel(SelectedRow, {
+        Size = UDim2.new(0.6, -10, 1, 0),
+        Position = UDim2.new(0.4, 0, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = Color3.fromRGB(150, 150, 150),
+        Text = "None"
+    })
+    
+    -- Quantity Row
+    local QuantityRow = Instance.new("Frame", MerchantSection)
+    QuantityRow.Size = UDim2.new(1, 0, 0, 36)
+    QuantityRow.BackgroundTransparency = 1
+    
+    CreateLabel(QuantityRow, {
+        Size = UDim2.new(0.5, -10, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = "Buy Quantity"
+    })
+    
+    local qtyBox = Instance.new("TextBox", QuantityRow)
+    qtyBox.Size = UDim2.new(0, 60, 0, 24)
+    qtyBox.Position = UDim2.new(0.5, -10, 0.5, -12)
+    qtyBox.BackgroundColor3 = THEME.CARD
+    qtyBox.BackgroundTransparency = 0.1
+    qtyBox.Text = tostring(_G.RAYMerchantBuyQty)
+    qtyBox.TextColor3 = THEME.TEXT
+    qtyBox.Font = Enum.Font.Gotham
+    qtyBox.TextSize = 12
+    qtyBox.ClearTextOnFocus = false
+    
+    CreateCorner(qtyBox, 8)
+    
+    qtyBox.FocusLost:Connect(function()
+        local n = tonumber(qtyBox.Text)
+        if not n or n < 1 then 
+            n = 1
+            qtyBox.Text = "1"
+        end
+        _G.RAYMerchantBuyQty = math.min(n, 99)
+    end)
+    
+    -- Buy Button
+    local buyBtn = Instance.new("TextButton", QuantityRow)
+    buyBtn.Size = UDim2.new(0, 80, 0, 24)
+    buyBtn.Position = UDim2.new(1, -90, 0.5, -12)
+    buyBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
+    buyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    buyBtn.Font = Enum.Font.GothamBold
+    buyBtn.TextSize = 12
+    buyBtn.Text = "BUY"
+    
+    CreateCorner(buyBtn, 8)
+    
+    buyBtn.MouseButton1Click:Connect(function()
+        if not _G.RAYSelectedMerchantItem then
+            if NotifyFeature then NotifyFeature("No item selected!", false) end
+            return
+        end
+        
+        local qty = _G.RAYMerchantBuyQty or 1
+        BuyMerchantItem(_G.RAYSelectedMerchantItem.Id, qty)
+        
+        if NotifyFeature then 
+            NotifyFeature("Buying " .. _G.RAYSelectedMerchantItem.Name .. " x" .. qty, true) 
+        end
+    end)
+    
+    -- Auto Buy Toggle Row
+    local AutoBuyRow = Instance.new("Frame", MerchantSection)
+    AutoBuyRow.Size = UDim2.new(1, 0, 0, 36)
+    AutoBuyRow.BackgroundTransparency = 1
+    
+    CreateLabel(AutoBuyRow, {
+        Size = UDim2.new(1, -70, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = "Auto Buy Selected"
+    })
+    
+    local AutoBuyToggle, SetAutoBuyState = CreateTogglePill(AutoBuyRow, _G.RAYMerchantAutoBuy, function(state)
+        _G.RAYMerchantAutoBuy = state
+        if NotifyFeature then
+            NotifyFeature("Merchant Auto Buy: " .. (state and "ON" or "OFF"), state)
+        end
+    end)
+    
+    -- Open Panel Button (Section Row)
+    CreateSectionRow(MerchantSection, "Merchant Stock Panel", "Open", function()
+        MerchantPanel.Visible = not MerchantPanel.Visible
+        if MerchantPanel.Visible then
+            rebuildMerchantPanel()
+        end
+    end)
+    
+    --==================================================
+    -- REBUILD MERCHANT PANEL (dengan garis ungu highlight)
+    --==================================================
+    
+    local function rebuildMerchantPanel()
+        -- Clear existing
+        for _, c in ipairs(MerchantScroll:GetChildren()) do
+            if c:IsA("Frame") then c:Destroy() end
+        end
+        
+        local stock = GetCurrentMerchantStock()
+        
+        -- Update status di section
+        if #stock == 0 then
+            MerchantStatus.Text = "Not Available"
+            MerchantStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+            
+            -- Empty state di panel
+            local emptyRow = Instance.new("Frame", MerchantScroll)
+            emptyRow.Size = UDim2.new(1, -4, 0, 60)
+            emptyRow.BackgroundTransparency = 1
+            
+            CreateLabel(emptyRow, {
+                Size = UDim2.new(1, -10, 1, 0),
+                Position = UDim2.new(0, 5, 0, 0),
+                BackgroundTransparency = 1,
+                Font = Enum.Font.Gotham,
+                TextSize = 12,
+                TextXAlignment = Enum.TextXAlignment.Center,
+                TextColor3 = Color3.fromRGB(150, 150, 150),
+                Text = "No merchant stock available.\nCheck back later!"
+            })
+            
+            _G.RAYSelectedMerchantItem = nil
+            SelectedItemLabel.Text = "None"
+            SelectedItemLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+            
+            return
+        end
+        
+        MerchantStatus.Text = #stock .. " Items"
+        MerchantStatus.TextColor3 = Color3.fromRGB(0, 255, 140)
+        
+        -- Build item list dengan GARIS UNGU HIGHLIGHT
+        for _, item in ipairs(stock) do
+            local row = Instance.new("Frame", MerchantScroll)
+            row.Size = UDim2.new(1, -4, 0, 40)
+            row.BackgroundTransparency = 1
+            row.ZIndex = 11
+            
+            -- GARIS UNGU DI PINGGIR (Highlight)
+            local line = Instance.new("Frame", row)
+            line.Name = "Highlight"
+            line.Size = UDim2.new(0, 3, 1, 0)
+            line.Position = UDim2.new(0, 0, 0, 0)
+            line.BackgroundColor3 = THEME.MAIN -- Warna ungu dari theme
+            line.BorderSizePixel = 0
+            line.Visible = (_G.RAYSelectedMerchantItem and _G.RAYSelectedMerchantItem.Id == item.Id)
+            line.ZIndex = 12
+            
+            -- Main button
+            local btn = Instance.new("TextButton", row)
+            btn.Size = UDim2.new(1, -6, 1, 0)
+            btn.Position = UDim2.new(0, 6, 0, 0)
+            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+            btn.TextColor3 = THEME.TEXT
+            btn.Font = Enum.Font.Gotham
+            btn.TextSize = 11
+            btn.TextXAlignment = Enum.TextXAlignment.Left
+            btn.TextYAlignment = Enum.TextYAlignment.Top
+            btn.Text = string.format("  %s\n  💰 %d %s", item.Name, item.Price, item.Currency)
+            btn.ZIndex = 11
+            
+            CreateCorner(btn, 6)
+            
+            -- Premium currency indicator
+            if item.Currency:lower():find("robux") or item.Currency:lower():find("premium") then
+                btn.TextColor3 = Color3.fromRGB(255, 200, 100)
+            end
+            
+            -- CLICK HANDLER dengan HIGHLIGHT
+            btn.MouseButton1Click:Connect(function()
+                _G.RAYSelectedMerchantItem = item
+                SelectedItemLabel.Text = item.Name
+                SelectedItemLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+                
+                -- Update GARIS UNGU highlight di semua rows
+                for _, child in ipairs(MerchantScroll:GetChildren()) do
+                    if child:IsA("Frame") then
+                        local hl = child:FindFirstChild("Highlight")
+                        if hl then
+                            hl.Visible = (child == row)
+                        end
+                    end
+                end
+                
+                if NotifyFeature then 
+                    NotifyFeature("Selected: " .. item.Name .. " (" .. item.Price .. " " .. item.Currency .. ")", true) 
+                end
+            end)
+        end
+    end
+    
+    -- Initial build
+    rebuildMerchantPanel()
+    
+    -- Auto refresh on Replion change
+    MerchantReplion:OnChange("Items", function()
+        -- Update panel kalau visible
+        if MerchantPanel.Visible then
+            rebuildMerchantPanel()
+        end
+        
+        -- Update status selalu
+        local stock = GetCurrentMerchantStock()
+        if #stock > 0 then
+            MerchantStatus.Text = #stock .. " Items"
+            MerchantStatus.TextColor3 = Color3.fromRGB(0, 255, 140)
+            
+            -- Auto buy logic
+            if _G.RAYMerchantAutoBuy and _G.RAYSelectedMerchantItem then
+                local stillAvailable = false
+                for _, item in ipairs(stock) do
+                    if item.Id == _G.RAYSelectedMerchantItem.Id then
+                        stillAvailable = true
+                        break
+                    end
+                end
+                
+                if stillAvailable then
+                    BuyMerchantItem(_G.RAYSelectedMerchantItem.Id, _G.RAYMerchantBuyQty or 1)
+                    if NotifyFeature then
+                        NotifyFeature("Auto-bought " .. _G.RAYSelectedMerchantItem.Name, true)
+                    end
+                end
+            end
+        else
+            MerchantStatus.Text = "Not Available"
+            MerchantStatus.TextColor3 = Color3.fromRGB(255, 100, 100)
+            
+            -- Clear selection kalau merchant ilang
+            _G.RAYSelectedMerchantItem = nil
+            SelectedItemLabel.Text = "None"
+            SelectedItemLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        end
+    end)
+    
+    -- Auto buy loop backup
+    task.spawn(function()
+        while true do
+            if _G.RAYMerchantAutoBuy and _G.RAYSelectedMerchantItem then
+                local stock = GetCurrentMerchantStock()
+                for _, item in ipairs(stock) do
+                    if item.Id == _G.RAYSelectedMerchantItem.Id then
+                        BuyMerchantItem(item.Id, _G.RAYMerchantBuyQty or 1)
+                        break
+                    end
+                end
+            end
+            task.wait(3)
+        end
+    end)
+    
+    -- Tambah panel ke list AllPanels untuk close on outside click
+    table.insert(AllPanels, MerchantPanel)
+end
+
+print("[TravelingMerchant] Section loaded with right panel + purple highlight")
