@@ -2883,6 +2883,34 @@ local function CreateSectionRow(parent, title, buttonText, onClick)
 end
 
 --==================================================
+-- HELPER: CREATE TOGGLE BUTTON (On/Off)
+--==================================================
+local function CreateToggleButton(parent, defaultState, onToggle)
+    local btn = Instance.new("TextButton", parent)
+    btn.Size = UDim2.new(0, 60, 0, 24)
+    btn.Position = UDim2.new(1, -70, 0.5, -12)
+    btn.BackgroundColor3 = defaultState and Color3.fromRGB(40, 100, 40) or Color3.fromRGB(100, 40, 40)
+    btn.Text = defaultState and "On" or "Off"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 12
+    
+    CreateCorner(btn, 6)
+    
+    local currentState = defaultState
+    btn.MouseButton1Click:Connect(function()
+        currentState = not currentState
+        btn.Text = currentState and "On" or "Off"
+        btn.BackgroundColor3 = currentState and Color3.fromRGB(40, 100, 40) or Color3.fromRGB(100, 40, 40)
+        if onToggle then
+            onToggle(currentState, btn)
+        end
+    end)
+    
+    return btn
+end
+
+--==================================================
 -- ISLAND TELEPORT
 --==================================================
 local IslandSection = CreateSectionDropdown(TeleportPage, "Teleport Island")
@@ -3577,24 +3605,86 @@ local ChestStatusLabel = CreateLabel(ClaimChestSection, {
     Text = "Initializing..."
 })
 
+-- Stats Row
+local StatsRow = Instance.new("Frame", ClaimChestSection)
+StatsRow.Size = UDim2.new(1, 0, 0, 30)
+StatsRow.BackgroundTransparency = 1
+
+local TotalClaimedLabel = CreateLabel(StatsRow, {
+    Size = UDim2.new(0.5, -5, 1, 0),
+    Position = UDim2.new(0, 10, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Claimed: 0"
+})
+
+local ChestCountLabel = CreateLabel(StatsRow, {
+    Size = UDim2.new(0.5, -5, 1, 0),
+    Position = UDim2.new(0.5, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Active: 0"
+})
+
 -- Toggle Button Row
-CreateSectionRow(ClaimChestSection, "Auto Claim Chests", "Off", function(button)
-    _G.RAYChestFarmOn = not _G.RAYChestFarmOn
-    
-    if _G.RAYChestFarmOn then
-        button.Text = "On"
-        button.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
+local AutoClaimRow = Instance.new("Frame", ClaimChestSection)
+AutoClaimRow.Size = UDim2.new(1, 0, 0, 36)
+AutoClaimRow.BackgroundTransparency = 1
+
+CreateLabel(AutoClaimRow, {
+    Size = UDim2.new(1, -70, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Auto Claim Chests"
+})
+
+local AutoClaimBtn = CreateToggleButton(AutoClaimRow, false, function(state, btn)
+    _G.RAYChestFarmOn = state
+    if state then
         ChestStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
     else
-        button.Text = "Off"
-        button.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
         ChestStatusLabel.TextColor3 = THEME.SUBTEXT
         ChestStatusLabel.Text = "Paused."
     end
 end)
 
--- Manual Claim Button
-CreateSectionRow(ClaimChestSection, "Claim Once", "Claim", function()
+-- Manual Claim Button Row
+local ManualClaimRow = Instance.new("Frame", ClaimChestSection)
+ManualClaimRow.Size = UDim2.new(1, 0, 0, 36)
+ManualClaimRow.BackgroundTransparency = 1
+
+CreateLabel(ManualClaimRow, {
+    Size = UDim2.new(1, -130, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Claim Once (Manual)"
+})
+
+local ManualClaimBtn = Instance.new("TextButton", ManualClaimRow)
+ManualClaimBtn.Size = UDim2.new(0, 110, 0, 26)
+ManualClaimBtn.Position = UDim2.new(1, -126, 0.5, -13)
+ManualClaimBtn.BackgroundColor3 = Color3.fromRGB(40, 70, 100)
+ManualClaimBtn.Text = "Claim"
+ManualClaimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+ManualClaimBtn.Font = Enum.Font.GothamBold
+ManualClaimBtn.TextSize = 12
+CreateCorner(ManualClaimBtn, 8)
+
+ManualClaimBtn.MouseButton1Click:Connect(function()
     if not _G.RAYChestFarm_ReplionReady then
         ChestStatusLabel.Text = "Replion not ready!"
         ChestStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
@@ -3616,39 +3706,14 @@ CreateSectionRow(ClaimChestSection, "Claim Once", "Claim", function()
     end
 end)
 
--- Stats Row
-local StatsRow = Instance.new("Frame", ClaimChestSection)
-StatsRow.Size = UDim2.new(1, 0, 0, 50)
-StatsRow.BackgroundTransparency = 1
-
-local TotalClaimedLabel = CreateLabel(StatsRow, {
-    Size = UDim2.new(0.5, -5, 0, 20),
-    Position = UDim2.new(0, 10, 0, 5),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.GothamBold,
-    TextSize = 12,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = THEME.TEXT,
-    Text = "Claimed: 0"
-})
-
-local ChestCountLabel = CreateLabel(StatsRow, {
-    Size = UDim2.new(0.5, -5, 0, 20),
-    Position = UDim2.new(0.5, 0, 0, 5),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.GothamBold,
-    TextSize = 12,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = THEME.TEXT,
-    Text = "Active: 0"
-})
-
 --==================================================
 -- CLAIM PIRATE CHEST LOGIC
 --==================================================
 
+-- Setup Replion dan RemoteEvent
 local Replion = require(ReplicatedStorage.Packages.Replion)
-local ClaimPirateChest = Net:WaitForChild("RE/ClaimPirateChest")
+local Net = ReplicatedStorage:WaitForChild("RE")
+local ClaimPirateChest = Net:WaitForChild("ClaimPirateChest")
 
 -- Global functions untuk diakses manual claim
 _G.RAYChestFarm_GetUUIDs = nil
