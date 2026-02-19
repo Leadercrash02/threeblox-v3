@@ -2697,6 +2697,9 @@ end
 --==================================================
 -- TELEPORT DATA
 --==================================================
+--==================================================
+-- TELEPORT DATA
+--==================================================
 local IslandTeleportCF = {
     ["Arrow Artifact"] = CFrame.new(879.857178, 4.92162275, -339.661469, -0.195367768, 0, 0.980730057, 0, 1, 0, -0.980730057, 0, -0.195367768),
     ["Crescent Artifact"] = CFrame.new(1382.48401, 4.83972979, 113.104294, -0.956645668, 0, 0.291254193, 0, 1, 0, -0.291254193, 0, -0.956645668),
@@ -2903,7 +2906,7 @@ local function CreateToggleButton(parent, defaultState, onToggle)
         btn.Text = currentState and "On" or "Off"
         btn.BackgroundColor3 = currentState and Color3.fromRGB(40, 100, 40) or Color3.fromRGB(100, 40, 40)
         if onToggle then
-            onToggle(currentState, btn)
+            onToggle(currentState)
         end
     end)
     
@@ -3272,7 +3275,7 @@ local function FormatTime(seconds)
     return string.format("%02d:%02d:%02d", h, m, s)
 end
 
-local function SaveCurrentPosition()
+local function SaveCurrentPositionLochNess()
     local char = Player.Character
     if not char then return false end
     local hrp = char:FindFirstChild("HumanoidRootPart")
@@ -3300,7 +3303,7 @@ local function TeleportToAncientRuin()
     end
 end
 
-local function ReturnToSavedPosition()
+local function ReturnToSavedPositionLochNess()
     local data = _G.LochNessState.SavedPosition
     if not data then 
         if NotifyFeature then NotifyFeature("No saved position!", false) end
@@ -3388,7 +3391,7 @@ local function HandleAutoActions()
        and state.AutoTeleportEnabled 
        and not state.IsAutoTeleported then
         
-        if SaveCurrentPosition() then
+        if SaveCurrentPositionLochNess() then
             task.wait(0.5)
             TeleportToAncientRuin()
             state.IsAutoTeleported = true
@@ -3402,7 +3405,7 @@ local function HandleAutoActions()
        and not state.IsReturned then
         
         task.wait(1) -- Jeda sebentar sebelum balik
-        ReturnToSavedPosition()
+        ReturnToSavedPositionLochNess()
         state.IsReturned = true
     end
 end
@@ -3434,7 +3437,7 @@ TimeDisplay.Position = UDim2.new(0.4, 0, 0.5, -14)
 TimeDisplay.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
 TimeDisplay.BackgroundTransparency = 0.2
 TimeDisplay.Font = Enum.Font.GothamBold
-TimeDisplay.TextSize = 16
+TextSize = 16
 TimeDisplay.TextColor3 = Color3.fromRGB(0, 255, 140)
 TimeDisplay.Text = "00:00:00"
 CreateCorner(TimeDisplay, 6)
@@ -3481,7 +3484,7 @@ TeleportBtn.MouseButton1Click:Connect(function()
     -- Kalau event aktif, save dulu baru TP
     if _G.LochNessState.CurrentState == EVENT_STATE.ACTIVE then
         if not _G.LochNessState.SavedPosition then
-            SaveCurrentPosition()
+            SaveCurrentPositionLochNess()
         end
     end
     TeleportToAncientRuin()
@@ -3514,7 +3517,7 @@ ReturnBtn.TextSize = 12
 CreateCorner(ReturnBtn, 8)
 
 ReturnBtn.MouseButton1Click:Connect(function()
-    ReturnToSavedPosition()
+    ReturnToSavedPositionLochNess()
 end)
 
 -- Auto Teleport Toggle
@@ -3533,10 +3536,28 @@ CreateLabel(AutoTeleportRow, {
     Text = "Auto TP + Return"
 })
 
-local AutoTeleportToggle, SetAutoTeleportState = CreateToggleKnob(AutoTeleportRow, false, function(state)
-    _G.LochNessState.AutoTeleportEnabled = state
+-- Buat toggle sederhana
+local AutoTeleportBtn = Instance.new("TextButton", AutoTeleportRow)
+AutoTeleportBtn.Size = UDim2.new(0, 60, 0, 24)
+AutoTeleportBtn.Position = UDim2.new(1, -70, 0.5, -12)
+AutoTeleportBtn.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
+AutoTeleportBtn.Text = "Off"
+AutoTeleportBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoTeleportBtn.Font = Enum.Font.GothamBold
+AutoTeleportBtn.TextSize = 12
+CreateCorner(AutoTeleportBtn, 6)
+
+AutoTeleportBtn.MouseButton1Click:Connect(function()
+    _G.LochNessState.AutoTeleportEnabled = not _G.LochNessState.AutoTeleportEnabled
+    if _G.LochNessState.AutoTeleportEnabled then
+        AutoTeleportBtn.Text = "On"
+        AutoTeleportBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
+    else
+        AutoTeleportBtn.Text = "Off"
+        AutoTeleportBtn.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
+    end
     if NotifyFeature then 
-        NotifyFeature("Loch Ness Auto: " .. (state and "ON" or "OFF"), state) 
+        NotifyFeature("Loch Ness Auto: " .. (_G.LochNessState.AutoTeleportEnabled and "ON" or "OFF"), _G.LochNessState.AutoTeleportEnabled) 
     end
 end)
 
@@ -3562,11 +3583,11 @@ task.spawn(function()
         TimeDisplay.TextColor3 = color
         
         -- Update status indicator
-        local state = _G.LochNessState.CurrentState
-        StatusLabel.Text = state
-        if state == EVENT_STATE.IDLE then
+        local currentState = _G.LochNessState.CurrentState
+        StatusLabel.Text = currentState
+        if currentState == EVENT_STATE.IDLE then
             StatusLabel.TextColor3 = Color3.fromRGB(100, 200, 100)
-        elseif state == EVENT_STATE.ACTIVE then
+        elseif currentState == EVENT_STATE.ACTIVE then
             StatusLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
         else
             StatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
@@ -3648,11 +3669,25 @@ CreateLabel(AutoClaimRow, {
     Text = "Auto Claim Chests"
 })
 
-local AutoClaimBtn = CreateToggleButton(AutoClaimRow, false, function(state, btn)
-    _G.RAYChestFarmOn = state
-    if state then
+local AutoClaimBtn = Instance.new("TextButton", AutoClaimRow)
+AutoClaimBtn.Size = UDim2.new(0, 60, 0, 24)
+AutoClaimBtn.Position = UDim2.new(1, -70, 0.5, -12)
+AutoClaimBtn.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
+AutoClaimBtn.Text = "Off"
+AutoClaimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+AutoClaimBtn.Font = Enum.Font.GothamBold
+AutoClaimBtn.TextSize = 12
+CreateCorner(AutoClaimBtn, 6)
+
+AutoClaimBtn.MouseButton1Click:Connect(function()
+    _G.RAYChestFarmOn = not _G.RAYChestFarmOn
+    if _G.RAYChestFarmOn then
+        AutoClaimBtn.Text = "On"
+        AutoClaimBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
         ChestStatusLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
     else
+        AutoClaimBtn.Text = "Off"
+        AutoClaimBtn.BackgroundColor3 = Color3.fromRGB(100, 40, 40)
         ChestStatusLabel.TextColor3 = THEME.SUBTEXT
         ChestStatusLabel.Text = "Paused."
     end
