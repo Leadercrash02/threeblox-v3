@@ -3055,6 +3055,10 @@ local function safeConnectGhostSharkReplion()
     local function OnEventRemoved(index, eventName)
         if eventName == SharkHuntEventName then
             _G.GhostSharkHuntActive = false
+            if ghostSharkFloor then
+                ghostSharkFloor:Destroy()
+                ghostSharkFloor = nil
+            end
             if NotifyFeature then NotifyFeature("Ghost Shark Hunt Ended", false) end
         end
     end
@@ -3558,6 +3562,166 @@ task.spawn(function()
 end)
 
 --==================================================
+-- CHEST FARM SECTION (Replion-based, Toggle Pill)
+--==================================================
+
+local ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Farm")
+Instance.new("UIListLayout", ChestFarmSection).SortOrder = Enum.SortOrder.LayoutOrder
+ChestFarmSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- State global
+_G.RAYChestFarmOn = _G.RAYChestFarmOn or false
+_G.ChestFarmReplionReady = false
+
+-- Status row dengan toggle pill
+local ChestFarmStatusRow = Instance.new("Frame", ChestFarmSection)
+ChestFarmStatusRow.Size = UDim2.new(1, 0, 0, 36)
+ChestFarmStatusRow.BackgroundTransparency = 1
+
+CreateLabel(ChestFarmStatusRow, {
+    Size = UDim2.new(0.5, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Auto Claim Chests"
+})
+
+-- Toggle pill (gunakan CreateToggleKnob yang udah ada)
+local ChestFarmToggle, SetChestFarmState = CreateToggleKnob(ChestFarmStatusRow, _G.RAYChestFarmOn, function(state)
+    _G.RAYChestFarmOn = state
+    if NotifyFeature then 
+        NotifyFeature("Chest Farm: " .. (state and "ON" or "OFF"), state) 
+    end
+end)
+
+-- Status label
+local ChestFarmInfoLabel = CreateLabel(ChestFarmSection, {
+    Size = UDim2.new(1, -32, 0, 20),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 11,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(150, 150, 150),
+    Text = "Waiting Replion..."
+})
+
+-- Stats row
+local ChestFarmStatsRow = Instance.new("Frame", ChestFarmSection)
+ChestFarmStatsRow.Size = UDim2.new(1, 0, 0, 24)
+ChestFarmStatsRow.BackgroundTransparency = 1
+
+local ChestCountLabel = CreateLabel(ChestFarmStatsRow, {
+    Size = UDim2.new(0.5, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(0, 255, 140),
+    Text = "Chests: 0"
+})
+
+------------------------------------------------------------
+-- REPLION SETUP (dari logic lu)
+------------------------------------------------------------
+
+local Replion = require(ReplicatedStorage.Packages.Replion)
+
+local netFolder = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+
+local ClaimPirateChest = netFolder:WaitForChild("RE/ClaimPirateChest")
+
+local chestReplion
+
+-- Inisialisasi Replion
+task.spawn(function()
+    local ok, r = pcall(function()
+        return Replion.Client:WaitReplion("PirateTreasureChests")
+    end)
+    
+    if not ok or not r or typeof(r.Data) ~= "table" then
+        warn("[ChestFarm] Failed to get PirateTreasureChests")
+        ChestFarmInfoLabel.Text = "Replion failed"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    chestReplion = r
+    _G.ChestFarmReplionReady = true
+    ChestFarmInfoLabel.Text = "Replion connected"
+    ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    
+    -- Debug print
+    print("[ChestFarm] Replion Data:", chestReplion.Data)
+end)
+
+-- Helper get chest UUIDs
+local function GetAllChestUUIDs()
+    if not chestReplion then return {} end
+    local data = chestReplion.Data
+    local spawned = data and data.SpawnedChests
+    if typeof(spawned) ~= "table" then return {} end
+
+    local list = {}
+    for i, entry in ipairs(spawned) do
+        local uuid = entry.Id
+        if typeof(uuid) == "string" then
+            table.insert(list, uuid)
+        end
+    end
+    return list
+end
+
+------------------------------------------------------------
+-- FARM LOOP
+------------------------------------------------------------
+
+task.spawn(function()
+    while true do
+        task.wait(0.25)
+
+        -- Update status label berdasarkan state
+        if not _G.ChestFarmReplionReady then
+            ChestFarmInfoLabel.Text = "Connecting to Replion..."
+            continue
+        end
+
+        if not _G.RAYChestFarmOn then
+            ChestFarmInfoLabel.Text = "Paused"
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+            continue
+        end
+
+        local uuids = GetAllChestUUIDs()
+        ChestCountLabel.Text = "Chests: " .. #uuids
+        
+        if #uuids == 0 then
+            ChestFarmInfoLabel.Text = "No chests spawned"
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+        else
+            ChestFarmInfoLabel.Text = "Claiming " .. #uuids .. " chests..."
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+            
+            for _, uuid in ipairs(uuids) do
+                pcall(function()
+                    ClaimPirateChest:FireServer(uuid)
+                end)
+            end
+        end
+    end
+end)
+
+print("[ChestFarm] Section loaded with Replion integration")
+
+--==================================================
 -- SAVED POSITIONS LOGIC
 --==================================================
 
@@ -3815,7 +3979,7 @@ UIS.InputBegan:Connect(function(input)
     end
     
     -- Cek kalo klik di dalam section dropdown, juga jangan tutup
-    local sections = {IslandSection, PlayerSection, EventHuntSection, LochNessSection, SavedPosSection}
+    local sections = {IslandSection, PlayerSection, EventHuntSection, LochNessSection, ChestFarmSection, SavedPosSection}
     for _, section in ipairs(sections) do
         if IsInsideSection(section, pos) then
             return -- Klik di dalam section, abort
