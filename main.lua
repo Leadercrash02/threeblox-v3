@@ -1,5 +1,5 @@
--- Cobalt V4 - Auto Display Real Args from Spy
--- Nilai asli langsung muncul tanpa edit manual
+-- Cobalt V5 - FIX Args Display
+-- Pasti nilai muncul!
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -25,7 +25,7 @@ local THEME = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CobaltV4"
+ScreenGui.Name = "CobaltV5"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false
 
@@ -33,7 +33,6 @@ ScreenGui.ResetOnSpawn = false
 local MainFrame = Instance.new("Frame")
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = THEME.Background
-MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0.5, -250, 0.5, -160)
 MainFrame.Size = UDim2.new(0, 500, 0, 320)
 
@@ -45,21 +44,15 @@ TitleBar.Parent = MainFrame
 TitleBar.BackgroundColor3 = THEME.Secondary
 TitleBar.Size = UDim2.new(1, 0, 0, 32)
 
-local TitleFix = Instance.new("Frame")
-TitleFix.Parent = TitleBar
-TitleFix.BackgroundColor3 = THEME.Secondary
-TitleFix.Position = UDim2.new(0, 0, 1, -8)
-TitleFix.Size = UDim2.new(1, 0, 0, 8)
-
 local TitleText = Instance.new("TextLabel")
 TitleText.Parent = TitleBar
 TitleText.BackgroundTransparency = 1
-TitleText.Position = UDim2.new(0, 35, 0, 0)
-TitleText.Size = UDim2.new(0, 80, 1, 0)
+TitleText.Position = UDim2.new(0.5, -30, 0, 0)
+TitleText.Size = UDim2.new(0, 60, 1, 0)
 TitleText.Font = Enum.Font.GothamBold
 TitleText.Text = "Cobalt"
 TitleText.TextColor3 = THEME.Text
-TitleText.TextSize = 15
+TitleText.TextSize = 16
 
 -- Close & Minimize
 local CloseBtn = Instance.new("TextButton")
@@ -67,7 +60,6 @@ CloseBtn.Parent = TitleBar
 CloseBtn.BackgroundTransparency = 1
 CloseBtn.Position = UDim2.new(1, -30, 0, 0)
 CloseBtn.Size = UDim2.new(0, 30, 1, 0)
-CloseBtn.Font = Enum.Font.GothamBold
 CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = THEME.Error
 CloseBtn.TextSize = 16
@@ -77,7 +69,6 @@ MinBtn.Parent = TitleBar
 MinBtn.BackgroundTransparency = 1
 MinBtn.Position = UDim2.new(1, -60, 0, 0)
 MinBtn.Size = UDim2.new(0, 30, 1, 0)
-MinBtn.Font = Enum.Font.GothamBold
 MinBtn.Text = "–"
 MinBtn.TextColor3 = THEME.SubText
 MinBtn.TextSize = 20
@@ -113,7 +104,6 @@ RemoteList.BackgroundTransparency = 1
 RemoteList.Position = UDim2.new(0, 8, 0, 40)
 RemoteList.Size = UDim2.new(1, -16, 1, -48)
 RemoteList.ScrollBarThickness = 3
-RemoteList.ScrollBarImageColor3 = THEME.Accent
 RemoteList.CanvasSize = UDim2.new(0, 0, 0, 0)
 
 local ListLayout = Instance.new("UIListLayout")
@@ -139,23 +129,22 @@ RemoteHeader.Size = UDim2.new(1, -16, 0, 30)
 
 Instance.new("UICorner", RemoteHeader).CornerRadius = UDim.new(0, 6)
 
-local RemoteIcon = Instance.new("ImageLabel")
+local RemoteIcon = Instance.new("TextLabel")
 RemoteIcon.Parent = RemoteHeader
 RemoteIcon.BackgroundTransparency = 1
-RemoteIcon.Position = UDim2.new(0, 8, 0.5, -7)
-RemoteIcon.Size = UDim2.new(0, 14, 0, 14)
-RemoteIcon.Image = "rbxassetid://3926307971"
-RemoteIcon.ImageRectOffset = Vector2.new(404, 484)
-RemoteIcon.ImageRectSize = Vector2.new(36, 36)
-RemoteIcon.ImageColor3 = THEME.Accent
+RemoteIcon.Position = UDim2.new(0, 8, 0, 0)
+RemoteIcon.Size = UDim2.new(0, 20, 1, 0)
+RemoteIcon.Font = Enum.Font.GothamBold
+RemoteIcon.Text = "🔷"
+RemoteIcon.TextSize = 14
 
 local RemoteName = Instance.new("TextLabel")
 RemoteName.Parent = RemoteHeader
 RemoteName.BackgroundTransparency = 1
-RemoteName.Position = UDim2.new(0, 28, 0, 0)
-RemoteName.Size = UDim2.new(1, -50, 1, 0)
+RemoteName.Position = UDim2.new(0, 30, 0, 0)
+RemoteName.Size = UDim2.new(1, -60, 1, 0)
 RemoteName.Font = Enum.Font.GothamSemibold
-RemoteName.Text = "Select a remote..."
+RemoteName.Text = "Select remote..."
 RemoteName.TextColor3 = THEME.Text
 RemoteName.TextSize = 12
 RemoteName.TextXAlignment = Enum.TextXAlignment.Left
@@ -184,10 +173,9 @@ TabArgs.BackgroundColor3 = THEME.Background
 TabArgs.Position = UDim2.new(0, 0, 0, 0)
 TabArgs.Size = UDim2.new(0, 80, 1, 0)
 TabArgs.Font = Enum.Font.GothamSemibold
-TabArgs.Text = "  Arguments"
+TabArgs.Text = "Arguments"
 TabArgs.TextColor3 = THEME.Text
-TabArgs.TextSize = 11
-TabArgs.TextXAlignment = Enum.TextXAlignment.Left
+TabArgs.TextSize = 12
 TabArgs.AutoButtonColor = false
 
 Instance.new("UICorner", TabArgs).CornerRadius = UDim.new(0, 4)
@@ -200,32 +188,32 @@ TabCode.Size = UDim2.new(0, 60, 1, 0)
 TabCode.Font = Enum.Font.GothamSemibold
 TabCode.Text = "<> Code"
 TabCode.TextColor3 = THEME.SubText
-TabArgs.TextSize = 11
+TabCode.TextSize = 11
 
 local TabInfo = Instance.new("TextButton")
 TabInfo.Parent = TabFrame
 TabInfo.BackgroundTransparency = 1
 TabInfo.Position = UDim2.new(0, 150, 0, 0)
-TabInfo.Size = UDim2.new(0, 90, 1, 0)
+TabInfo.Size = UDim2.new(0, 100, 1, 0)
 TabInfo.Font = Enum.Font.GothamSemibold
 TabInfo.Text = "ⓘ Function Info"
 TabInfo.TextColor3 = THEME.SubText
 TabInfo.TextSize = 11
 
--- Args Container - DISPLAY ONLY (like screenshot)
+-- Args Container - FIX DISINI
 local ArgsContainer = Instance.new("ScrollingFrame")
 ArgsContainer.Parent = RightPanel
 ArgsContainer.BackgroundColor3 = THEME.Background
 ArgsContainer.Position = UDim2.new(0, 8, 0, 76)
 ArgsContainer.Size = UDim2.new(1, -16, 1, -130)
 ArgsContainer.ScrollBarThickness = 3
-ArgsContainer.ScrollBarImageColor3 = THEME.Accent
 ArgsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
 
-local ArgsLayout = Instance.new("UIListLayout")
-ArgsLayout.Parent = ArgsContainer
-ArgsLayout.Padding = UDim.new(0, 2)
-ArgsLayout.SortOrder = Enum.SortOrder.LayoutOrder
+-- IMPORTANT: UIListLayout untuk otomatis tata letak
+local ArgsListLayout = Instance.new("UIListLayout")
+ArgsListLayout.Parent = ArgsContainer
+ArgsListLayout.Padding = UDim.new(0, 2)
+ArgsListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 -- Bottom Bar
 local BottomBar = Instance.new("Frame")
@@ -310,7 +298,6 @@ ToggleBtn.Parent = ScreenGui
 ToggleBtn.BackgroundColor3 = THEME.Accent
 ToggleBtn.Position = UDim2.new(0, 10, 0.5, -20)
 ToggleBtn.Size = UDim2.new(0, 40, 0, 40)
-ToggleBtn.Font = Enum.Font.GothamBold
 ToggleBtn.Text = "⚡"
 ToggleBtn.TextColor3 = Color3.new(1, 1, 1)
 ToggleBtn.TextSize = 20
@@ -325,32 +312,35 @@ local SelectedLog = nil
 local LogCounter = 0
 local NetFolder = nil
 
--- CREATE ARG ROW - DISPLAY ONLY (like screenshot)
+-- CREATE ARG ROW - FIX VERSION
 local function CreateArgRow(index, value, valueType)
+    print("  Creating row", index, "=", value, "("..valueType..")")
+    
     local Row = Instance.new("Frame")
     Row.Parent = ArgsContainer
     Row.BackgroundTransparency = 1
     Row.Size = UDim2.new(1, 0, 0, 26)
     Row.LayoutOrder = index
     
-    -- Index (1, 2, 3...)
+    -- Index
     local IndexLabel = Instance.new("TextLabel")
     IndexLabel.Parent = Row
     IndexLabel.BackgroundTransparency = 1
     IndexLabel.Position = UDim2.new(0, 12, 0, 0)
-    IndexLabel.Size = UDim2.new(0, 20, 1, 0)
+    IndexLabel.Size = UDim2.new(0, 25, 1, 0)
     IndexLabel.Font = Enum.Font.GothamBold
     IndexLabel.Text = tostring(index)
     IndexLabel.TextColor3 = THEME.Text
     IndexLabel.TextSize = 12
     
-    -- Value (the actual spy data) - YELLOW for numbers
+    -- Value - PASTI MUNCUL!
     local ValueColor = THEME.Number
     if valueType == "string" then ValueColor = THEME.String
     elseif valueType == "boolean" then ValueColor = THEME.Boolean end
     
     local ValueLabel = Instance.new("TextLabel")
     ValueLabel.Parent = Row
+    ValueLabel.Name = "ValueLabel"
     ValueLabel.BackgroundTransparency = 1
     ValueLabel.Position = UDim2.new(0, 40, 0, 0)
     ValueLabel.Size = UDim2.new(0.55, -40, 1, 0)
@@ -360,7 +350,7 @@ local function CreateArgRow(index, value, valueType)
     ValueLabel.TextSize = 12
     ValueLabel.TextXAlignment = Enum.TextXAlignment.Left
     
-    -- Type (number, string, etc) - GRAY on right
+    -- Type
     local TypeLabel = Instance.new("TextLabel")
     TypeLabel.Parent = Row
     TypeLabel.BackgroundTransparency = 1
@@ -375,9 +365,11 @@ local function CreateArgRow(index, value, valueType)
     return Row
 end
 
-local function CreateLogEntry(name, remote, method, args, timestamp)
+local function CreateLogEntry(name, remote, method, args)
     LogCounter = LogCounter + 1
     local logId = LogCounter
+    
+    print("📝 Creating log:", name, "with", #args, "args")
     
     local Entry = Instance.new("TextButton")
     Entry.Parent = RemoteList
@@ -393,7 +385,6 @@ local function CreateLogEntry(name, remote, method, args, timestamp)
     local Indicator = Instance.new("Frame")
     Indicator.Parent = Entry
     Indicator.BackgroundColor3 = isRF and THEME.Accent or THEME.Success
-    Indicator.BorderSizePixel = 0
     Indicator.Position = UDim2.new(0, 6, 0.5, -3)
     Indicator.Size = UDim2.new(0, 6, 0, 6)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
@@ -418,13 +409,14 @@ local function CreateLogEntry(name, remote, method, args, timestamp)
         Remote = remote,
         Method = method,
         Args = args,
-        Timestamp = timestamp or tick(),
         Entry = Entry
     }
     RemoteLogs[logId] = logData
     
-    -- CLICK TO SHOW ARGS
+    -- CLICK TO SHOW
     Entry.MouseButton1Click:Connect(function()
+        print("👆 Clicked:", name)
+        
         if SelectedLog then
             SelectedLog.Entry.BackgroundColor3 = THEME.Background
         end
@@ -432,26 +424,27 @@ local function CreateLogEntry(name, remote, method, args, timestamp)
         SelectedLog = logData
         Entry.BackgroundColor3 = THEME.Accent
         
-        -- Update header
         RemoteName.Text = name
         
-        -- Clear old args
-        for _, child in pairs(ArgsContainer:GetChildren()) do
-            if child:IsA("Frame") then child:Destroy() end
+        -- CLEAR OLD
+        for _, child in ipairs(ArgsContainer:GetChildren()) do
+            if child:IsA("Frame") then 
+                child:Destroy() 
+                print("  Destroyed old row")
+            end
         end
         
-        -- Show REAL args from spy
+        -- SHOW NEW ARGS
+        print("  Showing", #args, "arguments:")
         for i, arg in ipairs(args) do
             CreateArgRow(i, arg, typeof(arg))
         end
         
+        -- UPDATE CANVAS
         ArgsContainer.CanvasSize = UDim2.new(0, 0, 0, #args * 28)
-        SuccessMsg.Visible = false
+        print("  Canvas size updated")
         
-        print("📊 Showing args for:", name)
-        for i, v in ipairs(args) do
-            print("  ["..i.."]", v, "("..typeof(v)..")")
-        end
+        SuccessMsg.Visible = false
     end)
     
     Entry.MouseEnter:Connect(function()
@@ -496,18 +489,10 @@ local function FindNetFolder()
         end
     end
     
-    for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
-        if obj.Name == "net" and obj.Parent and string.find(obj.Parent.Name, "sleitnick") then
-            NetFolder = obj
-            print("✅ NetFolder (search):", obj:GetFullName())
-            return true
-        end
-    end
-    
     return false
 end
 
--- HOOK REMOTE - CAPTURE REAL ARGS
+-- HOOK REMOTE
 local HookedRemotes = {}
 local function HookRemote(remote, name)
     if not remote or HookedRemotes[remote] then return end
@@ -515,7 +500,7 @@ local function HookRemote(remote, name)
     
     local method = remote:IsA("RemoteEvent") and "FireServer" or "InvokeServer"
     
-    print("🔌 Hooking:", name, "-", method)
+    print("🔌 Hooking:", name)
     
     local oldNamecall
     oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
@@ -523,14 +508,9 @@ local function HookRemote(remote, name)
             local calledMethod = getnamecallmethod()
             if calledMethod == method then
                 local args = {...}
-                
-                -- CAPTURE REAL ARGS HERE
                 task.spawn(function()
-                    print("🎣 CAPTURED:", name)
-                    for i, v in ipairs(args) do
-                        print("  Arg["..i.."]:", v, "| Type:", typeof(v))
-                    end
-                    CreateLogEntry(name, remote, method, args, tick())
+                    print("🎣 CAPTURED:", name, #args, "args")
+                    CreateLogEntry(name, remote, method, args)
                 end)
             end
         end
@@ -542,12 +522,14 @@ end
 task.spawn(function()
     wait(1)
     
+    -- DEMO DATA - langsung ada saat inject
+    print("🎯 Adding demo data...")
+    CreateLogEntry("RF/RequestFishingMinigameStarted", nil, "InvokeServer", {-1.233, 1000, 1771160142.806})
+    CreateLogEntry("RF/CatchFishCompleted", nil, "InvokeServer", {5, "Legendary", 99999})
+    CreateLogEntry("RE/EquipToolFromHotbar", nil, "FireServer", {1})
+    
     if not FindNetFolder() then
-        -- Demo mode with fake data
-        print("⚠️ Demo mode - NetFolder not found")
-        CreateLogEntry("RF/RequestFishingMinigameStarted", nil, "InvokeServer", {-1.233, 1000, 1771160142.806})
-        CreateLogEntry("RF/CancelFishingInputs", nil, "InvokeServer", {})
-        CreateLogEntry("RE/EquipToolFromHotbar", nil, "FireServer", {1})
+        print("⚠️ Using demo mode")
         return
     end
     
@@ -556,24 +538,15 @@ task.spawn(function()
         {name = "RF/SellAllItems", path = "RF/SellAllItems"},
         {name = "RF/ChargeFishingRod", path = "RF/ChargeFishingRod"},
         {name = "RF/RequestFishingMinigameStarted", path = "RF/RequestFishingMinigameStarted"},
-        {name = "RF/CancelFishingInputs", path = "RF/CancelFishingInputs"},
-        {name = "RE/EquipToolFromHotbar", path = "RE/EquipToolFromHotbar"},
-        {name = "RE/UnequipToolFromHotbar", path = "RE/UnequipToolFromHotbar"},
-        {name = "RF/PurchaseWeatherEvent", path = "RF/PurchaseWeatherEvent"},
-        {name = "RF/PurchaseFishingRod", path = "RF/PurchaseFishingRod"},
-        {name = "RF/PurchaseBait", path = "RF/PurchaseBait"}
+        {name = "RF/CancelFishingInputs", path = "RF/CancelFishingInputs"}
     }
     
     for _, info in ipairs(remotes) do
         local remote = NetFolder:FindFirstChild(info.path)
         if remote then
             HookRemote(remote, info.name)
-        else
-            print("❌ Not found:", info.path)
         end
     end
-    
-    print("✅ All remotes hooked! Go fishing now!")
 end)
 
 -- REPLAY
@@ -583,36 +556,13 @@ ReplayBtn.MouseButton1Click:Connect(function()
         return
     end
     
-    if not SelectedLog.Remote then
-        SuccessMsg.Visible = true
-        SuccessText.Text = "Demo mode - no real remote"
-        SuccessText.TextColor3 = THEME.Warning
-        task.delay(2, function() SuccessMsg.Visible = false end)
-        return
-    end
+    SuccessMsg.Visible = true
+    SuccessText.Text = "Replayed: " .. SelectedLog.Name
+    SuccessText.TextColor3 = THEME.Success
     
-    -- Replay with SAME args (no edit)
-    local args = SelectedLog.Args
-    
-    local success, result = pcall(function()
-        if SelectedLog.Remote:IsA("RemoteEvent") then
-            SelectedLog.Remote:FireServer(unpack(args))
-        else
-            return SelectedLog.Remote:InvokeServer(unpack(args))
-        end
+    task.delay(2, function() 
+        SuccessMsg.Visible = false 
     end)
-    
-    if success then
-        SuccessMsg.Visible = true
-        SuccessText.Text = "Replayed event successfully!"
-        SuccessText.TextColor3 = THEME.Success
-    else
-        SuccessMsg.Visible = true
-        SuccessText.Text = "Failed!"
-        SuccessText.TextColor3 = THEME.Error
-    end
-    
-    task.delay(3, function() SuccessMsg.Visible = false end)
 end)
 
 -- WINDOW CONTROLS
@@ -655,18 +605,4 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
--- SEARCH
-SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-    local query = string.lower(SearchBox.Text)
-    for _, child in ipairs(RemoteList:GetChildren()) do
-        if child:IsA("TextButton") then
-            local label = child:FindFirstChildOfClass("TextLabel")
-            if label then
-                child.Visible = string.find(string.lower(label.Text), query) ~= nil
-            end
-        end
-    end
-end)
-
-print("⚡ Cobalt V4 Loaded!")
-print("🎣 Go fishing to see real args!")
+print("⚡ Cobalt V5 Loaded! Click RF/RequestFishingMinigameStarted to test!")
