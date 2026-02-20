@@ -1,5 +1,5 @@
--- Cobalt V5 - FIX Args Display
--- Pasti nilai muncul!
+-- Cobalt V6 - Guaranteed Args Display
+-- Fix: Manual positioning tanpa UIListLayout
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -25,7 +25,7 @@ local THEME = {
 
 -- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CobaltV5"
+ScreenGui.Name = "CobaltV6"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false
 
@@ -200,20 +200,15 @@ TabInfo.Text = "ⓘ Function Info"
 TabInfo.TextColor3 = THEME.SubText
 TabInfo.TextSize = 11
 
--- Args Container - FIX DISINI
+-- Args Container - TANPA UILISTLAYOUT, pakai manual position
 local ArgsContainer = Instance.new("ScrollingFrame")
 ArgsContainer.Parent = RightPanel
+ArgsContainer.Name = "ArgsContainer"
 ArgsContainer.BackgroundColor3 = THEME.Background
 ArgsContainer.Position = UDim2.new(0, 8, 0, 76)
 ArgsContainer.Size = UDim2.new(1, -16, 1, -130)
 ArgsContainer.ScrollBarThickness = 3
 ArgsContainer.CanvasSize = UDim2.new(0, 0, 0, 0)
-
--- IMPORTANT: UIListLayout untuk otomatis tata letak
-local ArgsListLayout = Instance.new("UIListLayout")
-ArgsListLayout.Parent = ArgsContainer
-ArgsListLayout.Padding = UDim.new(0, 2)
-ArgsListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
 -- Bottom Bar
 local BottomBar = Instance.new("Frame")
@@ -312,15 +307,19 @@ local SelectedLog = nil
 local LogCounter = 0
 local NetFolder = nil
 
--- CREATE ARG ROW - FIX VERSION
-local function CreateArgRow(index, value, valueType)
-    print("  Creating row", index, "=", value, "("..valueType..")")
-    
+-- CREATE ARG ROW - MANUAL POSITION (NO UILISTLAYOUT)
+local function ClearArgs()
+    for _, child in ipairs(ArgsContainer:GetChildren()) do
+        child:Destroy()
+    end
+end
+
+local function CreateArgRow(index, value, valueType, yPos)
     local Row = Instance.new("Frame")
     Row.Parent = ArgsContainer
     Row.BackgroundTransparency = 1
+    Row.Position = UDim2.new(0, 0, 0, yPos)
     Row.Size = UDim2.new(1, 0, 0, 26)
-    Row.LayoutOrder = index
     
     -- Index
     local IndexLabel = Instance.new("TextLabel")
@@ -333,11 +332,12 @@ local function CreateArgRow(index, value, valueType)
     IndexLabel.TextColor3 = THEME.Text
     IndexLabel.TextSize = 12
     
-    -- Value - PASTI MUNCUL!
+    -- Value Color
     local ValueColor = THEME.Number
     if valueType == "string" then ValueColor = THEME.String
     elseif valueType == "boolean" then ValueColor = THEME.Boolean end
     
+    -- Value
     local ValueLabel = Instance.new("TextLabel")
     ValueLabel.Parent = Row
     ValueLabel.Name = "ValueLabel"
@@ -365,11 +365,35 @@ local function CreateArgRow(index, value, valueType)
     return Row
 end
 
+local function ShowArgs(args)
+    ClearArgs()
+    
+    if #args == 0 then
+        local EmptyLabel = Instance.new("TextLabel")
+        EmptyLabel.Parent = ArgsContainer
+        EmptyLabel.BackgroundTransparency = 1
+        EmptyLabel.Size = UDim2.new(1, 0, 0, 26)
+        EmptyLabel.Font = Enum.Font.Gotham
+        EmptyLabel.Text = "(no arguments)"
+        EmptyLabel.TextColor3 = THEME.SubText
+        EmptyLabel.TextSize = 12
+        ArgsContainer.CanvasSize = UDim2.new(0, 0, 0, 30)
+        return
+    end
+    
+    for i, arg in ipairs(args) do
+        local yPos = (i - 1) * 28
+        CreateArgRow(i, arg, typeof(arg), yPos)
+    end
+    
+    ArgsContainer.CanvasSize = UDim2.new(0, 0, 0, #args * 28)
+end
+
 local function CreateLogEntry(name, remote, method, args)
     LogCounter = LogCounter + 1
     local logId = LogCounter
     
-    print("📝 Creating log:", name, "with", #args, "args")
+    print("📝 Log:", name, "| Args:", #args)
     
     local Entry = Instance.new("TextButton")
     Entry.Parent = RemoteList
@@ -402,7 +426,7 @@ local function CreateLogEntry(name, remote, method, args)
     NameLabel.TextXAlignment = Enum.TextXAlignment.Left
     NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
     
-    -- Store data
+    -- Store
     local logData = {
         Id = logId,
         Name = name,
@@ -413,9 +437,9 @@ local function CreateLogEntry(name, remote, method, args)
     }
     RemoteLogs[logId] = logData
     
-    -- CLICK TO SHOW
+    -- CLICK
     Entry.MouseButton1Click:Connect(function()
-        print("👆 Clicked:", name)
+        print("👆 Selected:", name)
         
         if SelectedLog then
             SelectedLog.Entry.BackgroundColor3 = THEME.Background
@@ -423,27 +447,10 @@ local function CreateLogEntry(name, remote, method, args)
         
         SelectedLog = logData
         Entry.BackgroundColor3 = THEME.Accent
-        
         RemoteName.Text = name
         
-        -- CLEAR OLD
-        for _, child in ipairs(ArgsContainer:GetChildren()) do
-            if child:IsA("Frame") then 
-                child:Destroy() 
-                print("  Destroyed old row")
-            end
-        end
-        
-        -- SHOW NEW ARGS
-        print("  Showing", #args, "arguments:")
-        for i, arg in ipairs(args) do
-            CreateArgRow(i, arg, typeof(arg))
-        end
-        
-        -- UPDATE CANVAS
-        ArgsContainer.CanvasSize = UDim2.new(0, 0, 0, #args * 28)
-        print("  Canvas size updated")
-        
+        -- SHOW ARGS
+        ShowArgs(args)
         SuccessMsg.Visible = false
     end)
     
@@ -466,8 +473,7 @@ end
 local function FindNetFolder()
     local paths = {
         "Packages/_Index/sleitnick_net@0.2.0/net",
-        "Packages/_Index/sleitnick_net@0.1.0/net",
-        "Packages/_Index/sleitnick_net@0.3.0/net"
+        "Packages/_Index/sleitnick_net@0.1.0/net"
     }
     
     for _, path in ipairs(paths) do
@@ -484,7 +490,6 @@ local function FindNetFolder()
         
         if found then
             NetFolder = current
-            print("✅ NetFolder:", path)
             return true
         end
     end
@@ -492,15 +497,13 @@ local function FindNetFolder()
     return false
 end
 
--- HOOK REMOTE
+-- HOOK
 local HookedRemotes = {}
 local function HookRemote(remote, name)
     if not remote or HookedRemotes[remote] then return end
     HookedRemotes[remote] = true
     
     local method = remote:IsA("RemoteEvent") and "FireServer" or "InvokeServer"
-    
-    print("🔌 Hooking:", name)
     
     local oldNamecall
     oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
@@ -509,7 +512,6 @@ local function HookRemote(remote, name)
             if calledMethod == method then
                 local args = {...}
                 task.spawn(function()
-                    print("🎣 CAPTURED:", name, #args, "args")
                     CreateLogEntry(name, remote, method, args)
                 end)
             end
@@ -518,67 +520,53 @@ local function HookRemote(remote, name)
     end)
 end
 
--- INITIALIZE
+-- INIT
 task.spawn(function()
     wait(1)
     
-    -- DEMO DATA - langsung ada saat inject
-    print("🎯 Adding demo data...")
+    -- DEMO DATA - Langsung muncul
+    print("🎯 Creating demo entries...")
     CreateLogEntry("RF/RequestFishingMinigameStarted", nil, "InvokeServer", {-1.233, 1000, 1771160142.806})
     CreateLogEntry("RF/CatchFishCompleted", nil, "InvokeServer", {5, "Legendary", 99999})
+    CreateLogEntry("RF/CancelFishingInputs", nil, "InvokeServer", {})
     CreateLogEntry("RE/EquipToolFromHotbar", nil, "FireServer", {1})
     
-    if not FindNetFolder() then
-        print("⚠️ Using demo mode")
-        return
-    end
-    
-    local remotes = {
-        {name = "RF/CatchFishCompleted", path = "RF/CatchFishCompleted"},
-        {name = "RF/SellAllItems", path = "RF/SellAllItems"},
-        {name = "RF/ChargeFishingRod", path = "RF/ChargeFishingRod"},
-        {name = "RF/RequestFishingMinigameStarted", path = "RF/RequestFishingMinigameStarted"},
-        {name = "RF/CancelFishingInputs", path = "RF/CancelFishingInputs"}
-    }
-    
-    for _, info in ipairs(remotes) do
-        local remote = NetFolder:FindFirstChild(info.path)
-        if remote then
-            HookRemote(remote, info.name)
+    if FindNetFolder() then
+        local remotes = {
+            {name = "RF/CatchFishCompleted", path = "RF/CatchFishCompleted"},
+            {name = "RF/SellAllItems", path = "RF/SellAllItems"},
+            {name = "RF/ChargeFishingRod", path = "RF/ChargeFishingRod"},
+            {name = "RF/RequestFishingMinigameStarted", path = "RF/RequestFishingMinigameStarted"}
+        }
+        
+        for _, info in ipairs(remotes) do
+            local remote = NetFolder:FindFirstChild(info.path)
+            if remote then
+                HookRemote(remote, info.name)
+            end
         end
     end
+    
+    print("✅ Ready! Click any remote to see args.")
 end)
 
 -- REPLAY
 ReplayBtn.MouseButton1Click:Connect(function()
     if not SelectedLog then
-        RemoteName.Text = "Select a remote first!"
+        RemoteName.Text = "Select remote first!"
         return
     end
     
     SuccessMsg.Visible = true
     SuccessText.Text = "Replayed: " .. SelectedLog.Name
     SuccessText.TextColor3 = THEME.Success
-    
-    task.delay(2, function() 
-        SuccessMsg.Visible = false 
-    end)
+    task.delay(2, function() SuccessMsg.Visible = false end)
 end)
 
--- WINDOW CONTROLS
-CloseBtn.MouseButton1Click:Connect(function()
-    ScreenGui:Destroy()
-end)
-
-MinBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = false
-    ToggleBtn.Visible = true
-end)
-
-ToggleBtn.MouseButton1Click:Connect(function()
-    MainFrame.Visible = true
-    ToggleBtn.Visible = false
-end)
+-- CONTROLS
+CloseBtn.MouseButton1Click:Connect(function() ScreenGui:Destroy() end)
+MinBtn.MouseButton1Click:Connect(function() MainFrame.Visible = false ToggleBtn.Visible = true end)
+ToggleBtn.MouseButton1Click:Connect(function() MainFrame.Visible = true ToggleBtn.Visible = false end)
 
 -- DRAG
 local dragging = false
@@ -605,4 +593,17 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
-print("⚡ Cobalt V5 Loaded! Click RF/RequestFishingMinigameStarted to test!")
+-- SEARCH
+SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    local query = string.lower(SearchBox.Text)
+    for _, child in ipairs(RemoteList:GetChildren()) do
+        if child:IsA("TextButton") then
+            local label = child:FindFirstChildOfClass("TextLabel")
+            if label then
+                child.Visible = string.find(string.lower(label.Text), query) ~= nil
+            end
+        end
+    end
+end)
+
+print("⚡ Cobalt V6 Loaded!")
