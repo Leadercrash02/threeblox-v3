@@ -3515,7 +3515,7 @@ local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto We
 end)
 
 --==================================================
--- CHARM PRESET SECTION (SHOP PAGE) - NO EMOJI, NO ID DISPLAY
+-- CHARM PRESET SECTION (SHOP PAGE) - QUANTITY + BUY SYSTEM
 --==================================================
 CharmSection = CreateSectionDropdown(ShopPage, "Charm Preset")
 Instance.new("UIListLayout", CharmSection).SortOrder = Enum.SortOrder.LayoutOrder
@@ -3559,7 +3559,7 @@ CL(CharmPanel, {
     TextXAlignment = Enum.TextXAlignment.Left,
     TextColor3 = Color3.fromRGB(200, 200, 200),
     ZIndex = 11,
-    Text = "Select charm to auto buy/craft"
+    Text = "Select charm to purchase/craft"
 })
 
 -- Scrolling Frame
@@ -3579,47 +3579,64 @@ local charmLayout = Instance.new("UIListLayout", CharmScroll)
 charmLayout.SortOrder = Enum.SortOrder.LayoutOrder
 charmLayout.Padding = UDim.new(0, 4)
 
--- Data Charm (tanpa emoji, dengan ID internal tapi tidak ditampilkan)
+-- Data Charm (ID untuk logic, tapi tidak ditampilkan + tanpa emoji)
 local CHARM_DATA = {
-    -- Shop charms
-    {id = 14, name = "Heart Charm", type = "shop", price = "20k"},
-    {id = 4, name = "Clover Charm", type = "shop", price = "5k"},
-    {id = 1, name = "Bone Charm", type = "shop", price = "70k"},
-    {id = 2, name = "Algae Charm", type = "shop", price = "40k"},
-    {id = 3, name = "Magma Charm", type = "shop", price = "20k"},
-    -- Craft charms
-    {name = "Hook Charm", type = "craft", mats = "3x Rope"},
-    {name = "Winged Charm", type = "craft", mats = "2x Rope + Driftwood"},
-    {name = "Anchor Charm", type = "craft", mats = "Pyrafruit + Embercrux"},
-    {name = "Oculus Charm", type = "craft", mats = "Full Recipe"},
-    -- Info only
-    {name = "Silver Kraken", type = "info", tier = 5},
-    {name = "Black Kraken", type = "info", tier = 7},
-    {name = "Coral Charm", type = "info", tier = 2},
-    {name = "Mermaid Charm", type = "info", tier = 4}
+    -- SHOP CHARMS (pakai ID untuk beli)
+    {type = "shop", id = 14, name = "Heart Charm", price = "20k"},
+    {type = "shop", id = 4, name = "Clover Charm", price = "5k"},
+    {type = "shop", id = 1, name = "Bone Charm", price = "70k"},
+    {type = "shop", id = 2, name = "Algae Charm", price = "40k"},
+    {type = "shop", id = 3, name = "Magma Charm", price = "20k"},
+    
+    -- CRAFT CHARMS (pakai nama untuk craft)
+    {type = "craft", name = "Hook Charm", mats = "3x Rope"},
+    {type = "craft", name = "Winged Charm", mats = "2x Rope + Driftwood"},
+    {type = "craft", name = "Anchor Charm", mats = "Pyrafruit + Embercrux"},
+    {type = "craft", name = "Oculus Charm", mats = "Full Recipe"},
+    
+    -- INFO ONLY
+    {type = "info", name = "Silver Kraken", tier = 5},
+    {type = "info", name = "Black Kraken", tier = 7},
+    {type = "info", name = "Coral Charm", tier = 2},
+    {type = "info", name = "Mermaid Charm", tier = 4}
 }
 
-local selectedCharms = {}
-local charmRF = nil
+-- Global variables
+_G.RAY = _G.RAY or {}
+_G.RAY.SelectedCharmItem = nil
+_G.RAY.CharmBuyQty = 1
 
--- Ambil remote
+local selectedCharms = {}
+local charmPurchaseRF = nil
+local charmCraftStartRF = nil
+local charmCraftConfirmRF = nil
+
+-- Ambil remotes
 task.spawn(function()
-    local success, result = pcall(function()
+    local success1, result1 = pcall(function()
         return net:WaitForChild("RF/PurchaseCharm")
     end)
-    if success then
-        charmRF = result
-        print("[Charm] RF initialized")
+    if success1 then
+        charmPurchaseRF = result1
+        print("[Charm] Purchase RF ready")
+    end
+    
+    local success2, result2 = pcall(function()
+        return net:WaitForChild("RF/StartCrafting")
+    end)
+    if success2 then
+        charmCraftStartRF = result2
+        print("[Charm] Craft Start RF ready")
+    end
+    
+    local success3, result3 = pcall(function()
+        return net:WaitForChild("RF/ConfirmCrafting")
+    end)
+    if success3 then
+        charmCraftConfirmRF = result3
+        print("[Charm] Craft Confirm RF ready")
     end
 end)
-
-local function countSelectedCharms()
-    local c = 0
-    for _, on in pairs(selectedCharms) do
-        if on then c = c + 1 end
-    end
-    return c
-end
 
 local function updateCharmRows()
     for _, row in ipairs(CharmScroll:GetChildren()) do
@@ -3631,21 +3648,18 @@ local function updateCharmRows()
             end
         end
     end
-    if CharmCountLabel then
-        CharmCountLabel.Text = "Selected: " .. countSelectedCharms()
-    end
 end
 
--- Buat list charm (hanya nama, tanpa ID, tanpa emoji)
+-- Buat list charm di panel kanan (hanya nama, tanpa ID, tanpa emoji)
 for i, charm in ipairs(CHARM_DATA) do
     local row = Instance.new("Frame", CharmScroll)
-    row.Size = UDim2.new(1, -4, 0, 28)
+    row.Size = UDim2.new(1, -4, 0, 32)
     row.BackgroundTransparency = 1
     row.Name = "CharmRow_" .. charm.name
     row.LayoutOrder = i
     row.ZIndex = 11
     
-    -- Purple highlight di kiri (sama kayak weather)
+    -- Purple highlight di kiri
     local highlight = Instance.new("Frame", row)
     highlight.Name = "Highlight"
     highlight.Size = UDim2.new(0, 3, 1, 0)
@@ -3654,162 +3668,206 @@ for i, charm in ipairs(CHARM_DATA) do
     highlight.Visible = false
     highlight.ZIndex = 12
     
-    -- Button dengan teks putih
+    -- Button dengan teks
     local btn = Instance.new("TextButton", row)
     btn.Size = UDim2.new(1, -6, 1, 0)
     btn.Position = UDim2.new(0, 6, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-    -- Hanya nama charm, tanpa ID, tanpa emoji
+    
+    -- Format display text (tanpa emoji, tanpa ID)
     local displayText = "  " .. charm.name
     if charm.type == "shop" then
-        displayText = displayText .. " (" .. charm.price .. ")"
+        displayText = displayText .. "\n  " .. charm.price .. " Coins"
     elseif charm.type == "craft" then
         displayText = displayText .. " [Craft]"
     elseif charm.type == "info" then
-        displayText = displayText .. " [T" .. charm.tier .. "]"
+        displayText = displayText .. " [Tier " .. charm.tier .. "]"
     end
+    
     btn.Text = displayText
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.Gotham
-    btn.TextSize = 12
+    btn.TextSize = 11
     btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.TextYAlignment = Enum.TextYAlignment.Top
     btn.ZIndex = 11
     CC(btn, 6)
     
     btn.MouseButton1Click:Connect(function()
-        if selectedCharms[charm.name] then
-            selectedCharms[charm.name] = nil
-        else
-            selectedCharms[charm.name] = true
+        -- Single select (clear others)
+        for k, _ in pairs(selectedCharms) do
+            selectedCharms[k] = nil
         end
+        
+        selectedCharms[charm.name] = true
+        _G.RAY.SelectedCharmItem = charm
+        
         updateCharmRows()
+        
+        -- Update selected label
+        if SelectedCharmLabel then
+            SelectedCharmLabel.Text = charm.name
+            SelectedCharmLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+        end
+        
         if NotifyFeature then
             NotifyFeature("Selected: " .. charm.name, true)
         end
     end)
 end
 
--- Counter label
-local CharmCountRow = Instance.new("Frame", CharmSection)
-CharmCountRow.Size = UDim2.new(1, 0, 0, 30)
-CharmCountRow.BackgroundTransparency = 1
+-- Selected Row
+local SelectedCharmRow = Instance.new("Frame", CharmSection)
+SelectedCharmRow.Size = UDim2.new(1, 0, 0, 30)
+SelectedCharmRow.BackgroundTransparency = 1
 
-CharmCountLabel = CL(CharmCountRow, {
-    Size = UDim2.new(0.5, -10, 1, 0),
+CL(SelectedCharmRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
     Position = UDim2.new(0, 16, 0, 0),
     BackgroundTransparency = 1,
     Font = Enum.Font.Gotham,
     TextSize = 12,
     TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = Color3.fromRGB(200, 200, 200),
-    Text = "Selected: 0"
+    TextColor3 = THEME.TEXT,
+    Text = "Selected:"
 })
 
--- Status label
-local CharmStatusRow = Instance.new("Frame", CharmSection)
-CharmStatusRow.Size = UDim2.new(1, 0, 0, 24)
-CharmStatusRow.BackgroundTransparency = 1
+SelectedCharmLabel = CL(SelectedCharmRow, {
+    Size = UDim2.new(0.6, -10, 1, 0),
+    Position = UDim2.new(0.4, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(150, 150, 150),
+    Text = "None"
+})
 
-local charmStatusLabel = CL(CharmStatusRow, {
-    Size = UDim2.new(1, -32, 1, 0),
+-- Quantity Row (sama persis kayak Merchant)
+local CharmQtyRow = Instance.new("Frame", CharmSection)
+CharmQtyRow.Size = UDim2.new(1, 0, 0, 36)
+CharmQtyRow.BackgroundTransparency = 1
+
+CL(CharmQtyRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
     Position = UDim2.new(0, 16, 0, 0),
     BackgroundTransparency = 1,
     Font = Enum.Font.Gotham,
-    TextSize = 11,
+    TextSize = 13,
     TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = Color3.fromRGB(150, 150, 150),
-    Text = "Ready..."
+    TextColor3 = THEME.TEXT,
+    Text = "Quantity"
 })
+
+-- Quantity Input
+local charmQtyBox = Instance.new("TextBox", CharmQtyRow)
+charmQtyBox.Size = UDim2.new(0, 60, 0, 24)
+charmQtyBox.Position = UDim2.new(0.4, -10, 0.5, -12)
+charmQtyBox.BackgroundColor3 = THEME.CARD
+charmQtyBox.BackgroundTransparency = 0.1
+charmQtyBox.Text = tostring(_G.RAY.CharmBuyQty)
+charmQtyBox.TextColor3 = THEME.TEXT
+charmQtyBox.Font = Enum.Font.Gotham
+charmQtyBox.TextSize = 12
+charmQtyBox.ClearTextOnFocus = false
+CC(charmQtyBox, 8)
+
+charmQtyBox.FocusLost:Connect(function()
+    local n = tonumber(charmQtyBox.Text)
+    if not n or n < 1 then
+        n = 1
+    end
+    _G.RAY.CharmBuyQty = math.min(n, 99)
+    charmQtyBox.Text = tostring(_G.RAY.CharmBuyQty)
+end)
+
+-- BUY Button
+local charmBuyBtn = Instance.new("TextButton", CharmQtyRow)
+charmBuyBtn.Size = UDim2.new(0, 80, 0, 24)
+charmBuyBtn.Position = UDim2.new(1, -90, 0.5, -12)
+charmBuyBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
+charmBuyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+charmBuyBtn.Font = Enum.Font.GothamBold
+charmBuyBtn.TextSize = 12
+charmBuyBtn.Text = "BUY"
+CC(charmBuyBtn, 8)
+
+-- Function Execute Charm (logic sama kayak script referensi)
+function ExecuteCharm(charmData, qty)
+    qty = math.max(1, tonumber(qty) or 1)
+    
+    if charmData.type == "shop" then
+        -- SHOP PURCHASE (pakai ID)
+        if not charmPurchaseRF then
+            warn("[Charm] Purchase RF not ready!")
+            return false
+        end
+        
+        for i = 1, qty do
+            task.spawn(function()
+                pcall(function()
+                    charmPurchaseRF:InvokeServer(charmData.id)
+                    print("[Charm] Purchased:", charmData.name)
+                end)
+            end)
+            task.wait(0.1)
+        end
+        return true
+        
+    elseif charmData.type == "craft" then
+        -- CRAFT EXECUTE (pakai nama)
+        if not charmCraftStartRF or not charmCraftConfirmRF then
+            warn("[Charm] Craft RF not ready!")
+            return false
+        end
+        
+        for i = 1, qty do
+            task.spawn(function()
+                pcall(function()
+                    charmCraftStartRF:InvokeServer(charmData.name)
+                    task.wait(0.1)
+                    charmCraftConfirmRF:InvokeServer()
+                    print("[Charm] Crafted:", charmData.name)
+                end)
+            end)
+            task.wait(0.2)
+        end
+        return true
+        
+    elseif charmData.type == "info" then
+        -- Info only, tidak bisa dibeli
+        if NotifyFeature then
+            NotifyFeature(charmData.name .. " is info only!", false)
+        end
+        return false
+    end
+    
+    return false
+end
+
+charmBuyBtn.MouseButton1Click:Connect(function()
+    if not _G.RAY.SelectedCharmItem then
+        if NotifyFeature then NotifyFeature("No charm selected!", false) end
+        return
+    end
+    
+    local charm = _G.RAY.SelectedCharmItem
+    local qty = _G.RAY.CharmBuyQty or 1
+    
+    local success = ExecuteCharm(charm, qty)
+    
+    if success and NotifyFeature then
+        local action = charm.type == "shop" and "Buying" or "Crafting"
+        NotifyFeature(action .. " " .. charm.name .. " x" .. qty, true)
+    end
+end)
 
 -- Open/Close panel
 CSR(CharmSection, "Charm Panel", "Open", function()
     CharmPanel.Visible = not CharmPanel.Visible
 end)
 
+-- Tambah ke AllPanels
 table.insert(AllPanels, CharmPanel)
 
---==================================================
--- AUTO CHARM TOGGLE PILL (DENGAN CALLBACK)
---==================================================
-local AutoCharmRow = Instance.new("Frame", CharmSection)
-AutoCharmRow.Size = UDim2.new(1, 0, 0, 36)
-AutoCharmRow.BackgroundTransparency = 1
-
-local autoCharmEnabled = false
-local autoCharmThread = nil
-
-local function autoCharmLoop()
-    while autoCharmEnabled do
-        local count = countSelectedCharms()
-        if count > 0 then
-            charmStatusLabel.Text = "Processing " .. count .. " charms..."
-            charmStatusLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
-            
-            for charmName, isSelected in pairs(selectedCharms) do
-                if isSelected then
-                    -- Cari data charm
-                    local charmData = nil
-                    for _, c in ipairs(CHARM_DATA) do
-                        if c.name == charmName then
-                            charmData = c
-                            break
-                        end
-                    end
-                    
-                    if charmData then
-                        if charmData.type == "shop" and charmRF then
-                            -- Beli charm dari shop
-                            pcall(function()
-                                charmRF:InvokeServer(charmData.id)
-                                print("[CharmAuto] Bought:", charmName)
-                            end)
-                        elseif charmData.type == "craft" then
-                            -- Craft charm (gunakan StartCrafting dan ConfirmCrafting)
-                            pcall(function()
-                                local craftRF = net:FindFirstChild("RF/StartCrafting")
-                                local confirmRF = net:FindFirstChild("RF/ConfirmCrafting")
-                                if craftRF and confirmRF then
-                                    craftRF:InvokeServer(charmName)
-                                    task.wait(0.1)
-                                    confirmRF:InvokeServer()
-                                    print("[CharmAuto] Crafted:", charmName)
-                                end
-                            end)
-                        end
-                    end
-                end
-            end
-        else
-            charmStatusLabel.Text = "No charm selected!"
-            charmStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        end
-        task.wait(0.5)
-    end
-    
-    charmStatusLabel.Text = "Auto stopped"
-    charmStatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-    autoCharmThread = nil
-end
-
--- TOGGLE PILL dengan callback yang benar
-local AutoCharmGet, AutoCharmSet = CreateTogglePill(AutoCharmRow, "Auto Charm", false, function(isOn)
-    if isOn then
-        if countSelectedCharms() == 0 then
-            charmStatusLabel.Text = "Select charm first!"
-            charmStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-            AutoCharmSet(false) -- Matikan toggle balik
-            return
-        end
-        
-        autoCharmEnabled = true
-        if not autoCharmThread then
-            autoCharmThread = task.spawn(autoCharmLoop)
-        end
-        if NotifyFeature then NotifyFeature("Auto Charm: ON", true) end
-    else
-        autoCharmEnabled = false
-        if NotifyFeature then NotifyFeature("Auto Charm: OFF", false) end
-    end
-end)
-
-print("[FullScript] All sections loaded with Charm Preset + Fixed Loch Ness Timer")
+print("[Charm] Section loaded - Shop(ID) + Craft(Name) + Quantity + Buy")
