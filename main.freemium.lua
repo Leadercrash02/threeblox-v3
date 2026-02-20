@@ -3304,3 +3304,303 @@ local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto We
 end)
 
 print("[FullScript] All sections loaded with fixes")
+
+--==================================================
+-- CHARM PRESET SECTION (SHOP PAGE) - NO EMOJI, NO ID DISPLAY
+--==================================================
+CharmSection = CreateSectionDropdown(ShopPage, "Charm Preset")
+Instance.new("UIListLayout", CharmSection).SortOrder = Enum.SortOrder.LayoutOrder
+CharmSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Panel kanan untuk Charm
+CharmPanel = Instance.new("Frame", Main)
+CharmPanel.Name = "CharmPresetRightPanel"
+CharmPanel.Size = UDim2.new(0, 220, 1, -46)
+CharmPanel.AnchorPoint = Vector2.new(1, 0)
+CharmPanel.Position = UDim2.new(1, -10, 0, 40)
+CharmPanel.BackgroundColor3 = THEME.CARD
+CharmPanel.BackgroundTransparency = 0.25
+CharmPanel.BorderSizePixel = 0
+CharmPanel.Visible = false
+CharmPanel.ZIndex = 10
+
+CC(CharmPanel, 10)
+CS(CharmPanel, THEME.MAIN, 0.5)
+
+-- Title
+CL(CharmPanel, {
+    Size = UDim2.new(1, -10, 0, 24),
+    Position = UDim2.new(0, 5, 0, 6),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    ZIndex = 11,
+    Text = "Charm Preset"
+})
+
+-- Subtitle
+CL(CharmPanel, {
+    Size = UDim2.new(1, -10, 0, 18),
+    Position = UDim2.new(0, 5, 0, 30),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    ZIndex = 11,
+    Text = "Select charm to auto buy/craft"
+})
+
+-- Scrolling Frame
+CharmScroll = Instance.new("ScrollingFrame", CharmPanel)
+CharmScroll.Name = "CharmScroll"
+CharmScroll.Size = UDim2.new(1, -10, 1, -70)
+CharmScroll.Position = UDim2.new(0, 5, 0, 54)
+CharmScroll.BackgroundTransparency = 1
+CharmScroll.BorderSizePixel = 0
+CharmScroll.ScrollBarThickness = 3
+CharmScroll.ScrollBarImageColor3 = THEME.MAIN
+CharmScroll.ZIndex = 10
+CharmScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+CharmScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+local charmLayout = Instance.new("UIListLayout", CharmScroll)
+charmLayout.SortOrder = Enum.SortOrder.LayoutOrder
+charmLayout.Padding = UDim.new(0, 4)
+
+-- Data Charm (tanpa emoji, dengan ID internal tapi tidak ditampilkan)
+local CHARM_DATA = {
+    -- Shop charms
+    {id = 14, name = "Heart Charm", type = "shop", price = "20k"},
+    {id = 4, name = "Clover Charm", type = "shop", price = "5k"},
+    {id = 1, name = "Bone Charm", type = "shop", price = "70k"},
+    {id = 2, name = "Algae Charm", type = "shop", price = "40k"},
+    {id = 3, name = "Magma Charm", type = "shop", price = "20k"},
+    -- Craft charms
+    {name = "Hook Charm", type = "craft", mats = "3x Rope"},
+    {name = "Winged Charm", type = "craft", mats = "2x Rope + Driftwood"},
+    {name = "Anchor Charm", type = "craft", mats = "Pyrafruit + Embercrux"},
+    {name = "Oculus Charm", type = "craft", mats = "Full Recipe"},
+    -- Info only
+    {name = "Silver Kraken", type = "info", tier = 5},
+    {name = "Black Kraken", type = "info", tier = 7},
+    {name = "Coral Charm", type = "info", tier = 2},
+    {name = "Mermaid Charm", type = "info", tier = 4}
+}
+
+local selectedCharms = {}
+local charmRF = nil
+
+-- Ambil remote
+task.spawn(function()
+    local success, result = pcall(function()
+        return net:WaitForChild("RF/PurchaseCharm")
+    end)
+    if success then
+        charmRF = result
+        print("[Charm] RF initialized")
+    end
+end)
+
+local function countSelectedCharms()
+    local c = 0
+    for _, on in pairs(selectedCharms) do
+        if on then c = c + 1 end
+    end
+    return c
+end
+
+local function updateCharmRows()
+    for _, row in ipairs(CharmScroll:GetChildren()) do
+        if row:IsA("Frame") and row.Name:match("^CharmRow_") then
+            local highlight = row:FindFirstChild("Highlight")
+            if highlight then
+                local charmName = row.Name:gsub("CharmRow_", "")
+                highlight.Visible = selectedCharms[charmName] == true
+            end
+        end
+    end
+    if CharmCountLabel then
+        CharmCountLabel.Text = "Selected: " .. countSelectedCharms()
+    end
+end
+
+-- Buat list charm (hanya nama, tanpa ID, tanpa emoji)
+for i, charm in ipairs(CHARM_DATA) do
+    local row = Instance.new("Frame", CharmScroll)
+    row.Size = UDim2.new(1, -4, 0, 28)
+    row.BackgroundTransparency = 1
+    row.Name = "CharmRow_" .. charm.name
+    row.LayoutOrder = i
+    row.ZIndex = 11
+    
+    -- Purple highlight di kiri (sama kayak weather)
+    local highlight = Instance.new("Frame", row)
+    highlight.Name = "Highlight"
+    highlight.Size = UDim2.new(0, 3, 1, 0)
+    highlight.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+    highlight.BorderSizePixel = 0
+    highlight.Visible = false
+    highlight.ZIndex = 12
+    
+    -- Button dengan teks putih
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(1, -6, 1, 0)
+    btn.Position = UDim2.new(0, 6, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    -- Hanya nama charm, tanpa ID, tanpa emoji
+    local displayText = "  " .. charm.name
+    if charm.type == "shop" then
+        displayText = displayText .. " (" .. charm.price .. ")"
+    elseif charm.type == "craft" then
+        displayText = displayText .. " [Craft]"
+    elseif charm.type == "info" then
+        displayText = displayText .. " [T" .. charm.tier .. "]"
+    end
+    btn.Text = displayText
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 12
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.ZIndex = 11
+    CC(btn, 6)
+    
+    btn.MouseButton1Click:Connect(function()
+        if selectedCharms[charm.name] then
+            selectedCharms[charm.name] = nil
+        else
+            selectedCharms[charm.name] = true
+        end
+        updateCharmRows()
+        if NotifyFeature then
+            NotifyFeature("Selected: " .. charm.name, true)
+        end
+    end)
+end
+
+-- Counter label
+local CharmCountRow = Instance.new("Frame", CharmSection)
+CharmCountRow.Size = UDim2.new(1, 0, 0, 30)
+CharmCountRow.BackgroundTransparency = 1
+
+CharmCountLabel = CL(CharmCountRow, {
+    Size = UDim2.new(0.5, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    Text = "Selected: 0"
+})
+
+-- Status label
+local CharmStatusRow = Instance.new("Frame", CharmSection)
+CharmStatusRow.Size = UDim2.new(1, 0, 0, 24)
+CharmStatusRow.BackgroundTransparency = 1
+
+local charmStatusLabel = CL(CharmStatusRow, {
+    Size = UDim2.new(1, -32, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 11,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(150, 150, 150),
+    Text = "Ready..."
+})
+
+-- Open/Close panel
+CSR(CharmSection, "Charm Panel", "Open", function()
+    CharmPanel.Visible = not CharmPanel.Visible
+end)
+
+table.insert(AllPanels, CharmPanel)
+
+--==================================================
+-- AUTO CHARM TOGGLE PILL (DENGAN CALLBACK)
+--==================================================
+local AutoCharmRow = Instance.new("Frame", CharmSection)
+AutoCharmRow.Size = UDim2.new(1, 0, 0, 36)
+AutoCharmRow.BackgroundTransparency = 1
+
+local autoCharmEnabled = false
+local autoCharmThread = nil
+
+local function autoCharmLoop()
+    while autoCharmEnabled do
+        local count = countSelectedCharms()
+        if count > 0 then
+            charmStatusLabel.Text = "Processing " .. count .. " charms..."
+            charmStatusLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+            
+            for charmName, isSelected in pairs(selectedCharms) do
+                if isSelected then
+                    -- Cari data charm
+                    local charmData = nil
+                    for _, c in ipairs(CHARM_DATA) do
+                        if c.name == charmName then
+                            charmData = c
+                            break
+                        end
+                    end
+                    
+                    if charmData then
+                        if charmData.type == "shop" and charmRF then
+                            -- Beli charm dari shop
+                            pcall(function()
+                                charmRF:InvokeServer(charmData.id)
+                                print("[CharmAuto] Bought:", charmName)
+                            end)
+                        elseif charmData.type == "craft" then
+                            -- Craft charm (gunakan StartCrafting dan ConfirmCrafting)
+                            pcall(function()
+                                local craftRF = net:FindFirstChild("RF/StartCrafting")
+                                local confirmRF = net:FindFirstChild("RF/ConfirmCrafting")
+                                if craftRF and confirmRF then
+                                    craftRF:InvokeServer(charmName)
+                                    task.wait(0.1)
+                                    confirmRF:InvokeServer()
+                                    print("[CharmAuto] Crafted:", charmName)
+                                end
+                            end)
+                        end
+                    end
+                end
+            end
+        else
+            charmStatusLabel.Text = "No charm selected!"
+            charmStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        end
+        task.wait(0.5)
+    end
+    
+    charmStatusLabel.Text = "Auto stopped"
+    charmStatusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    autoCharmThread = nil
+end
+
+-- TOGGLE PILL dengan callback yang benar
+local AutoCharmGet, AutoCharmSet = CreateTogglePill(AutoCharmRow, "Auto Charm", false, function(isOn)
+    if isOn then
+        if countSelectedCharms() == 0 then
+            charmStatusLabel.Text = "Select charm first!"
+            charmStatusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            AutoCharmSet(false) -- Matikan toggle balik
+            return
+        end
+        
+        autoCharmEnabled = true
+        if not autoCharmThread then
+            autoCharmThread = task.spawn(autoCharmLoop)
+        end
+        if NotifyFeature then NotifyFeature("Auto Charm: ON", true) end
+    else
+        autoCharmEnabled = false
+        if NotifyFeature then NotifyFeature("Auto Charm: OFF", false) end
+    end
+end)
+
+print("[Charm] Section loaded")
