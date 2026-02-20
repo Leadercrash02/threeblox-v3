@@ -2784,26 +2784,237 @@ PlayerSection=CreateSectionDropdown(TeleportPage,"Teleport Player")Instance.new(
 -- Event Hunt
 ghostSharkFloor=nil function GSM()local pr=Workspace:FindFirstChild("Props")if not pr then return nil end local m=pr:FindFirstChild("Shark Hunt")or pr:FindFirstChild("Ghost Shark Hunt")return(m and m:IsA("Model"))and m or nil end function EFS()local m=GSM()if not m then return nil,nil end if not m.PrimaryPart then local a=m:FindFirstChildWhichIsA("BasePart",true)if a then m.PrimaryPart=a end end local an=m.PrimaryPart if not an then return nil,nil end if not ghostSharkFloor or not ghostSharkFloor.Parent then ghostSharkFloor=Instance.new("Part")ghostSharkFloor.Name,ghostSharkFloor.Anchored,ghostSharkFloor.CanCollide,ghostSharkFloor.Transparency,ghostSharkFloor.Size,ghostSharkFloor.Material,ghostSharkFloor.Parent="SharkHuntFloor_Client",true,true,1,Vector3.new(80,1,80),Enum.Material.SmoothPlastic,Workspace end ghostSharkFloor.CFrame=CFrame.new(Vector3.new(an.Position.X,an.Position.Y-2,an.Position.Z))return an,ghostSharkFloor end function TTGS()local a,f=EFS()if not a or not f then return end local c,r=Player.Character or Player.CharacterAdded:Wait(),(Player.Character or Player.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")r.AssemblyLinearVelocity,r.AssemblyAngularVelocity=Vector3.new(0,0,0),Vector3.new(0,0,0)c:PivotTo(CFrame.new(f.Position+Vector3.new(0,f.Size.Y/2+4,0),f.Position+Vector3.new(0,f.Size.Y/2+4,0)+a.CFrame.LookVector))end function TTM()local a for _,o in ipairs(workspace:GetDescendants())do if o:IsA("BasePart")and o.Name=="Megalodon Hunt"then a=o break end end if not a then return end local c,r=Player.Character or Player.CharacterAdded:Wait(),(Player.Character or Player.CharacterAdded:Wait()):WaitForChild("HumanoidRootPart")r.AssemblyLinearVelocity,r.AssemblyAngularVelocity=Vector3.new(0,0,0),Vector3.new(0,0,0)c:PivotTo(CFrame.new(a.Position+Vector3.new(0,5,0),a.Position+Vector3.new(0,5,0)+a.CFrame.LookVector))end task.spawn(function()local ok,rp=pcall(function()return require(ReplicatedStorage.Packages.Replion)end)if not ok or not rp or not rp.Client then return end local sc,er=pcall(function()return rp.Client:WaitReplion("Events")end)if not sc or not er then return end local function oi(i,n)if n=="Shark Hunt"then _G.RAY.GhostSharkHuntActive=true if NotifyFeature then NotifyFeature("Ghost Shark Hunt Spawned!",true)end end end local function orm(i,n)if n=="Shark Hunt"then _G.RAY.GhostSharkHuntActive=false if ghostSharkFloor then ghostSharkFloor:Destroy()ghostSharkFloor=nil end if NotifyFeature then NotifyFeature("Ghost Shark Hunt Ended",false)end end end er:OnArrayInsert("Events",oi)er:OnArrayRemove("Events",orm)for i,n in ipairs(er:Get("Events")or{})do oi(i,n)end end)EventHuntSection=CreateSectionDropdown(TeleportPage,"Event Hunt")Instance.new("UIListLayout",EventHuntSection).SortOrder=Enum.SortOrder.LayoutOrder EventHuntSection.UIListLayout.Padding=UDim.new(0,6)EventHuntPanel,EventHuntScroll=CTP("Event Hunt","Pilih hunt event untuk teleport.")CLE(EventHuntScroll,"Ghost Shark Hunt",function()if not _G.RAY.GhostSharkHuntActive then if NotifyFeature then NotifyFeature("Ghost Shark Hunt not active!",false)end return end TTGS()if NotifyFeature then NotifyFeature("Teleported to Ghost Shark Hunt",true)end end)CLE(EventHuntScroll,"Megalodon Hunt",function()if not _G.RAY.MegalodonHuntActive then if NotifyFeature then NotifyFeature("Megalodon Hunt not found!",false)end return end TTM()if NotifyFeature then NotifyFeature("Teleported to Megalodon Hunt",true)end end)task.spawn(function()while true do for _,e in ipairs(EventHuntScroll:GetChildren())do if e:IsA("Frame")then local b,h=e:FindFirstChildOfClass("TextButton"),e:FindFirstChild("Highlight")if b and h then if b.Text:find("Ghost Shark")then if _G.RAY.GhostSharkHuntActive then b.BackgroundColor3,h.Visible=Color3.fromRGB(40,70,40),true else b.BackgroundColor3,h.Visible=Color3.fromRGB(30,30,50),false end elseif b.Text:find("Megalodon")then local ex=false for _,o in ipairs(workspace:GetDescendants())do if o:IsA("BasePart")and o.Name=="Megalodon Hunt"then ex=true break end end _G.RAY.MegalodonHuntActive=ex if ex then b.BackgroundColor3,h.Visible=Color3.fromRGB(40,70,40),true else b.BackgroundColor3,h.Visible=Color3.fromRGB(30,30,50),false end end end end end task.wait(1)end end)CSR(EventHuntSection,"Event Hunt Panel","Open",function()EventHuntPanel.Visible=not EventHuntPanel.Visible end)
 
--- Loch Ness
-ANCIENT_RUIN_CF=CFrame.new(6082.87842,-585.924316,4633.71631,-0.681475937,0,0.731840551,0,1,0,-0.731840551,0,-0.681475937)EVENT_DURATION_MINUTES,EVENT_HOURS_UTC=10,{0,4,8,12,16,20}EVENT_STATE={IDLE="IDLE",ACTIVE="ACTIVE",ENDED="ENDED"}function GNES()local n=os.date("!*t",os.time())local nm=n.hour*60+n.min for _,h in ipairs(EVENT_HOURS_UTC)do if h*60>nm then return os.time({year=n.year,month=n.month,day=n.day,hour=h,min=0,sec=0,isdst=false})end end return os.time({year=n.year,month=n.month,day=n.day+1,hour=EVENT_HOURS_UTC[1],min=0,sec=0,isdst=false})end function FT(s)s=math.max(0,math.floor(s))return string.format("%02d:%02d:%02d",math.floor(s/3600),math.floor((s%3600)/60),s%60)end function SCP()local c,h=Player.Character,Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")if not h then return false end _G.RAY.LochNess.SavedPosition={Position=h.CFrame.Position,LookVector=h.CFrame.LookVector,Time=os.time()}return true end function TTAR()local c,h=Player.Character or Player.CharacterAdded:Wait(),(Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")if not h then return end h.AssemblyLinearVelocity,h.AssemblyAngularVelocity=Vector3.new(0,0,0),Vector3.new(0,0,0)c:PivotTo(ANCIENT_RUIN_CF)if NotifyFeature then NotifyFeature("Teleported to Ancient Ruin!",true)end end function RTSP()local d=_G.RAY.LochNess.SavedPosition if not d then if NotifyFeature then NotifyFeature("No saved position!",false)end return end local c,h=Player.Character or Player.CharacterAdded:Wait(),(Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")if not h then return end h.CFrame=CFrame.new(d.Position,d.Position+d.LookVector)if NotifyFeature then NotifyFeature("Returned to saved position!",true)end end function ULS()local n,s=os.time(),_G.RAY.LochNess if s.CurrentState==EVENT_STATE.IDLE then if n>=s.NextEventTime then s.CurrentState,s.EventEndTime,s.IsAutoTeleported,s.IsReturned=EVENT_STATE.ACTIVE,n+(EVENT_DURATION_MINUTES*60),false,false return"EVENT_START"end elseif s.CurrentState==EVENT_STATE.ACTIVE then if n>=s.EventEndTime then s.CurrentState=EVENT_STATE.ENDED return"EVENT_END"end elseif s.CurrentState==EVENT_STATE.ENDED then s.NextEventTime,s.CurrentState,s.IsAutoTeleported,s.IsReturned=GNES(),EVENT_STATE.IDLE,false,false return"RESET"end return nil end function GLDT()local n,s=os.time(),_G.RAY.LochNess if s.CurrentState==EVENT_STATE.IDLE then return"Next Event:",s.NextEventTime-n,Color3.fromRGB(0,255,140)elseif s.CurrentState==EVENT_STATE.ACTIVE then return"Event Ends:",s.EventEndTime-n,Color3.fromRGB(255,140,0)else return"Event Ended!",0,Color3.fromRGB(255,80,80)end end function HLAA()local s=_G.RAY.LochNess if s.CurrentState==EVENT_STATE.ACTIVE and s.AutoTeleportEnabled and not s.IsAutoTeleported then if SCP()then task.wait(0.5)TTAR()s.IsAutoTeleported=true end end if s.CurrentState==EVENT_STATE.ENDED and s.AutoTeleportEnabled and s.IsAutoTeleported and not s.IsReturned then task.wait(1)RTSP()s.IsReturned=true end end LochNessSection=CreateSectionDropdown(TeleportPage,"Lochnes Event")Instance.new("UIListLayout",LochNessSection).SortOrder=Enum.SortOrder.LayoutOrder LochNessSection.UIListLayout.Padding=UDim.new(0,6)TimerRow=Instance.new("Frame",LochNessSection)TimerRow.Size,TimerRow.BackgroundTransparency=UDim2.new(1,0,0,40),1 TimerLabel=CL(TimerRow,{Size=UDim2.new(0.4,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Next Event:"})TimeDisplay=Instance.new("TextLabel",TimerRow)TimeDisplay.Name,TimeDisplay.Size,TimeDisplay.Position,TimeDisplay.BackgroundColor3,TimeDisplay.BackgroundTransparency,TimeDisplay.Font,TimeDisplay.TextSize,TimeDisplay.TextColor3,TimeDisplay.Text="LochNessTimeDisplay",UDim2.new(0.35,0,0,28),UDim2.new(0.4,0,0.5,-14),Color3.fromRGB(20,20,30),0.2,Enum.Font.GothamBold,16,Color3.fromRGB(0,255,140),"00:00:00"CC(TimeDisplay,6)StatusLabel=CL(TimerRow,{Size=UDim2.new(0.25,0,0,20),Position=UDim2.new(0.75,-5,0.5,-10),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=11,TextXAlignment=Enum.TextXAlignment.Center,TextColor3=Color3.fromRGB(100,100,100),Text="IDLE"})TeleportRow=Instance.new("Frame",LochNessSection)TeleportRow.Size,TeleportRow.BackgroundTransparency=UDim2.new(1,0,0,36),1 CL(TeleportRow,{Size=UDim2.new(1,-130,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Teleport to Ancient Ruin"})TeleportBtn=Instance.new("TextButton",TeleportRow)TeleportBtn.Size,TeleportBtn.Position,TeleportBtn.BackgroundColor3,TeleportBtn.Text,TeleportBtn.TextColor3,TeleportBtn.Font,TeleportBtn.TextSize=UDim2.new(0,110,0,26),UDim2.new(1,-126,0.5,-13),Color3.fromRGB(40,70,40),"Teleport",Color3.fromRGB(255,255,255),Enum.Font.GothamBold,12 CC(TeleportBtn,8)TeleportBtn.MouseButton1Click:Connect(function()if _G.RAY.LochNess.CurrentState==EVENT_STATE.ACTIVE and not _G.RAY.LochNess.SavedPosition then SCP()end TTAR()end)ReturnRow=Instance.new("Frame",LochNessSection)ReturnRow.Size,ReturnRow.BackgroundTransparency=UDim2.new(1,0,0,36),1 CL(ReturnRow,{Size=UDim2.new(1,-130,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Return to Saved Pos"})ReturnBtn=Instance.new("TextButton",ReturnRow)ReturnBtn.Size,ReturnBtn.Position,ReturnBtn.BackgroundColor3,ReturnBtn.Text,ReturnBtn.TextColor3,ReturnBtn.Font,ReturnBtn.TextSize=UDim2.new(0,110,0,26),UDim2.new(1,-126,0.5,-13),Color3.fromRGB(70,40,40),"Return",Color3.fromRGB(255,255,255),Enum.Font.GothamBold,12 CC(ReturnBtn,8)ReturnBtn.MouseButton1Click:Connect(RTSP)
+--==================================================
+-- LOCH NESS EVENT - FIXED TIMER LOGIC
+--==================================================
+ANCIENT_RUIN_CF=CFrame.new(6082.87842,-585.924316,4633.71631,-0.681475937,0,0.731840551,0,1,0,-0.731840551,0,-0.681475937)
+EVENT_DURATION_MINUTES=10
+EVENT_HOURS_UTC={0,4,8,12,16,20}
+EVENT_STATE={IDLE="IDLE",ACTIVE="ACTIVE",ENDED="ENDED"}
 
--- Auto TP Toggle PILL (REPLACED CTPi with CreateTogglePill)
+-- FIX: Calculate next event time properly
+function GNES()
+    local n=os.date("!*t",os.time())
+    local nm=n.hour*60+n.min
+    
+    for _,h in ipairs(EVENT_HOURS_UTC) do
+        if h*60 > nm then
+            -- Event is later today
+            return os.time({year=n.year,month=n.month,day=n.day,hour=h,min=0,sec=0,isdst=false})
+        end
+    end
+    -- Next event is tomorrow at first hour
+    return os.time({year=n.year,month=n.month,day=n.day+1,hour=EVENT_HOURS_UTC[1],min=0,sec=0,isdst=false})
+end
+
+function FT(s)
+    s=math.max(0,math.floor(s))
+    return string.format("%02d:%02d:%02d",math.floor(s/3600),math.floor((s%3600)/60),s%60)
+end
+
+function SCP()
+    local c,h=Player.Character,Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    if not h then return false end
+    _G.RAY.LochNess.SavedPosition={Position=h.CFrame.Position,LookVector=h.CFrame.LookVector,Time=os.time()}
+    return true
+end
+
+function TTAR()
+    local c,h=Player.Character or Player.CharacterAdded:Wait(),(Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
+    if not h then return end
+    h.AssemblyLinearVelocity,h.AssemblyAngularVelocity=Vector3.new(0,0,0),Vector3.new(0,0,0)
+    c:PivotTo(ANCIENT_RUIN_CF)
+    if NotifyFeature then NotifyFeature("Teleported to Ancient Ruin!",true) end
+end
+
+function RTSP()
+    local d=_G.RAY.LochNess.SavedPosition
+    if not d then
+        if NotifyFeature then NotifyFeature("No saved position!",false) end
+        return
+    end
+    local c,h=Player.Character or Player.CharacterAdded:Wait(),(Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
+    if not h then return end
+    h.CFrame=CFrame.new(d.Position,d.Position+d.LookVector)
+    if NotifyFeature then NotifyFeature("Returned to saved position!",true) end
+end
+
+-- FIXED: Timer logic - when reaches 0, start 10 min countdown, then reset to 4 hours
+function ULS()
+    local n,s=os.time(),_G.RAY.LochNess
+    
+    if s.CurrentState==EVENT_STATE.IDLE then
+        if n >= s.NextEventTime then
+            -- Event starts now
+            s.CurrentState=EVENT_STATE.ACTIVE
+            s.EventEndTime=n+(EVENT_DURATION_MINUTES*60)
+            s.IsAutoTeleported=false
+            s.IsReturned=false
+            return"EVENT_START"
+        end
+    elseif s.CurrentState==EVENT_STATE.ACTIVE then
+        if n >= s.EventEndTime then
+            -- Event ends, go to ENDED state
+            s.CurrentState=EVENT_STATE.ENDED
+            return"EVENT_END"
+        end
+    elseif s.CurrentState==EVENT_STATE.ENDED then
+        -- FIX: Reset to IDLE and calculate next event (4 hours later)
+        s.NextEventTime=GNES()
+        s.CurrentState=EVENT_STATE.IDLE
+        s.IsAutoTeleported=false
+        s.IsReturned=false
+        return"RESET"
+    end
+    return nil
+end
+
+function GLDT()
+    local n,s=os.time(),_G.RAY.LochNess
+    if s.CurrentState==EVENT_STATE.IDLE then
+        local remaining=s.NextEventTime-n
+        if remaining <= 0 then
+            return"Starting...",0,Color3.fromRGB(0,255,140)
+        end
+        return"Next Event:",remaining,Color3.fromRGB(0,255,140)
+    elseif s.CurrentState==EVENT_STATE.ACTIVE then
+        local remaining=s.EventEndTime-n
+        if remaining <= 0 then
+            return"Ending...",0,Color3.fromRGB(255,140,0)
+        end
+        return"Event Ends:",remaining,Color3.fromRGB(255,140,0)
+    else
+        return"Resetting...",0,Color3.fromRGB(255,80,80)
+    end
+end
+
+function HLAA()
+    local s=_G.RAY.LochNess
+    if s.CurrentState==EVENT_STATE.ACTIVE and s.AutoTeleportEnabled and not s.IsAutoTeleported then
+        if SCP() then
+            task.wait(0.5)
+            TTAR()
+            s.IsAutoTeleported=true
+        end
+    end
+    if s.CurrentState==EVENT_STATE.ENDED and s.AutoTeleportEnabled and s.IsAutoTeleported and not s.IsReturned then
+        task.wait(1)
+        RTSP()
+        s.IsReturned=true
+    end
+end
+
+LochNessSection=CreateSectionDropdown(TeleportPage,"Lochnes Event")
+Instance.new("UIListLayout",LochNessSection).SortOrder=Enum.SortOrder.LayoutOrder
+LochNessSection.UIListLayout.Padding=UDim.new(0,6)
+
+TimerRow=Instance.new("Frame",LochNessSection)
+TimerRow.Size,TimerRow.BackgroundTransparency=UDim2.new(1,0,0,40),1
+
+TimerLabel=CL(TimerRow,{
+    Size=UDim2.new(0.4,-10,1,0),
+    Position=UDim2.new(0,16,0,0),
+    BackgroundTransparency=1,
+    Font=Enum.Font.Gotham,
+    TextSize=13,
+    TextXAlignment=Enum.TextXAlignment.Left,
+    TextColor3=THEME.TEXT,
+    Text="Next Event:"
+})
+
+TimeDisplay=Instance.new("TextLabel",TimerRow)
+TimeDisplay.Name,TimeDisplay.Size,TimeDisplay.Position,TimeDisplay.BackgroundColor3,TimeDisplay.BackgroundTransparency,TimeDisplay.Font,TimeDisplay.TextSize,TimeDisplay.TextColor3,TimeDisplay.Text="LochNessTimeDisplay",UDim2.new(0.35,0,0,28),UDim2.new(0.4,0,0.5,-14),Color3.fromRGB(20,20,30),0.2,Enum.Font.GothamBold,16,Color3.fromRGB(0,255,140),"00:00:00"
+CC(TimeDisplay,6)
+
+StatusLabel=CL(TimerRow,{
+    Size=UDim2.new(0.25,0,0,20),
+    Position=UDim2.new(0.75,-5,0.5,-10),
+    BackgroundTransparency=1,
+    Font=Enum.Font.GothamBold,
+    TextSize=11,
+    TextXAlignment=Enum.TextXAlignment.Center,
+    TextColor3=Color3.fromRGB(100,100,100),
+    Text="IDLE"
+})
+
+TeleportRow=Instance.new("Frame",LochNessSection)
+TeleportRow.Size,TeleportRow.BackgroundTransparency=UDim2.new(1,0,0,36),1
+CL(TeleportRow,{
+    Size=UDim2.new(1,-130,1,0),
+    Position=UDim2.new(0,16,0,0),
+    BackgroundTransparency=1,
+    Font=Enum.Font.Gotham,
+    TextSize=13,
+    TextXAlignment=Enum.TextXAlignment.Left,
+    TextColor3=THEME.TEXT,
+    Text="Teleport to Ancient Ruin"
+})
+
+TeleportBtn=Instance.new("TextButton",TeleportRow)
+TeleportBtn.Size,TeleportBtn.Position,TeleportBtn.BackgroundColor3,TeleportBtn.Text,TeleportBtn.TextColor3,TeleportBtn.Font,TeleportBtn.TextSize=UDim2.new(0,110,0,26),UDim2.new(1,-126,0.5,-13),Color3.fromRGB(40,70,40),"Teleport",Color3.fromRGB(255,255,255),Enum.Font.GothamBold,12
+CC(TeleportBtn,8)
+TeleportBtn.MouseButton1Click:Connect(function()
+    if _G.RAY.LochNess.CurrentState==EVENT_STATE.ACTIVE and not _G.RAY.LochNess.SavedPosition then
+        SCP()
+    end
+    TTAR()
+end)
+
+ReturnRow=Instance.new("Frame",LochNessSection)
+ReturnRow.Size,ReturnRow.BackgroundTransparency=UDim2.new(1,0,0,36),1
+CL(ReturnRow,{
+    Size=UDim2.new(1,-130,1,0),
+    Position=UDim2.new(0,16,0,0),
+    BackgroundTransparency=1,
+    Font=Enum.Font.Gotham,
+    TextSize=13,
+    TextXAlignment=Enum.TextXAlignment.Left,
+    TextColor3=THEME.TEXT,
+    Text="Return to Saved Pos"
+})
+
+ReturnBtn=Instance.new("TextButton",ReturnRow)
+ReturnBtn.Size,ReturnBtn.Position,ReturnBtn.BackgroundColor3,ReturnBtn.Text,ReturnBtn.TextColor3,ReturnBtn.Font,ReturnBtn.TextSize=UDim2.new(0,110,0,26),UDim2.new(1,-126,0.5,-13),Color3.fromRGB(70,40,40),"Return",Color3.fromRGB(255,255,255),Enum.Font.GothamBold,12
+CC(ReturnBtn,8)
+ReturnBtn.MouseButton1Click:Connect(RTSP)
+
+-- FIX: Auto TP Toggle dengan CreateTogglePill callback yang benar
 AutoTeleportRow=Instance.new("Frame",LochNessSection)
 AutoTeleportRow.Size=UDim2.new(1,0,0,36)
 AutoTeleportRow.BackgroundTransparency=1
-local AutoTeleportGet, AutoTeleportSet = CreateTogglePill(AutoTeleportRow, "Auto TP + Return", false)
-AutoTeleportSet(_G.RAY.LochNess.AutoTeleportEnabled)
--- Connect toggle to function
-local pillBtn = AutoTeleportRow:FindFirstChildOfClass("TextButton")
-if pillBtn then
-    pillBtn.MouseButton1Click:Connect(function()
-        local s = AutoTeleportGet()
-        _G.RAY.LochNess.AutoTeleportEnabled = s
-        if NotifyFeature then NotifyFeature("Loch Ness Auto: "..(s and"ON"or"OFF"),s) end
-    end)
-end
 
-_G.RAY.LochNess.NextEventTime=GNES()task.spawn(function()while true do local sc=ULS()HLAA()local lt,tv,tc=GLDT()TimerLabel.Text,TimeDisplay.Text,TimeDisplay.TextColor3=lt,FT(tv),tc local st=_G.RAY.LochNess.CurrentState StatusLabel.Text,StatusLabel.TextColor3=st,(st==EVENT_STATE.IDLE and Color3.fromRGB(100,200,100)or(st==EVENT_STATE.ACTIVE and Color3.fromRGB(255,200,100)or Color3.fromRGB(255,100,100)))if sc and NotifyFeature then if sc=="EVENT_START"then NotifyFeature("Loch Ness Event STARTED!",true)elseif sc=="EVENT_END"then NotifyFeature("Loch Ness Event ENDED!",false)end end task.wait(0.5)end end)
+-- Gunakan CreateTogglePill dengan callback
+local AutoTeleportGet, AutoTeleportSet = CreateTogglePill(AutoTeleportRow, "Auto TP + Return", _G.RAY.LochNess.AutoTeleportEnabled, function(isOn)
+    _G.RAY.LochNess.AutoTeleportEnabled = isOn
+    if NotifyFeature then 
+        NotifyFeature("Loch Ness Auto: "..(isOn and "ON" or "OFF"), isOn) 
+    end
+end)
+
+-- Init Next Event Time
+_G.RAY.LochNess.NextEventTime=GNES()
+
+-- Main Loop
+task.spawn(function()
+    while true do
+        local sc=ULS()
+        HLAA()
+        local lt,tv,tc=GLDT()
+        TimerLabel.Text,TimeDisplay.Text,TimeDisplay.TextColor3=lt,FT(tv),tc
+        local st=_G.RAY.LochNess.CurrentState
+        StatusLabel.Text=st
+        StatusLabel.TextColor3=(st==EVENT_STATE.IDLE and Color3.fromRGB(100,200,100) or (st==EVENT_STATE.ACTIVE and Color3.fromRGB(255,200,100) or Color3.fromRGB(255,100,100)))
+        
+        if sc and NotifyFeature then
+            if sc=="EVENT_START" then
+                NotifyFeature("Loch Ness Event STARTED!",true)
+            elseif sc=="EVENT_END" then
+                NotifyFeature("Loch Ness Event ENDED!",false)
+            end
+        end
+        task.wait(0.5)
+    end
+end)
 
 --==================================================
 -- CHEST FARM SECTION (FIXED - Using provided logic)
@@ -3303,8 +3514,6 @@ local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto We
     end
 end)
 
-print("[FullScript] All sections loaded with fixes")
-
 --==================================================
 -- CHARM PRESET SECTION (SHOP PAGE) - NO EMOJI, NO ID DISPLAY
 --==================================================
@@ -3603,4 +3812,4 @@ local AutoCharmGet, AutoCharmSet = CreateTogglePill(AutoCharmRow, "Auto Charm", 
     end
 end)
 
-print("[Charm] Section loaded")
+print("[FullScript] All sections loaded with Charm Preset + Fixed Loch Ness Timer")
