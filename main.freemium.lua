@@ -2801,10 +2801,13 @@ local selectedWeather = {}
 local autoWeatherEnabled = false
 local autoWeatherThread = nil
 
--- Ambil RF dengan pcall untuk debug
-local rf = nil
-local function initRF()
-    local success, result = pcall(function()
+-- Coba cari RE (RemoteEvent) atau RF (RemoteFunction)
+local weatherRemote = nil
+local remoteType = nil
+
+local function findWeatherRemote()
+    -- Coba RF dulu
+    local success, rf = pcall(function()
         return ReplicatedStorage
             :WaitForChild("Packages")
             :WaitForChild("_Index")
@@ -2813,14 +2816,41 @@ local function initRF()
             :WaitForChild("RF/PurchaseWeatherEvent")
     end)
     
-    if success then
-        rf = result
-        print("[Weather] RF initialized:", rf:GetFullName())
+    if success and rf then
+        weatherRemote = rf
+        remoteType = "RF"
+        print("[Weather] Found RF:", rf:GetFullName())
         return true
-    else
-        warn("[Weather] Failed to get RF:", result)
-        return false
     end
+    
+    -- Coba RE (RemoteEvent) kalau RF ga ada
+    local success2, re = pcall(function()
+        return ReplicatedStorage
+            :WaitForChild("Packages")
+            :WaitForChild("_Index")
+            :WaitForChild("sleitnick_net@0.2.0")
+            :WaitForChild("net")
+            :WaitForChild("RE/PurchaseWeatherEvent")
+    end)
+    
+    if success2 and re then
+        weatherRemote = re
+        remoteType = "RE"
+        print("[Weather] Found RE:", re:GetFullName())
+        return true
+    end
+    
+    -- Cari semua yang ada "Weather" di namanya
+    print("[Weather] Searching all remotes...")
+    for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
+        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+            if v.Name:lower():find("weather") then
+                print("[Weather] Found:", v.ClassName, v:GetFullName())
+            end
+        end
+    end
+    
+    return false
 end
 
 -- Helper
@@ -2932,18 +2962,39 @@ AutoWeatherRow.BackgroundTransparency = 1
 
 local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto Weather", false)
 
--- Auto loop function - BUY langsung
-local function autoWeatherLoop()
-    -- Init RF kalau belum
-    if not rf then
-        if not initRF() then
-            statusLabel.Text = "RF Error!"
-            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-            AutoWeatherSet(false)
-            autoWeatherEnabled = false
-            return
-        end
+-- Function untuk purchase (RF atau RE)
+local function purchaseWeather(name)
+    if not weatherRemote then return false, "No remote" end
+    
+    if remoteType == "RF" then
+        -- RemoteFunction pakai InvokeServer
+        local success, result = pcall(function()
+            return weatherRemote:InvokeServer(name)
+        end)
+        return success, result
+        
+    elseif remoteType == "RE" then
+        -- RemoteEvent pakai FireServer
+        local success, err = pcall(function()
+            weatherRemote:FireServer(name)
+        end)
+        return success, err
     end
+    
+    return false, "Unknown remote type"
+end
+
+-- Auto loop function
+local function autoWeatherLoop()
+    if not weatherRemote and not findWeatherRemote() then
+        statusLabel.Text = "Remote not found!"
+        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        AutoWeatherSet(false)
+        autoWeatherEnabled = false
+        return
+    end
+    
+    print("[Weather] Starting auto loop, type:", remoteType)
     
     while autoWeatherEnabled do
         local count = countSelected()
@@ -2953,16 +3004,8 @@ local function autoWeatherLoop()
             
             for name, on in pairs(selectedWeather) do
                 if on then
-                    local success, result = pcall(function()
-                        local ok, msg = rf:InvokeServer(name)
-                        return ok, msg
-                    end)
-                    
-                    if success then
-                        print("[Weather] Bought:", name, "| Success:", result)
-                    else
-                        warn("[Weather] Failed:", name, "| Error:", result)
-                    end
+                    local success, result = purchaseWeather(name)
+                    print("[Weather] Purchase:", name, "| Success:", success, "| Result:", result)
                 end
             end
         else
@@ -2993,9 +3036,8 @@ if pillBtn then
                 return
             end
             
-            -- Init RF sebelum mulai
-            if not rf and not initRF() then
-                statusLabel.Text = "RF not found!"
+            if not weatherRemote and not findWeatherRemote() then
+                statusLabel.Text = "Remote not found!"
                 statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
                 AutoWeatherSet(false)
                 autoWeatherEnabled = false
@@ -3020,10 +3062,10 @@ end)
 
 table.insert(AllPanels, WeatherPanel)
 
--- Init RF saat load
+-- Init saat load
 task.spawn(function()
     task.wait(2)
-    initRF()
+    findWeatherRemote()
 end)
 
 print("[WeatherPreset] Auto-only version loaded")
