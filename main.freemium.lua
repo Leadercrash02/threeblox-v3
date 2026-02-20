@@ -1838,7 +1838,7 @@ end)
 _G.RAYAutoTotemOn = _G.RAYAutoTotemOn or false
 _G.RAYSelectedTotemType = _G.RAYSelectedTotemType or "Lucky"
 
-local TotemTypeId = { Lucky = 1, Mutasi = 2, Shiny = 3, Love = 17 }
+local TotemTypeId = { Lucky = 1, Mutasi = 2, Shiny = 3, Love = 5}
 local TOTEM_DURATION = 3600
 
 local SpawnTotemRemote = ReplicatedStorage
