@@ -1,29 +1,25 @@
--- Cobalt Mobile - Delta Executor Compatible
--- Optimized for Mobile UI & Touch
+-- Cobalt Fishing Pro - Khusus untuk game dengan sleitnick_net
+-- Auto-hook ke semua remote fishing yang udah diketahui
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
-local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
---// MOBILE CONFIG
+--// CONFIG
 local CONFIG = {
-    MaxLogs = 50, -- Lebih sedikit untuk performa mobile
     Theme = {
         Background = Color3.fromRGB(20, 20, 25),
         Secondary = Color3.fromRGB(30, 30, 38),
         Accent = Color3.fromRGB(88, 101, 242),
-        Text = Color3.fromRGB(240, 240, 240),
-        SubText = Color3.fromRGB(150, 150, 150),
         Success = Color3.fromRGB(59, 165, 93),
-        Warning = Color3.fromRGB(250, 168, 26),
         Error = Color3.fromRGB(237, 66, 69),
-        Border = Color3.fromRGB(45, 45, 55)
+        Warning = Color3.fromRGB(250, 168, 26),
+        Text = Color3.fromRGB(240, 240, 240),
+        SubText = Color3.fromRGB(150, 150, 150)
     }
 }
 
@@ -36,103 +32,70 @@ local function Create(className, properties)
     return instance
 end
 
---// SCREEN SETUP (Mobile Optimized)
+--// UI SETUP
 local ScreenGui = Create("ScreenGui", {
-    Name = "CobaltMobile",
+    Name = "CobaltFishing",
     Parent = PlayerGui,
     ResetOnSpawn = false,
     ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 })
 
--- Toggle Button (Floating)
+-- Toggle Button
 local ToggleBtn = Create("TextButton", {
     Name = "Toggle",
     Parent = ScreenGui,
     BackgroundColor3 = CONFIG.Theme.Accent,
-    BorderSizePixel = 0,
-    Position = UDim2.new(0, 10, 0.5, -25),
-    Size = UDim2.new(0, 50, 0, 50),
-    Text = "⚡",
+    Position = UDim2.new(0, 10, 0.3, 0),
+    Size = UDim2.new(0, 55, 0, 55),
+    Text = "🎣",
     Font = Enum.Font.GothamBold,
     TextColor3 = Color3.new(1, 1, 1),
-    TextSize = 24,
+    TextSize = 28,
     ZIndex = 100
 })
-
 Create("UICorner", {CornerRadius = UDim.new(1, 0), Parent = ToggleBtn})
-Create("UIStroke", {Color = CONFIG.Theme.Border, Thickness = 2, Parent = ToggleBtn})
 
--- Shadow untuk Toggle
-local ToggleShadow = Create("ImageLabel", {
-    Parent = ToggleBtn,
-    BackgroundTransparency = 1,
-    Position = UDim2.new(0, -5, 0, -5),
-    Size = UDim2.new(1, 10, 1, 10),
-    ZIndex = 99,
-    Image = "rbxassetid://6015897843",
-    ImageColor3 = Color3.new(0, 0, 0),
-    ImageTransparency = 0.6,
-    ScaleType = Enum.ScaleType.Slice,
-    SliceCenter = Rect.new(49, 49, 450, 450)
-})
-
--- Main Frame (Full Screen untuk Mobile)
+-- Main Frame
 local MainFrame = Create("Frame", {
     Name = "Main",
     Parent = ScreenGui,
     BackgroundColor3 = CONFIG.Theme.Background,
-    BorderSizePixel = 0,
-    Position = UDim2.new(0, 0, 1, 0), -- Start dari bawah
+    Position = UDim2.new(0, 0, 1, 0),
     Size = UDim2.new(1, 0, 1, 0),
     Visible = false
 })
 
---// HEADER
+-- Header
 local Header = Create("Frame", {
-    Name = "Header",
     Parent = MainFrame,
     BackgroundColor3 = CONFIG.Theme.Secondary,
-    BorderSizePixel = 0,
     Size = UDim2.new(1, 0, 0, 60)
 })
 
-local Title = Create("TextLabel", {
+Create("TextLabel", {
     Parent = Header,
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 20, 0, 0),
-    Size = UDim2.new(0, 200, 1, 0),
+    Position = UDim2.new(0, 15, 0, 0),
+    Size = UDim2.new(0, 250, 1, 0),
     Font = Enum.Font.GothamBold,
-    Text = "⚡ Cobalt Mobile",
+    Text = "🎣 Cobalt Fishing Pro",
     TextColor3 = CONFIG.Theme.Text,
-    TextSize = 20,
+    TextSize = 18,
     TextXAlignment = Enum.TextXAlignment.Left
 })
 
--- Close Button
 local CloseBtn = Create("TextButton", {
     Parent = Header,
     BackgroundTransparency = 1,
-    Position = UDim2.new(1, -60, 0, 0),
-    Size = UDim2.new(0, 60, 1, 0),
+    Position = UDim2.new(1, -50, 0, 0),
+    Size = UDim2.new(0, 50, 1, 0),
     Font = Enum.Font.GothamBold,
     Text = "✕",
     TextColor3 = CONFIG.Theme.Error,
     TextSize = 24
 })
 
--- Clear Button
-local ClearBtn = Create("TextButton", {
-    Parent = Header,
-    BackgroundTransparency = 1,
-    Position = UDim2.new(1, -120, 0, 0),
-    Size = UDim2.new(0, 60, 1, 0),
-    Font = Enum.Font.GothamBold,
-    Text = "🗑",
-    TextColor3 = CONFIG.Theme.SubText,
-    TextSize = 20
-})
-
---// CONTENT AREA
+-- Content
 local Content = Create("Frame", {
     Parent = MainFrame,
     BackgroundTransparency = 1,
@@ -140,73 +103,46 @@ local Content = Create("Frame", {
     Size = UDim2.new(1, 0, 1, -60)
 })
 
---// LEFT: REMOTE LIST
+-- Remote List Panel
 local ListPanel = Create("Frame", {
     Parent = Content,
     BackgroundColor3 = CONFIG.Theme.Secondary,
-    BorderSizePixel = 0,
     Position = UDim2.new(0, 10, 0, 10),
-    Size = UDim2.new(0.45, -15, 1, -20)
+    Size = UDim2.new(0.5, -15, 1, -20)
 })
+Create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = ListPanel})
 
-Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = ListPanel})
-
-local ListTitle = Create("TextLabel", {
+Create("TextLabel", {
     Parent = ListPanel,
     BackgroundTransparency = 1,
     Position = UDim2.new(0, 15, 0, 10),
     Size = UDim2.new(1, -30, 0, 25),
     Font = Enum.Font.GothamBold,
-    Text = "Remote Calls",
+    Text = "Fishing Remotes",
     TextColor3 = CONFIG.Theme.Text,
     TextSize = 16,
     TextXAlignment = Enum.TextXAlignment.Left
 })
 
--- Search
-local SearchBox = Create("TextBox", {
-    Parent = ListPanel,
-    BackgroundColor3 = CONFIG.Theme.Background,
-    BorderSizePixel = 0,
-    Position = UDim2.new(0, 10, 0, 40),
-    Size = UDim2.new(1, -20, 0, 40),
-    Font = Enum.Font.Gotham,
-    PlaceholderText = "🔍 Search...",
-    PlaceholderColor3 = CONFIG.Theme.SubText,
-    Text = "",
-    TextColor3 = CONFIG.Theme.Text,
-    TextSize = 14
-})
-
-Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = SearchBox})
-
--- Remote List
 local RemoteList = Create("ScrollingFrame", {
     Parent = ListPanel,
     BackgroundTransparency = 1,
-    Position = UDim2.new(0, 10, 0, 90),
-    Size = UDim2.new(1, -20, 1, -100),
+    Position = UDim2.new(0, 10, 0, 40),
+    Size = UDim2.new(1, -20, 1, -50),
     ScrollBarThickness = 6,
     ScrollBarImageColor3 = CONFIG.Theme.Accent,
     CanvasSize = UDim2.new(0, 0, 0, 0)
 })
+Create("UIListLayout", {Parent = RemoteList, Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder})
 
-Create("UIListLayout", {
-    Parent = RemoteList,
-    Padding = UDim.new(0, 8),
-    SortOrder = Enum.SortOrder.LayoutOrder
-})
-
---// RIGHT: DETAILS & REPLAY
+-- Detail Panel
 local DetailPanel = Create("Frame", {
     Parent = Content,
     BackgroundColor3 = CONFIG.Theme.Secondary,
-    BorderSizePixel = 0,
-    Position = UDim2.new(0.55, 0, 0, 10),
-    Size = UDim2.new(0.45, -10, 1, -20)
+    Position = UDim2.new(0.5, 5, 0, 10),
+    Size = UDim2.new(0.5, -15, 1, -20)
 })
-
-Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = DetailPanel})
+Create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = DetailPanel})
 
 local DetailTitle = Create("TextLabel", {
     Parent = DetailPanel,
@@ -220,175 +156,218 @@ local DetailTitle = Create("TextLabel", {
     TextXAlignment = Enum.TextXAlignment.Left
 })
 
--- Args Container
 local ArgsContainer = Create("ScrollingFrame", {
     Parent = DetailPanel,
     BackgroundColor3 = CONFIG.Theme.Background,
-    BorderSizePixel = 0,
     Position = UDim2.new(0, 10, 0, 45),
-    Size = UDim2.new(1, -20, 1, -140),
+    Size = UDim2.new(1, -20, 1, -150),
     ScrollBarThickness = 6,
     ScrollBarImageColor3 = CONFIG.Theme.Accent,
     CanvasSize = UDim2.new(0, 0, 0, 0)
 })
-
 Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = ArgsContainer})
-Create("UIPadding", {
-    Parent = ArgsContainer,
-    PaddingLeft = UDim.new(0, 10),
-    PaddingRight = UDim.new(0, 10),
-    PaddingTop = UDim.new(0, 10),
-    PaddingBottom = UDim.new(0, 10)
+Create("UIPadding", {Parent = ArgsContainer, PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 10), PaddingTop = UDim.new(0, 10), PaddingBottom = UDim.new(0, 10)})
+Create("UIListLayout", {Parent = ArgsContainer, Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder})
+
+-- Quick Mods Section
+local QuickMods = Create("Frame", {
+    Parent = DetailPanel,
+    BackgroundColor3 = CONFIG.Theme.Background,
+    Position = UDim2.new(0, 10, 1, -135),
+    Size = UDim2.new(1, -20, 0, 80),
+    BorderSizePixel = 0
+})
+Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = QuickMods})
+
+Create("TextLabel", {
+    Parent = QuickMods,
+    BackgroundTransparency = 1,
+    Position = UDim2.new(0, 10, 0, 5),
+    Size = UDim2.new(1, -20, 0, 20),
+    Font = Enum.Font.GothamBold,
+    Text = "⚡ Quick Mods",
+    TextColor3 = CONFIG.Theme.Accent,
+    TextSize = 14,
+    TextXAlignment = Enum.TextXAlignment.Left
 })
 
-Create("UIListLayout", {
-    Parent = ArgsContainer,
-    Padding = UDim.new(0, 10),
-    SortOrder = Enum.SortOrder.LayoutOrder
+local ModInstant = Create("TextButton", {
+    Parent = QuickMods,
+    BackgroundColor3 = CONFIG.Theme.Secondary,
+    Position = UDim2.new(0, 10, 0, 30),
+    Size = UDim2.new(0.48, 0, 0, 35),
+    Font = Enum.Font.GothamBold,
+    Text = "Instant Catch",
+    TextColor3 = CONFIG.Theme.Text,
+    TextSize = 12,
+    AutoButtonColor = false
 })
+Create("UICorner", {CornerRadius = UDim.new(0, 6), Parent = ModInstant})
 
--- Replay Button (Big for mobile)
+local ModLegendary = Create("TextButton", {
+    Parent = QuickMods,
+    BackgroundColor3 = CONFIG.Theme.Secondary,
+    Position = UDim2.new(0.52, 0, 0, 30),
+    Size = UDim2.new(0.48, 0, 0, 35),
+    Font = Enum.Font.GothamBold,
+    Text = "Legendary Fish",
+    TextColor3 = CONFIG.Theme.Text,
+    TextSize = 12,
+    AutoButtonColor = false
+})
+Create("UICorner", {CornerRadius = UDim.new(0, 6), Parent = ModLegendary})
+
+-- Replay Button
 local ReplayBtn = Create("TextButton", {
     Parent = DetailPanel,
     BackgroundColor3 = CONFIG.Theme.Accent,
-    BorderSizePixel = 0,
-    Position = UDim2.new(0, 10, 1, -80),
-    Size = UDim2.new(1, -20, 0, 50),
+    Position = UDim2.new(0, 10, 1, -50),
+    Size = UDim2.new(1, -20, 0, 45),
     Font = Enum.Font.GothamBold,
-    Text = "↻  REPLAY EVENT",
+    Text = "↻ REPLAY EVENT",
     TextColor3 = Color3.new(1, 1, 1),
     TextSize = 16,
     AutoButtonColor = false
 })
-
 Create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = ReplayBtn})
 
--- Copy Code Button
-local CopyBtn = Create("TextButton", {
-    Parent = DetailPanel,
-    BackgroundColor3 = CONFIG.Theme.Background,
-    BorderSizePixel = 0,
-    Position = UDim2.new(0, 10, 1, -25),
-    Size = UDim2.new(1, -20, 0, 40),
-    Font = Enum.Font.GothamSemibold,
-    Text = "📋 Copy Code",
-    TextColor3 = CONFIG.Theme.Text,
-    TextSize = 14,
-    AutoButtonColor = false
-})
-
-Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = CopyBtn})
-
---// DATA STORAGE
+--// DATA
 local RemoteLogs = {}
 local SelectedLog = nil
 local LogCounter = 0
+local NetFolder = nil
 
---// CREATE ARG INPUT (Mobile Friendly)
-local function CreateArgInput(index, value, valueType)
-    local Frame = Create("Frame", {
-        Parent = ArgsContainer,
-        BackgroundColor3 = CONFIG.Theme.Secondary,
-        BorderSizePixel = 0,
-        Size = UDim2.new(1, 0, 0, 80),
-        LayoutOrder = index
-    })
+--// FIND NET FOLDER
+local function FindNetFolder()
+    -- Coba path yang udah diketahui
+    local success, result = pcall(function()
+        return ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+    end)
     
-    Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = Frame})
+    if success then
+        NetFolder = result
+        print("✅ NetFolder ditemukan!")
+        return true
+    end
     
-    -- Index Badge
-    local Badge = Create("TextLabel", {
-        Parent = Frame,
-        BackgroundColor3 = CONFIG.Theme.Accent,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 10, 0, 10),
-        Size = UDim2.new(0, 35, 0, 25),
-        Font = Enum.Font.GothamBold,
-        Text = "#"..index,
-        TextColor3 = Color3.new(1, 1, 1),
-        TextSize = 14
-    })
-    Create("UICorner", {CornerRadius = UDim.new(0, 6), Parent = Badge})
+    -- Cari manual kalau versi berbeda
+    for _, pkg in pairs(ReplicatedStorage:GetDescendants()) do
+        if pkg.Name:find("sleitnick_net") and pkg:FindFirstChild("net") then
+            NetFolder = pkg:FindFirstChild("net")
+            print("✅ NetFolder ditemukan (manual):", NetFolder:GetFullName())
+            return true
+        end
+    end
     
-    -- Type Label
-    local TypeLabel = Create("TextLabel", {
-        Parent = Frame,
-        BackgroundTransparency = 1,
-        Position = UDim2.new(0, 55, 0, 10),
-        Size = UDim2.new(0, 100, 0, 25),
-        Font = Enum.Font.GothamSemibold,
-        Text = valueType:lower(),
-        TextColor3 = CONFIG.Theme.Warning,
-        TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left
-    })
-    
-    -- Value Input (Bigger for mobile)
-    local Input = Create("TextBox", {
-        Parent = Frame,
-        BackgroundColor3 = CONFIG.Theme.Background,
-        BorderSizePixel = 0,
-        Position = UDim2.new(0, 10, 0, 45),
-        Size = UDim2.new(1, -20, 0, 35),
-        Font = Enum.Font.GothamMono,
-        Text = tostring(value),
-        TextColor3 = CONFIG.Theme.Text,
-        TextSize = 14,
-        ClearTextOnFocus = false,
-        TextWrapped = true
-    })
-    Create("UICorner", {CornerRadius = UDim.new(0, 6), Parent = Input})
-    
-    Frame:SetAttribute("Input", Input)
-    Frame:SetAttribute("Type", valueType)
-    
-    return Frame
+    return false
 end
 
---// CREATE LOG ENTRY
-local function CreateLogEntry(remote, method, args)
+--// REMOTE REFERENCES
+local FishingRemotes = {}
+
+local function GetFishingRemotes()
+    if not NetFolder then return false end
+    
+    local remotes = {
+        {name = "CatchFish", path = "RF/CatchFishCompleted"},
+        {name = "SellAll", path = "RF/SellAllItems"},
+        {name = "ChargeRod", path = "RF/ChargeFishingRod"},
+        {name = "Minigame", path = "RF/RequestFishingMinigameStarted"},
+        {name = "Cancel", path = "RF/CancelFishingInputs"},
+        {name = "EquipTool", path = "RE/EquipToolFromHotbar"},
+        {name = "UnequipTool", path = "RE/UnequipToolFromHotbar"},
+        {name = "BuyWeather", path = "RF/PurchaseWeatherEvent"},
+        {name = "BuyRod", path = "RF/PurchaseFishingRod"},
+        {name = "BuyBait", path = "RF/PurchaseBait"},
+        {name = "AutoSell", path = "RF/UpdateAutoSellThreshold"},
+        {name = "AutoFish", path = "RF/UpdateAutoFishingState"}
+    }
+    
+    for _, remoteInfo in pairs(remotes) do
+        local remote = NetFolder:FindFirstChild(remoteInfo.path)
+        if remote then
+            FishingRemotes[remoteInfo.name] = remote
+            print("🎣 Ditemukan:", remoteInfo.name)
+        end
+    end
+    
+    return true
+end
+
+--// HOOK FUNCTION
+local function HookSpecificRemote(remote, name, method)
+    if not remote then return end
+    
+    if remote:IsA("RemoteEvent") then
+        local oldFireServer = remote.FireServer
+        remote.FireServer = function(self, ...)
+            if self == remote then
+                local args = {...}
+                AddLog(name, method, args, remote)
+            end
+            return oldFireServer(self, ...)
+        end
+        print("✅ Hooked RE:", name)
+        
+    elseif remote:IsA("RemoteFunction") then
+        local oldInvokeServer = remote.InvokeServer
+        remote.InvokeServer = function(self, ...)
+            if self == remote then
+                local args = {...}
+                AddLog(name, method, args, remote)
+            end
+            return oldInvokeServer(self, ...)
+        end
+        print("✅ Hooked RF:", name)
+    end
+end
+
+--// ADD LOG TO UI
+function AddLog(name, method, args, remote)
     LogCounter = LogCounter + 1
     local logId = LogCounter
     
     local Entry = Create("TextButton", {
         Parent = RemoteList,
         BackgroundColor3 = CONFIG.Theme.Background,
-        BorderSizePixel = 0,
         Size = UDim2.new(1, 0, 0, 70),
         LayoutOrder = -logId,
         AutoButtonColor = false
     })
-    
     Create("UICorner", {CornerRadius = UDim.new(0, 10), Parent = Entry})
     
-    -- Icon
-    local isEvent = remote:IsA("RemoteEvent")
-    local Icon = Create("TextLabel", {
+    -- Icon berdasarkan tipe
+    local icon = "🟢"
+    if name:find("Catch") then icon = "🐟"
+    elseif name:find("Sell") then icon = "💰"
+    elseif name:find("Buy") then icon = "🛒"
+    elseif name:find("Charge") then icon = "⚡"
+    elseif name:find("Minigame") then icon = "🎮"
+    end
+    
+    Create("TextLabel", {
         Parent = Entry,
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 10, 0, 10),
         Size = UDim2.new(0, 30, 0, 30),
         Font = Enum.Font.GothamBold,
-        Text = isEvent and "🟢" or "🔵",
+        Text = icon,
         TextSize = 20
     })
     
-    -- Name
-    local NameLabel = Create("TextLabel", {
+    Create("TextLabel", {
         Parent = Entry,
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 50, 0, 10),
         Size = UDim2.new(1, -60, 0, 20),
         Font = Enum.Font.GothamBold,
-        Text = remote.Name,
+        Text = name,
         TextColor3 = CONFIG.Theme.Text,
         TextSize = 14,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextTruncate = Enum.TextTruncate.AtEnd
+        TextXAlignment = Enum.TextXAlignment.Left
     })
     
-    -- Info
-    local Info = Create("TextLabel", {
+    Create("TextLabel", {
         Parent = Entry,
         BackgroundTransparency = 1,
         Position = UDim2.new(0, 50, 0, 35),
@@ -400,111 +379,110 @@ local function CreateLogEntry(remote, method, args)
         TextXAlignment = Enum.TextXAlignment.Left
     })
     
-    -- Store data
     local logData = {
         Id = logId,
+        Name = name,
         Remote = remote,
         Method = method,
-        Args = args,
-        Entry = Entry
+        Args = args
     }
     RemoteLogs[logId] = logData
     
-    -- Click to select
+    -- Click handler
     Entry.MouseButton1Click:Connect(function()
-        -- Deselect previous
         if SelectedLog then
-            SelectedLog.Entry.BackgroundColor3 = CONFIG.Theme.Background
+            RemoteLogs[SelectedLog.Id].Entry.BackgroundColor3 = CONFIG.Theme.Background
         end
         
         SelectedLog = logData
         Entry.BackgroundColor3 = CONFIG.Theme.Accent
         
-        -- Clear and rebuild args
+        -- Clear args
         for _, child in pairs(ArgsContainer:GetChildren()) do
             if child:IsA("Frame") then child:Destroy() end
         end
         
+        -- Build arg inputs
         for i, arg in ipairs(args) do
             local t = typeof(arg)
-            CreateArgInput(i, arg, t)
+            local color = CONFIG.Theme.Text
+            if t == "number" then color = CONFIG.Theme.Warning
+            elseif t == "string" then color = CONFIG.Theme.Success end
+            
+            local ArgFrame = Create("Frame", {
+                Parent = ArgsContainer,
+                BackgroundColor3 = CONFIG.Theme.Secondary,
+                Size = UDim2.new(1, 0, 0, 85)
+            })
+            Create("UICorner", {CornerRadius = UDim.new(0, 8), Parent = ArgFrame})
+            
+            Create("TextLabel", {
+                Parent = ArgFrame,
+                BackgroundColor3 = CONFIG.Theme.Accent,
+                Position = UDim2.new(0, 10, 0, 10),
+                Size = UDim2.new(0, 40, 0, 25),
+                Font = Enum.Font.GothamBold,
+                Text = "#" .. i,
+                TextColor3 = Color3.new(1, 1, 1),
+                TextSize = 14
+            }).CornerRadius = UDim.new(0, 6)
+            
+            Create("TextLabel", {
+                Parent = ArgFrame,
+                BackgroundTransparency = 1,
+                Position = UDim2.new(0, 60, 0, 10),
+                Size = UDim2.new(0, 100, 0, 25),
+                Font = Enum.Font.GothamBold,
+                Text = t:lower(),
+                TextColor3 = color,
+                TextSize = 14,
+                TextXAlignment = Enum.TextXAlignment.Left
+            })
+            
+            local Input = Create("TextBox", {
+                Parent = ArgFrame,
+                BackgroundColor3 = CONFIG.Theme.Background,
+                Position = UDim2.new(0, 10, 0, 45),
+                Size = UDim2.new(1, -20, 0, 35),
+                Font = Enum.Font.GothamMono,
+                Text = tostring(arg),
+                TextColor3 = CONFIG.Theme.Text,
+                TextSize = 14,
+                ClearTextOnFocus = false,
+                TextWrapped = true
+            })
+            Create("UICorner", {CornerRadius = UDim.new(0, 6), Parent = Input})
+            
+            ArgFrame:SetAttribute("Input", Input)
+            ArgFrame:SetAttribute("Type", t)
         end
         
-        ArgsContainer.CanvasSize = UDim2.new(0, 0, 0, #args * 90)
-        DetailTitle.Text = remote.Name:sub(1, 20)
+        ArgsContainer.CanvasSize = UDim2.new(0, 0, 0, #args * 95)
+        DetailTitle.Text = name:sub(1, 25)
     end)
     
-    -- Touch feedback
-    Entry.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            Entry.BackgroundColor3 = CONFIG.Theme.Secondary
-        end
-    end)
-    
-    Entry.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.Touch then
-            if SelectedLog ~= logData then
-                Entry.BackgroundColor3 = CONFIG.Theme.Background
-            end
-        end
-    end)
-    
-    -- Limit logs
-    if #RemoteList:GetChildren() > CONFIG.MaxLogs then
-        local oldest = nil
-        for _, child in pairs(RemoteList:GetChildren()) do
-            if child:IsA("TextButton") then
-                local id = tonumber(child.LayoutOrder) * -1
-                if not oldest or id < oldest then oldest = id end
-            end
-        end
-        if oldest and RemoteLogs[oldest] then
-            RemoteLogs[oldest].Entry:Destroy()
-            RemoteLogs[oldest] = nil
-        end
-    end
-    
+    logData.Entry = Entry
     RemoteList.CanvasSize = UDim2.new(0, 0, 0, #RemoteList:GetChildren() * 78)
 end
 
---// HOOK REMOTES (Delta Compatible)
-local function HookRemote(remote)
-    if remote:IsA("RemoteEvent") then
-        local oldFireServer = remote.FireServer
-        remote.FireServer = function(self, ...)
-            if self == remote then
-                local args = {...}
-                CreateLogEntry(remote, "FireServer", args)
-            end
-            return oldFireServer(self, ...)
-        end
-        
-    elseif remote:IsA("RemoteFunction") then
-        local oldInvokeServer = remote.InvokeServer
-        remote.InvokeServer = function(self, ...)
-            if self == remote then
-                local args = {...}
-                CreateLogEntry(remote, "InvokeServer", args)
-            end
-            return oldInvokeServer(self, ...)
+--// INITIALIZE
+wait(1) -- Tunggu game load
+if FindNetFolder() then
+    GetFishingRemotes()
+    
+    -- Hook semua remote
+    for name, remote in pairs(FishingRemotes) do
+        if remote:IsA("RemoteEvent") then
+            HookSpecificRemote(remote, name, "FireServer")
+        else
+            HookSpecificRemote(remote, name, "InvokeServer")
         end
     end
+    
+    print("✅ Semua fishing remote sudah di-hook!")
+else
+    warn("❌ NetFolder tidak ditemukan!")
 end
-
--- Hook existing
-for _, obj in pairs(ReplicatedStorage:GetDescendants()) do
-    if obj:IsA("RemoteEvent") or obj:IsA("RemoteFunction") then
-        pcall(function() HookRemote(obj) end)
-    end
-end
-
--- Hook new
-ReplicatedStorage.DescendantAdded:Connect(function(descendant)
-    if descendant:IsA("RemoteEvent") or descendant:IsA("RemoteFunction") then
-        wait(0.5)
-        pcall(function() HookRemote(descendant) end)
-    end
-end)
 
 --// BUTTON FUNCTIONS
 
@@ -515,72 +493,84 @@ ToggleBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = true
     
     if uiVisible then
-        -- Slide up
-        MainFrame:TweenPosition(
-            UDim2.new(0, 0, 0, 0),
-            Enum.EasingDirection.Out,
-            Enum.EasingStyle.Quad,
-            0.3,
-            true
-        )
-        ToggleBtn.Text = "✕"
-        ToggleBtn.BackgroundColor3 = CONFIG.Theme.Error
+        MainFrame:TweenPosition(UDim2.new(0, 0, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
     else
-        -- Slide down
-        MainFrame:TweenPosition(
-            UDim2.new(0, 0, 1, 0),
-            Enum.EasingDirection.Out,
-            Enum.EasingStyle.Quad,
-            0.3,
-            true
-        )
-        ToggleBtn.Text = "⚡"
-        ToggleBtn.BackgroundColor3 = CONFIG.Theme.Accent
+        MainFrame:TweenPosition(UDim2.new(0, 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
         wait(0.3)
         MainFrame.Visible = false
     end
 end)
 
--- Close
 CloseBtn.MouseButton1Click:Connect(function()
     uiVisible = false
-    MainFrame:TweenPosition(
-        UDim2.new(0, 0, 1, 0),
-        Enum.EasingDirection.Out,
-        Enum.EasingStyle.Quad,
-        0.3,
-        true
-    )
-    ToggleBtn.Text = "⚡"
-    ToggleBtn.BackgroundColor3 = CONFIG.Theme.Accent
+    MainFrame:TweenPosition(UDim2.new(0, 0, 1, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Quad, 0.3, true)
     wait(0.3)
     MainFrame.Visible = false
 end)
 
--- Clear
-ClearBtn.MouseButton1Click:Connect(function()
-    for _, child in pairs(RemoteList:GetChildren()) do
-        if child:IsA("TextButton") then child:Destroy() end
+-- Quick Mods
+ModInstant.MouseButton1Click:Connect(function()
+    if not SelectedLog then return end
+    if SelectedLog.Name ~= "Minigame" then
+        ModInstant.Text = "❌ Pilih Minigame!"
+        wait(1)
+        ModInstant.Text = "Instant Catch"
+        return
     end
+    
+    -- Auto set argumen untuk instant catch
     for _, child in pairs(ArgsContainer:GetChildren()) do
-        if child:IsA("Frame") then child:Destroy() end
+        if child:IsA("Frame") then
+            local input = child:GetAttribute("Input")
+            local idx = child.LayoutOrder
+            if idx == 2 then -- Force/Power
+                input.Text = "99999"
+            elseif idx == 3 then -- Timestamp atau instant flag
+                input.Text = "0"
+            end
+        end
     end
-    RemoteLogs = {}
-    SelectedLog = nil
-    RemoteList.CanvasSize = UDim2.new(0, 0, 0, 0)
-    DetailTitle.Text = "Arguments"
+    
+    ModInstant.Text = "✅ Mod Applied!"
+    wait(1)
+    ModInstant.Text = "Instant Catch"
+end)
+
+ModLegendary.MouseButton1Click:Connect(function()
+    if not SelectedLog then return end
+    if SelectedLog.Name ~= "CatchFish" then
+        ModLegendary.Text = "❌ Pilih CatchFish!"
+        wait(1)
+        ModLegendary.Text = "Legendary Fish"
+        return
+    end
+    
+    -- Mod untuk legendary fish
+    for _, child in pairs(ArgsContainer:GetChildren()) do
+        if child:IsA("Frame") then
+            local input = child:GetAttribute("Input")
+            local idx = child.LayoutOrder
+            if idx == 1 then -- Fish ID/Rarity
+                input.Text = "5" -- Legendary tier
+            end
+        end
+    end
+    
+    ModLegendary.Text = "✅ Mod Applied!"
+    wait(1)
+    ModLegendary.Text = "Legendary Fish"
 end)
 
 -- Replay
 ReplayBtn.MouseButton1Click:Connect(function()
     if not SelectedLog then
-        ReplayBtn.Text = "❌ Select Log First!"
+        ReplayBtn.Text = "❌ Pilih Log Dulu!"
         wait(1)
-        ReplayBtn.Text = "↻  REPLAY EVENT"
+        ReplayBtn.Text = "↻ REPLAY EVENT"
         return
     end
     
-    -- Collect args
+    -- Collect modified args
     local newArgs = {}
     for _, child in pairs(ArgsContainer:GetChildren()) do
         if child:IsA("Frame") then
@@ -588,7 +578,6 @@ ReplayBtn.MouseButton1Click:Connect(function()
             local t = child:GetAttribute("Type")
             local val = input.Text
             
-            -- Convert
             if t == "number" then val = tonumber(val) or 0
             elseif t == "boolean" then val = val:lower() == "true"
             end
@@ -607,66 +596,24 @@ ReplayBtn.MouseButton1Click:Connect(function()
     end)
     
     if success then
-        ReplayBtn.Text = "✅ Replay Success!"
+        ReplayBtn.Text = "✅ Replay Sukses!"
         ReplayBtn.BackgroundColor3 = CONFIG.Theme.Success
     else
-        ReplayBtn.Text = "❌ Failed: " .. tostring(result):sub(1, 20)
+        ReplayBtn.Text = "❌ Gagal: " .. tostring(result):sub(1, 20)
         ReplayBtn.BackgroundColor3 = CONFIG.Theme.Error
     end
     
     wait(1.5)
-    ReplayBtn.Text = "↻  REPLAY EVENT"
+    ReplayBtn.Text = "↻ REPLAY EVENT"
     ReplayBtn.BackgroundColor3 = CONFIG.Theme.Accent
 end)
 
--- Copy
-CopyBtn.MouseButton1Click:Connect(function()
-    if not SelectedLog then return end
-    
-    local code = string.format([[
--- Cobalt Generated
-local remote = game:GetService("ReplicatedStorage"):WaitForChild("%s")
-remote:%s(%s)]],
-        SelectedLog.Remote.Name,
-        SelectedLog.Method,
-        table.concat(SelectedLog.Args, ", ")
-    )
-    
-    -- Delta Mobile clipboard
-    if setclipboard then
-        setclipboard(code)
-        CopyBtn.Text = "✅ Copied!"
-    else
-        -- Fallback: print ke console
-        print("=== COPY THIS CODE ===")
-        print(code)
-        print("======================")
-        CopyBtn.Text = "📋 Check Console!"
-    end
-    
-    wait(1.5)
-    CopyBtn.Text = "📋 Copy Code"
-end)
-
--- Search
-SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-    local query = SearchBox.Text:lower()
-    for _, child in pairs(RemoteList:GetChildren()) do
-        if child:IsA("TextButton") then
-            local nameLabel = child:FindFirstChildOfClass("TextLabel")
-            if nameLabel then
-                child.Visible = nameLabel.Text:lower():find(query) ~= nil
-            end
-        end
-    end
-end)
-
--- Touch drag untuk toggle button
+-- Drag toggle
 local dragging = false
 local dragStart, startPos
 
 ToggleBtn.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
         dragStart = input.Position
         startPos = ToggleBtn.Position
@@ -674,13 +621,11 @@ ToggleBtn.InputBegan:Connect(function(input)
 end)
 
 ToggleBtn.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        dragging = false
-    end
+    dragging = false
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.Touch then
+    if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
         local delta = input.Position - dragStart
         ToggleBtn.Position = UDim2.new(
             startPos.X.Scale,
@@ -691,16 +636,5 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- Init animation
-ToggleBtn.Position = UDim2.new(0, -60, 0.5, -25)
-ToggleBtn:TweenPosition(
-    UDim2.new(0, 10, 0.5, -25),
-    Enum.EasingDirection.Out,
-    Enum.EasingStyle.Back,
-    0.5,
-    true
-)
-
-print("⚡ Cobalt Mobile loaded!")
-print("✅ Delta Executor compatible")
-print("👆 Tap ⚡ button to open")
+print("🎣 Cobalt Fishing Pro loaded!")
+print("👆 Tap 🎣 untuk buka UI")
