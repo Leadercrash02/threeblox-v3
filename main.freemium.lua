@@ -3515,7 +3515,7 @@ local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto We
 end)
 
 --==================================================
--- CHARM PRESET SECTION (SHOP PAGE) - QUANTITY + BUY SYSTEM
+-- CHARM PRESET SECTION (SHOP PAGE) - FIXED REMOTE GET
 --==================================================
 CharmSection = CreateSectionDropdown(ShopPage, "Charm Preset")
 Instance.new("UIListLayout", CharmSection).SortOrder = Enum.SortOrder.LayoutOrder
@@ -3579,7 +3579,15 @@ local charmLayout = Instance.new("UIListLayout", CharmScroll)
 charmLayout.SortOrder = Enum.SortOrder.LayoutOrder
 charmLayout.Padding = UDim.new(0, 4)
 
--- Data Charm (ID untuk logic, tapi tidak ditampilkan + tanpa emoji)
+-- FIX: Ambil remote langsung kayak script referensi (tanpa pcall/wait lama)
+local netPath = ReplicatedStorage.Packages["_Index"]["sleitnick_net@0.2.0"].net
+local purchaseRemote = netPath:WaitForChild("RF/PurchaseCharm")
+local startCraftRemote = netPath:WaitForChild("RF/StartCrafting")
+local confirmCraftRemote = netPath:WaitForChild("RF/ConfirmCrafting")
+
+print("[Charm] All remotes loaded successfully!")
+
+-- Data Charm (tanpa emoji, ID untuk logic tapi tidak ditampilkan)
 local CHARM_DATA = {
     -- SHOP CHARMS (pakai ID untuk beli)
     {type = "shop", id = 14, name = "Heart Charm", price = "20k"},
@@ -3607,36 +3615,6 @@ _G.RAY.SelectedCharmItem = nil
 _G.RAY.CharmBuyQty = 1
 
 local selectedCharms = {}
-local charmPurchaseRF = nil
-local charmCraftStartRF = nil
-local charmCraftConfirmRF = nil
-
--- Ambil remotes
-task.spawn(function()
-    local success1, result1 = pcall(function()
-        return net:WaitForChild("RF/PurchaseCharm")
-    end)
-    if success1 then
-        charmPurchaseRF = result1
-        print("[Charm] Purchase RF ready")
-    end
-    
-    local success2, result2 = pcall(function()
-        return net:WaitForChild("RF/StartCrafting")
-    end)
-    if success2 then
-        charmCraftStartRF = result2
-        print("[Charm] Craft Start RF ready")
-    end
-    
-    local success3, result3 = pcall(function()
-        return net:WaitForChild("RF/ConfirmCrafting")
-    end)
-    if success3 then
-        charmCraftConfirmRF = result3
-        print("[Charm] Craft Confirm RF ready")
-    end
-end)
 
 local function updateCharmRows()
     for _, row in ipairs(CharmScroll:GetChildren()) do
@@ -3743,7 +3721,7 @@ SelectedCharmLabel = CL(SelectedCharmRow, {
     Text = "None"
 })
 
--- Quantity Row (sama persis kayak Merchant)
+-- Quantity Row
 local CharmQtyRow = Instance.new("Frame", CharmSection)
 CharmQtyRow.Size = UDim2.new(1, 0, 0, 36)
 CharmQtyRow.BackgroundTransparency = 1
@@ -3792,21 +3770,16 @@ charmBuyBtn.TextSize = 12
 charmBuyBtn.Text = "BUY"
 CC(charmBuyBtn, 8)
 
--- Function Execute Charm (logic sama kayak script referensi)
+-- Function Execute Charm (logic SAMA PERSIS kayak script referensi)
 function ExecuteCharm(charmData, qty)
     qty = math.max(1, tonumber(qty) or 1)
     
     if charmData.type == "shop" then
-        -- SHOP PURCHASE (pakai ID)
-        if not charmPurchaseRF then
-            warn("[Charm] Purchase RF not ready!")
-            return false
-        end
-        
+        -- SHOP: pakai ID (sama kayak script referensi)
         for i = 1, qty do
             task.spawn(function()
                 pcall(function()
-                    charmPurchaseRF:InvokeServer(charmData.id)
+                    purchaseRemote:InvokeServer(charmData.id)
                     print("[Charm] Purchased:", charmData.name)
                 end)
             end)
@@ -3815,18 +3788,13 @@ function ExecuteCharm(charmData, qty)
         return true
         
     elseif charmData.type == "craft" then
-        -- CRAFT EXECUTE (pakai nama)
-        if not charmCraftStartRF or not charmCraftConfirmRF then
-            warn("[Charm] Craft RF not ready!")
-            return false
-        end
-        
+        -- CRAFT: pakai nama (sama kayak script referensi)
         for i = 1, qty do
             task.spawn(function()
                 pcall(function()
-                    charmCraftStartRF:InvokeServer(charmData.name)
+                    startCraftRemote:InvokeServer(charmData.name)
                     task.wait(0.1)
-                    charmCraftConfirmRF:InvokeServer()
+                    confirmCraftRemote:InvokeServer()
                     print("[Charm] Crafted:", charmData.name)
                 end)
             end)
@@ -3835,7 +3803,6 @@ function ExecuteCharm(charmData, qty)
         return true
         
     elseif charmData.type == "info" then
-        -- Info only, tidak bisa dibeli
         if NotifyFeature then
             NotifyFeature(charmData.name .. " is info only!", false)
         end
@@ -3870,4 +3837,4 @@ end)
 -- Tambah ke AllPanels
 table.insert(AllPanels, CharmPanel)
 
-print("[Charm] Section loaded - Shop(ID) + Craft(Name) + Quantity + Buy")
+print("[Charm] Section loaded - Fixed remote get + Quantity + Buy system")
