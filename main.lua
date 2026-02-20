@@ -1,16 +1,14 @@
--- Cobalt V3 - Blatant Fishing Edition
--- Exact replica + editable args + auto features
+-- Cobalt V4 - Auto Display Real Args from Spy
+-- Nilai asli langsung muncul tanpa edit manual
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local UserInputService = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
-local RunService = game:GetService("RunService")
 
 local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
--- THEME (Exact from screenshot)
+-- THEME
 local THEME = {
     Background = Color3.fromRGB(20, 20, 25),
     Secondary = Color3.fromRGB(30, 30, 38),
@@ -25,22 +23,19 @@ local THEME = {
     Border = Color3.fromRGB(45, 45, 55)
 }
 
--- MAIN GUI (Small & Compact)
+-- GUI
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "CobaltV3"
+ScreenGui.Name = "CobaltV4"
 ScreenGui.Parent = PlayerGui
 ScreenGui.ResetOnSpawn = false
-ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
--- Main Frame (Smaller: 500x320)
+-- Main Frame
 local MainFrame = Instance.new("Frame")
-MainFrame.Name = "Main"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = THEME.Background
 MainFrame.BorderSizePixel = 0
 MainFrame.Position = UDim2.new(0.5, -250, 0.5, -160)
 MainFrame.Size = UDim2.new(0, 500, 0, 320)
-MainFrame.ClipsDescendants = true
 
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
 
@@ -48,26 +43,13 @@ Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 8)
 local TitleBar = Instance.new("Frame")
 TitleBar.Parent = MainFrame
 TitleBar.BackgroundColor3 = THEME.Secondary
-TitleBar.BorderSizePixel = 0
 TitleBar.Size = UDim2.new(1, 0, 0, 32)
 
 local TitleFix = Instance.new("Frame")
 TitleFix.Parent = TitleBar
 TitleFix.BackgroundColor3 = THEME.Secondary
-TitleFix.BorderSizePixel = 0
 TitleFix.Position = UDim2.new(0, 0, 1, -8)
 TitleFix.Size = UDim2.new(1, 0, 0, 8)
-
--- Lightning Icon
-local Lightning = Instance.new("ImageLabel")
-Lightning.Parent = TitleBar
-Lightning.BackgroundTransparency = 1
-Lightning.Position = UDim2.new(0, 10, 0.5, -9)
-Lightning.Size = UDim2.new(0, 18, 0, 18)
-Lightning.Image = "rbxassetid://3926307971"
-Lightning.ImageRectOffset = Vector2.new(604, 324)
-Lightning.ImageRectSize = Vector2.new(36, 36)
-Lightning.ImageColor3 = THEME.Accent
 
 local TitleText = Instance.new("TextLabel")
 TitleText.Parent = TitleBar
@@ -79,7 +61,7 @@ TitleText.Text = "Cobalt"
 TitleText.TextColor3 = THEME.Text
 TitleText.TextSize = 15
 
--- Close Button (X)
+-- Close & Minimize
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TitleBar
 CloseBtn.BackgroundTransparency = 1
@@ -90,7 +72,6 @@ CloseBtn.Text = "✕"
 CloseBtn.TextColor3 = THEME.Error
 CloseBtn.TextSize = 16
 
--- Minimize Button (–)
 local MinBtn = Instance.new("TextButton")
 MinBtn.Parent = TitleBar
 MinBtn.BackgroundTransparency = 1
@@ -101,11 +82,10 @@ MinBtn.Text = "–"
 MinBtn.TextColor3 = THEME.SubText
 MinBtn.TextSize = 20
 
--- Left Panel (Remote List)
+-- Left Panel
 local LeftPanel = Instance.new("Frame")
 LeftPanel.Parent = MainFrame
 LeftPanel.BackgroundColor3 = THEME.Secondary
-LeftPanel.BorderSizePixel = 0
 LeftPanel.Position = UDim2.new(0, 8, 0, 40)
 LeftPanel.Size = UDim2.new(0, 140, 1, -48)
 
@@ -115,7 +95,6 @@ Instance.new("UICorner", LeftPanel).CornerRadius = UDim.new(0, 6)
 local SearchBox = Instance.new("TextBox")
 SearchBox.Parent = LeftPanel
 SearchBox.BackgroundColor3 = THEME.Background
-SearchBox.BorderSizePixel = 0
 SearchBox.Position = UDim2.new(0, 8, 0, 8)
 SearchBox.Size = UDim2.new(1, -16, 0, 24)
 SearchBox.Font = Enum.Font.Gotham
@@ -146,17 +125,15 @@ ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
 local RightPanel = Instance.new("Frame")
 RightPanel.Parent = MainFrame
 RightPanel.BackgroundColor3 = THEME.Secondary
-RightPanel.BorderSizePixel = 0
 RightPanel.Position = UDim2.new(0, 156, 0, 40)
 RightPanel.Size = UDim2.new(1, -164, 1, -48)
 
 Instance.new("UICorner", RightPanel).CornerRadius = UDim.new(0, 6)
 
--- Remote Name Header
+-- Remote Header
 local RemoteHeader = Instance.new("Frame")
 RemoteHeader.Parent = RightPanel
 RemoteHeader.BackgroundColor3 = THEME.Background
-RemoteHeader.BorderSizePixel = 0
 RemoteHeader.Position = UDim2.new(0, 8, 0, 8)
 RemoteHeader.Size = UDim2.new(1, -16, 0, 30)
 
@@ -178,7 +155,7 @@ RemoteName.BackgroundTransparency = 1
 RemoteName.Position = UDim2.new(0, 28, 0, 0)
 RemoteName.Size = UDim2.new(1, -50, 1, 0)
 RemoteName.Font = Enum.Font.GothamSemibold
-RemoteName.Text = "RF/RequestFishingMinigameStarted"
+RemoteName.Text = "Select a remote..."
 RemoteName.TextColor3 = THEME.Text
 RemoteName.TextSize = 12
 RemoteName.TextXAlignment = Enum.TextXAlignment.Left
@@ -190,7 +167,6 @@ PinBtn.Parent = RemoteHeader
 PinBtn.BackgroundTransparency = 1
 PinBtn.Position = UDim2.new(1, -25, 0.5, -10)
 PinBtn.Size = UDim2.new(0, 20, 0, 20)
-PinBtn.Font = Enum.Font.Gotham
 PinBtn.Text = "📌"
 PinBtn.TextColor3 = THEME.SubText
 PinBtn.TextSize = 12
@@ -205,7 +181,6 @@ TabFrame.Size = UDim2.new(1, -16, 0, 26)
 local TabArgs = Instance.new("TextButton")
 TabArgs.Parent = TabFrame
 TabArgs.BackgroundColor3 = THEME.Background
-TabArgs.BorderSizePixel = 0
 TabArgs.Position = UDim2.new(0, 0, 0, 0)
 TabArgs.Size = UDim2.new(0, 80, 1, 0)
 TabArgs.Font = Enum.Font.GothamSemibold
@@ -225,8 +200,7 @@ TabCode.Size = UDim2.new(0, 60, 1, 0)
 TabCode.Font = Enum.Font.GothamSemibold
 TabCode.Text = "<> Code"
 TabCode.TextColor3 = THEME.SubText
-TabCode.TextSize = 11
-TabCode.AutoButtonColor = false
+TabArgs.TextSize = 11
 
 local TabInfo = Instance.new("TextButton")
 TabInfo.Parent = TabFrame
@@ -237,13 +211,11 @@ TabInfo.Font = Enum.Font.GothamSemibold
 TabInfo.Text = "ⓘ Function Info"
 TabInfo.TextColor3 = THEME.SubText
 TabInfo.TextSize = 11
-TabInfo.AutoButtonColor = false
 
--- Args Container (WITH EDITABLE INPUTS)
+-- Args Container - DISPLAY ONLY (like screenshot)
 local ArgsContainer = Instance.new("ScrollingFrame")
 ArgsContainer.Parent = RightPanel
 ArgsContainer.BackgroundColor3 = THEME.Background
-ArgsContainer.BorderSizePixel = 0
 ArgsContainer.Position = UDim2.new(0, 8, 0, 76)
 ArgsContainer.Size = UDim2.new(1, -16, 1, -130)
 ArgsContainer.ScrollBarThickness = 3
@@ -255,7 +227,7 @@ ArgsLayout.Parent = ArgsContainer
 ArgsLayout.Padding = UDim.new(0, 2)
 ArgsLayout.SortOrder = Enum.SortOrder.LayoutOrder
 
--- Bottom Buttons
+-- Bottom Bar
 local BottomBar = Instance.new("Frame")
 BottomBar.Parent = RightPanel
 BottomBar.BackgroundTransparency = 1
@@ -265,42 +237,36 @@ BottomBar.Size = UDim2.new(1, -16, 0, 40)
 local CodeBtn = Instance.new("TextButton")
 CodeBtn.Parent = BottomBar
 CodeBtn.BackgroundColor3 = THEME.Background
-CodeBtn.BorderSizePixel = 0
 CodeBtn.Position = UDim2.new(0, 0, 0, 0)
 CodeBtn.Size = UDim2.new(0, 60, 1, 0)
 CodeBtn.Font = Enum.Font.GothamSemibold
 CodeBtn.Text = "<> Code"
 CodeBtn.TextColor3 = THEME.SubText
 CodeBtn.TextSize = 11
-CodeBtn.AutoButtonColor = false
 
 Instance.new("UICorner", CodeBtn).CornerRadius = UDim.new(0, 4)
 
 local OriginBtn = Instance.new("TextButton")
 OriginBtn.Parent = BottomBar
 OriginBtn.BackgroundColor3 = THEME.Background
-OriginBtn.BorderSizePixel = 0
 OriginBtn.Position = UDim2.new(0, 65, 0, 0)
 OriginBtn.Size = UDim2.new(0, 70, 1, 0)
 OriginBtn.Font = Enum.Font.GothamSemibold
 OriginBtn.Text = "🔍 Origin"
 OriginBtn.TextColor3 = THEME.SubText
 OriginBtn.TextSize = 11
-OriginBtn.AutoButtonColor = false
 
 Instance.new("UICorner", OriginBtn).CornerRadius = UDim.new(0, 4)
 
 local EventBtn = Instance.new("TextButton")
 EventBtn.Parent = BottomBar
 EventBtn.BackgroundColor3 = THEME.Background
-EventBtn.BorderSizePixel = 0
 EventBtn.Position = UDim2.new(0, 140, 0, 0)
 EventBtn.Size = UDim2.new(0, 70, 1, 0)
 EventBtn.Font = Enum.Font.GothamSemibold
 EventBtn.Text = "📋 Event"
 EventBtn.TextColor3 = THEME.SubText
 EventBtn.TextSize = 11
-EventBtn.AutoButtonColor = false
 
 Instance.new("UICorner", EventBtn).CornerRadius = UDim.new(0, 4)
 
@@ -308,14 +274,12 @@ Instance.new("UICorner", EventBtn).CornerRadius = UDim.new(0, 4)
 local ReplayBtn = Instance.new("TextButton")
 ReplayBtn.Parent = BottomBar
 ReplayBtn.BackgroundColor3 = THEME.Background
-ReplayBtn.BorderSizePixel = 0
 ReplayBtn.Position = UDim2.new(1, -85, 0, 0)
 ReplayBtn.Size = UDim2.new(0, 85, 1, 0)
 ReplayBtn.Font = Enum.Font.GothamBold
 ReplayBtn.Text = "↻ Replay"
 ReplayBtn.TextColor3 = THEME.Text
 ReplayBtn.TextSize = 12
-ReplayBtn.AutoButtonColor = false
 
 Instance.new("UICorner", ReplayBtn).CornerRadius = UDim.new(0, 6)
 
@@ -323,26 +287,15 @@ Instance.new("UICorner", ReplayBtn).CornerRadius = UDim.new(0, 6)
 local SuccessMsg = Instance.new("Frame")
 SuccessMsg.Parent = RightPanel
 SuccessMsg.BackgroundColor3 = THEME.Background
-SuccessMsg.BorderSizePixel = 0
 SuccessMsg.Position = UDim2.new(0, 8, 1, -22)
 SuccessMsg.Size = UDim2.new(1, -16, 0, 20)
 SuccessMsg.Visible = false
 
 Instance.new("UICorner", SuccessMsg).CornerRadius = UDim.new(0, 4)
 
-local SuccessIcon = Instance.new("TextLabel")
-SuccessIcon.Parent = SuccessMsg
-SuccessIcon.BackgroundTransparency = 1
-SuccessIcon.Position = UDim2.new(0, 8, 0, 0)
-SuccessIcon.Size = UDim2.new(0, 20, 1, 0)
-SuccessIcon.Font = Enum.Font.GothamBold
-SuccessIcon.Text = "✓"
-SuccessIcon.TextColor3 = THEME.Success
-SuccessIcon.TextSize = 14
-
 local SuccessText = Instance.new("TextLabel")
 SuccessText.Parent = SuccessMsg
-SuccessIcon.BackgroundTransparency = 1
+SuccessText.BackgroundTransparency = 1
 SuccessText.Position = UDim2.new(0, 28, 0, 0)
 SuccessText.Size = UDim2.new(1, -36, 1, 0)
 SuccessText.Font = Enum.Font.Gotham
@@ -351,7 +304,7 @@ SuccessText.TextColor3 = THEME.Success
 SuccessText.TextSize = 11
 SuccessText.TextXAlignment = Enum.TextXAlignment.Left
 
--- TOGGLE BUTTON (When minimized)
+-- Toggle Button
 local ToggleBtn = Instance.new("TextButton")
 ToggleBtn.Parent = ScreenGui
 ToggleBtn.BackgroundColor3 = THEME.Accent
@@ -371,9 +324,8 @@ local RemoteLogs = {}
 local SelectedLog = nil
 local LogCounter = 0
 local NetFolder = nil
-local ArgInputs = {} -- Store input references
 
--- FUNCTIONS
+-- CREATE ARG ROW - DISPLAY ONLY (like screenshot)
 local function CreateArgRow(index, value, valueType)
     local Row = Instance.new("Frame")
     Row.Parent = ArgsContainer
@@ -381,64 +333,55 @@ local function CreateArgRow(index, value, valueType)
     Row.Size = UDim2.new(1, 0, 0, 26)
     Row.LayoutOrder = index
     
-    -- Index
+    -- Index (1, 2, 3...)
     local IndexLabel = Instance.new("TextLabel")
     IndexLabel.Parent = Row
     IndexLabel.BackgroundTransparency = 1
-    IndexLabel.Position = UDim2.new(0, 8, 0, 0)
+    IndexLabel.Position = UDim2.new(0, 12, 0, 0)
     IndexLabel.Size = UDim2.new(0, 20, 1, 0)
     IndexLabel.Font = Enum.Font.GothamBold
     IndexLabel.Text = tostring(index)
     IndexLabel.TextColor3 = THEME.Text
     IndexLabel.TextSize = 12
     
-    -- Editable Value Input
+    -- Value (the actual spy data) - YELLOW for numbers
     local ValueColor = THEME.Number
     if valueType == "string" then ValueColor = THEME.String
     elseif valueType == "boolean" then ValueColor = THEME.Boolean end
     
-    local Input = Instance.new("TextBox")
-    Input.Parent = Row
-    Input.BackgroundTransparency = 1
-    Input.Position = UDim2.new(0, 32, 0, 0)
-    Input.Size = UDim2.new(0.55, -32, 1, 0)
-    Input.Font = Enum.Font.GothamMono
-    Input.Text = tostring(value)
-    Input.TextColor3 = ValueColor
-    Input.TextSize = 12
-    Input.TextXAlignment = Enum.TextXAlignment.Left
-    Input.ClearTextOnFocus = false
+    local ValueLabel = Instance.new("TextLabel")
+    ValueLabel.Parent = Row
+    ValueLabel.BackgroundTransparency = 1
+    ValueLabel.Position = UDim2.new(0, 40, 0, 0)
+    ValueLabel.Size = UDim2.new(0.55, -40, 1, 0)
+    ValueLabel.Font = Enum.Font.GothamMono
+    ValueLabel.Text = tostring(value)
+    ValueLabel.TextColor3 = ValueColor
+    ValueLabel.TextSize = 12
+    ValueLabel.TextXAlignment = Enum.TextXAlignment.Left
     
-    -- Type Label
+    -- Type (number, string, etc) - GRAY on right
     local TypeLabel = Instance.new("TextLabel")
     TypeLabel.Parent = Row
     TypeLabel.BackgroundTransparency = 1
     TypeLabel.Position = UDim2.new(0.6, 0, 0, 0)
-    TypeLabel.Size = UDim2.new(0.4, -8, 1, 0)
+    TypeLabel.Size = UDim2.new(0.4, -12, 1, 0)
     TypeLabel.Font = Enum.Font.Gotham
     TypeLabel.Text = valueType:lower()
     TypeLabel.TextColor3 = THEME.SubText
     TypeLabel.TextSize = 11
     TypeLabel.TextXAlignment = Enum.TextXAlignment.Right
     
-    -- Store reference
-    ArgInputs[index] = {
-        Input = Input,
-        Type = valueType,
-        Original = value
-    }
-    
     return Row
 end
 
-local function CreateLogEntry(name, remote, method, args)
+local function CreateLogEntry(name, remote, method, args, timestamp)
     LogCounter = LogCounter + 1
     local logId = LogCounter
     
     local Entry = Instance.new("TextButton")
     Entry.Parent = RemoteList
     Entry.BackgroundColor3 = THEME.Background
-    Entry.BorderSizePixel = 0
     Entry.Size = UDim2.new(1, 0, 0, 28)
     Entry.LayoutOrder = -logId
     Entry.AutoButtonColor = false
@@ -455,6 +398,7 @@ local function CreateLogEntry(name, remote, method, args)
     Indicator.Size = UDim2.new(0, 6, 0, 6)
     Instance.new("UICorner", Indicator).CornerRadius = UDim.new(1, 0)
     
+    -- Name
     local NameLabel = Instance.new("TextLabel")
     NameLabel.Parent = Entry
     NameLabel.BackgroundTransparency = 1
@@ -467,16 +411,19 @@ local function CreateLogEntry(name, remote, method, args)
     NameLabel.TextXAlignment = Enum.TextXAlignment.Left
     NameLabel.TextTruncate = Enum.TextTruncate.AtEnd
     
+    -- Store data
     local logData = {
         Id = logId,
         Name = name,
         Remote = remote,
         Method = method,
         Args = args,
+        Timestamp = timestamp or tick(),
         Entry = Entry
     }
     RemoteLogs[logId] = logData
     
+    -- CLICK TO SHOW ARGS
     Entry.MouseButton1Click:Connect(function()
         if SelectedLog then
             SelectedLog.Entry.BackgroundColor3 = THEME.Background
@@ -485,21 +432,26 @@ local function CreateLogEntry(name, remote, method, args)
         SelectedLog = logData
         Entry.BackgroundColor3 = THEME.Accent
         
+        -- Update header
         RemoteName.Text = name
         
-        -- Clear old inputs
+        -- Clear old args
         for _, child in pairs(ArgsContainer:GetChildren()) do
             if child:IsA("Frame") then child:Destroy() end
         end
-        ArgInputs = {}
         
-        -- Create new inputs
+        -- Show REAL args from spy
         for i, arg in ipairs(args) do
             CreateArgRow(i, arg, typeof(arg))
         end
         
         ArgsContainer.CanvasSize = UDim2.new(0, 0, 0, #args * 28)
         SuccessMsg.Visible = false
+        
+        print("📊 Showing args for:", name)
+        for i, v in ipairs(args) do
+            print("  ["..i.."]", v, "("..typeof(v)..")")
+        end
     end)
     
     Entry.MouseEnter:Connect(function()
@@ -539,26 +491,23 @@ local function FindNetFolder()
         
         if found then
             NetFolder = current
-            print("✅ NetFolder found:", path)
+            print("✅ NetFolder:", path)
             return true
         end
     end
     
-    -- Manual search
     for _, obj in ipairs(ReplicatedStorage:GetDescendants()) do
         if obj.Name == "net" and obj.Parent and string.find(obj.Parent.Name, "sleitnick") then
-            if obj:FindFirstChild("RF") or obj:FindFirstChild("RE") then
-                NetFolder = obj
-                print("✅ NetFolder found (search):", obj:GetFullName())
-                return true
-            end
+            NetFolder = obj
+            print("✅ NetFolder (search):", obj:GetFullName())
+            return true
         end
     end
     
     return false
 end
 
--- HOOK REMOTE
+-- HOOK REMOTE - CAPTURE REAL ARGS
 local HookedRemotes = {}
 local function HookRemote(remote, name)
     if not remote or HookedRemotes[remote] then return end
@@ -566,32 +515,39 @@ local function HookRemote(remote, name)
     
     local method = remote:IsA("RemoteEvent") and "FireServer" or "InvokeServer"
     
+    print("🔌 Hooking:", name, "-", method)
+    
     local oldNamecall
     oldNamecall = hookmetamethod(game, "__namecall", function(self, ...)
         if self == remote then
             local calledMethod = getnamecallmethod()
             if calledMethod == method then
                 local args = {...}
+                
+                -- CAPTURE REAL ARGS HERE
                 task.spawn(function()
-                    CreateLogEntry(name, remote, method, args)
+                    print("🎣 CAPTURED:", name)
+                    for i, v in ipairs(args) do
+                        print("  Arg["..i.."]:", v, "| Type:", typeof(v))
+                    end
+                    CreateLogEntry(name, remote, method, args, tick())
                 end)
             end
         end
         return oldNamecall(self, ...)
     end)
-    
-    print("✅ Hooked:", name)
 end
 
 -- INITIALIZE
 task.spawn(function()
     wait(1)
     
-    -- Add sample data
-    CreateLogEntry("RF/RequestFishingMinigameStarted", nil, "InvokeServer", {-1.233, 1000, 1771160142.806})
-    
     if not FindNetFolder() then
-        print("❌ NetFolder not found, using sample mode")
+        -- Demo mode with fake data
+        print("⚠️ Demo mode - NetFolder not found")
+        CreateLogEntry("RF/RequestFishingMinigameStarted", nil, "InvokeServer", {-1.233, 1000, 1771160142.806})
+        CreateLogEntry("RF/CancelFishingInputs", nil, "InvokeServer", {})
+        CreateLogEntry("RE/EquipToolFromHotbar", nil, "FireServer", {1})
         return
     end
     
@@ -612,11 +568,15 @@ task.spawn(function()
         local remote = NetFolder:FindFirstChild(info.path)
         if remote then
             HookRemote(remote, info.name)
+        else
+            print("❌ Not found:", info.path)
         end
     end
+    
+    print("✅ All remotes hooked! Go fishing now!")
 end)
 
--- REPLAY WITH EDITABLE ARGS
+-- REPLAY
 ReplayBtn.MouseButton1Click:Connect(function()
     if not SelectedLog then
         RemoteName.Text = "Select a remote first!"
@@ -624,49 +584,21 @@ ReplayBtn.MouseButton1Click:Connect(function()
     end
     
     if not SelectedLog.Remote then
-        -- Test mode - just show success
         SuccessMsg.Visible = true
-        SuccessText.Text = "Test mode - no remote!"
+        SuccessText.Text = "Demo mode - no real remote"
         SuccessText.TextColor3 = THEME.Warning
-        task.delay(2, function()
-            SuccessMsg.Visible = false
-        end)
+        task.delay(2, function() SuccessMsg.Visible = false end)
         return
     end
     
-    -- Collect edited args
-    local newArgs = {}
-    for i = 1, #SelectedLog.Args do
-        local argData = ArgInputs[i]
-        if argData then
-            local val = argData.Input.Text
-            local t = argData.Type
-            
-            -- Convert type
-            if t == "number" then
-                val = tonumber(val) or 0
-            elseif t == "boolean" then
-                val = string.lower(val) == "true"
-            elseif t == "table" then
-                -- Try parse JSON
-                local success, result = pcall(function()
-                    return game:GetService("HttpService"):JSONDecode(val)
-                end)
-                val = success and result or {}
-            end
-            
-            newArgs[i] = val
-        else
-            newArgs[i] = SelectedLog.Args[i]
-        end
-    end
+    -- Replay with SAME args (no edit)
+    local args = SelectedLog.Args
     
-    -- Fire remote
     local success, result = pcall(function()
         if SelectedLog.Remote:IsA("RemoteEvent") then
-            SelectedLog.Remote:FireServer(unpack(newArgs))
+            SelectedLog.Remote:FireServer(unpack(args))
         else
-            return SelectedLog.Remote:InvokeServer(unpack(newArgs))
+            return SelectedLog.Remote:InvokeServer(unpack(args))
         end
     end)
     
@@ -674,20 +606,13 @@ ReplayBtn.MouseButton1Click:Connect(function()
         SuccessMsg.Visible = true
         SuccessText.Text = "Replayed event successfully!"
         SuccessText.TextColor3 = THEME.Success
-        SuccessIcon.Text = "✓"
-        SuccessIcon.TextColor3 = THEME.Success
     else
         SuccessMsg.Visible = true
-        SuccessText.Text = "Failed: " .. tostring(result):sub(1, 25)
+        SuccessText.Text = "Failed!"
         SuccessText.TextColor3 = THEME.Error
-        SuccessIcon.Text = "✗"
-        SuccessIcon.TextColor3 = THEME.Error
     end
     
-    task.delay(3, function()
-        SuccessMsg.Visible = false
-        SuccessIcon.Text = "✓"
-    end)
+    task.delay(3, function() SuccessMsg.Visible = false end)
 end)
 
 -- WINDOW CONTROLS
@@ -705,7 +630,7 @@ ToggleBtn.MouseButton1Click:Connect(function()
     ToggleBtn.Visible = false
 end)
 
--- DRAGGING
+-- DRAG
 local dragging = false
 local dragStart, startPos
 
@@ -743,5 +668,5 @@ SearchBox:GetPropertyChangedSignal("Text"):Connect(function()
     end
 end)
 
-print("⚡ Cobalt V3 Loaded!")
-print("🎣 Ready for blatant fishing!")
+print("⚡ Cobalt V4 Loaded!")
+print("🎣 Go fishing to see real args!")
