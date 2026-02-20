@@ -2805,25 +2805,181 @@ end
 
 _G.RAY.LochNess.NextEventTime=GNES()task.spawn(function()while true do local sc=ULS()HLAA()local lt,tv,tc=GLDT()TimerLabel.Text,TimeDisplay.Text,TimeDisplay.TextColor3=lt,FT(tv),tc local st=_G.RAY.LochNess.CurrentState StatusLabel.Text,StatusLabel.TextColor3=st,(st==EVENT_STATE.IDLE and Color3.fromRGB(100,200,100)or(st==EVENT_STATE.ACTIVE and Color3.fromRGB(255,200,100)or Color3.fromRGB(255,100,100)))if sc and NotifyFeature then if sc=="EVENT_START"then NotifyFeature("Loch Ness Event STARTED!",true)elseif sc=="EVENT_END"then NotifyFeature("Loch Ness Event ENDED!",false)end end task.wait(0.5)end end)
 
--- Chest Farm
-ChestFarmSection=CreateSectionDropdown(TeleportPage,"Chest Farm")Instance.new("UIListLayout",ChestFarmSection).SortOrder=Enum.SortOrder.LayoutOrder ChestFarmSection.UIListLayout.Padding=UDim.new(0,6)
+--==================================================
+-- CHEST FARM SECTION (FIXED - Using provided logic)
+--==================================================
+ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Farm")
+Instance.new("UIListLayout", ChestFarmSection).SortOrder = Enum.SortOrder.LayoutOrder
+ChestFarmSection.UIListLayout.Padding = UDim.new(0, 6)
 
--- Chest Farm Toggle PILL (REPLACED CTPi with CreateTogglePill)
-ChestFarmStatusRow=Instance.new("Frame",ChestFarmSection)
-ChestFarmStatusRow.Size=UDim2.new(1,0,0,36)
-ChestFarmStatusRow.BackgroundTransparency=1
-local ChestFarmGet, ChestFarmSet = CreateTogglePill(ChestFarmStatusRow, "Auto Claim Chests", _G.RAY.ChestFarmOn)
--- Connect toggle to function
-local cfPillBtn = ChestFarmStatusRow:FindFirstChildOfClass("TextButton")
-if cfPillBtn then
-    cfPillBtn.MouseButton1Click:Connect(function()
-        local s = ChestFarmGet()
-        _G.RAY.ChestFarmOn = s
-        if NotifyFeature then NotifyFeature("Chest Farm: "..(s and"ON"or"OFF"),s) end
+-- Status Row
+local ChestFarmStatusRow = Instance.new("Frame", ChestFarmSection)
+ChestFarmStatusRow.Size = UDim2.new(1, 0, 0, 30)
+ChestFarmStatusRow.BackgroundTransparency = 1
+
+ChestFarmInfoLabel = CL(ChestFarmStatusRow, {
+    Size = UDim2.new(0.6, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    Text = "Waiting Replion..."
+})
+
+-- Count label
+ChestCountLabel = CL(ChestFarmStatusRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
+    Position = UDim2.new(0.6, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Right,
+    TextColor3 = Color3.fromRGB(0, 255, 140),
+    Text = "Chests: 0"
+})
+
+-- Toggle Row
+local ToggleRow = Instance.new("Frame", ChestFarmSection)
+ToggleRow.Size = UDim2.new(1, 0, 0, 36)
+ToggleRow.BackgroundTransparency = 1
+
+CL(ToggleRow, {
+    Size = UDim2.new(1, -70, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Auto Claim Chests"
+})
+
+-- Chest Farm Variables (sync dengan global)
+_G.RAY.ChestFarmOn = _G.RAY.ChestFarmOn or false
+local chestReplion = nil
+local ClaimPirateChest = nil
+
+-- Ambil RE dengan pcall
+task.spawn(function()
+    local success, result = pcall(function()
+        local netFolder = ReplicatedStorage
+            :WaitForChild("Packages")
+            :WaitForChild("_Index")
+            :WaitForChild("sleitnick_net@0.2.0")
+            :WaitForChild("net")
+        return netFolder:WaitForChild("RE/ClaimPirateChest")
     end)
+    
+    if success then
+        ClaimPirateChest = result
+        print("[ChestFarm] RE initialized:", ClaimPirateChest:GetFullName())
+    else
+        warn("[ChestFarm] Failed to get RE:", result)
+        ChestFarmInfoLabel.Text = "RE Error!"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+-- Init Replion
+task.spawn(function()
+    local ok, r = pcall(function()
+        return Replion.Client:WaitReplion("PirateTreasureChests")
+    end)
+    
+    print("[ChestFarm] WaitReplion:", ok, r)
+    
+    if not ok or not r or typeof(r.Data) ~= "table" then
+        ChestFarmInfoLabel.Text = "Replion failed"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        warn("[ChestFarm] Failed to get PirateTreasureChests")
+        return
+    end
+    
+    chestReplion = r
+    _G.RAY.ChestFarmReplionReady = true
+    ChestFarmInfoLabel.Text = "Replion ready"
+    ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    print("[ChestFarm] Replion Data:", chestReplion.Data)
+end)
+
+-- Function GetAllChestUUIDs (sama persis dari logic lu)
+local function GetAllChestUUIDs()
+    if not chestReplion then return {} end
+    local data = chestReplion.Data
+    local spawned = data and data.SpawnedChests
+    if typeof(spawned) ~= "table" then return {} end
+
+    local list = {}
+    for i, entry in ipairs(spawned) do
+        local uuid = entry.Id
+        if typeof(uuid) == "string" then
+            table.insert(list, uuid)
+        end
+    end
+    return list
 end
 
-ChestFarmInfoLabel=CL(ChestFarmSection,{Size=UDim2.new(1,-32,0,20),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=11,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(150,150,150),Text="Waiting Replion..."})ChestFarmStatsRow=Instance.new("Frame",ChestFarmSection)ChestFarmStatsRow.Size,ChestFarmStatsRow.BackgroundTransparency=UDim2.new(1,0,0,24),1 ChestCountLabel=CL(ChestFarmStatsRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(0,255,140),Text="Chests: 0"})ClaimPirateChest,chestReplion=NetFolder:WaitForChild("RE/ClaimPirateChest"),nil task.spawn(function()local ok,r=pcall(function()return Replion.Client:WaitReplion("PirateTreasureChests")end)if not ok or not r or typeof(r.Data)~="table"then ChestFarmInfoLabel.Text,ChestFarmInfoLabel.TextColor3="Replion failed",Color3.fromRGB(255,100,100)return end chestReplion,_G.RAY.ChestFarmReplionReady,ChestFarmInfoLabel.Text,ChestFarmInfoLabel.TextColor3=r,true,"Replion connected",Color3.fromRGB(100,255,100)end)function GCU()if not chestReplion then return{}end local s=chestReplion.Data and chestReplion.Data.SpawnedChests if typeof(s)~="table"then return{}end local l={}for _,e in ipairs(s)do if typeof(e.Id)=="string"then table.insert(l,e.Id)end end return l end task.spawn(function()while true do task.wait(0.25)if not _G.RAY.ChestFarmReplionReady then ChestFarmInfoLabel.Text="Connecting to Replion..."continue end if not _G.RAY.ChestFarmOn then ChestFarmInfoLabel.Text,ChestFarmInfoLabel.TextColor3="Paused",Color3.fromRGB(150,150,150)continue end local u=GCU()ChestCountLabel.Text="Chests: "..#u if#u==0 then ChestFarmInfoLabel.Text,ChestFarmInfoLabel.TextColor3="No chests spawned",Color3.fromRGB(255,200,100)else ChestFarmInfoLabel.Text,ChestFarmInfoLabel.TextColor3="Claiming "..#u.." chests...",Color3.fromRGB(0,255,140)for _,i in ipairs(u)do pcall(function()ClaimPirateChest:FireServer(i)end)end end end end)print("[ChestFarm] Section loaded")
+-- Toggle Pill untuk Chest Farm
+local ChestFarmRow = Instance.new("Frame", ChestFarmSection)
+ChestFarmRow.Size = UDim2.new(1, 0, 0, 36)
+ChestFarmRow.BackgroundTransparency = 1
+
+local ChestFarmGet, ChestFarmSet = CreateTogglePill(ChestFarmRow, "Auto Farm", false, function(isOn)
+    _G.RAY.ChestFarmOn = isOn
+    if isOn then
+        if NotifyFeature then NotifyFeature("Chest Farm: ON", true) end
+        print("[ChestFarm] Auto ON")
+    else
+        if NotifyFeature then NotifyFeature("Chest Farm: OFF", false) end
+        print("[ChestFarm] Auto OFF")
+    end
+end)
+
+-- FARM LOOP (sama persis dari logic lu)
+task.spawn(function()
+    while true do
+        task.wait(0.25)
+
+        if not _G.RAY.ChestFarmOn then
+            ChestFarmInfoLabel.Text = "Paused"
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+            continue
+        end
+
+        if not chestReplion then
+            ChestFarmInfoLabel.Text = "Waiting Replion..."
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+            continue
+        end
+
+        if not ClaimPirateChest then
+            ChestFarmInfoLabel.Text = "RE not ready!"
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            continue
+        end
+
+        local uuids = GetAllChestUUIDs()
+        ChestCountLabel.Text = "Chests: " .. #uuids
+        
+        if #uuids == 0 then
+            ChestFarmInfoLabel.Text = "No chests spawned"
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+        else
+            ChestFarmInfoLabel.Text = "Claiming " .. #uuids .. " chests..."
+            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+            
+            for _, uuid in ipairs(uuids) do
+                pcall(function()
+                    ClaimPirateChest:FireServer(uuid)
+                end)
+            end
+        end
+    end
+end)
+
+print("[ChestFarm] Section loaded with fixed logic")
 
 -- Saved Positions
 function GCP()local c,h=Player.Character,Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")return h and h.CFrame or nil end function SP(n)local cf=GCP()if not cf then if NotifyFeature then NotifyFeature("Failed to save position!",false)end return false end _G.RAY.SavedPositions[n]={Position=cf.Position,LookVector=cf.LookVector,UpVector=cf.UpVector,Time=os.time()}if NotifyFeature then NotifyFeature("Saved position: "..n,true)end return true end function TTS(n)local d=_G.RAY.SavedPositions[n]if not d then if NotifyFeature then NotifyFeature("Position not found: "..n,false)end return end local h=(Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")if not h then return end h.CFrame=CFrame.new(d.Position,d.Position+d.LookVector)if NotifyFeature then NotifyFeature("Teleported to: "..n,true)end end function DSP(n)_G.RAY.SavedPositions[n]=nil if NotifyFeature then NotifyFeature("Deleted position: "..n,true)end end task.spawn(function()task.wait(2)local ls,lt=nil,0 for n,d in pairs(_G.RAY.SavedPositions)do if d.Time and d.Time>lt then lt,ls=d.Time,n end end if ls then TTS(ls)end end)SavedPosSection=CreateSectionDropdown(TeleportPage,"Saved Positions")Instance.new("UIListLayout",SavedPosSection).SortOrder=Enum.SortOrder.LayoutOrder SavedPosSection.UIListLayout.Padding=UDim.new(0,6)SavedPosPanel,SavedPosScroll=CTP("Saved Positions","Pilih posisi tersimpan untuk teleport.")function RSPL()for _,c in ipairs(SavedPosScroll:GetChildren())do if c:IsA("Frame")then c:Destroy()end end local ns={}for n in pairs(_G.RAY.SavedPositions)do table.insert(ns,n)end table.sort(ns)for _,n in ipairs(ns)do local r=Instance.new("Frame",SavedPosScroll)r.Size,r.BackgroundTransparency,r.ZIndex=UDim2.new(1,-4,0,28),1,11 Instance.new("Frame",r).Name,Instance.new("Frame",r).Size,Instance.new("Frame",r).BackgroundColor3,Instance.new("Frame",r).Visible,Instance.new("Frame",r).ZIndex="Highlight",UDim2.new(0,3,1,0),THEME.MAIN,false,12 local b=Instance.new("TextButton",r)b.Size,b.Position,b.BackgroundColor3,b.TextColor3,b.Font,b.TextSize,b.TextXAlignment,b.Text,b.ZIndex=UDim2.new(1,-30,1,0),UDim2.new(0,4,0,0),Color3.fromRGB(30,30,50),Color3.fromRGB(255,255,255),Enum.Font.Gotham,12,Enum.TextXAlignment.Left,"  "..n,11 CC(b,6)local d=Instance.new("TextButton",r)d.Size,d.Position,d.BackgroundColor3,d.TextColor3,d.Font,d.TextSize,d.Text,d.ZIndex=UDim2.new(0,20,0,20),UDim2.new(1,-26,0.5,-10),Color3.fromRGB(80,30,30),Color3.fromRGB(255,150,150),Enum.Font.GothamBold,12,"X",11 CC(d,4)b.MouseButton1Click:Connect(function()TTS(n)for _,c in ipairs(SavedPosScroll:GetChildren())do local h=c:FindFirstChild("Highlight")if h then h.Visible=(c==r)end end end)d.MouseButton1Click:Connect(function()DSP(n)RSPL()end)end end do local r=Instance.new("Frame",SavedPosSection)r.Size,r.BackgroundTransparency=UDim2.new(1,0,0,36),1 CL(r,{Size=UDim2.new(0.5,-20,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Save Current Pos"})local nb=Instance.new("TextBox",r)nb.Size,nb.Position,nb.BackgroundColor3,nb.BackgroundTransparency,nb.Text,nb.TextColor3,nb.Font,nb.TextSize,nb.ClearTextOnFocus=UDim2.new(0.3,0,0,24),UDim2.new(0.5,-10,0.5,-12),THEME.CARD,0.12,"Pos "..(TC(_G.RAY.SavedPositions)+1),THEME.TEXT,Enum.Font.Gotham,12,true CC(nb,6)local sb=Instance.new("TextButton",r)sb.Size,sb.Position,sb.BackgroundColor3,sb.TextColor3,sb.Font,sb.TextSize,sb.Text=UDim2.new(0,60,0,24),UDim2.new(1,-70,0.5,-12),Color3.fromRGB(40,70,40),THEME.TEXT,Enum.Font.GothamBold,12,"Save" CC(sb,6)sb.MouseButton1Click:Connect(function()local nm=nb.Text:gsub("^%s+",""):gsub("%s+$","")if#nm==0 then nm="Pos "..(TC(_G.RAY.SavedPositions)+1)end if SP(nm)then RSPL()nb.Text="Pos "..(TC(_G.RAY.SavedPositions)+1)end end)end CSR(SavedPosSection,"Saved Positions Panel","Open",function()SavedPosPanel.Visible=not SavedPosPanel.Visible if SavedPosPanel.Visible then RSPL()end end)RSPL()
@@ -3147,4 +3303,4 @@ local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto We
     end
 end)
 
-print("[WeatherPreset] Fixed scrolling loaded")
+print("[FullScript] All sections loaded with fixes")
