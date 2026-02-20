@@ -3603,10 +3603,10 @@ local CHARM_DATA = {
     {type = "craft", name = "Oculus Charm", mats = "Full Recipe"},
     
     -- INFO ONLY
-    {type = "info", name = "Silver Kraken", tier = 5},
-    {type = "info", name = "Black Kraken", tier = 7},
-    {type = "info", name = "Coral Charm", tier = 2},
-    {type = "info", name = "Mermaid Charm", tier = 4}
+    {type = "info", name = "Silver Kraken"},
+    {type = "info", name = "Black Kraken"},
+    {type = "info", name = "Coral Charm",},
+    {type = "info", name = "Mermaid Charm",}
 }
 
 -- Global variables
