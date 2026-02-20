@@ -1794,6 +1794,93 @@ task.spawn(function()
     end
 end)
 
+--==================================================
+-- FIXED CREATE SIDE PANEL FUNCTION
+--==================================================
+local function CreateSidePanel(parent, title, infoText)
+    local panel = Instance.new("Frame", parent)
+    panel.Name = title:gsub(" ", "") .. "Panel"
+    panel.Size = UDim2.new(0, 220, 1, -46)
+    panel.AnchorPoint = Vector2.new(1, 0)
+    panel.Position = UDim2.new(1, -10, 0, 40)
+    panel.BackgroundColor3 = THEME.CARD
+    panel.BackgroundTransparency = 0.25
+    panel.BorderSizePixel = 0
+    panel.Visible = false
+    panel.ZIndex = 10
+    
+    CreateCorner(panel, 10)
+    CreateStroke(panel, THEME.MAIN, 0.5)
+    
+    -- Title
+    CreateLabel(panel, {
+        Size = UDim2.new(1, -10, 0, 24),
+        Position = UDim2.new(0, 5, 0, 6),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.GothamBold,
+        TextSize = 16,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        ZIndex = 11,
+        Text = title
+    })
+    
+    -- Subtitle
+    CreateLabel(panel, {
+        Size = UDim2.new(1, -10, 0, 18),
+        Position = UDim2.new(0, 5, 0, 30),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 12,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = Color3.fromRGB(200, 200, 200),
+        ZIndex = 11,
+        Text = infoText
+    })
+    
+    -- FIXED: ScrollingFrame dengan proper setup
+    local scroll = Instance.new("ScrollingFrame", panel)
+    scroll.Name = title:gsub(" ", "") .. "Scroll"
+    scroll.Size = UDim2.new(1, -10, 1, -70)  -- 54 offset + 16 padding bottom
+    scroll.Position = UDim2.new(0, 5, 0, 54)
+    scroll.BackgroundTransparency = 1
+    scroll.BorderSizePixel = 0
+    scroll.ScrollBarThickness = 3
+    scroll.ScrollBarImageColor3 = THEME.MAIN
+    scroll.ZIndex = 10
+    
+    -- PENTING: CanvasSize manual, bukan Automatic
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.None  -- DISABLE automatic!
+    
+    -- UIListLayout dengan padding
+    local listLayout = Instance.new("UIListLayout", scroll)
+    listLayout.Name = "ListLayout"
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 4)
+    
+    -- TAMBAHAN: UIPadding untuk spacing yang proper
+    local padding = Instance.new("UIPadding", scroll)
+    padding.PaddingTop = UDim.new(0, 4)
+    padding.PaddingBottom = UDim.new(0, 8)
+    padding.PaddingLeft = UDim.new(0, 4)
+    padding.PaddingRight = UDim.new(0, 4)
+    
+    -- FIX: Update CanvasSize saat content berubah
+    local function updateCanvasSize()
+        task.wait()  -- delay 1 frame untuk layout update
+        local contentHeight = listLayout.AbsoluteContentSize.Y
+        scroll.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 16)  -- +16 untuk padding
+    end
+    
+    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
+    
+    -- Initial update
+    task.spawn(updateCanvasSize)
+    
+    return panel, scroll
+end
+
 
 
 --==================================================
@@ -1840,10 +1927,11 @@ local function SpawnTotemUUID(uuid)
 end
 
 --==================================================
--- PANEL SYSTEM (REUSABLE)
+-- FIXED CREATE SIDE PANEL FUNCTION
 --==================================================
 local function CreateSidePanel(parent, title, infoText)
     local panel = Instance.new("Frame", parent)
+    panel.Name = title:gsub(" ", "") .. "Panel"
     panel.Size = UDim2.new(0, 220, 1, -46)
     panel.AnchorPoint = Vector2.new(1, 0)
     panel.Position = UDim2.new(1, -10, 0, 40)
@@ -1881,17 +1969,36 @@ local function CreateSidePanel(parent, title, infoText)
     })
     
     local scroll = Instance.new("ScrollingFrame", panel)
+    scroll.Name = title:gsub(" ", "") .. "Scroll"
     scroll.Size = UDim2.new(1, -10, 1, -70)
     scroll.Position = UDim2.new(0, 5, 0, 54)
     scroll.BackgroundTransparency = 1
     scroll.BorderSizePixel = 0
     scroll.ScrollBarThickness = 3
-    scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
     scroll.ScrollBarImageColor3 = THEME.MAIN
     scroll.ZIndex = 10
+    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+    scroll.AutomaticCanvasSize = Enum.AutomaticSize.None
     
-    Instance.new("UIListLayout", scroll).SortOrder = Enum.SortOrder.LayoutOrder
-    scroll.UIListLayout.Padding = UDim.new(0, 4)
+    local listLayout = Instance.new("UIListLayout", scroll)
+    listLayout.Name = "ListLayout"
+    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+    listLayout.Padding = UDim.new(0, 4)
+    
+    local padding = Instance.new("UIPadding", scroll)
+    padding.PaddingTop = UDim.new(0, 4)
+    padding.PaddingBottom = UDim.new(0, 8)
+    padding.PaddingLeft = UDim.new(0, 4)
+    padding.PaddingRight = UDim.new(0, 4)
+    
+    local function updateCanvasSize()
+        task.wait()
+        local contentHeight = listLayout.AbsoluteContentSize.Y
+        scroll.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 16)
+    end
+    
+    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
+    task.spawn(updateCanvasSize)
     
     return panel, scroll
 end
@@ -1905,7 +2012,6 @@ if BackpackPage then
     Instance.new("UIListLayout", AutoTotemSection).SortOrder = Enum.SortOrder.LayoutOrder
     AutoTotemSection.UIListLayout.Padding = UDim.new(0, 6)
     
-    -- Create Totem Panel
     local TotemPanel, TotemScroll = CreateSidePanel(Main, "Totem List", "Pilih totem yang mau dipasang.")
     
     local TO_TYPES = { "Lucky", "Mutasi", "Shiny", "Love" }
@@ -1915,13 +2021,14 @@ if BackpackPage then
             if c:IsA("Frame") then c:Destroy() end
         end
         
-        for _, jenis in ipairs(TO_TYPES) do
+        for i, jenis in ipairs(TO_TYPES) do
             local id = TotemTypeId[jenis]
             local isSelected = (_G.RAYSelectedTotemType == jenis)
             
             local row = Instance.new("Frame", TotemScroll)
-            row.Size = UDim2.new(1, -4, 0, 24)
+            row.Size = UDim2.new(1, -8, 0, 28)
             row.BackgroundTransparency = 1
+            row.LayoutOrder = i
             row.ZIndex = 11
             
             local line = Instance.new("Frame", row)
@@ -1933,13 +2040,13 @@ if BackpackPage then
             
             local btn = Instance.new("TextButton", row)
             btn.Size = UDim2.new(1, -6, 1, 0)
-            btn.Position = UDim2.new(0, 4, 0, 0)
+            btn.Position = UDim2.new(0, 6, 0, 0)
             btn.BackgroundColor3 = isSelected and Color3.fromRGB(40, 40, 70) or Color3.fromRGB(30, 30, 50)
             btn.TextColor3 = THEME.TEXT
             btn.Font = Enum.Font.Gotham
             btn.TextSize = 12
             btn.TextXAlignment = Enum.TextXAlignment.Left
-            btn.Text = "  " .. jenis .. " Totem  [" .. tostring(id) .. "]"
+            btn.Text = "  " .. jenis .. " Totem"
             btn.ZIndex = 11
             
             CreateCorner(btn, 6)
@@ -1950,11 +2057,16 @@ if BackpackPage then
                 rebuildTotemPanel()
             end)
         end
+        
+        task.wait()
+        local listLayout = TotemScroll:FindFirstChild("ListLayout")
+        if listLayout then
+            TotemScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 16)
+        end
     end
     
     rebuildTotemPanel()
     
-    -- Enable Toggle
     CreateToggleRow(AutoTotemSection, "Enable Auto Totem (1x Cast)", _G.RAYAutoTotemOn, function(state)
         _G.RAYAutoTotemOn = state
         if state then
@@ -1970,7 +2082,6 @@ if BackpackPage then
         end
     end, { ActiveColor = Color3.fromRGB(0, 200, 150) })
     
-    -- Open Panel Button
     do
         local row = Instance.new("Frame", AutoTotemSection)
         row.Size = UDim2.new(1, 0, 0, 40)
@@ -2005,7 +2116,6 @@ if BackpackPage then
         end)
     end
     
-    -- Close on outside click
     UIS.InputBegan:Connect(function(input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
         if not TotemPanel.Visible then return end
@@ -2029,7 +2139,6 @@ if BackpackPage then
     Instance.new("UIListLayout", GearPresetSection).SortOrder = Enum.SortOrder.LayoutOrder
     GearPresetSection.UIListLayout.Padding = UDim.new(0, 6)
     
-    -- Helper for gear toggles
     local function CreateGearToggle(parent, name, globalKey, onCallback, offCallback)
         _G[globalKey] = _G[globalKey] or false
         
@@ -2043,7 +2152,6 @@ if BackpackPage then
         end, { ActiveColor = Color3.fromRGB(0, 200, 150) })
     end
     
-    -- Advance Diving Gear
     local function GetEquipTankRF()
         local ok, rf = pcall(function()
             return ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net"):WaitForChild("RF/EquipOxygenTank")
@@ -2052,7 +2160,7 @@ if BackpackPage then
     end
     
     CreateGearToggle(GearPresetSection, "Advance Diving Gear", "RAY_AdvanceDivingOn",
-        function() -- ON
+        function()
             local rf = GetEquipTankRF()
             if rf then
                 local ok, res = pcall(function() return rf:InvokeServer(575) end)
@@ -2061,14 +2169,13 @@ if BackpackPage then
                 warn("[Threeblox] EquipOxygenTank RF not found")
             end
         end,
-        function() -- OFF
+        function()
             if Events and Events.unequip then
                 pcall(function() Events.unequip:FireServer() end)
             end
         end
     )
     
-    -- Fishing Radar
     local function GetRadarRF()
         local ok, rf = pcall(function()
             return ReplicatedStorage:WaitForChild("Packages"):WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net"):WaitForChild("RF/UpdateFishingRadar")
@@ -2077,7 +2184,7 @@ if BackpackPage then
     end
     
     CreateGearToggle(GearPresetSection, "Fishing Radar", "RAY_FishingRadarOn",
-        function() -- ON
+        function()
             local rf = GetRadarRF()
             if rf then
                 local ok, res = pcall(function() return rf:InvokeServer(true) end)
@@ -2086,13 +2193,12 @@ if BackpackPage then
                 warn("[Threeblox] UpdateFishingRadar RF not found")
             end
         end,
-        function() -- OFF
+        function()
             local rf = GetRadarRF()
             if rf then pcall(function() rf:InvokeServer(false) end) end
         end
     )
 end
-
 
 --==================================================
 -- POTION SYSTEM
@@ -2162,7 +2268,6 @@ if BackpackPage then
     Instance.new("UIListLayout", PotionSection).SortOrder = Enum.SortOrder.LayoutOrder
     PotionSection.UIListLayout.Padding = UDim.new(0, 6)
     
-    -- Create Panel
     local PotionPanel, PotionScroll = CreateSidePanel(Main, "Potion List", "Pilih potion dan set quantity.")
     
     local function rebuildPotionPanel()
@@ -2170,10 +2275,11 @@ if BackpackPage then
             if c:IsA("Frame") then c:Destroy() end
         end
         
-        for _, name in ipairs(POTION_NAMES) do
+        for i, name in ipairs(POTION_NAMES) do
             local row = Instance.new("Frame", PotionScroll)
-            row.Size = UDim2.new(1, -4, 0, 24)
+            row.Size = UDim2.new(1, -8, 0, 28)
             row.BackgroundTransparency = 1
+            row.LayoutOrder = i
             row.ZIndex = 11
             
             local line = Instance.new("Frame", row)
@@ -2205,11 +2311,16 @@ if BackpackPage then
                 if NotifyFeature then NotifyFeature("Selected " .. name, true) end
             end)
         end
+        
+        task.wait()
+        local listLayout = PotionScroll:FindFirstChild("ListLayout")
+        if listLayout then
+            PotionScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 16)
+        end
     end
     
     rebuildPotionPanel()
     
-    -- Quantity Row
     do
         local row = Instance.new("Frame", PotionSection)
         row.Size = UDim2.new(1, 0, 0, 36)
@@ -2259,7 +2370,6 @@ if BackpackPage then
         useBtn.MouseButton1Click:Connect(ConsumeSelectedPotion)
     end
     
-    -- Open Panel Button
     do
         local row = Instance.new("Frame", PotionSection)
         row.Size = UDim2.new(1, 0, 0, 40)
@@ -2293,7 +2403,6 @@ if BackpackPage then
         end)
     end
     
-    -- Close on outside click
     UIS.InputBegan:Connect(function(input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
         if not PotionPanel.Visible then return end
@@ -2378,7 +2487,6 @@ local function EquipStoneById(stoneId)
     if NotifyFeature then NotifyFeature("Equip Stone Id " .. stoneId, true) end
 end
 
--- Auto-stop on target enchant
 local TargetId = nil
 local function refreshTarget()
     TargetId = nil
@@ -2442,19 +2550,21 @@ if BackpackPage then
         Text = "NOTE: Taruh batu enchant di slot kanan tas (hotbar 2)."
     })
     
-    -- Create Panels
     local StonePanel, StoneScroll = CreateSidePanel(Main, "Stone List", "Pilih batu enchant untuk slot.")
     local EnchantPanel, EnchantScroll = CreateSidePanel(Main, "Enchant List", "Pilih enchant target sesuai batu.")
     
     local function rebuildStonePanel()
-        for _, c in ipairs(StoneScroll:GetChildren()) do if c:IsA("Frame") then c:Destroy() end end
+        for _, c in ipairs(StoneScroll:GetChildren()) do 
+            if c:IsA("Frame") then c:Destroy() end 
+        end
         
-        for _, id in ipairs(StoneList) do
+        for i, id in ipairs(StoneList) do
             local cfg = StoneConfig[id]
             if cfg then
                 local row = Instance.new("Frame", StoneScroll)
-                row.Size = UDim2.new(1, -4, 0, 24)
+                row.Size = UDim2.new(1, -8, 0, 28)
                 row.BackgroundTransparency = 1
+                row.LayoutOrder = i
                 row.ZIndex = 11
                 
                 local line = Instance.new("Frame", row)
@@ -2487,18 +2597,27 @@ if BackpackPage then
                 end)
             end
         end
+        
+        task.wait()
+        local listLayout = StoneScroll:FindFirstChild("ListLayout")
+        if listLayout then
+            StoneScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 16)
+        end
     end
     
     local function rebuildEnchantPanel()
-        for _, c in ipairs(EnchantScroll:GetChildren()) do if c:IsA("Frame") then c:Destroy() end end
+        for _, c in ipairs(EnchantScroll:GetChildren()) do 
+            if c:IsA("Frame") then c:Destroy() end 
+        end
         
         local cfg = StoneConfig[_G.RAY_EnchantStoneId]
         local list = cfg and cfg.Enchants or {}
         
-        for _, name in ipairs(list) do
+        for i, name in ipairs(list) do
             local row = Instance.new("Frame", EnchantScroll)
-            row.Size = UDim2.new(1, -4, 0, 24)
+            row.Size = UDim2.new(1, -8, 0, 28)
             row.BackgroundTransparency = 1
+            row.LayoutOrder = i
             row.ZIndex = 11
             
             local line = Instance.new("Frame", row)
@@ -2528,12 +2647,17 @@ if BackpackPage then
                 rebuildEnchantPanel()
             end)
         end
+        
+        task.wait()
+        local listLayout = EnchantScroll:FindFirstChild("ListLayout")
+        if listLayout then
+            EnchantScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 16)
+        end
     end
     
     rebuildStonePanel()
     rebuildEnchantPanel()
     
-    -- Target Slot Row
     do
         local row = Instance.new("Frame", EnchantSection)
         row.Size = UDim2.new(1, 0, 0, 36)
@@ -2579,7 +2703,6 @@ if BackpackPage then
         end
     end
     
-    -- Open Stone Panel
     do
         local row = Instance.new("Frame", EnchantSection)
         row.Size = UDim2.new(1, 0, 0, 36)
@@ -2613,7 +2736,6 @@ if BackpackPage then
         end)
     end
     
-    -- Open Enchant Panel
     do
         local row = Instance.new("Frame", EnchantSection)
         row.Size = UDim2.new(1, 0, 0, 36)
@@ -2647,13 +2769,11 @@ if BackpackPage then
         end)
     end
     
-    -- Auto Enchant Toggle
     CreateToggleRow(EnchantSection, "Auto Enchant", _G.RAY_EnchantAutoOn, function(state)
         _G.RAY_EnchantAutoOn = state
         if NotifyFeature then NotifyFeature("Auto Enchant", state) end
     end, { ActiveColor = THEME.ACCENT })
     
-    -- Teleport Altar
     do
         local row = Instance.new("Frame", EnchantSection)
         row.Size = UDim2.new(1, 0, 0, 36)
@@ -2686,7 +2806,6 @@ if BackpackPage then
         end
     end
     
-    -- Close panels on outside click
     UIS.InputBegan:Connect(function(input)
         if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
         
@@ -2701,6 +2820,8 @@ if BackpackPage then
         if outside(EnchantPanel) then EnchantPanel.Visible = false end
     end)
 end
+
+print("[Backpack] All sections loaded with fixed scrolling")
 
 --==================================================
 -- ISLAND TELEPORT CF DATA
