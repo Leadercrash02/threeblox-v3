@@ -3097,7 +3097,7 @@ task.spawn(function()
 end)
 
 --==================================================
--- CHEST FARM SECTION (FIXED - Using provided logic)
+-- CHEST FARM SECTION (FIXED - Manual Claim)
 --==================================================
 ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Farm")
 Instance.new("UIListLayout", ChestFarmSection).SortOrder = Enum.SortOrder.LayoutOrder
@@ -3131,28 +3131,11 @@ ChestCountLabel = CL(ChestFarmStatusRow, {
     Text = "Chests: 0"
 })
 
--- Toggle Row
-local ToggleRow = Instance.new("Frame", ChestFarmSection)
-ToggleRow.Size = UDim2.new(1, 0, 0, 36)
-ToggleRow.BackgroundTransparency = 1
-
-CL(ToggleRow, {
-    Size = UDim2.new(1, -70, 1, 0),
-    Position = UDim2.new(0, 16, 0, 0),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham,
-    TextSize = 13,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = THEME.TEXT,
-    Text = "Auto Claim Chests"
-})
-
--- Chest Farm Variables (sync dengan global)
-_G.RAY.ChestFarmOn = _G.RAY.ChestFarmOn or false
+-- Chest Farm Variables
 local chestReplion = nil
 local ClaimPirateChest = nil
 
--- Ambil RE dengan pcall
+-- Ambil RE dengan pcall (sama persis)
 task.spawn(function()
     local success, result = pcall(function()
         local netFolder = ReplicatedStorage
@@ -3173,7 +3156,7 @@ task.spawn(function()
     end
 end)
 
--- Init Replion
+-- Init Replion (sama persis)
 task.spawn(function()
     local ok, r = pcall(function()
         return Replion.Client:WaitReplion("PirateTreasureChests")
@@ -3189,13 +3172,12 @@ task.spawn(function()
     end
     
     chestReplion = r
-    _G.RAY.ChestFarmReplionReady = true
     ChestFarmInfoLabel.Text = "Replion ready"
     ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
     print("[ChestFarm] Replion Data:", chestReplion.Data)
 end)
 
--- Function GetAllChestUUIDs (sama persis dari logic lu)
+-- Function GetAllChestUUIDs (SAMA PERSIS)
 local function GetAllChestUUIDs()
     if not chestReplion then return {} end
     local data = chestReplion.Data
@@ -3205,6 +3187,7 @@ local function GetAllChestUUIDs()
     local list = {}
     for i, entry in ipairs(spawned) do
         local uuid = entry.Id
+        local pos = entry.Location
         if typeof(uuid) == "string" then
             table.insert(list, uuid)
         end
@@ -3212,65 +3195,89 @@ local function GetAllChestUUIDs()
     return list
 end
 
--- Toggle Pill untuk Chest Farm
-local ChestFarmRow = Instance.new("Frame", ChestFarmSection)
-ChestFarmRow.Size = UDim2.new(1, 0, 0, 36)
-ChestFarmRow.BackgroundTransparency = 1
+-- MANUAL CLAIM BUTTON (GANTI TOGGLE AUTO)
+local ClaimButtonRow = Instance.new("Frame", ChestFarmSection)
+ClaimButtonRow.Size = UDim2.new(1, 0, 0, 40)
+ClaimButtonRow.BackgroundTransparency = 1
 
-local ChestFarmGet, ChestFarmSet = CreateTogglePill(ChestFarmRow, "Auto Farm", false, function(isOn)
-    _G.RAY.ChestFarmOn = isOn
-    if isOn then
-        if NotifyFeature then NotifyFeature("Chest Farm: ON", true) end
-        print("[ChestFarm] Auto ON")
+CL(ClaimButtonRow, {
+    Size = UDim2.new(1, -110, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Claim All Chests"
+})
+
+local claimBtn = Instance.new("TextButton", ClaimButtonRow)
+claimBtn.Size = UDim2.new(0, 90, 0, 28)
+claimBtn.Position = UDim2.new(1, -110, 0.5, -14)
+claimBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)  -- Green
+claimBtn.Text = "CLAIM"
+claimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+claimBtn.Font = Enum.Font.GothamBold
+claimBtn.TextSize = 12
+CreateCorner(claimBtn, 6)
+
+-- Claim logic (sama persis dari farm loop tapi manual)
+claimBtn.MouseButton1Click:Connect(function()
+    if not chestReplion then
+        ChestFarmInfoLabel.Text = "Replion not ready!"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    if not ClaimPirateChest then
+        ChestFarmInfoLabel.Text = "RE not ready!"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    local uuids = GetAllChestUUIDs()
+    ChestCountLabel.Text = "Chests: " .. #uuids
+    
+    if #uuids == 0 then
+        ChestFarmInfoLabel.Text = "No chests spawned"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
     else
-        if NotifyFeature then NotifyFeature("Chest Farm: OFF", false) end
-        print("[ChestFarm] Auto OFF")
+        ChestFarmInfoLabel.Text = "Claiming " .. #uuids .. " chests..."
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+        
+        for _, uuid in ipairs(uuids) do
+            pcall(function()
+                ClaimPirateChest:FireServer(uuid)
+            end)
+        end
+        
+        -- Feedback visual
+        claimBtn.Text = "DONE!"
+        claimBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+        task.delay(1, function()
+            claimBtn.Text = "CLAIM"
+            claimBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        end)
     end
 end)
 
--- FARM LOOP (sama persis dari logic lu)
+-- AUTO UPDATE COUNT (opsional - biar tau jumlah chest tanpa claim)
 task.spawn(function()
     while true do
-        task.wait(0.25)
-
-        if not _G.RAY.ChestFarmOn then
-            ChestFarmInfoLabel.Text = "Paused"
-            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-            continue
-        end
-
-        if not chestReplion then
-            ChestFarmInfoLabel.Text = "Waiting Replion..."
-            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
-            continue
-        end
-
-        if not ClaimPirateChest then
-            ChestFarmInfoLabel.Text = "RE not ready!"
-            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-            continue
-        end
-
-        local uuids = GetAllChestUUIDs()
-        ChestCountLabel.Text = "Chests: " .. #uuids
-        
-        if #uuids == 0 then
-            ChestFarmInfoLabel.Text = "No chests spawned"
-            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
-        else
-            ChestFarmInfoLabel.Text = "Claiming " .. #uuids .. " chests..."
-            ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+        task.wait(1)
+        if chestReplion then
+            local uuids = GetAllChestUUIDs()
+            ChestCountLabel.Text = "Chests: " .. #uuids
             
-            for _, uuid in ipairs(uuids) do
-                pcall(function()
-                    ClaimPirateChest:FireServer(uuid)
-                end)
+            if #uuids > 0 and ChestFarmInfoLabel.Text == "Replion ready" then
+                ChestFarmInfoLabel.Text = #uuids .. " chests available"
+                ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
             end
         end
     end
 end)
 
-print("[ChestFarm] Section loaded with fixed logic")
+print("[ChestFarm] Section loaded with manual claim")
 
 -- Saved Positions
 function GCP()local c,h=Player.Character,Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")return h and h.CFrame or nil end function SP(n)local cf=GCP()if not cf then if NotifyFeature then NotifyFeature("Failed to save position!",false)end return false end _G.RAY.SavedPositions[n]={Position=cf.Position,LookVector=cf.LookVector,UpVector=cf.UpVector,Time=os.time()}if NotifyFeature then NotifyFeature("Saved position: "..n,true)end return true end function TTS(n)local d=_G.RAY.SavedPositions[n]if not d then if NotifyFeature then NotifyFeature("Position not found: "..n,false)end return end local h=(Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")if not h then return end h.CFrame=CFrame.new(d.Position,d.Position+d.LookVector)if NotifyFeature then NotifyFeature("Teleported to: "..n,true)end end function DSP(n)_G.RAY.SavedPositions[n]=nil if NotifyFeature then NotifyFeature("Deleted position: "..n,true)end end task.spawn(function()task.wait(2)local ls,lt=nil,0 for n,d in pairs(_G.RAY.SavedPositions)do if d.Time and d.Time>lt then lt,ls=d.Time,n end end if ls then TTS(ls)end end)SavedPosSection=CreateSectionDropdown(TeleportPage,"Saved Positions")Instance.new("UIListLayout",SavedPosSection).SortOrder=Enum.SortOrder.LayoutOrder SavedPosSection.UIListLayout.Padding=UDim.new(0,6)SavedPosPanel,SavedPosScroll=CTP("Saved Positions","Pilih posisi tersimpan untuk teleport.")function RSPL()for _,c in ipairs(SavedPosScroll:GetChildren())do if c:IsA("Frame")then c:Destroy()end end local ns={}for n in pairs(_G.RAY.SavedPositions)do table.insert(ns,n)end table.sort(ns)for _,n in ipairs(ns)do local r=Instance.new("Frame",SavedPosScroll)r.Size,r.BackgroundTransparency,r.ZIndex=UDim2.new(1,-4,0,28),1,11 Instance.new("Frame",r).Name,Instance.new("Frame",r).Size,Instance.new("Frame",r).BackgroundColor3,Instance.new("Frame",r).Visible,Instance.new("Frame",r).ZIndex="Highlight",UDim2.new(0,3,1,0),THEME.MAIN,false,12 local b=Instance.new("TextButton",r)b.Size,b.Position,b.BackgroundColor3,b.TextColor3,b.Font,b.TextSize,b.TextXAlignment,b.Text,b.ZIndex=UDim2.new(1,-30,1,0),UDim2.new(0,4,0,0),Color3.fromRGB(30,30,50),Color3.fromRGB(255,255,255),Enum.Font.Gotham,12,Enum.TextXAlignment.Left,"  "..n,11 CC(b,6)local d=Instance.new("TextButton",r)d.Size,d.Position,d.BackgroundColor3,d.TextColor3,d.Font,d.TextSize,d.Text,d.ZIndex=UDim2.new(0,20,0,20),UDim2.new(1,-26,0.5,-10),Color3.fromRGB(80,30,30),Color3.fromRGB(255,150,150),Enum.Font.GothamBold,12,"X",11 CC(d,4)b.MouseButton1Click:Connect(function()TTS(n)for _,c in ipairs(SavedPosScroll:GetChildren())do local h=c:FindFirstChild("Highlight")if h then h.Visible=(c==r)end end end)d.MouseButton1Click:Connect(function()DSP(n)RSPL()end)end end do local r=Instance.new("Frame",SavedPosSection)r.Size,r.BackgroundTransparency=UDim2.new(1,0,0,36),1 CL(r,{Size=UDim2.new(0.5,-20,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Save Current Pos"})local nb=Instance.new("TextBox",r)nb.Size,nb.Position,nb.BackgroundColor3,nb.BackgroundTransparency,nb.Text,nb.TextColor3,nb.Font,nb.TextSize,nb.ClearTextOnFocus=UDim2.new(0.3,0,0,24),UDim2.new(0.5,-10,0.5,-12),THEME.CARD,0.12,"Pos "..(TC(_G.RAY.SavedPositions)+1),THEME.TEXT,Enum.Font.Gotham,12,true CC(nb,6)local sb=Instance.new("TextButton",r)sb.Size,sb.Position,sb.BackgroundColor3,sb.TextColor3,sb.Font,sb.TextSize,sb.Text=UDim2.new(0,60,0,24),UDim2.new(1,-70,0.5,-12),Color3.fromRGB(40,70,40),THEME.TEXT,Enum.Font.GothamBold,12,"Save" CC(sb,6)sb.MouseButton1Click:Connect(function()local nm=nb.Text:gsub("^%s+",""):gsub("%s+$","")if#nm==0 then nm="Pos "..(TC(_G.RAY.SavedPositions)+1)end if SP(nm)then RSPL()nb.Text="Pos "..(TC(_G.RAY.SavedPositions)+1)end end)end CSR(SavedPosSection,"Saved Positions Panel","Open",function()SavedPosPanel.Visible=not SavedPosPanel.Visible if SavedPosPanel.Visible then RSPL()end end)RSPL()
