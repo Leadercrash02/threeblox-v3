@@ -2801,13 +2801,27 @@ local selectedWeather = {}
 local autoWeatherEnabled = false
 local autoWeatherThread = nil
 
--- Ambil RF
-local rf = ReplicatedStorage
-    :WaitForChild("Packages")
-    :WaitForChild("_Index")
-    :WaitForChild("sleitnick_net@0.2.0")
-    :WaitForChild("net")
-    :WaitForChild("RF/PurchaseWeatherEvent")
+-- Ambil RF dengan pcall untuk debug
+local rf = nil
+local function initRF()
+    local success, result = pcall(function()
+        return ReplicatedStorage
+            :WaitForChild("Packages")
+            :WaitForChild("_Index")
+            :WaitForChild("sleitnick_net@0.2.0")
+            :WaitForChild("net")
+            :WaitForChild("RF/PurchaseWeatherEvent")
+    end)
+    
+    if success then
+        rf = result
+        print("[Weather] RF initialized:", rf:GetFullName())
+        return true
+    else
+        warn("[Weather] Failed to get RF:", result)
+        return false
+    end
+end
 
 -- Helper
 local function countSelected()
@@ -2918,19 +2932,37 @@ AutoWeatherRow.BackgroundTransparency = 1
 
 local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto Weather", false)
 
--- Auto loop function
+-- Auto loop function - BUY langsung
 local function autoWeatherLoop()
+    -- Init RF kalau belum
+    if not rf then
+        if not initRF() then
+            statusLabel.Text = "RF Error!"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            AutoWeatherSet(false)
+            autoWeatherEnabled = false
+            return
+        end
+    end
+    
     while autoWeatherEnabled do
         local count = countSelected()
         if count > 0 then
             statusLabel.Text = "Buying " .. count .. " weather..."
-            statusLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+            statusLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
             
             for name, on in pairs(selectedWeather) do
                 if on then
-                    pcall(function()
-                        rf:InvokeServer(name)
+                    local success, result = pcall(function()
+                        local ok, msg = rf:InvokeServer(name)
+                        return ok, msg
                     end)
+                    
+                    if success then
+                        print("[Weather] Bought:", name, "| Success:", result)
+                    else
+                        warn("[Weather] Failed:", name, "| Error:", result)
+                    end
                 end
             end
         else
@@ -2961,6 +2993,15 @@ if pillBtn then
                 return
             end
             
+            -- Init RF sebelum mulai
+            if not rf and not initRF() then
+                statusLabel.Text = "RF not found!"
+                statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+                AutoWeatherSet(false)
+                autoWeatherEnabled = false
+                return
+            end
+            
             if not autoWeatherThread then
                 autoWeatherThread = task.spawn(autoWeatherLoop)
             end
@@ -2978,5 +3019,11 @@ CSR(WeatherSection, "Weather Panel", "Open", function()
 end)
 
 table.insert(AllPanels, WeatherPanel)
+
+-- Init RF saat load
+task.spawn(function()
+    task.wait(2)
+    initRF()
+end)
 
 print("[WeatherPreset] Auto-only version loaded")
