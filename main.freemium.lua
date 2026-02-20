@@ -2778,7 +2778,61 @@ AllPanels={IslandPanel,PlayerPanel,EventHuntPanel,SavedPosPanel}function IIP(p,p
 MerchantReplion=Replion.Client:WaitReplion("Merchant")MarketItemData=require(ReplicatedStorage.Shared.MarketItemData)PurchaseMarketItemRF=NetFolder:WaitForChild("RF/PurchaseMarketItem")MERCHANT_ITEM_MAP={}for _,i in ipairs(MarketItemData)do MERCHANT_ITEM_MAP[i.Id]=i end function GMS()local ids,stock=MerchantReplion:GetExpect("Items")or{},{}for _,id in ipairs(ids)do local d=MERCHANT_ITEM_MAP[id]if d then table.insert(stock,{Id=d.Id,Name=d.Identifier or d.Name or("Item_"..id),Price=d.Price or 0,Currency=d.Currency or"Coins",MaxStock=d.MaxStock or 1,Data=d})end end return stock end function BMI(id,q)q=math.max(1,tonumber(q)or 1)for i=1,q do task.spawn(function()pcall(function()PurchaseMarketItemRF:InvokeServer(id)end)end)task.wait(0.1)end return true end MerchantSection=CreateSectionDropdown(ShopPage,"Traveling Merchant")Instance.new("UIListLayout",MerchantSection).SortOrder=Enum.SortOrder.LayoutOrder MerchantSection.UIListLayout.Padding=UDim.new(0,6)MerchantPanel,MerchantScroll=CTP("Merchant Stock","Select item to purchase")StatusRow=Instance.new("Frame",MerchantSection)StatusRow.Size,StatusRow.BackgroundTransparency=UDim2.new(1,0,0,30),1 CL(StatusRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Merchant Status:"})MerchantStatus=CL(StatusRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0.5,0,0,0),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(255,100,100),Text="Checking..."})SelectedRow=Instance.new("Frame",MerchantSection)SelectedRow.Size,SelectedRow.BackgroundTransparency=UDim2.new(1,0,0,30),1 CL(SelectedRow,{Size=UDim2.new(0.4,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Selected:"})SelectedItemLabel=CL(SelectedRow,{Size=UDim2.new(0.6,-10,1,0),Position=UDim2.new(0.4,0,0,0),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(150,150,150),Text="None"})QuantityRow=Instance.new("Frame",MerchantSection)QuantityRow.Size,QuantityRow.BackgroundTransparency=UDim2.new(1,0,0,36),1 CL(QuantityRow,{Size=UDim2.new(0.4,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Buy Quantity"})qtyBox=Instance.new("TextBox",QuantityRow)qtyBox.Size,qtyBox.Position,qtyBox.BackgroundColor3,qtyBox.BackgroundTransparency,qtyBox.Text,qtyBox.TextColor3,qtyBox.Font,qtyBox.TextSize,qtyBox.ClearTextOnFocus=UDim2.new(0,60,0,24),UDim2.new(0.4,-10,0.5,-12),THEME.CARD,0.1,tostring(_G.RAY.MerchantBuyQty),THEME.TEXT,Enum.Font.Gotham,12,false CC(qtyBox,8)qtyBox.FocusLost:Connect(function()local n=tonumber(qtyBox.Text)if not n or n<1 then n=1 qtyBox.Text="1"end _G.RAY.MerchantBuyQty=math.min(n,99)end)buyBtn=Instance.new("TextButton",QuantityRow)buyBtn.Size,buyBtn.Position,buyBtn.BackgroundColor3,buyBtn.TextColor3,buyBtn.Font,buyBtn.TextSize,buyBtn.Text=UDim2.new(0,80,0,24),UDim2.new(1,-90,0.5,-12),Color3.fromRGB(40,100,40),Color3.fromRGB(255,255,255),Enum.Font.GothamBold,12,"BUY"CC(buyBtn,8)buyBtn.MouseButton1Click:Connect(function()if not _G.RAY.SelectedMerchantItem then if NotifyFeature then NotifyFeature("No item selected!",false)end return end BMI(_G.RAY.SelectedMerchantItem.Id,_G.RAY.MerchantBuyQty or 1)if NotifyFeature then NotifyFeature("Buying ".._G.RAY.SelectedMerchantItem.Name.." x"..(_G.RAY.MerchantBuyQty or 1),true)end end)CSR(MerchantSection,"Merchant Stock Panel","Open",function()MerchantPanel.Visible=not MerchantPanel.Visible if MerchantPanel.Visible then RMP()end end)function RMP()for _,c in ipairs(MerchantScroll:GetChildren())do if c:IsA("Frame")then c:Destroy()end end local stock=GMS()if#stock==0 then MerchantStatus.Text,MerchantStatus.TextColor3="Not Available",Color3.fromRGB(255,100,100)local er=Instance.new("Frame",MerchantScroll)er.Size,er.BackgroundTransparency=UDim2.new(1,-4,0,60),1 CL(er,{Size=UDim2.new(1,-10,1,0),Position=UDim2.new(0,5,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Center,TextColor3=Color3.fromRGB(150,150,150),Text="No merchant stock available.\nCheck back later!"})_G.RAY.SelectedMerchantItem,SelectedItemLabel.Text,SelectedItemLabel.TextColor3=nil,"None",Color3.fromRGB(150,150,150)return end MerchantStatus.Text,MerchantStatus.TextColor3=#stock.." Items",Color3.fromRGB(0,255,140)for _,it in ipairs(stock)do local r=Instance.new("Frame",MerchantScroll)r.Size,r.BackgroundTransparency,r.ZIndex=UDim2.new(1,-4,0,40),1,11 local l=Instance.new("Frame",r)l.Name,l.Size,l.Position,l.BackgroundColor3,l.BorderSizePixel,l.Visible,l.ZIndex="Highlight",UDim2.new(0,3,1,0),UDim2.new(0,0,0,0),THEME.MAIN,0,(_G.RAY.SelectedMerchantItem and _G.RAY.SelectedMerchantItem.Id==it.Id),12 local b=Instance.new("TextButton",r)local priceText=FN(it.Price)b.Size,b.Position,b.BackgroundColor3,b.TextColor3,b.Font,b.TextSize,b.TextXAlignment,b.TextYAlignment,b.Text,b.ZIndex=UDim2.new(1,-6,1,0),UDim2.new(0,6,0,0),Color3.fromRGB(30,30,50),THEME.TEXT,Enum.Font.Gotham,11,Enum.TextXAlignment.Left,Enum.TextYAlignment.Top,string.format("  %s\n  %s %s",it.Name,priceText,it.Currency),11 CC(b,6)if it.Currency:lower():find("robux")or it.Currency:lower():find("premium")then b.TextColor3=Color3.fromRGB(255,200,100)end b.MouseButton1Click:Connect(function()_G.RAY.SelectedMerchantItem=it SelectedItemLabel.Text,SelectedItemLabel.TextColor3=it.Name,Color3.fromRGB(0,255,140)for _,c in ipairs(MerchantScroll:GetChildren())do if c:IsA("Frame")then local h=c:FindFirstChild("Highlight")if h then h.Visible=(c==r)end end end if NotifyFeature then NotifyFeature("Selected: "..it.Name.." ("..priceText.." "..it.Currency..")",true)end end)end end RMP()MerchantReplion:OnChange("Items",function()if MerchantPanel.Visible then RMP()end local stock=GMS()if#stock>0 then MerchantStatus.Text,MerchantStatus.TextColor3=#stock.." Items",Color3.fromRGB(0,255,140)else MerchantStatus.Text,MerchantStatus.TextColor3,_G.RAY.SelectedMerchantItem,SelectedItemLabel.Text,SelectedItemLabel.TextColor3="Not Available",Color3.fromRGB(255,100,100),nil,"None",Color3.fromRGB(150,150,150)end end)table.insert(AllPanels,MerchantPanel)
 
 --==================================================
--- WEATHER PRESET SECTION (SHOP PAGE) - AUTO ONLY
+-- COMPONENT: TOGGLE PILL (MODIFIED WITH CALLBACK)
+--==================================================
+local function CreateTogglePill(parent, labelText, default, onChangeCallback)
+    local row = Instance.new("Frame", parent)
+    row.Size = UDim2.new(1, 0, 0, 36)
+    row.BackgroundTransparency = 1
+
+    CreateLabel(row, {
+        Size = UDim2.new(1, -100, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = labelText
+    })
+
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0, 50, 0, 24)
+    pill.Position = UDim2.new(1, -80, 0.5, -12)
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+
+    CreateCorner(pill, 999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0, 18, 0, 18)
+    knob.Position = UDim2.new(0, 3, 0.5, -9)
+    knob.BackgroundColor3 = Color3.new(1, 1, 1)
+    CreateCorner(knob, 999)
+
+    local state = not not default
+
+    local function refresh()
+        pill.BackgroundColor3 = state and THEME.ACCENT or THEME.MUTED
+        knob.Position = state and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+    end
+    refresh()
+
+    pill.MouseButton1Click:Connect(function()
+        state = not state
+        refresh()
+        -- Panggil callback kalau ada
+        if onChangeCallback then
+            onChangeCallback(state)
+        end
+    end)
+
+    return function() return state end, function(v) state = not not v; refresh() end
+end
+
+--==================================================
+-- WEATHER PRESET SECTION (SHOP PAGE)
 --==================================================
 WeatherSection = CreateSectionDropdown(ShopPage, "Weather Preset")
 Instance.new("UIListLayout", WeatherSection).SortOrder = Enum.SortOrder.LayoutOrder
@@ -2798,60 +2852,14 @@ local WEATHER_OPTIONS = {
 }
 
 local selectedWeather = {}
-local autoWeatherEnabled = false
-local autoWeatherThread = nil
 
--- Coba cari RE (RemoteEvent) atau RF (RemoteFunction)
-local weatherRemote = nil
-local remoteType = nil
-
-local function findWeatherRemote()
-    -- Coba RF dulu
-    local success, rf = pcall(function()
-        return ReplicatedStorage
-            :WaitForChild("Packages")
-            :WaitForChild("_Index")
-            :WaitForChild("sleitnick_net@0.2.0")
-            :WaitForChild("net")
-            :WaitForChild("RF/PurchaseWeatherEvent")
-    end)
-    
-    if success and rf then
-        weatherRemote = rf
-        remoteType = "RF"
-        print("[Weather] Found RF:", rf:GetFullName())
-        return true
-    end
-    
-    -- Coba RE (RemoteEvent) kalau RF ga ada
-    local success2, re = pcall(function()
-        return ReplicatedStorage
-            :WaitForChild("Packages")
-            :WaitForChild("_Index")
-            :WaitForChild("sleitnick_net@0.2.0")
-            :WaitForChild("net")
-            :WaitForChild("RE/PurchaseWeatherEvent")
-    end)
-    
-    if success2 and re then
-        weatherRemote = re
-        remoteType = "RE"
-        print("[Weather] Found RE:", re:GetFullName())
-        return true
-    end
-    
-    -- Cari semua yang ada "Weather" di namanya
-    print("[Weather] Searching all remotes...")
-    for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
-        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
-            if v.Name:lower():find("weather") then
-                print("[Weather] Found:", v.ClassName, v:GetFullName())
-            end
-        end
-    end
-    
-    return false
-end
+-- Ambil RF
+local rf = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RF/PurchaseWeatherEvent")
 
 -- Helper
 local function countSelected()
@@ -2885,7 +2893,6 @@ for _, weatherName in ipairs(WEATHER_OPTIONS) do
     row.Name = "WeatherRow_" .. weatherName
     row.ZIndex = 11
     
-    -- Purple highlight
     local highlight = Instance.new("Frame", row)
     highlight.Name = "Highlight"
     highlight.Size = UDim2.new(0, 3, 1, 0)
@@ -2894,7 +2901,6 @@ for _, weatherName in ipairs(WEATHER_OPTIONS) do
     highlight.Visible = false
     highlight.ZIndex = 12
     
-    -- Button putih
     local btn = Instance.new("TextButton", row)
     btn.Size = UDim2.new(1, -6, 1, 0)
     btn.Position = UDim2.new(0, 6, 0, 0)
@@ -2953,59 +2959,42 @@ local statusLabel = CL(StatusRow, {
     Text = "Ready..."
 })
 
+-- Open/Close panel
+CSR(WeatherSection, "Weather Panel", "Open", function()
+    WeatherPanel.Visible = not WeatherPanel.Visible
+end)
+
+table.insert(AllPanels, WeatherPanel)
+
 --==================================================
--- AUTO WEATHER TOGGLE PILL
+-- AUTO WEATHER TOGGLE PILL (PAKAI CALLBACK)
 --==================================================
 local AutoWeatherRow = Instance.new("Frame", WeatherSection)
 AutoWeatherRow.Size = UDim2.new(1, 0, 0, 36)
 AutoWeatherRow.BackgroundTransparency = 1
 
-local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto Weather", false)
+-- Auto weather variables
+local autoWeatherEnabled = false
+local autoWeatherThread = nil
 
--- Function untuk purchase (RF atau RE)
-local function purchaseWeather(name)
-    if not weatherRemote then return false, "No remote" end
-    
-    if remoteType == "RF" then
-        -- RemoteFunction pakai InvokeServer
-        local success, result = pcall(function()
-            return weatherRemote:InvokeServer(name)
-        end)
-        return success, result
-        
-    elseif remoteType == "RE" then
-        -- RemoteEvent pakai FireServer
-        local success, err = pcall(function()
-            weatherRemote:FireServer(name)
-        end)
-        return success, err
-    end
-    
-    return false, "Unknown remote type"
-end
-
--- Auto loop function
+-- Auto loop function - BELI TERUS setiap 0.1 detik
 local function autoWeatherLoop()
-    if not weatherRemote and not findWeatherRemote() then
-        statusLabel.Text = "Remote not found!"
-        statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        AutoWeatherSet(false)
-        autoWeatherEnabled = false
-        return
-    end
-    
-    print("[Weather] Starting auto loop, type:", remoteType)
-    
     while autoWeatherEnabled do
         local count = countSelected()
         if count > 0 then
-            statusLabel.Text = "Buying " .. count .. " weather..."
+            statusLabel.Text = "Auto buying " .. count .. " weather..."
             statusLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
             
             for name, on in pairs(selectedWeather) do
                 if on then
-                    local success, result = purchaseWeather(name)
-                    print("[Weather] Purchase:", name, "| Success:", success, "| Result:", result)
+                    local success, result = pcall(function()
+                        return rf:InvokeServer(name)
+                    end)
+                    if success then
+                        print("[WeatherAuto] Bought:", name, "Result:", result)
+                    else
+                        warn("[WeatherAuto] Failed:", name, "Error:", result)
+                    end
                 end
             end
         else
@@ -3015,57 +3004,34 @@ local function autoWeatherLoop()
         task.wait(0.1)
     end
     
-    statusLabel.Text = "Stopped"
+    statusLabel.Text = "Auto stopped"
     statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
     autoWeatherThread = nil
 end
 
--- Connect toggle
-local pillBtn = AutoWeatherRow:FindFirstChildOfClass("TextButton")
-if pillBtn then
-    pillBtn.MouseButton1Click:Connect(function()
-        local isOn = AutoWeatherGet()
-        autoWeatherEnabled = isOn
-        
-        if isOn then
-            if countSelected() == 0 then
-                statusLabel.Text = "Select weather first!"
-                statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-                AutoWeatherSet(false)
-                autoWeatherEnabled = false
-                return
-            end
-            
-            if not weatherRemote and not findWeatherRemote() then
-                statusLabel.Text = "Remote not found!"
-                statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-                AutoWeatherSet(false)
-                autoWeatherEnabled = false
-                return
-            end
-            
-            if not autoWeatherThread then
-                autoWeatherThread = task.spawn(autoWeatherLoop)
-            end
-            if NotifyFeature then NotifyFeature("Auto Weather: ON", true) end
-        else
-            autoWeatherEnabled = false
-            if NotifyFeature then NotifyFeature("Auto Weather: OFF", false) end
+-- BUAT TOGGLE PILL DENGAN CALLBACK
+local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto Weather", false, function(isOn)
+    if isOn then
+        -- ON - Start auto buy
+        if countSelected() == 0 then
+            statusLabel.Text = "Select weather first!"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            AutoWeatherSet(false) -- Matikan toggle balik
+            return
         end
-    end)
-end
-
--- Open/Close panel
-CSR(WeatherSection, "Weather Panel", "Open", function()
-    WeatherPanel.Visible = not WeatherPanel.Visible
+        
+        autoWeatherEnabled = true
+        if not autoWeatherThread then
+            autoWeatherThread = task.spawn(autoWeatherLoop)
+        end
+        if NotifyFeature then NotifyFeature("Auto Weather: ON - Buying every 0.1s", true) end
+        print("[Weather] Auto ON")
+    else
+        -- OFF - Stop auto buy
+        autoWeatherEnabled = false
+        if NotifyFeature then NotifyFeature("Auto Weather: OFF", false) end
+        print("[Weather] Auto OFF")
+    end
 end)
 
-table.insert(AllPanels, WeatherPanel)
-
--- Init saat load
-task.spawn(function()
-    task.wait(2)
-    findWeatherRemote()
-end)
-
-print("[WeatherPreset] Auto-only version loaded")
+print("[WeatherPreset] Auto-buy with callback loaded")
