@@ -2776,3 +2776,249 @@ AllPanels={IslandPanel,PlayerPanel,EventHuntPanel,SavedPosPanel}function IIP(p,p
 
 -- Traveling Merchant - Ultra minimized
 MerchantReplion=Replion.Client:WaitReplion("Merchant")MarketItemData=require(ReplicatedStorage.Shared.MarketItemData)PurchaseMarketItemRF=NetFolder:WaitForChild("RF/PurchaseMarketItem")MERCHANT_ITEM_MAP={}for _,i in ipairs(MarketItemData)do MERCHANT_ITEM_MAP[i.Id]=i end function GMS()local ids,stock=MerchantReplion:GetExpect("Items")or{},{}for _,id in ipairs(ids)do local d=MERCHANT_ITEM_MAP[id]if d then table.insert(stock,{Id=d.Id,Name=d.Identifier or d.Name or("Item_"..id),Price=d.Price or 0,Currency=d.Currency or"Coins",MaxStock=d.MaxStock or 1,Data=d})end end return stock end function BMI(id,q)q=math.max(1,tonumber(q)or 1)for i=1,q do task.spawn(function()pcall(function()PurchaseMarketItemRF:InvokeServer(id)end)end)task.wait(0.1)end return true end MerchantSection=CreateSectionDropdown(ShopPage,"Traveling Merchant")Instance.new("UIListLayout",MerchantSection).SortOrder=Enum.SortOrder.LayoutOrder MerchantSection.UIListLayout.Padding=UDim.new(0,6)MerchantPanel,MerchantScroll=CTP("Merchant Stock","Select item to purchase")StatusRow=Instance.new("Frame",MerchantSection)StatusRow.Size,StatusRow.BackgroundTransparency=UDim2.new(1,0,0,30),1 CL(StatusRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Merchant Status:"})MerchantStatus=CL(StatusRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0.5,0,0,0),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(255,100,100),Text="Checking..."})SelectedRow=Instance.new("Frame",MerchantSection)SelectedRow.Size,SelectedRow.BackgroundTransparency=UDim2.new(1,0,0,30),1 CL(SelectedRow,{Size=UDim2.new(0.4,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Selected:"})SelectedItemLabel=CL(SelectedRow,{Size=UDim2.new(0.6,-10,1,0),Position=UDim2.new(0.4,0,0,0),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(150,150,150),Text="None"})QuantityRow=Instance.new("Frame",MerchantSection)QuantityRow.Size,QuantityRow.BackgroundTransparency=UDim2.new(1,0,0,36),1 CL(QuantityRow,{Size=UDim2.new(0.4,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Buy Quantity"})qtyBox=Instance.new("TextBox",QuantityRow)qtyBox.Size,qtyBox.Position,qtyBox.BackgroundColor3,qtyBox.BackgroundTransparency,qtyBox.Text,qtyBox.TextColor3,qtyBox.Font,qtyBox.TextSize,qtyBox.ClearTextOnFocus=UDim2.new(0,60,0,24),UDim2.new(0.4,-10,0.5,-12),THEME.CARD,0.1,tostring(_G.RAY.MerchantBuyQty),THEME.TEXT,Enum.Font.Gotham,12,false CC(qtyBox,8)qtyBox.FocusLost:Connect(function()local n=tonumber(qtyBox.Text)if not n or n<1 then n=1 qtyBox.Text="1"end _G.RAY.MerchantBuyQty=math.min(n,99)end)buyBtn=Instance.new("TextButton",QuantityRow)buyBtn.Size,buyBtn.Position,buyBtn.BackgroundColor3,buyBtn.TextColor3,buyBtn.Font,buyBtn.TextSize,buyBtn.Text=UDim2.new(0,80,0,24),UDim2.new(1,-90,0.5,-12),Color3.fromRGB(40,100,40),Color3.fromRGB(255,255,255),Enum.Font.GothamBold,12,"BUY"CC(buyBtn,8)buyBtn.MouseButton1Click:Connect(function()if not _G.RAY.SelectedMerchantItem then if NotifyFeature then NotifyFeature("No item selected!",false)end return end BMI(_G.RAY.SelectedMerchantItem.Id,_G.RAY.MerchantBuyQty or 1)if NotifyFeature then NotifyFeature("Buying ".._G.RAY.SelectedMerchantItem.Name.." x"..(_G.RAY.MerchantBuyQty or 1),true)end end)CSR(MerchantSection,"Merchant Stock Panel","Open",function()MerchantPanel.Visible=not MerchantPanel.Visible if MerchantPanel.Visible then RMP()end end)function RMP()for _,c in ipairs(MerchantScroll:GetChildren())do if c:IsA("Frame")then c:Destroy()end end local stock=GMS()if#stock==0 then MerchantStatus.Text,MerchantStatus.TextColor3="Not Available",Color3.fromRGB(255,100,100)local er=Instance.new("Frame",MerchantScroll)er.Size,er.BackgroundTransparency=UDim2.new(1,-4,0,60),1 CL(er,{Size=UDim2.new(1,-10,1,0),Position=UDim2.new(0,5,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Center,TextColor3=Color3.fromRGB(150,150,150),Text="No merchant stock available.\nCheck back later!"})_G.RAY.SelectedMerchantItem,SelectedItemLabel.Text,SelectedItemLabel.TextColor3=nil,"None",Color3.fromRGB(150,150,150)return end MerchantStatus.Text,MerchantStatus.TextColor3=#stock.." Items",Color3.fromRGB(0,255,140)for _,it in ipairs(stock)do local r=Instance.new("Frame",MerchantScroll)r.Size,r.BackgroundTransparency,r.ZIndex=UDim2.new(1,-4,0,40),1,11 local l=Instance.new("Frame",r)l.Name,l.Size,l.Position,l.BackgroundColor3,l.BorderSizePixel,l.Visible,l.ZIndex="Highlight",UDim2.new(0,3,1,0),UDim2.new(0,0,0,0),THEME.MAIN,0,(_G.RAY.SelectedMerchantItem and _G.RAY.SelectedMerchantItem.Id==it.Id),12 local b=Instance.new("TextButton",r)local priceText=FN(it.Price)b.Size,b.Position,b.BackgroundColor3,b.TextColor3,b.Font,b.TextSize,b.TextXAlignment,b.TextYAlignment,b.Text,b.ZIndex=UDim2.new(1,-6,1,0),UDim2.new(0,6,0,0),Color3.fromRGB(30,30,50),THEME.TEXT,Enum.Font.Gotham,11,Enum.TextXAlignment.Left,Enum.TextYAlignment.Top,string.format("  %s\n  %s %s",it.Name,priceText,it.Currency),11 CC(b,6)if it.Currency:lower():find("robux")or it.Currency:lower():find("premium")then b.TextColor3=Color3.fromRGB(255,200,100)end b.MouseButton1Click:Connect(function()_G.RAY.SelectedMerchantItem=it SelectedItemLabel.Text,SelectedItemLabel.TextColor3=it.Name,Color3.fromRGB(0,255,140)for _,c in ipairs(MerchantScroll:GetChildren())do if c:IsA("Frame")then local h=c:FindFirstChild("Highlight")if h then h.Visible=(c==r)end end end if NotifyFeature then NotifyFeature("Selected: "..it.Name.." ("..priceText.." "..it.Currency..")",true)end end)end end RMP()MerchantReplion:OnChange("Items",function()if MerchantPanel.Visible then RMP()end local stock=GMS()if#stock>0 then MerchantStatus.Text,MerchantStatus.TextColor3=#stock.." Items",Color3.fromRGB(0,255,140)else MerchantStatus.Text,MerchantStatus.TextColor3,_G.RAY.SelectedMerchantItem,SelectedItemLabel.Text,SelectedItemLabel.TextColor3="Not Available",Color3.fromRGB(255,100,100),nil,"None",Color3.fromRGB(150,150,150)end end)table.insert(AllPanels,MerchantPanel)
+
+--==================================================
+-- WEATHER PRESET SECTION
+--==================================================
+WeatherSection = CreateSectionDropdown(TeleportPage, "Weather Preset")
+Instance.new("UIListLayout", WeatherSection).SortOrder = Enum.SortOrder.LayoutOrder
+WeatherSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Panel kanan
+WeatherPanel, WeatherScroll = CTP("Weather Preset", "Pilih max 4 weather untuk purchase")
+
+-- Data weather
+local WEATHER_OPTIONS = {
+    "Cloudy",
+    "Radiant", 
+    "Shark Hunt",
+    "Snow",
+    "Storm",
+    "Wind",
+}
+
+local selectedWeather = {}
+local weatherGetters = {} -- Store getter functions for each toggle
+
+-- Ambil RF sekali
+local rf = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RF/PurchaseWeatherEvent")
+
+-- Helper functions
+local function countSelected()
+    local c = 0
+    for _, on in pairs(selectedWeather) do
+        if on then c = c + 1 end
+    end
+    return c
+end
+
+local function updateWeatherHighlight(row, isSelected)
+    local highlight = row:FindFirstChild("Highlight")
+    if highlight then
+        highlight.Visible = isSelected
+        highlight.BackgroundColor3 = Color3.fromRGB(138, 43, 226) -- Ungu
+    end
+end
+
+-- Buat row untuk setiap weather dengan Toggle Pill
+for _, weatherName in ipairs(WEATHER_OPTIONS) do
+    local row = Instance.new("Frame", WeatherScroll)
+    row.Size = UDim2.new(1, -4, 0, 36)
+    row.BackgroundTransparency = 1
+    row.Name = "WeatherRow_" .. weatherName
+    row.LayoutOrder = 0
+    
+    -- Purple highlight (sama kayak CLE tapi warna ungu)
+    local highlight = Instance.new("Frame", row)
+    highlight.Name = "Highlight"
+    highlight.Size = UDim2.new(0, 3, 1, 0)
+    highlight.Position = UDim2.new(0, 0, 0, 0)
+    highlight.BackgroundColor3 = Color3.fromRGB(138, 43, 226) -- Ungu
+    highlight.BorderSizePixel = 0
+    highlight.Visible = false
+    highlight.ZIndex = 12
+    
+    -- Label nama weather
+    CL(row, {
+        Size = UDim2.new(1, -100, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = weatherName
+    })
+    
+    -- Toggle Pill (posisi kanan)
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0, 50, 0, 24)
+    pill.Position = UDim2.new(1, -66, 0.5, -12)
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+    pill.ZIndex = 11
+    
+    CC(pill, 999)
+    
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0, 18, 0, 18)
+    knob.Position = UDim2.new(0, 3, 0.5, -9)
+    knob.BackgroundColor3 = Color3.new(1, 1, 1)
+    knob.ZIndex = 12
+    CC(knob, 999)
+    
+    -- State
+    selectedWeather[weatherName] = false
+    
+    local function refresh()
+        local isOn = selectedWeather[weatherName]
+        pill.BackgroundColor3 = isOn and THEME.ACCENT or THEME.MUTED
+        knob.Position = isOn and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+        updateWeatherHighlight(row, isOn)
+    end
+    
+    pill.MouseButton1Click:Connect(function()
+        local currentlyOn = selectedWeather[weatherName]
+        
+        if currentlyOn then
+            -- Turn off
+            selectedWeather[weatherName] = false
+        else
+            -- Check limit
+            local c = countSelected()
+            if c >= 4 then
+                if NotifyFeature then NotifyFeature("Max 4 weather only!", false) end
+                return
+            end
+            selectedWeather[weatherName] = true
+        end
+        
+        refresh()
+        
+        -- Update counter label kalau ada
+        if WeatherCountLabel then
+            WeatherCountLabel.Text = "Selected: " .. countSelected() .. "/4"
+        end
+    end)
+    
+    refresh()
+end
+
+-- Counter label
+local CountRow = Instance.new("Frame", WeatherSection)
+CountRow.Size = UDim2.new(1, 0, 0, 30)
+CountRow.BackgroundTransparency = 1
+
+WeatherCountLabel = CL(CountRow, {
+    Size = UDim2.new(0.5, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    Text = "Selected: 0/4"
+})
+
+-- Purchase Button Row
+local PurchaseRow = Instance.new("Frame", WeatherSection)
+PurchaseRow.Size = UDim2.new(1, 0, 0, 36)
+PurchaseRow.BackgroundTransparency = 1
+
+CL(PurchaseRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Purchase Selected"
+})
+
+local purchaseBtn = Instance.new("TextButton", PurchaseRow)
+purchaseBtn.Size = UDim2.new(0, 110, 0, 26)
+purchaseBtn.Position = UDim2.new(1, -126, 0.5, -13)
+purchaseBtn.BackgroundColor3 = Color3.fromRGB(138, 43, 226) -- Ungu
+purchaseBtn.Text = "BUY"
+purchaseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+purchaseBtn.Font = Enum.Font.GothamBold
+purchaseBtn.TextSize = 12
+CC(purchaseBtn, 8)
+
+-- Result label
+local ResultRow = Instance.new("Frame", WeatherSection)
+ResultRow.Size = UDim2.new(1, 0, 0, 24)
+ResultRow.BackgroundTransparency = 1
+
+local resultLabel = CL(ResultRow, {
+    Size = UDim2.new(1, -32, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 11,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(150, 150, 150),
+    Text = "Ready to purchase..."
+})
+
+-- Purchase logic
+purchaseBtn.MouseButton1Click:Connect(function()
+    local count = countSelected()
+    if count == 0 then
+        resultLabel.Text = "Pilih minimal 1 weather dulu."
+        resultLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+
+    resultLabel.Text = "Purchasing..."
+    resultLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+
+    local anyOk = false
+    local lastStatus = nil
+
+    for name, on in pairs(selectedWeather) do
+        if on then
+            local success, err = pcall(function()
+                local ok, msg = rf:InvokeServer(name)
+                lastStatus = msg or lastStatus
+                if ok then
+                    anyOk = true
+                end
+                print("[Weather] Purchase:", name, "->", ok, msg)
+            end)
+
+            if not success then
+                lastStatus = "Error: " .. tostring(err)
+                warn("[Weather] Invoke error:", name, err)
+            end
+
+            task.wait(0.1)
+        end
+    end
+
+    if anyOk then
+        resultLabel.Text = "Success: " .. tostring(lastStatus or "OK")
+        resultLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+        if NotifyFeature then NotifyFeature("Weather purchased!", true) end
+    else
+        resultLabel.Text = "Failed: " .. tostring(lastStatus or "No response")
+        resultLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+-- Open/Close panel button
+CSR(WeatherSection, "Weather Panel", "Open", function()
+    WeatherPanel.Visible = not WeatherPanel.Visible
+end)
+
+-- Tambah ke AllPanels untuk close on click outside
+table.insert(AllPanels, WeatherPanel)
+
+print("[WeatherPreset] Section loaded")
