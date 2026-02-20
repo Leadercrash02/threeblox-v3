@@ -1557,7 +1557,7 @@ if AutoPage then
 end
 
 --==================================================
--- AUTO SELL SYSTEM
+-- AUTO SELL SYSTEM - FIXED DEFAULT OFF
 --==================================================
 local BackpackPage = Pages["Backpack"]
 if BackpackPage then
@@ -1571,12 +1571,12 @@ if BackpackPage then
     Instance.new("UIListLayout", BackpackAutoSellSection).SortOrder = Enum.SortOrder.LayoutOrder
     BackpackAutoSellSection.UIListLayout.Padding = UDim.new(0, 4)
     
-    -- Init globals
+    -- FIX: Default semua OFF (tidak auto nyala)
     _G.RAY_SellThreshold = _G.RAY_SellThreshold or "Legendary"
     _G.RAY_SellDelay = _G.RAY_SellDelay or 5
     _G.RAY_SellInventoryThreshold = _G.RAY_SellInventoryThreshold or 30
-    _G.RAY_SellByTime = (_G.RAY_SellByTime ~= false)
-    _G.RAY_SellByInventory = _G.RAY_SellByInventory or false
+    _G.RAY_SellByTime = _G.RAY_SellByTime or false  -- FIX: Default false, bukan true!
+    _G.RAY_SellByInventory = _G.RAY_SellByInventory or false  -- FIX: Default false
     
     local ThresholdMap = { Legendary = 5, Mythic = 6, Secret = 7 }
     
@@ -1719,13 +1719,19 @@ if BackpackPage then
         _G.RAY_SellInventoryThreshold = n
     end, true)
     
-    -- Toggles
+    -- FIX: Toggle dengan default false (tidak selalu ON)
     CreateToggleRow(BackpackAutoSellSection, "Sell by Time", _G.RAY_SellByTime, function(state)
         _G.RAY_SellByTime = state
+        if NotifyFeature then 
+            NotifyFeature("Sell by Time: " .. (state and "ON" or "OFF"), state) 
+        end
     end, { ActiveColor = Color3.fromRGB(0, 200, 100) })
     
     CreateToggleRow(BackpackAutoSellSection, "Sell by Inventory", _G.RAY_SellByInventory, function(state)
         _G.RAY_SellByInventory = state
+        if NotifyFeature then 
+            NotifyFeature("Sell by Inventory: " .. (state and "ON" or "OFF"), state) 
+        end
     end, { ActiveColor = Color3.fromRGB(0, 200, 100) })
 end
 
@@ -1753,7 +1759,7 @@ local function getFishCountInInventory()
 end
 
 --==================================================
--- AUTO SELL ENGINE
+-- AUTO SELL ENGINE - CHECK BOTH TOGGLES
 --==================================================
 task.spawn(function()
     local lastSell = 0
@@ -1762,13 +1768,13 @@ task.spawn(function()
         local now = os.clock()
         local shouldSell = false
 
-        -- Sell by Time
+        -- Sell by Time (hanya jika toggle ON)
         if _G.RAY_SellByTime then
             local delay = tonumber(_G.RAY_SellDelay) or 5
             if now - lastSell >= delay then shouldSell = true end
         end
 
-        -- Sell by Inventory
+        -- Sell by Inventory (hanya jika toggle ON)
         if _G.RAY_SellByInventory and not shouldSell then
             local count = getFishCountInInventory()
             local limit = tonumber(_G.RAY_SellInventoryThreshold) or 30
@@ -1787,6 +1793,8 @@ task.spawn(function()
         task.wait(0.5)
     end
 end)
+
+
 
 --==================================================
 -- AUTO TOTEM SYSTEM
@@ -3515,7 +3523,7 @@ local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto We
 end)
 
 --==================================================
--- CHARM PRESET SECTION (SHOP PAGE) - FIXED REMOTE GET
+-- CHARM PRESET SECTION (SHOP PAGE) - TIER IN DATA ONLY
 --==================================================
 CharmSection = CreateSectionDropdown(ShopPage, "Charm Preset")
 Instance.new("UIListLayout", CharmSection).SortOrder = Enum.SortOrder.LayoutOrder
@@ -3579,34 +3587,34 @@ local charmLayout = Instance.new("UIListLayout", CharmScroll)
 charmLayout.SortOrder = Enum.SortOrder.LayoutOrder
 charmLayout.Padding = UDim.new(0, 4)
 
--- FIX: Ambil remote langsung kayak script referensi (tanpa pcall/wait lama)
+-- FIX: Ambil remote langsung
 local netPath = ReplicatedStorage.Packages["_Index"]["sleitnick_net@0.2.0"].net
 local purchaseRemote = netPath:WaitForChild("RF/PurchaseCharm")
 local startCraftRemote = netPath:WaitForChild("RF/StartCrafting")
 local confirmCraftRemote = netPath:WaitForChild("RF/ConfirmCrafting")
 
-print("[Charm] All remotes loaded successfully!")
+print("[Charm] All remotes loaded!")
 
--- Data Charm (tanpa emoji, ID untuk logic tapi tidak ditampilkan)
+-- Data Charm (tier tetap ada di data tapi tidak ditampilkan)
 local CHARM_DATA = {
-    -- SHOP CHARMS (pakai ID untuk beli)
-    {type = "shop", id = 14, name = "Heart Charm", price = "20k"},
-    {type = "shop", id = 4, name = "Clover Charm", price = "5k"},
-    {type = "shop", id = 1, name = "Bone Charm", price = "70k"},
-    {type = "shop", id = 2, name = "Algae Charm", price = "40k"},
-    {type = "shop", id = 3, name = "Magma Charm", price = "20k"},
+    -- SHOP CHARMS
+    {type = "shop", id = 14, name = "Heart Charm", price = "20k", tier = 3},
+    {type = "shop", id = 4, name = "Clover Charm", price = "5k", tier = 3},
+    {type = "shop", id = 1, name = "Bone Charm", price = "70k", tier = 6},
+    {type = "shop", id = 2, name = "Algae Charm", price = "40k", tier = 5},
+    {type = "shop", id = 3, name = "Magma Charm", price = "20k", tier = 6},
     
-    -- CRAFT CHARMS (pakai nama untuk craft)
-    {type = "craft", name = "Hook Charm", mats = "3x Rope"},
-    {type = "craft", name = "Winged Charm", mats = "2x Rope + Driftwood"},
-    {type = "craft", name = "Anchor Charm", mats = "Pyrafruit + Embercrux"},
-    {type = "craft", name = "Oculus Charm", mats = "Full Recipe"},
+    -- CRAFT CHARMS
+    {type = "craft", name = "Hook Charm", mats = "3x Rope", tier = 3},
+    {type = "craft", name = "Winged Charm", mats = "2x Rope + Driftwood", tier = 3},
+    {type = "craft", name = "Anchor Charm", mats = "Pyrafruit + Embercrux", tier = 5},
+    {type = "craft", name = "Oculus Charm", mats = "Full Recipe", tier = 6},
     
     -- INFO ONLY
-    {type = "info", name = "Silver Kraken"},
-    {type = "info", name = "Black Kraken"},
-    {type = "info", name = "Coral Charm",},
-    {type = "info", name = "Mermaid Charm",}
+    {type = "info", name = "Silver Kraken", tier = 5},
+    {type = "info", name = "Black Kraken", tier = 7},
+    {type = "info", name = "Coral Charm", tier = 2},
+    {type = "info", name = "Mermaid Charm", tier = 4}
 }
 
 -- Global variables
@@ -3628,7 +3636,7 @@ local function updateCharmRows()
     end
 end
 
--- Buat list charm di panel kanan (hanya nama, tanpa ID, tanpa emoji)
+-- Buat list charm (hanya nama, tanpa ID, tanpa emoji, TANPA TIER DI DISPLAY)
 for i, charm in ipairs(CHARM_DATA) do
     local row = Instance.new("Frame", CharmScroll)
     row.Size = UDim2.new(1, -4, 0, 32)
@@ -3652,15 +3660,16 @@ for i, charm in ipairs(CHARM_DATA) do
     btn.Position = UDim2.new(0, 6, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
     
-    -- Format display text (tanpa emoji, tanpa ID)
+    -- FIX: Format display text (tanpa tier!)
     local displayText = "  " .. charm.name
     if charm.type == "shop" then
         displayText = displayText .. "\n  " .. charm.price .. " Coins"
     elseif charm.type == "craft" then
         displayText = displayText .. " [Craft]"
     elseif charm.type == "info" then
-        displayText = displayText .. " [Tier " .. charm.tier .. "]"
+        displayText = displayText .. " [Info]"
     end
+    -- TIDAK ADA TIER DI SINI!
     
     btn.Text = displayText
     btn.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -3672,7 +3681,7 @@ for i, charm in ipairs(CHARM_DATA) do
     CC(btn, 6)
     
     btn.MouseButton1Click:Connect(function()
-        -- Single select (clear others)
+        -- Single select
         for k, _ in pairs(selectedCharms) do
             selectedCharms[k] = nil
         end
@@ -3682,7 +3691,6 @@ for i, charm in ipairs(CHARM_DATA) do
         
         updateCharmRows()
         
-        -- Update selected label
         if SelectedCharmLabel then
             SelectedCharmLabel.Text = charm.name
             SelectedCharmLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
@@ -3770,12 +3778,11 @@ charmBuyBtn.TextSize = 12
 charmBuyBtn.Text = "BUY"
 CC(charmBuyBtn, 8)
 
--- Function Execute Charm (logic SAMA PERSIS kayak script referensi)
+-- Function Execute Charm
 function ExecuteCharm(charmData, qty)
     qty = math.max(1, tonumber(qty) or 1)
     
     if charmData.type == "shop" then
-        -- SHOP: pakai ID (sama kayak script referensi)
         for i = 1, qty do
             task.spawn(function()
                 pcall(function()
@@ -3788,7 +3795,6 @@ function ExecuteCharm(charmData, qty)
         return true
         
     elseif charmData.type == "craft" then
-        -- CRAFT: pakai nama (sama kayak script referensi)
         for i = 1, qty do
             task.spawn(function()
                 pcall(function()
@@ -3834,7 +3840,6 @@ CSR(CharmSection, "Charm Panel", "Open", function()
     CharmPanel.Visible = not CharmPanel.Visible
 end)
 
--- Tambah ke AllPanels
 table.insert(AllPanels, CharmPanel)
 
-print("[Charm] Section loaded - Fixed remote get + Quantity + Buy system")
+print("[Charm] Tier in data only, not displayed")
