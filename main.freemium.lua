@@ -1393,7 +1393,7 @@ AnimModule.GetAnimationData = function(self, animName)
 end
 
 --==================================================
--- RIGHT PANEL (SKIN LIST)
+-- RIGHT PANEL (SKIN LIST) - FIXED
 --==================================================
 local RightPanel = Instance.new("Frame", Main)
 RightPanel.Name = "SkinAnimationRightPanel"
@@ -1405,25 +1405,49 @@ RightPanel.BackgroundTransparency = 0.25
 RightPanel.BorderSizePixel = 0
 RightPanel.Visible = false
 RightPanel.ZIndex = 10
+RightPanel.ClipsDescendants = true  -- FIX: prevent bleed
 
 CreateCorner(RightPanel, 10)
 CreateStroke(RightPanel, THEME.MAIN, 0.5)
 
-CreateLabel(RightPanel, {
-    Size = UDim2.new(1, -10, 0, 24),
-    Position = UDim2.new(0, 5, 0, 6),
+-- Header dengan Close Button
+local headerFrame = Instance.new("Frame", RightPanel)
+headerFrame.Name = "Header"
+headerFrame.Size = UDim2.new(1, 0, 0, 30)
+headerFrame.BackgroundTransparency = 1
+headerFrame.ZIndex = 11
+
+CreateLabel(headerFrame, {
+    Size = UDim2.new(1, -35, 1, 0),
+    Position = UDim2.new(0, 10, 0, 0),
     BackgroundTransparency = 1,
     Font = Enum.Font.GothamBold,
     TextSize = 16,
     TextXAlignment = Enum.TextXAlignment.Left,
     TextColor3 = THEME.TEXT,
-    ZIndex = 11,
+    ZIndex = 12,
     Text = "Skin Animation"
 })
 
+-- CLOSE BUTTON X
+local closeBtn = Instance.new("TextButton", headerFrame)
+closeBtn.Size = UDim2.new(0, 22, 0, 22)
+closeBtn.Position = UDim2.new(1, -26, 0.5, -11)
+closeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 12
+closeBtn.ZIndex = 12
+CreateCorner(closeBtn, 4)
+
+closeBtn.MouseButton1Click:Connect(function()
+    RightPanel.Visible = false
+end)
+
 local rpSkin = CreateLabel(RightPanel, {
     Size = UDim2.new(1, -10, 0, 18),
-    Position = UDim2.new(0, 5, 0, 30),
+    Position = UDim2.new(0, 5, 0, 32),
     BackgroundTransparency = 1,
     Font = Enum.Font.Gotham,
     TextSize = 12,
@@ -1437,24 +1461,36 @@ local function UpdateRightSkinLabel()
     rpSkin.Text = SelectedAnimSkin and #SelectedAnimSkin > 0 and "Skin: " .. SelectedAnimSkin or "Skin: default (ikut rod)"
 end
 
+-- FIXED: ScrollingFrame dengan proper canvas size
 local rpScroll = Instance.new("ScrollingFrame", RightPanel)
-rpScroll.Size = UDim2.new(1, -10, 1, -70)
-rpScroll.Position = UDim2.new(0, 5, 0, 54)
+rpScroll.Size = UDim2.new(1, -10, 1, -75)  -- 75 = 30(header) + 18(label) + padding
+rpScroll.Position = UDim2.new(0, 5, 0, 55)
 rpScroll.BackgroundTransparency = 1
 rpScroll.BorderSizePixel = 0
 rpScroll.ScrollBarThickness = 3
-rpScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+rpScroll.ScrollingDirection = Enum.ScrollingDirection.Y  -- FIX: Y only
 rpScroll.ScrollBarImageColor3 = THEME.MAIN
 rpScroll.ZIndex = 10
+rpScroll.ClipsDescendants = true
 
-Instance.new("UIListLayout", rpScroll).SortOrder = Enum.SortOrder.LayoutOrder
-rpScroll.UIListLayout.Padding = UDim.new(0, 4)
+-- FIX: Manual CanvasSize instead of Automatic
+local listLayout = Instance.new("UIListLayout", rpScroll)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 4)
+
+local function UpdateCanvasSize()
+    rpScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
+end
+
+listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
 
 local function CreateSkinEntry(skinName)
-    local row = Instance.new("Frame", rpScroll)
+    local row = Instance.new("Frame")
+    row.Name = skinName .. "_Row"
     row.Size = UDim2.new(1, -4, 0, 24)
     row.BackgroundTransparency = 1
     row.ZIndex = 11
+    row.Parent = rpScroll  -- FIX: parent after setup
 
     local line = Instance.new("Frame", row)
     line.Name = "Highlight"
@@ -1490,11 +1526,13 @@ local function CreateSkinEntry(skinName)
 end
 
 for _, sn in ipairs(SKINS) do CreateSkinEntry(sn) end
+UpdateCanvasSize()  -- FIX: initial update
 UpdateRightSkinLabel()
 
--- Close panel on outside click
-UIS.InputBegan:Connect(function(input)
+-- Close panel on outside click - FIXED dengan gameProcessed check
+UIS.InputBegan:Connect(function(input, gameProcessed)
     if not RightPanel.Visible then return end
+    if gameProcessed then return end  -- FIX: jangan close pas typing
     if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
     
     local pos = input.Position
@@ -1795,95 +1833,6 @@ task.spawn(function()
 end)
 
 --==================================================
--- FIXED CREATE SIDE PANEL FUNCTION
---==================================================
-local function CreateSidePanel(parent, title, infoText)
-    local panel = Instance.new("Frame", parent)
-    panel.Name = title:gsub(" ", "") .. "Panel"
-    panel.Size = UDim2.new(0, 220, 1, -46)
-    panel.AnchorPoint = Vector2.new(1, 0)
-    panel.Position = UDim2.new(1, -10, 0, 40)
-    panel.BackgroundColor3 = THEME.CARD
-    panel.BackgroundTransparency = 0.25
-    panel.BorderSizePixel = 0
-    panel.Visible = false
-    panel.ZIndex = 10
-    
-    CreateCorner(panel, 10)
-    CreateStroke(panel, THEME.MAIN, 0.5)
-    
-    -- Title
-    CreateLabel(panel, {
-        Size = UDim2.new(1, -10, 0, 24),
-        Position = UDim2.new(0, 5, 0, 6),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.GothamBold,
-        TextSize = 16,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = THEME.TEXT,
-        ZIndex = 11,
-        Text = title
-    })
-    
-    -- Subtitle
-    CreateLabel(panel, {
-        Size = UDim2.new(1, -10, 0, 18),
-        Position = UDim2.new(0, 5, 0, 30),
-        BackgroundTransparency = 1,
-        Font = Enum.Font.Gotham,
-        TextSize = 12,
-        TextXAlignment = Enum.TextXAlignment.Left,
-        TextColor3 = Color3.fromRGB(200, 200, 200),
-        ZIndex = 11,
-        Text = infoText
-    })
-    
-    -- FIXED: ScrollingFrame dengan proper setup
-    local scroll = Instance.new("ScrollingFrame", panel)
-    scroll.Name = title:gsub(" ", "") .. "Scroll"
-    scroll.Size = UDim2.new(1, -10, 1, -70)  -- 54 offset + 16 padding bottom
-    scroll.Position = UDim2.new(0, 5, 0, 54)
-    scroll.BackgroundTransparency = 1
-    scroll.BorderSizePixel = 0
-    scroll.ScrollBarThickness = 3
-    scroll.ScrollBarImageColor3 = THEME.MAIN
-    scroll.ZIndex = 10
-    
-    -- PENTING: CanvasSize manual, bukan Automatic
-    scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-    scroll.AutomaticCanvasSize = Enum.AutomaticSize.None  -- DISABLE automatic!
-    
-    -- UIListLayout dengan padding
-    local listLayout = Instance.new("UIListLayout", scroll)
-    listLayout.Name = "ListLayout"
-    listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-    listLayout.Padding = UDim.new(0, 4)
-    
-    -- TAMBAHAN: UIPadding untuk spacing yang proper
-    local padding = Instance.new("UIPadding", scroll)
-    padding.PaddingTop = UDim.new(0, 4)
-    padding.PaddingBottom = UDim.new(0, 8)
-    padding.PaddingLeft = UDim.new(0, 4)
-    padding.PaddingRight = UDim.new(0, 4)
-    
-    -- FIX: Update CanvasSize saat content berubah
-    local function updateCanvasSize()
-        task.wait()  -- delay 1 frame untuk layout update
-        local contentHeight = listLayout.AbsoluteContentSize.Y
-        scroll.CanvasSize = UDim2.new(0, 0, 0, contentHeight + 16)  -- +16 untuk padding
-    end
-    
-    listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvasSize)
-    
-    -- Initial update
-    task.spawn(updateCanvasSize)
-    
-    return panel, scroll
-end
-
-
-
---==================================================
 -- AUTO TOTEM SYSTEM
 --==================================================
 _G.RAYAutoTotemOn = _G.RAYAutoTotemOn or false
@@ -1927,7 +1876,7 @@ local function SpawnTotemUUID(uuid)
 end
 
 --==================================================
--- FIXED CREATE SIDE PANEL FUNCTION
+-- FIXED CREATE SIDE PANEL FUNCTION (HANYA 1 KALI)
 --==================================================
 local function CreateSidePanel(parent, title, infoText)
     local panel = Instance.new("Frame", parent)
@@ -2821,7 +2770,9 @@ if BackpackPage then
     end)
 end
 
-print("[Backpack] All sections loaded with fixed scrolling")
+print("[Backpack] All sections loaded with fixed scrolling (no duplicates)")
+
+
 
 --==================================================
 -- ISLAND TELEPORT CF DATA
