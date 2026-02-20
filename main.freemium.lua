@@ -2832,14 +2832,71 @@ local function CreateTogglePill(parent, labelText, default, onChangeCallback)
 end
 
 --==================================================
--- WEATHER PRESET SECTION (SHOP PAGE)
+-- WEATHER PRESET SECTION (SHOP PAGE) - FIXED SCROLLING
 --==================================================
 WeatherSection = CreateSectionDropdown(ShopPage, "Weather Preset")
 Instance.new("UIListLayout", WeatherSection).SortOrder = Enum.SortOrder.LayoutOrder
 WeatherSection.UIListLayout.Padding = UDim.new(0, 6)
 
--- Panel kanan (list biasa)
-WeatherPanel, WeatherScroll = CTP("Weather Preset", "Pilih weather untuk auto buy (max 4)")
+-- Panel kanan dengan scrolling yang proper
+WeatherPanel = Instance.new("Frame", Main)
+WeatherPanel.Name = "WeatherPresetRightPanel"
+WeatherPanel.Size = UDim2.new(0, 220, 1, -46)
+WeatherPanel.AnchorPoint = Vector2.new(1, 0)
+WeatherPanel.Position = UDim2.new(1, -10, 0, 40)
+WeatherPanel.BackgroundColor3 = THEME.CARD
+WeatherPanel.BackgroundTransparency = 0.25
+WeatherPanel.BorderSizePixel = 0
+WeatherPanel.Visible = false
+WeatherPanel.ZIndex = 10
+
+CC(WeatherPanel, 10)
+CS(WeatherPanel, THEME.MAIN, 0.5)
+
+-- Title
+CL(WeatherPanel, {
+    Size = UDim2.new(1, -10, 0, 24),
+    Position = UDim2.new(0, 5, 0, 6),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    ZIndex = 11,
+    Text = "Weather Preset"
+})
+
+-- Subtitle
+CL(WeatherPanel, {
+    Size = UDim2.new(1, -10, 0, 18),
+    Position = UDim2.new(0, 5, 0, 30),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    ZIndex = 11,
+    Text = "Pilih weather untuk auto buy (max 4)"
+})
+
+-- Scrolling Frame dengan proper setup
+WeatherScroll = Instance.new("ScrollingFrame", WeatherPanel)
+WeatherScroll.Name = "WeatherScroll"
+WeatherScroll.Size = UDim2.new(1, -10, 1, -70)
+WeatherScroll.Position = UDim2.new(0, 5, 0, 54)
+WeatherScroll.BackgroundTransparency = 1
+WeatherScroll.BorderSizePixel = 0
+WeatherScroll.ScrollBarThickness = 3
+WeatherScroll.ScrollBarImageColor3 = THEME.MAIN
+WeatherScroll.ZIndex = 10
+-- PENTING: AutomaticCanvasSize untuk auto resize
+WeatherScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+WeatherScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+-- UIListLayout untuk scrolling
+local scrollLayout = Instance.new("UIListLayout", WeatherScroll)
+scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+scrollLayout.Padding = UDim.new(0, 4)
 
 -- Data weather
 local WEATHER_OPTIONS = {
@@ -2885,14 +2942,16 @@ local function updateWeatherRows()
     end
 end
 
--- Buat list item (teks putih + highlight ungu)
-for _, weatherName in ipairs(WEATHER_OPTIONS) do
+-- Buat list item dengan proper parent ke WeatherScroll
+for i, weatherName in ipairs(WEATHER_OPTIONS) do
     local row = Instance.new("Frame", WeatherScroll)
-    row.Size = UDim2.new(1, -4, 0, 24)
+    row.Size = UDim2.new(1, -4, 0, 28)
     row.BackgroundTransparency = 1
     row.Name = "WeatherRow_" .. weatherName
+    row.LayoutOrder = i
     row.ZIndex = 11
     
+    -- Purple highlight di kiri
     local highlight = Instance.new("Frame", row)
     highlight.Name = "Highlight"
     highlight.Size = UDim2.new(0, 3, 1, 0)
@@ -2901,6 +2960,7 @@ for _, weatherName in ipairs(WEATHER_OPTIONS) do
     highlight.Visible = false
     highlight.ZIndex = 12
     
+    -- Button dengan teks putih
     local btn = Instance.new("TextButton", row)
     btn.Size = UDim2.new(1, -6, 1, 0)
     btn.Position = UDim2.new(0, 6, 0, 0)
@@ -2977,7 +3037,7 @@ AutoWeatherRow.BackgroundTransparency = 1
 local autoWeatherEnabled = false
 local autoWeatherThread = nil
 
--- Auto loop function - BELI TERUS setiap 0.1 detik
+-- Auto loop function
 local function autoWeatherLoop()
     while autoWeatherEnabled do
         local count = countSelected()
@@ -3009,14 +3069,13 @@ local function autoWeatherLoop()
     autoWeatherThread = nil
 end
 
--- BUAT TOGGLE PILL DENGAN CALLBACK
+-- TOGGLE PILL dengan callback
 local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto Weather", false, function(isOn)
     if isOn then
-        -- ON - Start auto buy
         if countSelected() == 0 then
             statusLabel.Text = "Select weather first!"
             statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-            AutoWeatherSet(false) -- Matikan toggle balik
+            AutoWeatherSet(false)
             return
         end
         
@@ -3024,14 +3083,11 @@ local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto We
         if not autoWeatherThread then
             autoWeatherThread = task.spawn(autoWeatherLoop)
         end
-        if NotifyFeature then NotifyFeature("Auto Weather: ON - Buying every 0.1s", true) end
-        print("[Weather] Auto ON")
+        if NotifyFeature then NotifyFeature("Auto Weather: ON", true) end
     else
-        -- OFF - Stop auto buy
         autoWeatherEnabled = false
         if NotifyFeature then NotifyFeature("Auto Weather: OFF", false) end
-        print("[Weather] Auto OFF")
     end
 end)
 
-print("[WeatherPreset] Auto-buy with callback loaded")
+print("[WeatherPreset] Fixed scrolling loaded")
