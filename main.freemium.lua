@@ -3099,7 +3099,7 @@ end)
 --==================================================
 -- CHEST FARM SECTION (FIXED - Manual Claim)
 --==================================================
-ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Farm")
+ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Pirate Tresureroom
 Instance.new("UIListLayout", ChestFarmSection).SortOrder = Enum.SortOrder.LayoutOrder
 ChestFarmSection.UIListLayout.Padding = UDim.new(0, 6)
 
