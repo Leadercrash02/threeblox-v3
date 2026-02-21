@@ -1368,7 +1368,10 @@ end
 
 local SKINS = {
     "Eclipse Katana", "Holy Trident", "Soul Scythe",
-    "Oceanic Harpoon", "Binary Edge", "The Vanquisher", "1x1x1x1 Ban Hammer"
+    "Oceanic Harpoon", "Binary Edge", "The Vanquisher", "1x1x1x1 Ban Hammer",
+    "Ethereal Sword",        -- baru
+    "Cursed Katana",         -- baru
+    "Blackhole"              -- baru
 }
 
 local SelectedAnimSkin, OverrideEnabled = nil, false
