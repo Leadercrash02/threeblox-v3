@@ -1353,87 +1353,131 @@ end)
 
 
 --==================================================
--- SKIN ANIMATION SYSTEM - FULL EFFECT VERSION
+-- SKIN ANIMATION SYSTEM - FULL EFFECT (COMPLETE)
 --==================================================
 local Players, ReplicatedStorage, RunService, UIS = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService"), game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
-local Controllers, Modules, VFX = ReplicatedStorage:WaitForChild("Controllers"), ReplicatedStorage:WaitForChild("Modules"), ReplicatedStorage:WaitForChild("VFX")
 
--- Cari Tools folder dengan berbagai kemungkinan nama
-local Tools = nil
-local possibleToolFolders = {"Tools", "Skins", "Items", "Assets", "RodSkins"}
-for _, name in ipairs(possibleToolFolders) do
-    pcall(function() if not Tools then Tools = ReplicatedStorage:WaitForChild(name, 2) end end)
-end
-if not Tools then Tools = ReplicatedStorage end
+-- Dapatkan semua service yang diperlukan
+local Controllers = ReplicatedStorage:WaitForChild("Controllers")
+local Modules = ReplicatedStorage:WaitForChild("Modules")
+local VFX = ReplicatedStorage:WaitForChild("VFX")
+local Packages = ReplicatedStorage:WaitForChild("Packages")
 
--- Cari juga di Workspace atau lainnya
-local WorkspaceTools = nil
-pcall(function() WorkspaceTools = workspace:WaitForChild("Tools", 2) end)
+-- Cari Tools di berbagai lokasi
+local Tools = ReplicatedStorage:FindFirstChild("Tools") or ReplicatedStorage:FindFirstChild("Skins") or ReplicatedStorage:FindFirstChild("Items") or ReplicatedStorage
 
+-- Dapatkan module
 local AnimModule = require(Controllers:WaitForChild("AnimationController"))
 local Animations_upvr = require(Modules:WaitForChild("Animations"))
 local oldGetAnimationData = AnimModule.GetAnimationData
 
--- Coba dapatkan VFXController dan sistem lainnya
-local VFXModule, EffectModule, RodController = nil, nil, nil
-pcall(function() VFXModule = require(Controllers:WaitForChild("VFXController")) end)
-pcall(function() EffectModule = require(Modules:WaitForChild("Effects")) end)
-pcall(function() RodController = require(Controllers:WaitForChild("RodController")) end)
+-- Dapatkan VFXController dan Effects
+local VFXModule, VFXEffects = nil, nil
+pcall(function() 
+    VFXModule = require(Controllers:WaitForChild("VFXController"))
+    VFXEffects = Controllers.VFXController:FindFirstChild("Effects")
+end)
+
+-- Dapatkan FishingController Effects
+local FishingEffects = nil
+pcall(function()
+    local FishingController = Controllers:FindFirstChild("FishingController")
+    if FishingController then
+        FishingEffects = FishingController:FindFirstChild("Effects")
+    end
+end)
+
+-- Dapatkan RemoteEvents untuk efek
+local NetFolder = Packages:WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
+local PlayFishingEffectRE = NetFolder:WaitForChild("RE/PlayFishingEffect")
+local DestroyEffectRE = NetFolder:WaitForChild("RE/DestroyEffect")
+
+-- Dapatkan AcworksUtils TagEffect
+local TagEffectModule = nil
+pcall(function()
+    TagEffectModule = require(ReplicatedStorage:WaitForChild("AcworksUtils"):WaitForChild("TagEffect"))
+end)
 
 if type(oldGetAnimationData) ~= "function" then warn("[SkinOverride] GetAnimationData tidak ada di AnimationController") end
 
--- LIST SKIN LENGKAP
+-- LIST SKIN
 local SKINS = {"Eclipse Katana", "Holy Trident", "Soul Scythe", "Oceanic Harpoon", "Binary Edge", "The Vanquisher", "1x1x1x1 Ban Hammer", "Ethereal Sword", "Cursed Katana", "Blackhole Sword", "Gingerbread Katana", "Christmas Parasol", "Princess Parasol", "Corruption Edge", "Frozen Krampus Scythe", "Eternal Flower", "Cupid's Harp", "Aurelian Bow", "Chromatic Katana", "Crescendo Scythe", "Electric Guitar", "Pirate Banjo", "Kraken Anchor", "Undead Guitar", "Royal Spider", "Trick O' Treat", "Reaver Scythe", "Spirit Staff", "Divine Blade", "Heartfelt Blade", "Candy Cane Trident", "Ornament Axe", "Gingerbread Sword", "Xmas Tree Rod", "Pink Present Lance", "Aether Monarch", "Wings of Everlove", "Voidpunk Axe", "Crimson Rose", "Heartbreaker Surge"}
 
-local SelectedAnimSkin, OverrideEnabled, CurrentSkinData = nil, false, nil
-local OriginalToolRef = nil
-local ActiveEffects = {}
+local SelectedAnimSkin, OverrideEnabled = nil, false
+local CurrentTool = nil
+local SkinConnections = {}
 
 --==================================================
--- DEEP VFX HOOK - Tangkap semua emit particles
+-- EFFECT SYSTEM HOOK
 --==================================================
-local oldEmitParticles = VFXModule and VFXModule.emitParticles
-if oldEmitParticles then
-    VFXModule.emitParticles = function(arg1)
-        -- Cek apakah ada override skin aktif
-        if OverrideEnabled and SelectedAnimSkin and arg1 then
-            local particleName = arg1.particleName
+
+-- Hook PlayFishingEffect RemoteEvent
+local oldPlayFishingEffect = PlayFishingEffectRE.FireServer
+PlayFishingEffectRE.FireServer = function(self, effectName, ...)
+    if OverrideEnabled and SelectedAnimSkin then
+        -- Cek apakah ada efek khusus untuk skin ini
+        local skinEffectName = SelectedAnimSkin:gsub(" ", "") .. "_" .. effectName
+        local skinEffect = VFX:FindFirstChild(skinEffectName) or (VFXEffects and VFXEffects:FindFirstChild(skinEffectName))
+        
+        if skinEffect then
+            print("[Effect Hook] " .. effectName .. " -> " .. skinEffectName)
+            return oldPlayFishingEffect(self, skinEffectName, ...)
+        end
+    end
+    return oldPlayFishingEffect(self, effectName, ...)
+end
+
+-- Hook VFXModule.emitParticles jika ada
+if VFXModule and VFXModule.emitParticles then
+    local oldEmit = VFXModule.emitParticles
+    VFXModule.emitParticles = function(data)
+        if OverrideEnabled and SelectedAnimSkin and data then
+            local particleName = data.particleName
             
-            -- Cari VFX khusus untuk skin ini dengan banyak variasi nama
+            -- Cari efek skin dengan berbagai format
             local searchNames = {
-                SelectedAnimSkin .. "_" .. particleName,
                 SelectedAnimSkin:gsub(" ", "") .. "_" .. particleName,
+                SelectedAnimSkin .. "_" .. particleName,
                 particleName .. "_" .. SelectedAnimSkin:gsub(" ", ""),
-                SelectedAnimSkin:gsub(" ", "") .. particleName,
-                particleName .. SelectedAnimSkin:gsub(" ", ""),
-                -- Format dari skin asli
-                (SelectedAnimSkin:gsub(" ", ""):gsub("Sword", ""):gsub("Rod", "")) .. "_" .. particleName,
+                particleName .. "_" .. SelectedAnimSkin,
             }
             
             for _, name in ipairs(searchNames) do
-                local found = VFX:FindFirstChild(name)
+                local found = VFX:FindFirstChild(name) or (VFXEffects and VFXEffects:FindFirstChild(name))
                 if found then
-                    print("[VFX Override] " .. particleName .. " -> " .. name)
-                    arg1.particleName = name
+                    data.particleName = name
+                    -- Override position ke tool player
+                    if CurrentTool and CurrentTool:FindFirstChild("Handle") then
+                        data.position = CurrentTool.Handle.Position
+                        data.parent = CurrentTool.Handle
+                    end
                     break
                 end
             end
-            
-            -- Override position ke tool player kalau perlu
-            if CurrentSkinData and CurrentSkinData.Handle then
-                arg1.position = CurrentSkinData.Handle.Position
-                arg1.parent = CurrentSkinData.Handle
+        end
+        return oldEmit(data)
+    end
+end
+
+-- Hook TagEffect jika ada
+if TagEffectModule and TagEffectModule.createTagEffect then
+    local oldCreateTag = TagEffectModule.createTagEffect
+    TagEffectModule.createTagEffect = function(tag, ...)
+        if OverrideEnabled and SelectedAnimSkin then
+            local skinTag = SelectedAnimSkin:gsub(" ", "") .. "_" .. tag
+            if VFX:FindFirstChild(skinTag) or (VFXEffects and VFXEffects:FindFirstChild(skinTag)) then
+                return oldCreateTag(skinTag, ...)
             end
         end
-        
-        return oldEmitParticles(arg1)
+        return oldCreateTag(tag, ...)
     end
 end
 
 --==================================================
--- TOOL REPLACEMENT SYSTEM (Bukan cuma visual)
+-- TOOL & SKIN APPLICATION
 --==================================================
+
 local function getChar() return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait() end
 
 local function findTool()
@@ -1442,205 +1486,134 @@ local function findTool()
     return nil
 end
 
-local function findToolInStorage(skinName)
-    -- Cari di berbagai lokasi
-    local locations = {}
-    if Tools then table.insert(locations, Tools) end
-    if WorkspaceTools then table.insert(locations, WorkspaceTools) end
-    table.insert(locations, ReplicatedStorage)
+local function findSkinTool(skinName)
+    -- Cari di Tools
+    local found = Tools:FindFirstChild(skinName)
+    if found then return found end
     
-    for _, location in ipairs(locations) do
-        -- Coba langsung
-        local found = location:FindFirstChild(skinName)
-        if found then return found end
-        
-        -- Coba di subfolder
-        for _, child in ipairs(location:GetChildren()) do
-            if child:IsA("Folder") or child:IsA("Model") then
-                found = child:FindFirstChild(skinName)
-                if found then return found end
-            end
+    -- Cari di subfolder
+    for _, child in ipairs(Tools:GetChildren()) do
+        if child:IsA("Folder") or child:IsA("Model") then
+            found = child:FindFirstChild(skinName)
+            if found then return found end
         end
     end
+    
+    -- Cari di ReplicatedStorage langsung
+    found = ReplicatedStorage:FindFirstChild(skinName)
+    if found then return found end
+    
+    -- Cari di VFX (kadang skin disimpan sebagai efek)
+    found = VFX:FindFirstChild(skinName) or VFX:FindFirstChild(skinName:gsub(" ", ""))
+    if found then return found end
     
     return nil
 end
 
-local function getFullToolData(tool)
-    -- Extract semua data penting dari tool
-    local data = {
-        Model = tool,
-        Handle = tool:FindFirstChild("Handle") or tool:FindFirstChildOfClass("BasePart"),
-        Animations = {},
-        Scripts = {},
-        Effects = {},
-        Attachments = {},
-        Sounds = {},
-        Mesh = nil
-    }
-    
-    for _, v in ipairs(tool:GetDescendants()) do
-        if v:IsA("Animation") then
-            table.insert(data.Animations, v)
-        elseif v:IsA("Script") or v:IsA("LocalScript") then
-            table.insert(data.Scripts, v)
-        elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
-            table.insert(data.Effects, v)
-        elseif v:IsA("Attachment") then
-            table.insert(data.Attachments, v)
-        elseif v:IsA("Sound") then
-            table.insert(data.Sounds, v)
-        elseif v:IsA("SpecialMesh") or v:IsA("MeshPart") then
-            data.Mesh = v
-        end
-    end
-    
-    return data
-end
-
-local function applySkinToTool(skinName)
-    local currentTool = findTool()
-    if not currentTool then return false end
-    
-    -- Simpan referensi tool asli
-    OriginalToolRef = currentTool
-    
-    -- Cari tool skin
-    local skinTool = findToolInStorage(skinName)
-    if not skinTool then
-        warn("[Skin] Tool skin tidak ditemukan: " .. skinName)
-        return false
-    end
-    
-    -- Get data lengkap
-    CurrentSkinData = getFullToolData(skinTool)
-    
-    -- 1. Ganti Mesh/Model visual
-    if CurrentSkinData.Mesh then
-        local currentHandle = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildOfClass("BasePart")
-        if currentHandle then
-            -- Clone mesh ke tool current
-            for _, v in ipairs(currentHandle:GetChildren()) do
-                if v:IsA("SpecialMesh") or v:IsA("MeshPart") then v:Destroy() end
-            end
-            
-            local newMesh = CurrentSkinData.Mesh:Clone()
-            newMesh.Parent = currentHandle
-            
-            -- Atur offset/position kalau ada
-            if CurrentSkinData.Handle then
-                currentHandle.Size = CurrentSkinData.Handle.Size
-            end
-        end
-    end
-    
-    -- 2. Copy semua Attachment dengan VFX
-    for _, attach in ipairs(CurrentSkinData.Attachments) do
-        -- Cek apakah sudah ada
-        local existing = currentTool:FindFirstChild(attach.Name, true)
-        if existing then existing:Destroy() end
-        
-        local clone = attach:Clone()
-        clone.Parent = attach.Parent:IsDescendantOf(skinTool) and currentTool or attach.Parent
-    end
-    
-    -- 3. Copy Effects (Particle, Trail)
-    for _, effect in ipairs(CurrentSkinData.Effects) do
-        local clone = effect:Clone()
-        -- Parent ke bagian yang sesuai di tool current
-        local parentName = effect.Parent and effect.Parent.Name
-        if parentName then
-            local newParent = currentTool:FindFirstChild(parentName, true) or currentTool
+local function copyEffects(source, destination)
+    -- Copy semua tipe efek
+    for _, v in ipairs(source:GetDescendants()) do
+        if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
+            local clone = v:Clone()
+            -- Cari parent yang sesuai di destination
+            local parentName = v.Parent and v.Parent.Name
+            local newParent = parentName and destination:FindFirstChild(parentName, true) or destination:FindFirstChild("Handle") or destination
             clone.Parent = newParent
-        else
-            clone.Parent = currentTool
+            
+            -- Mark sebagai skin effect
+            clone:SetAttribute("SkinEffect", true)
+        elseif v:IsA("Sound") then
+            local clone = v:Clone()
+            clone.Parent = destination
+            clone:SetAttribute("SkinEffect", true)
+        elseif v:IsA("PointLight") or v:IsA("SpotLight") or v:IsA("SurfaceLight") then
+            local clone = v:Clone()
+            local parentName = v.Parent and v.Parent.Name
+            local newParent = parentName and destination:FindFirstChild(parentName, true) or destination:FindFirstChild("Handle") or destination
+            clone.Parent = newParent
+            clone:SetAttribute("SkinEffect", true)
         end
     end
-    
-    -- 4. Copy Sounds
-    for _, sound in ipairs(CurrentSkinData.Sounds) do
-        local clone = sound:Clone()
-        clone.Parent = currentTool
-    end
-    
-    -- 5. Setup connection untuk animasi trigger
-    -- Hook ke animation track untuk trigger efek saat animasi play
-    local humanoid = currentTool.Parent and currentTool.Parent:FindFirstChild("Humanoid")
-    if humanoid then
-        -- Cek animator
-        local animator = humanoid:FindFirstChild("Animator") or humanoid:WaitForChild("Animator", 1)
-        if animator then
-            -- Hook animation played
-            animator.AnimationPlayed:Connect(function(track)
-                if not OverrideEnabled then return end
-                
-                -- Cek apakah ini animasi dari skin kita
-                local animName = track.Animation and track.Animation.Name
-                if animName and animName:find(SelectedAnimSkin:gsub(" ", "")) then
-                    -- Trigger efek dari skin
-                    for _, effect in ipairs(CurrentSkinData.Effects) do
-                        if effect:IsA("ParticleEmitter") then
-                            effect:Emit(effect:GetAttribute("EmitCount") or 10)
-                        elseif effect:IsA("Trail") then
-                            effect.Enabled = true
-                            task.delay(0.5, function() if effect then effect.Enabled = false end end)
-                        end
-                    end
-                end
-            end)
-        end
-    end
-    
-    print("[Skin] Applied full skin: " .. skinName)
-    return true
 end
 
-local function removeSkinFromTool()
-    if not OriginalToolRef then return end
-    
-    -- Hapus semua efek yang ditambahkan
-    for _, v in ipairs(OriginalToolRef:GetDescendants()) do
-        if v:GetAttribute("SkinAdded") then
+local function clearSkinEffects(tool)
+    for _, v in ipairs(tool:GetDescendants()) do
+        if v:GetAttribute("SkinEffect") then
             v:Destroy()
         end
     end
+end
+
+local function applySkin(skinName)
+    local tool = findTool()
+    if not tool then return false end
     
-    -- Restore mesh asli (kalau ada backup)
+    CurrentTool = tool
+    clearSkinEffects(tool)
     
-    CurrentSkinData = nil
-    OriginalToolRef = nil
-    
-    -- Clear active effects
-    for _, effect in ipairs(ActiveEffects) do
-        if effect then effect:Destroy() end
+    -- Cari skin tool/efek
+    local skinTool = findSkinTool(skinName)
+    if not skinTool then
+        warn("[Skin] Skin tidak ditemukan: " .. skinName)
+        return false
     end
-    ActiveEffects = {}
+    
+    -- Copy efek dari skin
+    copyEffects(skinTool, tool)
+    
+    -- Jika skinTool adalah tool lengkap, copy juga mesh dan animasi
+    if skinTool:IsA("Tool") then
+        -- Copy mesh
+        local skinHandle = skinTool:FindFirstChild("Handle")
+        local currentHandle = tool:FindFirstChild("Handle")
+        
+        if skinHandle and currentHandle then
+            -- Hapus mesh lama
+            for _, v in ipairs(currentHandle:GetChildren()) do
+                if v:IsA("SpecialMesh") or v:IsA("MeshPart") then
+                    v:Destroy()
+                end
+            end
+            
+            -- Copy mesh baru
+            for _, v in ipairs(skinHandle:GetChildren()) do
+                if v:IsA("SpecialMesh") or v:IsA("MeshPart") then
+                    local clone = v:Clone()
+                    clone.Parent = currentHandle
+                end
+            end
+            
+            -- Copy size dan properties
+            currentHandle.Size = skinHandle.Size
+        end
+        
+        -- Copy scripts (kalau ada)
+        for _, v in ipairs(skinTool:GetChildren()) do
+            if v:IsA("Script") or v:IsA("LocalScript") then
+                local clone = v:Clone()
+                clone.Parent = tool
+            end
+        end
+    end
+    
+    print("[Skin] Applied: " .. skinName)
+    return true
 end
 
 --==================================================
--- ANIMATION OVERRIDE (Dengan trigger efek)
+-- ANIMATION OVERRIDE
 --==================================================
+
 function AnimModule:SetAnimationSkin(skinName)
     SelectedAnimSkin = (typeof(skinName) == "string" and #skinName > 0) and skinName or nil
-    
-    if OverrideEnabled and SelectedAnimSkin then
-        applySkinToTool(SelectedAnimSkin)
-    else
-        removeSkinFromTool()
-    end
+    if OverrideEnabled and SelectedAnimSkin then applySkin(SelectedAnimSkin) end
 end
 
 function AnimModule:SetSkinOverrideEnabled(enabled)
     OverrideEnabled = not not enabled
-    
-    if OverrideEnabled and SelectedAnimSkin then
-        applySkinToTool(SelectedAnimSkin)
-    else
-        removeSkinFromTool()
-    end
+    if OverrideEnabled and SelectedAnimSkin then applySkin(SelectedAnimSkin) else clearSkinEffects(findTool() or {}) end
 end
 
--- Hook GetAnimationData dengan trigger efek
 AnimModule.GetAnimationData = function(self, animName)
     local baseData, baseKey = oldGetAnimationData(self, animName)
     if not baseData then return nil, nil end
@@ -1660,14 +1633,14 @@ AnimModule.GetAnimationData = function(self, animName)
         overrideData = Animations_upvr[overrideKey]
     end
     
-    -- Kalau ketemu animasi skin, trigger efek juga
-    if overrideData and CurrentSkinData then
+    -- Trigger efek saat animasi override dipakai
+    if overrideData and CurrentTool then
         task.spawn(function()
-            -- Delay sesuai dengan marker di animasi
-            task.wait(0.1)
-            for _, effect in ipairs(CurrentSkinData.Effects) do
-                if effect:IsA("ParticleEmitter") and effect.Parent then
-                    effect:Emit(effect:GetAttribute("EmitCount") or 5)
+            task.wait(0.05)
+            -- Trigger semua particle di tool
+            for _, v in ipairs(CurrentTool:GetDescendants()) do
+                if v:GetAttribute("SkinEffect") and v:IsA("ParticleEmitter") then
+                    v:Emit(v:GetAttribute("EmitCount") or 10)
                 end
             end
         end)
@@ -1679,6 +1652,7 @@ end
 --==================================================
 -- UI - SAMA SEPERTI SEBELUMNYA
 --==================================================
+
 local RightPanel = Instance.new("Frame", Main)
 RightPanel.Name, RightPanel.Size, RightPanel.AnchorPoint, RightPanel.Position = "SkinAnimationRightPanel", UDim2.new(0, 220, 1, -46), Vector2.new(1, 0), UDim2.new(1, -10, 0, 40)
 RightPanel.BackgroundColor3, RightPanel.BackgroundTransparency, RightPanel.BorderSizePixel, RightPanel.Visible, RightPanel.ZIndex, RightPanel.ClipsDescendants = THEME.CARD, 0.25, 0, false, 10, true
@@ -1747,18 +1721,14 @@ if AutoPage then
     end
 end
 
--- Auto reapply saat tool berubah
 LocalPlayer.Character.ChildAdded:Connect(function(c)
     if c:IsA("Tool") then
         task.wait(0.2)
-        if OverrideEnabled and SelectedAnimSkin then
-            applySkinToTool(SelectedAnimSkin)
-        end
+        if OverrideEnabled and SelectedAnimSkin then applySkin(SelectedAnimSkin) end
     end
 end)
 
-print("[SkinAnimation] Full effect version loaded with " .. #SKINS .. " skins")
-
+print("[SkinAnimation] Full effect system loaded with " .. #SKINS .. " skins")
 --==================================================
 -- AUTO SELL SYSTEM - FIXED DEFAULT OFF
 --==================================================
