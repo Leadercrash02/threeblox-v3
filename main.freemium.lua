@@ -3099,7 +3099,7 @@ end)
 --==================================================
 -- CHEST FARM SECTION (FIXED - Manual Claim)
 --==================================================
-ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Pirate Tresureroom
+ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Pirate Treasureroom")
 Instance.new("UIListLayout", ChestFarmSection).SortOrder = Enum.SortOrder.LayoutOrder
 ChestFarmSection.UIListLayout.Padding = UDim.new(0, 6)
 
@@ -4511,6 +4511,8 @@ end)
 
 table.insert(AllPanels, BuyRodPanel)
 
+print("[BuyRod] Section loaded (Charm style)")
+
 --==================================================
 -- BUY BAIT SECTION - SAMA PERSIS KAYA BUY ROD
 --==================================================
@@ -4829,3 +4831,4 @@ end)
 
 table.insert(AllPanels, BuyBaitPanel)
 
+print("[BuyBait] Section loaded")
