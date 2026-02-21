@@ -3280,7 +3280,261 @@ end)
 print("[ChestFarm] Section loaded with manual claim")
 
 -- Saved Positions
-function GCP()local c,h=Player.Character,Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")return h and h.CFrame or nil end function SP(n)local cf=GCP()if not cf then if NotifyFeature then NotifyFeature("Failed to save position!",false)end return false end _G.RAY.SavedPositions[n]={Position=cf.Position,LookVector=cf.LookVector,UpVector=cf.UpVector,Time=os.time()}if NotifyFeature then NotifyFeature("Saved position: "..n,true)end return true end function TTS(n)local d=_G.RAY.SavedPositions[n]if not d then if NotifyFeature then NotifyFeature("Position not found: "..n,false)end return end local h=(Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")if not h then return end h.CFrame=CFrame.new(d.Position,d.Position+d.LookVector)if NotifyFeature then NotifyFeature("Teleported to: "..n,true)end end function DSP(n)_G.RAY.SavedPositions[n]=nil if NotifyFeature then NotifyFeature("Deleted position: "..n,true)end end task.spawn(function()task.wait(2)local ls,lt=nil,0 for n,d in pairs(_G.RAY.SavedPositions)do if d.Time and d.Time>lt then lt,ls=d.Time,n end end if ls then TTS(ls)end end)SavedPosSection=CreateSectionDropdown(TeleportPage,"Saved Positions")Instance.new("UIListLayout",SavedPosSection).SortOrder=Enum.SortOrder.LayoutOrder SavedPosSection.UIListLayout.Padding=UDim.new(0,6)SavedPosPanel,SavedPosScroll=CTP("Saved Positions","Pilih posisi tersimpan untuk teleport.")function RSPL()for _,c in ipairs(SavedPosScroll:GetChildren())do if c:IsA("Frame")then c:Destroy()end end local ns={}for n in pairs(_G.RAY.SavedPositions)do table.insert(ns,n)end table.sort(ns)for _,n in ipairs(ns)do local r=Instance.new("Frame",SavedPosScroll)r.Size,r.BackgroundTransparency,r.ZIndex=UDim2.new(1,-4,0,28),1,11 Instance.new("Frame",r).Name,Instance.new("Frame",r).Size,Instance.new("Frame",r).BackgroundColor3,Instance.new("Frame",r).Visible,Instance.new("Frame",r).ZIndex="Highlight",UDim2.new(0,3,1,0),THEME.MAIN,false,12 local b=Instance.new("TextButton",r)b.Size,b.Position,b.BackgroundColor3,b.TextColor3,b.Font,b.TextSize,b.TextXAlignment,b.Text,b.ZIndex=UDim2.new(1,-30,1,0),UDim2.new(0,4,0,0),Color3.fromRGB(30,30,50),Color3.fromRGB(255,255,255),Enum.Font.Gotham,12,Enum.TextXAlignment.Left,"  "..n,11 CC(b,6)local d=Instance.new("TextButton",r)d.Size,d.Position,d.BackgroundColor3,d.TextColor3,d.Font,d.TextSize,d.Text,d.ZIndex=UDim2.new(0,20,0,20),UDim2.new(1,-26,0.5,-10),Color3.fromRGB(80,30,30),Color3.fromRGB(255,150,150),Enum.Font.GothamBold,12,"X",11 CC(d,4)b.MouseButton1Click:Connect(function()TTS(n)for _,c in ipairs(SavedPosScroll:GetChildren())do local h=c:FindFirstChild("Highlight")if h then h.Visible=(c==r)end end end)d.MouseButton1Click:Connect(function()DSP(n)RSPL()end)end end do local r=Instance.new("Frame",SavedPosSection)r.Size,r.BackgroundTransparency=UDim2.new(1,0,0,36),1 CL(r,{Size=UDim2.new(0.5,-20,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Save Current Pos"})local nb=Instance.new("TextBox",r)nb.Size,nb.Position,nb.BackgroundColor3,nb.BackgroundTransparency,nb.Text,nb.TextColor3,nb.Font,nb.TextSize,nb.ClearTextOnFocus=UDim2.new(0.3,0,0,24),UDim2.new(0.5,-10,0.5,-12),THEME.CARD,0.12,"Pos "..(TC(_G.RAY.SavedPositions)+1),THEME.TEXT,Enum.Font.Gotham,12,true CC(nb,6)local sb=Instance.new("TextButton",r)sb.Size,sb.Position,sb.BackgroundColor3,sb.TextColor3,sb.Font,sb.TextSize,sb.Text=UDim2.new(0,60,0,24),UDim2.new(1,-70,0.5,-12),Color3.fromRGB(40,70,40),THEME.TEXT,Enum.Font.GothamBold,12,"Save" CC(sb,6)sb.MouseButton1Click:Connect(function()local nm=nb.Text:gsub("^%s+",""):gsub("%s+$","")if#nm==0 then nm="Pos "..(TC(_G.RAY.SavedPositions)+1)end if SP(nm)then RSPL()nb.Text="Pos "..(TC(_G.RAY.SavedPositions)+1)end end)end CSR(SavedPosSection,"Saved Positions Panel","Open",function()SavedPosPanel.Visible=not SavedPosPanel.Visible if SavedPosPanel.Visible then RSPL()end end)RSPL()
+--==================================================
+-- SAVED POSITIONS SYSTEM - AUTO TELEPORT ON RESPAWN
+--==================================================
+
+function GCP()
+    local c, h = Player.Character, Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    return h and h.CFrame or nil
+end
+
+function SP(n)
+    local cf = GCP()
+    if not cf then
+        if NotifyFeature then NotifyFeature("Failed to save position!", false) end
+        return false
+    end
+    _G.RAY.SavedPositions[n] = {
+        Position = cf.Position,
+        LookVector = cf.LookVector,
+        UpVector = cf.UpVector,
+        Time = os.time()
+    }
+    -- Save ke file/datastore persisten (opsional)
+    _G.RAY.LastSavedPosition = n
+    if NotifyFeature then NotifyFeature("Saved position: " .. n, true) end
+    return true
+end
+
+function TTS(n)
+    local d = _G.RAY.SavedPositions[n]
+    if not d then
+        if NotifyFeature then NotifyFeature("Position not found: " .. n, false) end
+        return false
+    end
+    local h = (Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
+    if not h then return false end
+    h.CFrame = CFrame.new(d.Position, d.Position + d.LookVector)
+    if NotifyFeature then NotifyFeature("Teleported to: " .. n, true) end
+    return true
+end
+
+function DSP(n)
+    _G.RAY.SavedPositions[n] = nil
+    if _G.RAY.LastSavedPosition == n then
+        _G.RAY.LastSavedPosition = nil
+    end
+    if NotifyFeature then NotifyFeature("Deleted position: " .. n, true) end
+end
+
+--==================================================
+-- AUTO TELEPORT SYSTEM (RESPAWN + EXECUTE)
+--==================================================
+
+-- Function untuk auto teleport ke posisi terakhir
+local function AutoTeleportToLast()
+    -- Cari posisi dengan Time paling baru (terakhir disave)
+    local lastPosName, latestTime = nil, 0
+    
+    for n, d in pairs(_G.RAY.SavedPositions) do
+        if d.Time and d.Time > latestTime then
+            latestTime = d.Time
+            lastPosName = n
+        end
+    end
+    
+    -- Kalau ada LastSavedPosition preferensi, pake itu dulu
+    if _G.RAY.LastSavedPosition and _G.RAY.SavedPositions[_G.RAY.LastSavedPosition] then
+        lastPosName = _G.RAY.LastSavedPosition
+    end
+    
+    if lastPosName then
+        -- Tunggu character ready
+        local char = Player.Character or Player.CharacterAdded:Wait()
+        local hrp = char:WaitForChild("HumanoidRootPart", 5)
+        
+        if hrp then
+            -- Small delay biar spawn fully complete
+            task.wait(0.5)
+            TTS(lastPosName)
+            print("[SavedPos] Auto teleported to:", lastPosName)
+        end
+    end
+end
+
+-- 1. AUTO TP PAS EXECUTE SCRIPT (delay 2 detik biar semua loaded)
+task.spawn(function()
+    task.wait(2)
+    AutoTeleportToLast()
+end)
+
+-- 2. AUTO TP PAS RESPAWN
+Player.CharacterAdded:Connect(function(newChar)
+    -- Delay biar character fully loaded
+    task.wait(1)
+    
+    -- Cek kalau ada Humanoid (pastikan bukan false respawn)
+    local hum = newChar:WaitForChild("Humanoid", 3)
+    if hum then
+        AutoTeleportToLast()
+    end
+end)
+
+--==================================================
+-- SAVED POSITIONS SECTION UI
+--==================================================
+
+SavedPosSection = CreateSectionDropdown(TeleportPage, "Saved Positions")
+Instance.new("UIListLayout", SavedPosSection).SortOrder = Enum.SortOrder.LayoutOrder
+SavedPosSection.UIListLayout.Padding = UDim.new(0, 6)
+
+SavedPosPanel, SavedPosScroll = CTP("Saved Positions", "Pilih posisi tersimpan untuk teleport.")
+
+function RSPL()
+    -- Clear existing
+    for _, c in ipairs(SavedPosScroll:GetChildren()) do
+        if c:IsA("Frame") then
+            c:Destroy()
+        end
+    end
+    
+    -- Sort names by time (newest first)
+    local ns = {}
+    for n, d in pairs(_G.RAY.SavedPositions) do
+        table.insert(ns, {name = n, time = d.Time or 0})
+    end
+    table.sort(ns, function(a, b) return a.time > b.time end)
+    
+    -- Create entries
+    for _, entry in ipairs(ns) do
+        local n = entry.name
+        local r = Instance.new("Frame", SavedPosScroll)
+        r.Size = UDim2.new(1, -4, 0, 28)
+        r.BackgroundTransparency = 1
+        r.ZIndex = 11
+        
+        -- Highlight indicator (mark last saved)
+        local hl = Instance.new("Frame", r)
+        hl.Name = "Highlight"
+        hl.Size = UDim2.new(0, 3, 1, 0)
+        hl.BackgroundColor3 = THEME.MAIN
+        hl.Visible = (_G.RAY.LastSavedPosition == n)
+        hl.ZIndex = 12
+        
+        -- Teleport button
+        local b = Instance.new("TextButton", r)
+        b.Size = UDim2.new(1, -30, 1, 0)
+        b.Position = UDim2.new(0, 4, 0, 0)
+        b.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+        b.TextColor3 = Color3.fromRGB(255, 255, 255)
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 12
+        b.TextXAlignment = Enum.TextXAlignment.Left
+        b.Text = "  " .. n
+        b.ZIndex = 11
+        CreateCorner(b, 6)
+        
+        -- Delete button
+        local d = Instance.new("TextButton", r)
+        d.Size = UDim2.new(0, 20, 0, 20)
+        d.Position = UDim2.new(1, -26, 0.5, -10)
+        d.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
+        d.TextColor3 = Color3.fromRGB(255, 150, 150)
+        d.Font = Enum.Font.GothamBold
+        d.TextSize = 12
+        d.Text = "X"
+        d.ZIndex = 11
+        CreateCorner(d, 4)
+        
+        -- Teleport click
+        b.MouseButton1Click:Connect(function()
+            TTS(n)
+            for _, c in ipairs(SavedPosScroll:GetChildren()) do
+                local h = c:FindFirstChild("Highlight")
+                if h then h.Visible = false end
+            end
+            hl.Visible = true
+        end)
+        
+        -- Delete click
+        d.MouseButton1Click:Connect(function()
+            DSP(n)
+            RSPL()
+        end)
+    end
+end
+
+-- Save position row
+do
+    local r = Instance.new("Frame", SavedPosSection)
+    r.Size = UDim2.new(1, 0, 0, 36)
+    r.BackgroundTransparency = 1
+    
+    CreateLabel(r, {
+        Size = UDim2.new(0.5, -20, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = "Save Current Pos"
+    })
+    
+    -- Name textbox
+    local nb = Instance.new("TextBox", r)
+    nb.Size = UDim2.new(0.3, 0, 0, 24)
+    nb.Position = UDim2.new(0.5, -10, 0.5, -12)
+    nb.BackgroundColor3 = THEME.CARD
+    nb.BackgroundTransparency = 0.12
+    nb.Text = "Pos " .. (function() 
+        local count = 0
+        for _ in pairs(_G.RAY.SavedPositions) do count = count + 1 end
+        return count
+    end)()
+    nb.TextColor3 = THEME.TEXT
+    nb.Font = Enum.Font.Gotham
+    nb.TextSize = 12
+    nb.ClearTextOnFocus = true
+    CreateCorner(nb, 6)
+    
+    -- Save button
+    local sb = Instance.new("TextButton", r)
+    sb.Size = UDim2.new(0, 60, 0, 24)
+    sb.Position = UDim2.new(1, -70, 0.5, -12)
+    sb.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+    sb.TextColor3 = THEME.TEXT
+    sb.Font = Enum.Font.GothamBold
+    sb.TextSize = 12
+    sb.Text = "Save"
+    CreateCorner(sb, 6)
+    
+    sb.MouseButton1Click:Connect(function()
+        local nm = nb.Text:gsub("^%s+", ""):gsub("%s+$", "")
+        if #nm == 0 then
+            local count = 0
+            for _ in pairs(_G.RAY.SavedPositions) do count = count + 1 end
+            nm = "Pos " .. (count + 1)
+        end
+        if SP(nm) then
+            RSPL()
+            local newCount = 0
+            for _ in pairs(_G.RAY.SavedPositions) do newCount = newCount + 1 end
+            nb.Text = "Pos " .. (newCount + 1)
+        end
+    end)
+end
+
+-- Open panel button
+CSR(SavedPosSection, "Saved Positions Panel", "Open", function()
+    SavedPosPanel.Visible = not SavedPosPanel.Visible
+    if SavedPosPanel.Visible then
+        RSPL()
+    end
+end)
+
+RSPL()
 
 -- Close panels
 AllPanels={IslandPanel,PlayerPanel,EventHuntPanel,SavedPosPanel}function IIP(p,pos)if not p or not p.Visible then return false end return(pos.X>=p.AbsolutePosition.X and pos.X<=p.AbsolutePosition.X+p.AbsoluteSize.X and pos.Y>=p.AbsolutePosition.Y and pos.Y<=p.AbsolutePosition.Y+p.AbsoluteSize.Y)end function IIS(s,pos)if not s then return false end return(pos.X>=s.AbsolutePosition.X and pos.X<=s.AbsolutePosition.X+s.AbsoluteSize.X and pos.Y>=s.AbsolutePosition.Y and pos.Y<=s.AbsolutePosition.Y+s.AbsoluteSize.Y)end UIS.InputBegan:Connect(function(i)if i.UserInputType~=Enum.UserInputType.MouseButton1 and i.UserInputType~=Enum.UserInputType.Touch then return end local pos=i.Position for _,p in ipairs(AllPanels)do if IIP(p,pos)then return end end for _,s in ipairs({IslandSection,PlayerSection,EventHuntSection,LochNessSection,ChestFarmSection,SavedPosSection})do if IIS(s,pos)then return end end for _,p in ipairs(AllPanels)do if p and p.Visible then p.Visible=false end end end)
