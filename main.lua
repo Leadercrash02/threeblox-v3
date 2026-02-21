@@ -1357,7 +1357,12 @@ end)
 --==================================================
 local Players, ReplicatedStorage, RunService, UIS = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService"), game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
-local Controllers, Modules, VFX, Tools = ReplicatedStorage:WaitForChild("Controllers"), ReplicatedStorage:WaitForChild("Modules"), ReplicatedStorage:WaitForChild("VFX"), ReplicatedStorage:WaitForChild("Tools")
+local Controllers, Modules, VFX = ReplicatedStorage:WaitForChild("Controllers"), ReplicatedStorage:WaitForChild("Modules"), ReplicatedStorage:WaitForChild("VFX")
+
+-- FIX: Tools folder dengan pcall
+local Tools = nil
+pcall(function() Tools = ReplicatedStorage:WaitForChild("Tools", 3) end)
+if not Tools then Tools = ReplicatedStorage end -- fallback ke ReplicatedStorage
 
 local AnimModule = require(Controllers:WaitForChild("AnimationController"))
 local Animations_upvr = require(Modules:WaitForChild("Animations"))
@@ -1366,43 +1371,23 @@ local oldGetAnimationData = AnimModule.GetAnimationData
 local VFXModule = nil
 pcall(function() VFXModule = require(Controllers:WaitForChild("VFXController")) end)
 
-if type(oldGetAnimationData) ~= "function" then
-    warn("[SkinOverride] GetAnimationData tidak ada di AnimationController")
-end
+if type(oldGetAnimationData) ~= "function" then warn("[SkinOverride] GetAnimationData tidak ada di AnimationController") end
 
-local SKINS = {
-    "Eclipse Katana", "Holy Trident", "Soul Scythe", "Oceanic Harpoon", "Binary Edge", "The Vanquisher", "1x1x1x1 Ban Hammer",
-    "Ethereal Sword", "Cursed Katana", "Blackhole Sword", "Gingerbread Katana", "Christmas Parasol", "Princess Parasol",
-    "Corruption Edge", "Frozen Krampus Scythe", "Eternal Flower", "Cupid's Harp", "Aurelian Bow", "Chromatic Katana",
-    "Crescendo Scythe", "Electric Guitar", "Pirate Banjo", "Kraken Anchor", "Undead Guitar", "Royal Spider",
-    "Trick O' Treat", "Reaver Scythe", "Spirit Staff", "Divine Blade", "Heartfelt Blade", "Candy Cane Trident",
-    "Ornament Axe", "Gingerbread Sword", "Xmas Tree Rod", "Pink Present Lance", "Aether Monarch", "Wings of Everlove",
-    "Voidpunk Axe", "Crimson Rose", "Heartbreaker Surge",
-}
+local SKINS = {"Eclipse Katana", "Holy Trident", "Soul Scythe", "Oceanic Harpoon", "Binary Edge", "The Vanquisher", "1x1x1x1 Ban Hammer", "Ethereal Sword", "Cursed Katana", "Blackhole Sword", "Gingerbread Katana", "Christmas Parasol", "Princess Parasol", "Corruption Edge", "Frozen Krampus Scythe", "Eternal Flower", "Cupid's Harp", "Aurelian Bow", "Chromatic Katana", "Crescendo Scythe", "Electric Guitar", "Pirate Banjo", "Kraken Anchor", "Undead Guitar", "Royal Spider", "Trick O' Treat", "Reaver Scythe", "Spirit Staff", "Divine Blade", "Heartfelt Blade", "Candy Cane Trident", "Ornament Axe", "Gingerbread Sword", "Xmas Tree Rod", "Pink Present Lance", "Aether Monarch", "Wings of Everlove", "Voidpunk Axe", "Crimson Rose", "Heartbreaker Surge"}
 
 local SelectedAnimSkin, OverrideEnabled, CurrentToolClone = nil, false, nil
 
--- VFX HOOK
 local oldEmitParticles = VFXModule and VFXModule.emitParticles
-if oldEmitParticles then
-    VFXModule.emitParticles = function(arg1)
-        if OverrideEnabled and SelectedAnimSkin and arg1 then
-            local particleName, skin = arg1.particleName, SelectedAnimSkin:gsub(" ", "")
-            local names = {skin .. "_" .. particleName, particleName .. "_" .. skin, SelectedAnimSkin .. "_" .. particleName, particleName .. "_" .. SelectedAnimSkin}
-            for i = 1, #names do
-                if VFX:FindFirstChild(names[i]) then arg1.particleName = names[i] break end
-            end
-        end
-        return oldEmitParticles(arg1)
-    end
-end
+if oldEmitParticles then VFXModule.emitParticles = function(arg1) if OverrideEnabled and SelectedAnimSkin and arg1 then local particleName, skin = arg1.particleName, SelectedAnimSkin:gsub(" ", "") local names = {skin .. "_" .. particleName, particleName .. "_" .. skin, SelectedAnimSkin .. "_" .. particleName, particleName .. "_" .. SelectedAnimSkin} for i = 1, #names do if VFX:FindFirstChild(names[i]) then arg1.particleName = names[i] break end end end return oldEmitParticles(arg1) end end
 
--- TOOL FUNCTIONS
 local function getChar() return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait() end
+local function findTool() local char = getChar() for _, v in ipairs(char:GetChildren()) do if v:IsA("Tool") then return v end end return nil end
 
-local function findTool()
-    local char = getChar()
-    for _, v in ipairs(char:GetChildren()) do if v:IsA("Tool") then return v end end
+local function cloneSkinTool(skinName)
+    if not Tools then return nil end
+    local skinTool = Tools:FindFirstChild(skinName)
+    if not skinTool then for _, f in ipairs({ReplicatedStorage}) do skinTool = f:FindFirstChild(skinName) if skinTool then break end for _, c in ipairs(f:GetChildren()) do if (c:IsA("Folder") or c:IsA("Model")) and c:FindFirstChild(skinName) then skinTool = c:FindFirstChild(skinName) break end end if skinTool then break end end end
+    if skinTool then return skinTool:Clone() end
     return nil
 end
 
@@ -1410,35 +1395,14 @@ local function equipSkinVisual(skinName)
     if CurrentToolClone then CurrentToolClone:Destroy() CurrentToolClone = nil end
     local currentTool = findTool()
     if not currentTool then return end
-    
-    local skinTool
-    for _, f in ipairs({Tools, ReplicatedStorage}) do
-        skinTool = f:FindFirstChild(skinName)
-        if skinTool then break end
-        for _, c in ipairs(f:GetChildren()) do
-            if (c:IsA("Folder") or c:IsA("Model")) and c:FindFirstChild(skinName) then skinTool = c:FindFirstChild(skinName) break end
-        end
-        if skinTool then break end
-    end
-    
+    local skinTool = cloneSkinTool(skinName)
     if not skinTool then return end
-    CurrentToolClone = skinTool:Clone()
-    CurrentToolClone.Parent = currentTool
-    
-    for _, v in ipairs(currentTool:GetDescendants()) do
-        if v:IsA("BasePart") or v:IsA("MeshPart") then v.Transparency = 1 end
-    end
-    
-    local handle, skinHandle = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildOfClass("BasePart"), CurrentToolClone:FindFirstChild("Handle") or CurrentToolClone:FindFirstChildOfClass("BasePart")
-    if handle and skinHandle then
-        RunService.RenderStepped:Connect(function()
-            if skinHandle and handle then skinHandle.CFrame = handle.CFrame end
-        end)
-    end
-    
-    for _, v in ipairs(CurrentToolClone:GetDescendants()) do
-        if v:IsA("Attachment") or v:IsA("ParticleEmitter") or v:IsA("Trail") then v:Clone().Parent = currentTool end
-    end
+    CurrentToolClone = skinTool
+    skinTool.Parent = currentTool
+    for _, v in ipairs(currentTool:GetDescendants()) do if v:IsA("BasePart") or v:IsA("MeshPart") then v.Transparency = 1 end end
+    local handle, skinHandle = currentTool:FindFirstChild("Handle") or currentTool:FindFirstChildOfClass("BasePart"), skinTool:FindFirstChild("Handle") or skinTool:FindFirstChildOfClass("BasePart")
+    if handle and skinHandle then RunService.RenderStepped:Connect(function() if skinHandle and handle then skinHandle.CFrame = handle.CFrame end end) end
+    for _, v in ipairs(skinTool:GetDescendants()) do if v:IsA("Attachment") or v:IsA("ParticleEmitter") or v:IsA("Trail") then v:Clone().Parent = currentTool end end
 end
 
 local function restoreTool()
@@ -1447,7 +1411,6 @@ local function restoreTool()
     if tool then for _, v in ipairs(tool:GetDescendants()) do if v:IsA("BasePart") or v:IsA("MeshPart") then v.Transparency = 0 end end end
 end
 
--- ANIMATION FUNCTIONS
 function AnimModule:SetAnimationSkin(skinName)
     SelectedAnimSkin = (typeof(skinName) == "string" and #skinName > 0) and skinName or nil
     if OverrideEnabled and SelectedAnimSkin then equipSkinVisual(SelectedAnimSkin) else restoreTool() end
@@ -1462,20 +1425,10 @@ AnimModule.GetAnimationData = function(self, animName)
     local baseData, baseKey = oldGetAnimationData(self, animName)
     if not baseData then return nil, nil end
     if not OverrideEnabled or not SelectedAnimSkin then return baseData, baseKey end
-    
     local overrideKey = ("%s - %s"):format(SelectedAnimSkin, animName)
     local overrideData = Animations_upvr[overrideKey]
-    
-    if not overrideData then
-        overrideKey = SelectedAnimSkin:gsub(" ", "") .. " - " .. animName
-        overrideData = Animations_upvr[overrideKey]
-    end
-    
-    if not overrideData then
-        overrideKey = SelectedAnimSkin:gsub(" ", "") .. animName
-        overrideData = Animations_upvr[overrideKey]
-    end
-    
+    if not overrideData then overrideKey = SelectedAnimSkin:gsub(" ", "") .. " - " .. animName overrideData = Animations_upvr[overrideKey] end
+    if not overrideData then overrideKey = SelectedAnimSkin:gsub(" ", "") .. animName overrideData = Animations_upvr[overrideKey] end
     return (overrideData and overrideData.AnimationId) and overrideData, overrideKey or baseData, baseKey
 end
 
@@ -1483,13 +1436,11 @@ end
 local RightPanel = Instance.new("Frame", Main)
 RightPanel.Name, RightPanel.Size, RightPanel.AnchorPoint, RightPanel.Position = "SkinAnimationRightPanel", UDim2.new(0, 220, 1, -46), Vector2.new(1, 0), UDim2.new(1, -10, 0, 40)
 RightPanel.BackgroundColor3, RightPanel.BackgroundTransparency, RightPanel.BorderSizePixel, RightPanel.Visible, RightPanel.ZIndex, RightPanel.ClipsDescendants = THEME.CARD, 0.25, 0, false, 10, true
-
 CreateCorner(RightPanel, 10)
 CreateStroke(RightPanel, THEME.MAIN, 0.5)
 
 local headerFrame = Instance.new("Frame", RightPanel)
 headerFrame.Name, headerFrame.Size, headerFrame.BackgroundTransparency, headerFrame.ZIndex = "Header", UDim2.new(1, 0, 0, 30), 1, 11
-
 CreateLabel(headerFrame, {Size = UDim2.new(1, -35, 1, 0), Position = UDim2.new(0, 10, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.GothamBold, TextSize = 16, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, ZIndex = 12, Text = "Skin Animation"})
 
 local closeBtn = Instance.new("TextButton", headerFrame)
@@ -1498,41 +1449,28 @@ CreateCorner(closeBtn, 4)
 closeBtn.MouseButton1Click:Connect(function() RightPanel.Visible = false end)
 
 local rpSkin = CreateLabel(RightPanel, {Size = UDim2.new(1, -10, 0, 18), Position = UDim2.new(0, 5, 0, 32), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 12, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = Color3.fromRGB(200, 200, 200), ZIndex = 11, Text = "Skin: default (ikut rod)"})
-
-local function UpdateRightSkinLabel()
-    rpSkin.Text = SelectedAnimSkin and #SelectedAnimSkin > 0 and "Skin: " .. SelectedAnimSkin or "Skin: default (ikut rod)"
-end
+local function UpdateRightSkinLabel() rpSkin.Text = SelectedAnimSkin and #SelectedAnimSkin > 0 and "Skin: " .. SelectedAnimSkin or "Skin: default (ikut rod)" end
 
 local rpScroll = Instance.new("ScrollingFrame", RightPanel)
 rpScroll.Size, rpScroll.Position, rpScroll.BackgroundTransparency, rpScroll.BorderSizePixel, rpScroll.ScrollBarThickness, rpScroll.ScrollingDirection, rpScroll.ScrollBarImageColor3, rpScroll.ZIndex, rpScroll.ClipsDescendants = UDim2.new(1, -10, 1, -75), UDim2.new(0, 5, 0, 55), 1, 0, 3, Enum.ScrollingDirection.Y, THEME.MAIN, 10, true
-
 local listLayout = Instance.new("UIListLayout", rpScroll)
 listLayout.SortOrder, listLayout.Padding = Enum.SortOrder.LayoutOrder, UDim.new(0, 4)
-
-local function UpdateCanvasSize()
-    rpScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
-end
-
+local function UpdateCanvasSize() rpScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10) end
 listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
 
 local function CreateSkinEntry(skinName)
     local row = Instance.new("Frame")
     row.Name, row.Size, row.BackgroundTransparency, row.ZIndex, row.Parent = skinName .. "_Row", UDim2.new(1, -4, 0, 24), 1, 11, rpScroll
-
     local line = Instance.new("Frame", row)
     line.Name, line.Size, line.BackgroundColor3, line.Visible, line.ZIndex = "Highlight", UDim2.new(0, 3, 1, 0), THEME.MAIN, false, 12
-
     local btn = Instance.new("TextButton", row)
     btn.Size, btn.Position, btn.BackgroundColor3, btn.TextColor3, btn.Font, btn.TextSize, btn.TextXAlignment, btn.Text, btn.ZIndex = UDim2.new(1, -6, 1, 0), UDim2.new(0, 4, 0, 0), Color3.fromRGB(30, 30, 50), THEME.TEXT, Enum.Font.Gotham, 12, Enum.TextXAlignment.Left, "  " .. skinName, 11
     CreateCorner(btn, 6)
-
     btn.MouseButton1Click:Connect(function()
         AnimModule:SetAnimationSkin(skinName)
         SelectedAnimSkin = skinName
         UpdateRightSkinLabel()
-        for _, c in ipairs(rpScroll:GetChildren()) do
-            if c:IsA("Frame") and c:FindFirstChild("Highlight") then c.Highlight.Visible = (c == row) end
-        end
+        for _, child in ipairs(rpScroll:GetChildren()) do if child:IsA("Frame") and child:FindFirstChild("Highlight") then child.Highlight.Visible = (child == row) end end
     end)
 end
 
@@ -1546,32 +1484,24 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
     if not (pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y) then RightPanel.Visible = false end
 end)
 
--- SKIN ANIMATION SECTION
 if AutoPage then
     local SkinAnimationSection = CreateSectionDropdown(AutoPage, "Skin Animation")
     Instance.new("UIListLayout", SkinAnimationSection).SortOrder = Enum.SortOrder.LayoutOrder
     SkinAnimationSection.UIListLayout.Padding = UDim.new(0, 6)
     CreateSectionLine(SkinAnimationSection)
-    
-    CreateToggleRow(SkinAnimationSection, "Skin Override", OverrideEnabled, function(state)
-        OverrideEnabled = state
-        AnimModule:SetSkinOverrideEnabled(state)
-    end)
-    
-    local row = Instance.new("Frame", SkinAnimationSection)
-    row.Size, row.BackgroundTransparency = UDim2.new(1, 0, 0, 40), 1
-    CreateLabel(row, {Size = UDim2.new(1, -110, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Open Skin Panel"})
-    
-    local btn = Instance.new("TextButton", row)
-    btn.Size, btn.Position, btn.BackgroundColor3, btn.BackgroundTransparency, btn.Text, btn.TextColor3, btn.Font, btn.TextSize = UDim2.new(0, 80, 0, 24), UDim2.new(1, -100, 0.5, -12), THEME.CARD, 0.1, "Open", THEME.TEXT, Enum.Font.GothamBold, 12
-    CreateCorner(btn, 8)
-    btn.MouseButton1Click:Connect(function() RightPanel.Visible = not RightPanel.Visible end)
+    CreateToggleRow(SkinAnimationSection, "Skin Override", OverrideEnabled, function(state) OverrideEnabled = state AnimModule:SetSkinOverrideEnabled(state) end)
+    do
+        local row = Instance.new("Frame", SkinAnimationSection)
+        row.Size, row.BackgroundTransparency = UDim2.new(1, 0, 0, 40), 1
+        CreateLabel(row, {Size = UDim2.new(1, -110, 1, 0), Position = UDim2.new(0, 16, 0, 0), BackgroundTransparency = 1, Font = Enum.Font.Gotham, TextSize = 13, TextXAlignment = Enum.TextXAlignment.Left, TextColor3 = THEME.TEXT, Text = "Open Skin Panel"})
+        local btn = Instance.new("TextButton", row)
+        btn.Size, btn.Position, btn.BackgroundColor3, btn.BackgroundTransparency, btn.Text, btn.TextColor3, btn.Font, btn.TextSize = UDim2.new(0, 80, 0, 24), UDim2.new(1, -100, 0.5, -12), THEME.CARD, 0.1, "Open", THEME.TEXT, Enum.Font.GothamBold, 12
+        CreateCorner(btn, 8)
+        btn.MouseButton1Click:Connect(function() RightPanel.Visible = not RightPanel.Visible end)
+    end
 end
 
-LocalPlayer.Character.ChildAdded:Connect(function(c)
-    if c:IsA("Tool") and OverrideEnabled and SelectedAnimSkin then task.wait(0.1) equipSkinVisual(SelectedAnimSkin) end
-end)
-
+LocalPlayer.Character.ChildAdded:Connect(function(c) if c:IsA("Tool") and OverrideEnabled and SelectedAnimSkin then task.wait(0.1) equipSkinVisual(SelectedAnimSkin) end end)
 print("[SkinAnimation] Loaded with " .. #SKINS .. " skins")
 
 --==================================================
@@ -3073,6 +3003,765 @@ task.spawn(function()
             end
         end
         task.wait(0.5)
+    end
+end)
+
+--==================================================
+-- CHEST FARM SECTION (FIXED - Manual Claim)
+--==================================================
+ChestFarmSection = CreateSectionDropdown(TeleportPage, "Chest Pirate Treasureroom")
+Instance.new("UIListLayout", ChestFarmSection).SortOrder = Enum.SortOrder.LayoutOrder
+ChestFarmSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Status Row
+local ChestFarmStatusRow = Instance.new("Frame", ChestFarmSection)
+ChestFarmStatusRow.Size = UDim2.new(1, 0, 0, 30)
+ChestFarmStatusRow.BackgroundTransparency = 1
+
+ChestFarmInfoLabel = CL(ChestFarmStatusRow, {
+    Size = UDim2.new(0.6, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    Text = "Waiting Replion..."
+})
+
+-- Count label
+ChestCountLabel = CL(ChestFarmStatusRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
+    Position = UDim2.new(0.6, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Right,
+    TextColor3 = Color3.fromRGB(0, 255, 140),
+    Text = "Chests: 0"
+})
+
+-- Chest Farm Variables
+local chestReplion = nil
+local ClaimPirateChest = nil
+
+-- Ambil RE dengan pcall (sama persis)
+task.spawn(function()
+    local success, result = pcall(function()
+        local netFolder = ReplicatedStorage
+            :WaitForChild("Packages")
+            :WaitForChild("_Index")
+            :WaitForChild("sleitnick_net@0.2.0")
+            :WaitForChild("net")
+        return netFolder:WaitForChild("RE/ClaimPirateChest")
+    end)
+    
+    if success then
+        ClaimPirateChest = result
+        print("[ChestFarm] RE initialized:", ClaimPirateChest:GetFullName())
+    else
+        warn("[ChestFarm] Failed to get RE:", result)
+        ChestFarmInfoLabel.Text = "RE Error!"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+    end
+end)
+
+-- Init Replion (sama persis)
+task.spawn(function()
+    local ok, r = pcall(function()
+        return Replion.Client:WaitReplion("PirateTreasureChests")
+    end)
+    
+    print("[ChestFarm] WaitReplion:", ok, r)
+    
+    if not ok or not r or typeof(r.Data) ~= "table" then
+        ChestFarmInfoLabel.Text = "Replion failed"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        warn("[ChestFarm] Failed to get PirateTreasureChests")
+        return
+    end
+    
+    chestReplion = r
+    ChestFarmInfoLabel.Text = "Replion ready"
+    ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+    print("[ChestFarm] Replion Data:", chestReplion.Data)
+end)
+
+-- Function GetAllChestUUIDs (SAMA PERSIS)
+local function GetAllChestUUIDs()
+    if not chestReplion then return {} end
+    local data = chestReplion.Data
+    local spawned = data and data.SpawnedChests
+    if typeof(spawned) ~= "table" then return {} end
+
+    local list = {}
+    for i, entry in ipairs(spawned) do
+        local uuid = entry.Id
+        local pos = entry.Location
+        if typeof(uuid) == "string" then
+            table.insert(list, uuid)
+        end
+    end
+    return list
+end
+
+-- MANUAL CLAIM BUTTON (GANTI TOGGLE AUTO)
+local ClaimButtonRow = Instance.new("Frame", ChestFarmSection)
+ClaimButtonRow.Size = UDim2.new(1, 0, 0, 40)
+ClaimButtonRow.BackgroundTransparency = 1
+
+CL(ClaimButtonRow, {
+    Size = UDim2.new(1, -110, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Claim All Chests"
+})
+
+local claimBtn = Instance.new("TextButton", ClaimButtonRow)
+claimBtn.Size = UDim2.new(0, 90, 0, 28)
+claimBtn.Position = UDim2.new(1, -110, 0.5, -14)
+claimBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)  -- Green
+claimBtn.Text = "CLAIM"
+claimBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+claimBtn.Font = Enum.Font.GothamBold
+claimBtn.TextSize = 12
+CreateCorner(claimBtn, 6)
+
+-- Claim logic (sama persis dari farm loop tapi manual)
+claimBtn.MouseButton1Click:Connect(function()
+    if not chestReplion then
+        ChestFarmInfoLabel.Text = "Replion not ready!"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    if not ClaimPirateChest then
+        ChestFarmInfoLabel.Text = "RE not ready!"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        return
+    end
+    
+    local uuids = GetAllChestUUIDs()
+    ChestCountLabel.Text = "Chests: " .. #uuids
+    
+    if #uuids == 0 then
+        ChestFarmInfoLabel.Text = "No chests spawned"
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(255, 200, 100)
+    else
+        ChestFarmInfoLabel.Text = "Claiming " .. #uuids .. " chests..."
+        ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+        
+        for _, uuid in ipairs(uuids) do
+            pcall(function()
+                ClaimPirateChest:FireServer(uuid)
+            end)
+        end
+        
+        -- Feedback visual
+        claimBtn.Text = "DONE!"
+        claimBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 0)
+        task.delay(1, function()
+            claimBtn.Text = "CLAIM"
+            claimBtn.BackgroundColor3 = Color3.fromRGB(0, 170, 0)
+        end)
+    end
+end)
+
+-- AUTO UPDATE COUNT (opsional - biar tau jumlah chest tanpa claim)
+task.spawn(function()
+    while true do
+        task.wait(1)
+        if chestReplion then
+            local uuids = GetAllChestUUIDs()
+            ChestCountLabel.Text = "Chests: " .. #uuids
+            
+            if #uuids > 0 and ChestFarmInfoLabel.Text == "Replion ready" then
+                ChestFarmInfoLabel.Text = #uuids .. " chests available"
+                ChestFarmInfoLabel.TextColor3 = Color3.fromRGB(100, 255, 100)
+            end
+        end
+    end
+end)
+
+print("[ChestFarm] Section loaded with manual claim")
+
+-- Saved Positions
+--==================================================
+-- SAVED POSITIONS SYSTEM - AUTO TELEPORT ON RESPAWN
+--==================================================
+
+function GCP()
+    local c, h = Player.Character, Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+    return h and h.CFrame or nil
+end
+
+function SP(n)
+    local cf = GCP()
+    if not cf then
+        if NotifyFeature then NotifyFeature("Failed to save position!", false) end
+        return false
+    end
+    _G.RAY.SavedPositions[n] = {
+        Position = cf.Position,
+        LookVector = cf.LookVector,
+        UpVector = cf.UpVector,
+        Time = os.time()
+    }
+    -- Save ke file/datastore persisten (opsional)
+    _G.RAY.LastSavedPosition = n
+    if NotifyFeature then NotifyFeature("Saved position: " .. n, true) end
+    return true
+end
+
+function TTS(n)
+    local d = _G.RAY.SavedPositions[n]
+    if not d then
+        if NotifyFeature then NotifyFeature("Position not found: " .. n, false) end
+        return false
+    end
+    local h = (Player.Character or Player.CharacterAdded:Wait()):FindFirstChild("HumanoidRootPart")
+    if not h then return false end
+    h.CFrame = CFrame.new(d.Position, d.Position + d.LookVector)
+    if NotifyFeature then NotifyFeature("Teleported to: " .. n, true) end
+    return true
+end
+
+function DSP(n)
+    _G.RAY.SavedPositions[n] = nil
+    if _G.RAY.LastSavedPosition == n then
+        _G.RAY.LastSavedPosition = nil
+    end
+    if NotifyFeature then NotifyFeature("Deleted position: " .. n, true) end
+end
+
+--==================================================
+-- AUTO TELEPORT SYSTEM (RESPAWN + EXECUTE)
+--==================================================
+
+-- Function untuk auto teleport ke posisi terakhir
+local function AutoTeleportToLast()
+    -- Cari posisi dengan Time paling baru (terakhir disave)
+    local lastPosName, latestTime = nil, 0
+    
+    for n, d in pairs(_G.RAY.SavedPositions) do
+        if d.Time and d.Time > latestTime then
+            latestTime = d.Time
+            lastPosName = n
+        end
+    end
+    
+    -- Kalau ada LastSavedPosition preferensi, pake itu dulu
+    if _G.RAY.LastSavedPosition and _G.RAY.SavedPositions[_G.RAY.LastSavedPosition] then
+        lastPosName = _G.RAY.LastSavedPosition
+    end
+    
+    if lastPosName then
+        -- Tunggu character ready
+        local char = Player.Character or Player.CharacterAdded:Wait()
+        local hrp = char:WaitForChild("HumanoidRootPart", 5)
+        
+        if hrp then
+            -- Small delay biar spawn fully complete
+            task.wait(0.5)
+            TTS(lastPosName)
+            print("[SavedPos] Auto teleported to:", lastPosName)
+        end
+    end
+end
+
+-- 1. AUTO TP PAS EXECUTE SCRIPT (delay 2 detik biar semua loaded)
+task.spawn(function()
+    task.wait(2)
+    AutoTeleportToLast()
+end)
+
+-- 2. AUTO TP PAS RESPAWN
+Player.CharacterAdded:Connect(function(newChar)
+    -- Delay biar character fully loaded
+    task.wait(1)
+    
+    -- Cek kalau ada Humanoid (pastikan bukan false respawn)
+    local hum = newChar:WaitForChild("Humanoid", 3)
+    if hum then
+        AutoTeleportToLast()
+    end
+end)
+
+--==================================================
+-- SAVED POSITIONS SECTION UI
+--==================================================
+
+SavedPosSection = CreateSectionDropdown(TeleportPage, "Saved Positions")
+Instance.new("UIListLayout", SavedPosSection).SortOrder = Enum.SortOrder.LayoutOrder
+SavedPosSection.UIListLayout.Padding = UDim.new(0, 6)
+
+SavedPosPanel, SavedPosScroll = CTP("Saved Positions", "Pilih posisi tersimpan untuk teleport.")
+
+function RSPL()
+    -- Clear existing
+    for _, c in ipairs(SavedPosScroll:GetChildren()) do
+        if c:IsA("Frame") then
+            c:Destroy()
+        end
+    end
+    
+    -- Sort names by time (newest first)
+    local ns = {}
+    for n, d in pairs(_G.RAY.SavedPositions) do
+        table.insert(ns, {name = n, time = d.Time or 0})
+    end
+    table.sort(ns, function(a, b) return a.time > b.time end)
+    
+    -- Create entries
+    for _, entry in ipairs(ns) do
+        local n = entry.name
+        local r = Instance.new("Frame", SavedPosScroll)
+        r.Size = UDim2.new(1, -4, 0, 28)
+        r.BackgroundTransparency = 1
+        r.ZIndex = 11
+        
+        -- Highlight indicator (mark last saved)
+        local hl = Instance.new("Frame", r)
+        hl.Name = "Highlight"
+        hl.Size = UDim2.new(0, 3, 1, 0)
+        hl.BackgroundColor3 = THEME.MAIN
+        hl.Visible = (_G.RAY.LastSavedPosition == n)
+        hl.ZIndex = 12
+        
+        -- Teleport button
+        local b = Instance.new("TextButton", r)
+        b.Size = UDim2.new(1, -30, 1, 0)
+        b.Position = UDim2.new(0, 4, 0, 0)
+        b.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+        b.TextColor3 = Color3.fromRGB(255, 255, 255)
+        b.Font = Enum.Font.Gotham
+        b.TextSize = 12
+        b.TextXAlignment = Enum.TextXAlignment.Left
+        b.Text = "  " .. n
+        b.ZIndex = 11
+        CreateCorner(b, 6)
+        
+        -- Delete button
+        local d = Instance.new("TextButton", r)
+        d.Size = UDim2.new(0, 20, 0, 20)
+        d.Position = UDim2.new(1, -26, 0.5, -10)
+        d.BackgroundColor3 = Color3.fromRGB(80, 30, 30)
+        d.TextColor3 = Color3.fromRGB(255, 150, 150)
+        d.Font = Enum.Font.GothamBold
+        d.TextSize = 12
+        d.Text = "X"
+        d.ZIndex = 11
+        CreateCorner(d, 4)
+        
+        -- Teleport click
+        b.MouseButton1Click:Connect(function()
+            TTS(n)
+            for _, c in ipairs(SavedPosScroll:GetChildren()) do
+                local h = c:FindFirstChild("Highlight")
+                if h then h.Visible = false end
+            end
+            hl.Visible = true
+        end)
+        
+        -- Delete click
+        d.MouseButton1Click:Connect(function()
+            DSP(n)
+            RSPL()
+        end)
+    end
+end
+
+-- Save position row
+do
+    local r = Instance.new("Frame", SavedPosSection)
+    r.Size = UDim2.new(1, 0, 0, 36)
+    r.BackgroundTransparency = 1
+    
+    CreateLabel(r, {
+        Size = UDim2.new(0.5, -20, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = "Save Current Pos"
+    })
+    
+    -- Name textbox
+    local nb = Instance.new("TextBox", r)
+    nb.Size = UDim2.new(0.3, 0, 0, 24)
+    nb.Position = UDim2.new(0.5, -10, 0.5, -12)
+    nb.BackgroundColor3 = THEME.CARD
+    nb.BackgroundTransparency = 0.12
+    nb.Text = "Pos " .. (function() 
+        local count = 0
+        for _ in pairs(_G.RAY.SavedPositions) do count = count + 1 end
+        return count
+    end)()
+    nb.TextColor3 = THEME.TEXT
+    nb.Font = Enum.Font.Gotham
+    nb.TextSize = 12
+    nb.ClearTextOnFocus = true
+    CreateCorner(nb, 6)
+    
+    -- Save button
+    local sb = Instance.new("TextButton", r)
+    sb.Size = UDim2.new(0, 60, 0, 24)
+    sb.Position = UDim2.new(1, -70, 0.5, -12)
+    sb.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+    sb.TextColor3 = THEME.TEXT
+    sb.Font = Enum.Font.GothamBold
+    sb.TextSize = 12
+    sb.Text = "Save"
+    CreateCorner(sb, 6)
+    
+    sb.MouseButton1Click:Connect(function()
+        local nm = nb.Text:gsub("^%s+", ""):gsub("%s+$", "")
+        if #nm == 0 then
+            local count = 0
+            for _ in pairs(_G.RAY.SavedPositions) do count = count + 1 end
+            nm = "Pos " .. (count + 1)
+        end
+        if SP(nm) then
+            RSPL()
+            local newCount = 0
+            for _ in pairs(_G.RAY.SavedPositions) do newCount = newCount + 1 end
+            nb.Text = "Pos " .. (newCount + 1)
+        end
+    end)
+end
+
+-- Open panel button
+CSR(SavedPosSection, "Saved Positions Panel", "Open", function()
+    SavedPosPanel.Visible = not SavedPosPanel.Visible
+    if SavedPosPanel.Visible then
+        RSPL()
+    end
+end)
+
+RSPL()
+
+-- Close panels
+AllPanels={IslandPanel,PlayerPanel,EventHuntPanel,SavedPosPanel}function IIP(p,pos)if not p or not p.Visible then return false end return(pos.X>=p.AbsolutePosition.X and pos.X<=p.AbsolutePosition.X+p.AbsoluteSize.X and pos.Y>=p.AbsolutePosition.Y and pos.Y<=p.AbsolutePosition.Y+p.AbsoluteSize.Y)end function IIS(s,pos)if not s then return false end return(pos.X>=s.AbsolutePosition.X and pos.X<=s.AbsolutePosition.X+s.AbsoluteSize.X and pos.Y>=s.AbsolutePosition.Y and pos.Y<=s.AbsolutePosition.Y+s.AbsoluteSize.Y)end UIS.InputBegan:Connect(function(i)if i.UserInputType~=Enum.UserInputType.MouseButton1 and i.UserInputType~=Enum.UserInputType.Touch then return end local pos=i.Position for _,p in ipairs(AllPanels)do if IIP(p,pos)then return end end for _,s in ipairs({IslandSection,PlayerSection,EventHuntSection,LochNessSection,ChestFarmSection,SavedPosSection})do if IIS(s,pos)then return end end for _,p in ipairs(AllPanels)do if p and p.Visible then p.Visible=false end end end)
+
+-- Traveling Merchant - Ultra minimized
+MerchantReplion=Replion.Client:WaitReplion("Merchant")MarketItemData=require(ReplicatedStorage.Shared.MarketItemData)PurchaseMarketItemRF=NetFolder:WaitForChild("RF/PurchaseMarketItem")MERCHANT_ITEM_MAP={}for _,i in ipairs(MarketItemData)do MERCHANT_ITEM_MAP[i.Id]=i end function GMS()local ids,stock=MerchantReplion:GetExpect("Items")or{},{}for _,id in ipairs(ids)do local d=MERCHANT_ITEM_MAP[id]if d then table.insert(stock,{Id=d.Id,Name=d.Identifier or d.Name or("Item_"..id),Price=d.Price or 0,Currency=d.Currency or"Coins",MaxStock=d.MaxStock or 1,Data=d})end end return stock end function BMI(id,q)q=math.max(1,tonumber(q)or 1)for i=1,q do task.spawn(function()pcall(function()PurchaseMarketItemRF:InvokeServer(id)end)end)task.wait(0.1)end return true end MerchantSection=CreateSectionDropdown(ShopPage,"Traveling Merchant")Instance.new("UIListLayout",MerchantSection).SortOrder=Enum.SortOrder.LayoutOrder MerchantSection.UIListLayout.Padding=UDim.new(0,6)MerchantPanel,MerchantScroll=CTP("Merchant Stock","Select item to purchase")StatusRow=Instance.new("Frame",MerchantSection)StatusRow.Size,StatusRow.BackgroundTransparency=UDim2.new(1,0,0,30),1 CL(StatusRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Merchant Status:"})MerchantStatus=CL(StatusRow,{Size=UDim2.new(0.5,-10,1,0),Position=UDim2.new(0.5,0,0,0),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(255,100,100),Text="Checking..."})SelectedRow=Instance.new("Frame",MerchantSection)SelectedRow.Size,SelectedRow.BackgroundTransparency=UDim2.new(1,0,0,30),1 CL(SelectedRow,{Size=UDim2.new(0.4,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Selected:"})SelectedItemLabel=CL(SelectedRow,{Size=UDim2.new(0.6,-10,1,0),Position=UDim2.new(0.4,0,0,0),BackgroundTransparency=1,Font=Enum.Font.GothamBold,TextSize=12,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=Color3.fromRGB(150,150,150),Text="None"})QuantityRow=Instance.new("Frame",MerchantSection)QuantityRow.Size,QuantityRow.BackgroundTransparency=UDim2.new(1,0,0,36),1 CL(QuantityRow,{Size=UDim2.new(0.4,-10,1,0),Position=UDim2.new(0,16,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=13,TextXAlignment=Enum.TextXAlignment.Left,TextColor3=THEME.TEXT,Text="Buy Quantity"})qtyBox=Instance.new("TextBox",QuantityRow)qtyBox.Size,qtyBox.Position,qtyBox.BackgroundColor3,qtyBox.BackgroundTransparency,qtyBox.Text,qtyBox.TextColor3,qtyBox.Font,qtyBox.TextSize,qtyBox.ClearTextOnFocus=UDim2.new(0,60,0,24),UDim2.new(0.4,-10,0.5,-12),THEME.CARD,0.1,tostring(_G.RAY.MerchantBuyQty),THEME.TEXT,Enum.Font.Gotham,12,false CC(qtyBox,8)qtyBox.FocusLost:Connect(function()local n=tonumber(qtyBox.Text)if not n or n<1 then n=1 qtyBox.Text="1"end _G.RAY.MerchantBuyQty=math.min(n,99)end)buyBtn=Instance.new("TextButton",QuantityRow)buyBtn.Size,buyBtn.Position,buyBtn.BackgroundColor3,buyBtn.TextColor3,buyBtn.Font,buyBtn.TextSize,buyBtn.Text=UDim2.new(0,80,0,24),UDim2.new(1,-90,0.5,-12),Color3.fromRGB(40,100,40),Color3.fromRGB(255,255,255),Enum.Font.GothamBold,12,"BUY"CC(buyBtn,8)buyBtn.MouseButton1Click:Connect(function()if not _G.RAY.SelectedMerchantItem then if NotifyFeature then NotifyFeature("No item selected!",false)end return end BMI(_G.RAY.SelectedMerchantItem.Id,_G.RAY.MerchantBuyQty or 1)if NotifyFeature then NotifyFeature("Buying ".._G.RAY.SelectedMerchantItem.Name.." x"..(_G.RAY.MerchantBuyQty or 1),true)end end)CSR(MerchantSection,"Merchant Stock Panel","Open",function()MerchantPanel.Visible=not MerchantPanel.Visible if MerchantPanel.Visible then RMP()end end)function RMP()for _,c in ipairs(MerchantScroll:GetChildren())do if c:IsA("Frame")then c:Destroy()end end local stock=GMS()if#stock==0 then MerchantStatus.Text,MerchantStatus.TextColor3="Not Available",Color3.fromRGB(255,100,100)local er=Instance.new("Frame",MerchantScroll)er.Size,er.BackgroundTransparency=UDim2.new(1,-4,0,60),1 CL(er,{Size=UDim2.new(1,-10,1,0),Position=UDim2.new(0,5,0,0),BackgroundTransparency=1,Font=Enum.Font.Gotham,TextSize=12,TextXAlignment=Enum.TextXAlignment.Center,TextColor3=Color3.fromRGB(150,150,150),Text="No merchant stock available.\nCheck back later!"})_G.RAY.SelectedMerchantItem,SelectedItemLabel.Text,SelectedItemLabel.TextColor3=nil,"None",Color3.fromRGB(150,150,150)return end MerchantStatus.Text,MerchantStatus.TextColor3=#stock.." Items",Color3.fromRGB(0,255,140)for _,it in ipairs(stock)do local r=Instance.new("Frame",MerchantScroll)r.Size,r.BackgroundTransparency,r.ZIndex=UDim2.new(1,-4,0,40),1,11 local l=Instance.new("Frame",r)l.Name,l.Size,l.Position,l.BackgroundColor3,l.BorderSizePixel,l.Visible,l.ZIndex="Highlight",UDim2.new(0,3,1,0),UDim2.new(0,0,0,0),THEME.MAIN,0,(_G.RAY.SelectedMerchantItem and _G.RAY.SelectedMerchantItem.Id==it.Id),12 local b=Instance.new("TextButton",r)local priceText=FN(it.Price)b.Size,b.Position,b.BackgroundColor3,b.TextColor3,b.Font,b.TextSize,b.TextXAlignment,b.TextYAlignment,b.Text,b.ZIndex=UDim2.new(1,-6,1,0),UDim2.new(0,6,0,0),Color3.fromRGB(30,30,50),THEME.TEXT,Enum.Font.Gotham,11,Enum.TextXAlignment.Left,Enum.TextYAlignment.Top,string.format("  %s\n  %s %s",it.Name,priceText,it.Currency),11 CC(b,6)if it.Currency:lower():find("robux")or it.Currency:lower():find("premium")then b.TextColor3=Color3.fromRGB(255,200,100)end b.MouseButton1Click:Connect(function()_G.RAY.SelectedMerchantItem=it SelectedItemLabel.Text,SelectedItemLabel.TextColor3=it.Name,Color3.fromRGB(0,255,140)for _,c in ipairs(MerchantScroll:GetChildren())do if c:IsA("Frame")then local h=c:FindFirstChild("Highlight")if h then h.Visible=(c==r)end end end if NotifyFeature then NotifyFeature("Selected: "..it.Name.." ("..priceText.." "..it.Currency..")",true)end end)end end RMP()MerchantReplion:OnChange("Items",function()if MerchantPanel.Visible then RMP()end local stock=GMS()if#stock>0 then MerchantStatus.Text,MerchantStatus.TextColor3=#stock.." Items",Color3.fromRGB(0,255,140)else MerchantStatus.Text,MerchantStatus.TextColor3,_G.RAY.SelectedMerchantItem,SelectedItemLabel.Text,SelectedItemLabel.TextColor3="Not Available",Color3.fromRGB(255,100,100),nil,"None",Color3.fromRGB(150,150,150)end end)table.insert(AllPanels,MerchantPanel)
+
+--==================================================
+-- COMPONENT: TOGGLE PILL (MODIFIED WITH CALLBACK)
+--==================================================
+local function CreateTogglePill(parent, labelText, default, onChangeCallback)
+    local row = Instance.new("Frame", parent)
+    row.Size = UDim2.new(1, 0, 0, 36)
+    row.BackgroundTransparency = 1
+
+    CreateLabel(row, {
+        Size = UDim2.new(1, -100, 1, 0),
+        Position = UDim2.new(0, 16, 0, 0),
+        BackgroundTransparency = 1,
+        Font = Enum.Font.Gotham,
+        TextSize = 13,
+        TextXAlignment = Enum.TextXAlignment.Left,
+        TextColor3 = THEME.TEXT,
+        Text = labelText
+    })
+
+    local pill = Instance.new("TextButton", row)
+    pill.Size = UDim2.new(0, 50, 0, 24)
+    pill.Position = UDim2.new(1, -80, 0.5, -12)
+    pill.BackgroundTransparency = 0.1
+    pill.Text = ""
+    pill.AutoButtonColor = false
+
+    CreateCorner(pill, 999)
+
+    local knob = Instance.new("Frame", pill)
+    knob.Size = UDim2.new(0, 18, 0, 18)
+    knob.Position = UDim2.new(0, 3, 0.5, -9)
+    knob.BackgroundColor3 = Color3.new(1, 1, 1)
+    CreateCorner(knob, 999)
+
+    local state = not not default
+
+    local function refresh()
+        pill.BackgroundColor3 = state and THEME.ACCENT or THEME.MUTED
+        knob.Position = state and UDim2.new(1, -21, 0.5, -9) or UDim2.new(0, 3, 0.5, -9)
+    end
+    refresh()
+
+    pill.MouseButton1Click:Connect(function()
+        state = not state
+        refresh()
+        -- Panggil callback kalau ada
+        if onChangeCallback then
+            onChangeCallback(state)
+        end
+    end)
+
+    return function() return state end, function(v) state = not not v; refresh() end
+end
+
+--==================================================
+-- WEATHER PRESET SECTION (SHOP PAGE) - FIXED SCROLLING
+--==================================================
+WeatherSection = CreateSectionDropdown(ShopPage, "Weather Preset")
+Instance.new("UIListLayout", WeatherSection).SortOrder = Enum.SortOrder.LayoutOrder
+WeatherSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Panel kanan dengan scrolling yang proper
+WeatherPanel = Instance.new("Frame", Main)
+WeatherPanel.Name = "WeatherPresetRightPanel"
+WeatherPanel.Size = UDim2.new(0, 220, 1, -46)
+WeatherPanel.AnchorPoint = Vector2.new(1, 0)
+WeatherPanel.Position = UDim2.new(1, -10, 0, 40)
+WeatherPanel.BackgroundColor3 = THEME.CARD
+WeatherPanel.BackgroundTransparency = 0.25
+WeatherPanel.BorderSizePixel = 0
+WeatherPanel.Visible = false
+WeatherPanel.ZIndex = 10
+
+CC(WeatherPanel, 10)
+CS(WeatherPanel, THEME.MAIN, 0.5)
+
+-- Title
+CL(WeatherPanel, {
+    Size = UDim2.new(1, -10, 0, 24),
+    Position = UDim2.new(0, 5, 0, 6),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    ZIndex = 11,
+    Text = "Weather Preset"
+})
+
+-- Subtitle
+CL(WeatherPanel, {
+    Size = UDim2.new(1, -10, 0, 18),
+    Position = UDim2.new(0, 5, 0, 30),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    ZIndex = 11,
+    Text = "Pilih weather untuk auto buy (max 4)"
+})
+
+-- Scrolling Frame dengan proper setup
+WeatherScroll = Instance.new("ScrollingFrame", WeatherPanel)
+WeatherScroll.Name = "WeatherScroll"
+WeatherScroll.Size = UDim2.new(1, -10, 1, -70)
+WeatherScroll.Position = UDim2.new(0, 5, 0, 54)
+WeatherScroll.BackgroundTransparency = 1
+WeatherScroll.BorderSizePixel = 0
+WeatherScroll.ScrollBarThickness = 3
+WeatherScroll.ScrollBarImageColor3 = THEME.MAIN
+WeatherScroll.ZIndex = 10
+-- PENTING: AutomaticCanvasSize untuk auto resize
+WeatherScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+WeatherScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+-- UIListLayout untuk scrolling
+local scrollLayout = Instance.new("UIListLayout", WeatherScroll)
+scrollLayout.SortOrder = Enum.SortOrder.LayoutOrder
+scrollLayout.Padding = UDim.new(0, 4)
+
+-- Data weather
+local WEATHER_OPTIONS = {
+    "Cloudy",
+    "Radiant", 
+    "Shark Hunt",
+    "Snow",
+    "Storm",
+    "Wind",
+}
+
+local selectedWeather = {}
+
+-- Ambil RF
+local rf = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RF/PurchaseWeatherEvent")
+
+-- Helper
+local function countSelected()
+    local c = 0
+    for _, on in pairs(selectedWeather) do
+        if on then c = c + 1 end
+    end
+    return c
+end
+
+local function updateWeatherRows()
+    for _, row in ipairs(WeatherScroll:GetChildren()) do
+        if row:IsA("Frame") and row.Name:match("^WeatherRow_") then
+            local highlight = row:FindFirstChild("Highlight")
+            if highlight then
+                local weatherName = row.Name:gsub("WeatherRow_", "")
+                highlight.Visible = selectedWeather[weatherName] == true
+            end
+        end
+    end
+    if WeatherCountLabel then
+        WeatherCountLabel.Text = "Selected: " .. countSelected() .. "/4"
+    end
+end
+
+-- Buat list item dengan proper parent ke WeatherScroll
+for i, weatherName in ipairs(WEATHER_OPTIONS) do
+    local row = Instance.new("Frame", WeatherScroll)
+    row.Size = UDim2.new(1, -4, 0, 28)
+    row.BackgroundTransparency = 1
+    row.Name = "WeatherRow_" .. weatherName
+    row.LayoutOrder = i
+    row.ZIndex = 11
+    
+    -- Purple highlight di kiri
+    local highlight = Instance.new("Frame", row)
+    highlight.Name = "Highlight"
+    highlight.Size = UDim2.new(0, 3, 1, 0)
+    highlight.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+    highlight.BorderSizePixel = 0
+    highlight.Visible = false
+    highlight.ZIndex = 12
+    
+    -- Button dengan teks putih
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(1, -6, 1, 0)
+    btn.Position = UDim2.new(0, 6, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    btn.Text = "  " .. weatherName
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 12
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.ZIndex = 11
+    CC(btn, 6)
+    
+    btn.MouseButton1Click:Connect(function()
+        if selectedWeather[weatherName] then
+            selectedWeather[weatherName] = nil
+        else
+            if countSelected() >= 4 then
+                if NotifyFeature then NotifyFeature("Max 4 weather only!", false) end
+                return
+            end
+            selectedWeather[weatherName] = true
+        end
+        updateWeatherRows()
+    end)
+end
+
+-- Counter label
+local CountRow = Instance.new("Frame", WeatherSection)
+CountRow.Size = UDim2.new(1, 0, 0, 30)
+CountRow.BackgroundTransparency = 1
+
+WeatherCountLabel = CL(CountRow, {
+    Size = UDim2.new(0.5, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    Text = "Selected: 0/4"
+})
+
+-- Status label
+local StatusRow = Instance.new("Frame", WeatherSection)
+StatusRow.Size = UDim2.new(1, 0, 0, 24)
+StatusRow.BackgroundTransparency = 1
+
+local statusLabel = CL(StatusRow, {
+    Size = UDim2.new(1, -32, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 11,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(150, 150, 150),
+    Text = "Ready..."
+})
+
+-- Open/Close panel
+CSR(WeatherSection, "Weather Panel", "Open", function()
+    WeatherPanel.Visible = not WeatherPanel.Visible
+end)
+
+table.insert(AllPanels, WeatherPanel)
+
+--==================================================
+-- AUTO WEATHER TOGGLE PILL (PAKAI CALLBACK)
+--==================================================
+local AutoWeatherRow = Instance.new("Frame", WeatherSection)
+AutoWeatherRow.Size = UDim2.new(1, 0, 0, 36)
+AutoWeatherRow.BackgroundTransparency = 1
+
+-- Auto weather variables
+local autoWeatherEnabled = false
+local autoWeatherThread = nil
+
+-- Auto loop function
+local function autoWeatherLoop()
+    while autoWeatherEnabled do
+        local count = countSelected()
+        if count > 0 then
+            statusLabel.Text = "Auto buying " .. count .. " weather..."
+            statusLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+            
+            for name, on in pairs(selectedWeather) do
+                if on then
+                    local success, result = pcall(function()
+                        return rf:InvokeServer(name)
+                    end)
+                    if success then
+                        print("[WeatherAuto] Bought:", name, "Result:", result)
+                    else
+                        warn("[WeatherAuto] Failed:", name, "Error:", result)
+                    end
+                end
+            end
+        else
+            statusLabel.Text = "No weather selected!"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        end
+        task.wait(0.1)
+    end
+    
+    statusLabel.Text = "Auto stopped"
+    statusLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+    autoWeatherThread = nil
+end
+
+-- TOGGLE PILL dengan callback
+local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto Weather", false, function(isOn)
+    if isOn then
+        if countSelected() == 0 then
+            statusLabel.Text = "Select weather first!"
+            statusLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+            AutoWeatherSet(false)
+            return
+        end
+        
+        autoWeatherEnabled = true
+        if not autoWeatherThread then
+            autoWeatherThread = task.spawn(autoWeatherLoop)
+        end
+        if NotifyFeature then NotifyFeature("Auto Weather: ON", true) end
+    else
+        autoWeatherEnabled = false
+        if NotifyFeature then NotifyFeature("Auto Weather: OFF", false) end
     end
 end)
 
