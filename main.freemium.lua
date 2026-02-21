@@ -4511,4 +4511,321 @@ end)
 
 table.insert(AllPanels, BuyRodPanel)
 
-print("[BuyRod] Section loaded (Charm style)")
+--==================================================
+-- BUY BAIT SECTION - SAMA PERSIS KAYA BUY ROD
+--==================================================
+
+local BuyBaitSection = CreateSectionDropdown(ShopPage, "Buy Bait")
+Instance.new("UIListLayout", BuyBaitSection).SortOrder = Enum.SortOrder.LayoutOrder
+BuyBaitSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Data Baits (dari decompile lu)
+local BAITS_DATA = {
+    {Id = 2, Name = "Luck Bait", Price = 1000, Tier = 2},
+    {Id = 3, Name = "Midnight Bait", Price = 3000, Tier = 3},
+    {Id = 17, Name = "Nature Bait", Price = 83500, Tier = 4},
+    {Id = 6, Name = "Chroma Bait", Price = 290000, Tier = 5},
+    {Id = 8, Name = "Dark Matter Bait", Price = 630000, Tier = 6},
+    {Id = 15, Name = "Corrupt Bait", Price = 1148484, Tier = 6},
+    {Id = 16, Name = "Aether Bait", Price = 3700000, Tier = 6},
+    {Id = 20, Name = "Floral Bait", Price = 4000000, Tier = 6},
+}
+
+table.sort(BAITS_DATA, function(a, b) return a.Price < b.Price end)
+
+-- Remote Function (sama kaya rod)
+local PurchaseBaitRF = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RF/PurchaseBait")
+
+-- Variables - MULTI SELECT
+local SelectedBaits = {}
+local BuyBaitPanel = nil
+local BuyBaitScroll = nil
+local BaitTotalPriceLabel = nil
+local BuyBaitButton = nil
+
+--==================================================
+-- RIGHT PANEL (SAMA PERSIS KAYA BUY ROD)
+--==================================================
+
+BuyBaitPanel = Instance.new("Frame", Main)
+BuyBaitPanel.Name = "BuyBaitRightPanel"
+BuyBaitPanel.Size = UDim2.new(0, 220, 1, -46) -- SAMA KAYA CHARM & BUY ROD
+BuyBaitPanel.AnchorPoint = Vector2.new(1, 0)
+BuyBaitPanel.Position = UDim2.new(1, -10, 0, 40)
+BuyBaitPanel.BackgroundColor3 = THEME.CARD
+BuyBaitPanel.BackgroundTransparency = 0.25
+BuyBaitPanel.BorderSizePixel = 0
+BuyBaitPanel.Visible = false
+BuyBaitPanel.ZIndex = 10
+
+CC(BuyBaitPanel, 10)
+CS(BuyBaitPanel, THEME.MAIN, 0.5)
+
+-- Title
+CL(BuyBaitPanel, {
+    Size = UDim2.new(1, -10, 0, 24),
+    Position = UDim2.new(0, 5, 0, 6),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    ZIndex = 11,
+    Text = "Buy Bait"
+})
+
+-- Subtitle
+CL(BuyBaitPanel, {
+    Size = UDim2.new(1, -10, 0, 18),
+    Position = UDim2.new(0, 5, 0, 30),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    ZIndex = 11,
+    Text = "Select baits to purchase"
+})
+
+-- Scrolling Frame
+BuyBaitScroll = Instance.new("ScrollingFrame", BuyBaitPanel)
+BuyBaitScroll.Name = "BaitScroll"
+BuyBaitScroll.Size = UDim2.new(1, -10, 1, -70)
+BuyBaitScroll.Position = UDim2.new(0, 5, 0, 54)
+BuyBaitScroll.BackgroundTransparency = 1
+BuyBaitScroll.BorderSizePixel = 0
+BuyBaitScroll.ScrollBarThickness = 3
+BuyBaitScroll.ScrollBarImageColor3 = THEME.MAIN
+BuyBaitScroll.ZIndex = 10
+BuyBaitScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+BuyBaitScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+local baitLayout = Instance.new("UIListLayout", BuyBaitScroll)
+baitLayout.SortOrder = Enum.SortOrder.LayoutOrder
+baitLayout.Padding = UDim.new(0, 4)
+
+-- Function update total price
+local function UpdateBaitTotalPrice()
+    local total = 0
+    for bait, _ in pairs(SelectedBaits) do
+        total = total + bait.Price
+    end
+    
+    if BaitTotalPriceLabel then
+        if total > 0 then
+            BaitTotalPriceLabel.Text = "Total: " .. FormatPrice(total)
+            BaitTotalPriceLabel.TextColor3 = Color3.fromRGB(255, 215, 0)
+        else
+            BaitTotalPriceLabel.Text = "Total: --"
+            BaitTotalPriceLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
+        end
+    end
+    
+    if BuyBaitButton then
+        local count = 0
+        for _ in pairs(SelectedBaits) do count = count + 1 end
+        if count > 0 then
+            BuyBaitButton.Text = "BUY (" .. count .. ")"
+            BuyBaitButton.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
+        else
+            BuyBaitButton.Text = "BUY"
+            BuyBaitButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        end
+    end
+end
+
+-- Create Bait Entry (SAMA PERSIS KAYA ROD)
+for i, bait in ipairs(BAITS_DATA) do
+    local row = Instance.new("Frame", BuyBaitScroll)
+    row.Size = UDim2.new(1, -4, 0, 32)
+    row.BackgroundTransparency = 1
+    row.Name = "BaitRow_" .. bait.Name
+    row.LayoutOrder = i
+    row.ZIndex = 11
+    
+    -- Purple highlight di kiri
+    local highlight = Instance.new("Frame", row)
+    highlight.Name = "Highlight"
+    highlight.Size = UDim2.new(0, 3, 1, 0)
+    highlight.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+    highlight.BorderSizePixel = 0
+    highlight.Visible = false
+    highlight.ZIndex = 12
+    
+    -- Button dengan teks
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(1, -6, 1, 0)
+    btn.Position = UDim2.new(0, 6, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    btn.Text = "  " .. bait.Name .. "\n  " .. FormatPrice(bait.Price) .. " Coins"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 11
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.TextYAlignment = Enum.TextYAlignment.Top
+    btn.ZIndex = 11
+    CC(btn, 6)
+    
+    -- Hover effects
+    btn.MouseEnter:Connect(function()
+        if not SelectedBaits[bait] then
+            btn.BackgroundColor3 = Color3.fromRGB(45, 45, 70)
+        end
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        if not SelectedBaits[bait] then
+            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+        else
+            btn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+        end
+    end)
+    
+    -- Click = TOGGLE SELECT
+    btn.MouseButton1Click:Connect(function()
+        if SelectedBaits[bait] then
+            SelectedBaits[bait] = nil
+            highlight.Visible = false
+            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+        else
+            SelectedBaits[bait] = true
+            highlight.Visible = true
+            btn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
+        end
+        UpdateBaitTotalPrice()
+    end)
+end
+
+--==================================================
+-- TOTAL PRICE & BUY BUTTON (DI SECTION)
+--==================================================
+
+-- Total Price Row
+local BaitTotalPriceRow = Instance.new("Frame", BuyBaitSection)
+BaitTotalPriceRow.Size = UDim2.new(1, 0, 0, 30)
+BaitTotalPriceRow.BackgroundTransparency = 1
+
+CL(BaitTotalPriceRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Total Price:"
+})
+
+BaitTotalPriceLabel = CL(BaitTotalPriceRow, {
+    Size = UDim2.new(0.6, -10, 1, 0),
+    Position = UDim2.new(0.4, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(150, 150, 150),
+    Text = "--"
+})
+
+-- Buy Button Row
+local BaitBuyButtonRow = Instance.new("Frame", BuyBaitSection)
+BaitBuyButtonRow.Size = UDim2.new(1, 0, 0, 36)
+BaitBuyButtonRow.BackgroundTransparency = 1
+
+CL(BaitBuyButtonRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Buy Selected"
+})
+
+BuyBaitButton = Instance.new("TextButton", BaitBuyButtonRow)
+BuyBaitButton.Size = UDim2.new(0, 80, 0, 24)
+BuyBaitButton.Position = UDim2.new(1, -90, 0.5, -12)
+BuyBaitButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+BuyBaitButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+BuyBaitButton.Font = Enum.Font.GothamBold
+BuyBaitButton.TextSize = 12
+BuyBaitButton.Text = "BUY"
+CC(BuyBaitButton, 8)
+
+BuyBaitButton.MouseButton1Click:Connect(function()
+    local baitList = {}
+    for bait, _ in pairs(SelectedBaits) do
+        table.insert(baitList, bait)
+    end
+    
+    if #baitList == 0 then
+        if NotifyFeature then NotifyFeature("No baits selected!", false) end
+        return
+    end
+    
+    BuyBaitButton.Text = "Buying..."
+    BuyBaitButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    
+    task.spawn(function()
+        local successCount = 0
+        
+        for _, bait in ipairs(baitList) do
+            local success, result = pcall(function()
+                return PurchaseBaitRF:InvokeServer(bait.Id)
+            end)
+            
+            if success and result then
+                successCount = successCount + 1
+            end
+            
+            task.wait(0.1)
+        end
+        
+        -- Clear selection after buy
+        SelectedBaits = {}
+        for _, child in ipairs(BuyBaitScroll:GetChildren()) do
+            if child:IsA("Frame") then
+                local hl = child:FindFirstChild("Highlight")
+                local btn = child:FindFirstChildOfClass("TextButton")
+                if hl then hl.Visible = false end
+                if btn then btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50) end
+            end
+        end
+        UpdateBaitTotalPrice()
+        
+        -- Feedback
+        if successCount > 0 then
+            BuyBaitButton.Text = "BOUGHT!"
+            BuyBaitButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+            if NotifyFeature then
+                NotifyFeature("Purchased " .. successCount .. " baits!", true)
+            end
+        else
+            BuyBaitButton.Text = "FAILED!"
+            BuyBaitButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+            if NotifyFeature then
+                NotifyFeature("Failed to buy baits!", false)
+            end
+        end
+        
+        task.wait(1.5)
+        UpdateBaitTotalPrice()
+    end)
+end)
+
+--==================================================
+-- OPEN/CLOSE PANEL
+--==================================================
+
+CSR(BuyBaitSection, "Bait Panel", "Open", function()
+    BuyBaitPanel.Visible = not BuyBaitPanel.Visible
+end)
+
+table.insert(AllPanels, BuyBaitPanel)
+
