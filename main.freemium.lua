@@ -4176,7 +4176,7 @@ end)
 table.insert(AllPanels, CharmPanel)
 
 --==================================================
--- BUY ROD SECTION - MULTI SELECT
+-- BUY ROD SECTION - SAMA PERSIS KAYA CHARM
 --==================================================
 
 local BuyRodSection = CreateSectionDropdown(ShopPage, "Buy Rod")
@@ -4221,18 +4221,19 @@ local PurchaseRF = ReplicatedStorage
     :WaitForChild("RF/PurchaseFishingRod")
 
 -- Variables - MULTI SELECT
-local SelectedRods = {} -- Table buat nyimpen rod yang dipilih
+local SelectedRods = {}
 local BuyRodPanel = nil
 local BuyRodScroll = nil
 local TotalPriceLabel = nil
+local BuyRodButton = nil
 
 --==================================================
--- RIGHT PANEL (LIST ONLY)
+-- RIGHT PANEL (SAMA PERSIS KAYA CHARM)
 --==================================================
 
 BuyRodPanel = Instance.new("Frame", Main)
 BuyRodPanel.Name = "BuyRodRightPanel"
-BuyRodPanel.Size = UDim2.new(0, 220, 1, -140) -- Lebih pendek, space untuk total+buy di bawah
+BuyRodPanel.Size = UDim2.new(0, 220, 1, -46) -- SAMA KAYA CHARM
 BuyRodPanel.AnchorPoint = Vector2.new(1, 0)
 BuyRodPanel.Position = UDim2.new(1, -10, 0, 40)
 BuyRodPanel.BackgroundColor3 = THEME.CARD
@@ -4240,82 +4241,54 @@ BuyRodPanel.BackgroundTransparency = 0.25
 BuyRodPanel.BorderSizePixel = 0
 BuyRodPanel.Visible = false
 BuyRodPanel.ZIndex = 10
-BuyRodPanel.ClipsDescendants = true
 
-CreateCorner(BuyRodPanel, 10)
-CreateStroke(BuyRodPanel, THEME.MAIN, 0.5)
+CC(BuyRodPanel, 10)
+CS(BuyRodPanel, THEME.MAIN, 0.5)
 
--- Header dengan Close Button
-local headerFrame = Instance.new("Frame", BuyRodPanel)
-headerFrame.Name = "Header"
-headerFrame.Size = UDim2.new(1, 0, 0, 30)
-headerFrame.BackgroundTransparency = 1
-headerFrame.ZIndex = 11
-
-CreateLabel(headerFrame, {
-    Size = UDim2.new(1, -35, 1, 0),
-    Position = UDim2.new(0, 10, 0, 0),
+-- Title (sama persis kaya charm)
+CL(BuyRodPanel, {
+    Size = UDim2.new(1, -10, 0, 24),
+    Position = UDim2.new(0, 5, 0, 6),
     BackgroundTransparency = 1,
     Font = Enum.Font.GothamBold,
     TextSize = 16,
     TextXAlignment = Enum.TextXAlignment.Left,
     TextColor3 = THEME.TEXT,
-    ZIndex = 12,
-    Text = "Select Rods"
+    ZIndex = 11,
+    Text = "Buy Rod"
 })
 
--- Close Button X
-local closeBtn = Instance.new("TextButton", headerFrame)
-closeBtn.Size = UDim2.new(0, 22, 0, 22)
-closeBtn.Position = UDim2.new(1, -26, 0.5, -11)
-closeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
-closeBtn.Text = "X"
-closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.TextSize = 12
-closeBtn.ZIndex = 12
-CreateCorner(closeBtn, 4)
-
-closeBtn.MouseButton1Click:Connect(function()
-    BuyRodPanel.Visible = false
-end)
-
--- Selected Count Info
-local selectedCountLabel = CreateLabel(BuyRodPanel, {
+-- Subtitle
+CL(BuyRodPanel, {
     Size = UDim2.new(1, -10, 0, 18),
-    Position = UDim2.new(0, 5, 0, 32),
+    Position = UDim2.new(0, 5, 0, 30),
     BackgroundTransparency = 1,
     Font = Enum.Font.Gotham,
     TextSize = 12,
     TextXAlignment = Enum.TextXAlignment.Left,
     TextColor3 = Color3.fromRGB(200, 200, 200),
     ZIndex = 11,
-    Text = "Selected: 0 rods"
+    Text = "Select rods to purchase"
 })
 
--- Scrolling Frame (FULL HEIGHT)
+-- Scrolling Frame (SAMA PERSIS KAYA CHARM)
 BuyRodScroll = Instance.new("ScrollingFrame", BuyRodPanel)
-BuyRodScroll.Name = "RodListScroll"
-BuyRodScroll.Size = UDim2.new(1, -10, 1, -60) -- -60 untuk header space
-BuyRodScroll.Position = UDim2.new(0, 5, 0, 55)
+BuyRodScroll.Name = "RodScroll"
+BuyRodScroll.Size = UDim2.new(1, -10, 1, -70) -- SAMA KAYA CHARM
+BuyRodScroll.Position = UDim2.new(0, 5, 0, 54)
 BuyRodScroll.BackgroundTransparency = 1
 BuyRodScroll.BorderSizePixel = 0
 BuyRodScroll.ScrollBarThickness = 3
-BuyRodScroll.ScrollingDirection = Enum.ScrollingDirection.Y
 BuyRodScroll.ScrollBarImageColor3 = THEME.MAIN
 BuyRodScroll.ZIndex = 10
-BuyRodScroll.ClipsDescendants = true
+BuyRodScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+BuyRodScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 
-local listLayout = Instance.new("UIListLayout", BuyRodScroll)
-listLayout.SortOrder = Enum.SortOrder.LayoutOrder
-listLayout.Padding = UDim.new(0, 4)
+local rodLayout = Instance.new("UIListLayout", BuyRodScroll)
+rodLayout.SortOrder = Enum.SortOrder.LayoutOrder
+rodLayout.Padding = UDim.new(0, 4)
 
-local function UpdateCanvasSize()
-    BuyRodScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
-end
-listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
-
--- Function update total price di luar panel
+-- Function update total price (untuk section di luar panel)
 local function UpdateTotalPrice()
     local total = 0
     for rod, _ in pairs(SelectedRods) do
@@ -4332,157 +4305,157 @@ local function UpdateTotalPrice()
         end
     end
     
-    if selectedCountLabel then
+    -- Update button text juga
+    if BuyRodButton then
         local count = 0
         for _ in pairs(SelectedRods) do count = count + 1 end
-        selectedCountLabel.Text = "Selected: " .. count .. " rod" .. (count ~= 1 and "s" or "")
+        if count > 0 then
+            BuyRodButton.Text = "BUY (" .. count .. ")"
+            BuyRodButton.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
+        else
+            BuyRodButton.Text = "BUY"
+            BuyRodButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+        end
     end
 end
 
--- Create Rod Entry (TOGGLE SELECT)
-local function CreateRodEntry(rodData)
-    local row = Instance.new("Frame")
-    row.Name = rodData.Name .. "_Row"
+-- Create Rod Entry (TOGGLE SELECT - SAMA KAYA CHARM STYLE)
+for i, rod in ipairs(RODS_DATA) do
+    local row = Instance.new("Frame", BuyRodScroll)
     row.Size = UDim2.new(1, -4, 0, 32)
     row.BackgroundTransparency = 1
+    row.Name = "RodRow_" .. rod.Name
+    row.LayoutOrder = i
     row.ZIndex = 11
-    row.Parent = BuyRodScroll
-
-    -- Checkmark indicator (selected)
-    local checkmark = Instance.new("Frame", row)
-    checkmark.Name = "Checkmark"
-    checkmark.Size = UDim2.new(0, 4, 0.8, 0)
-    checkmark.Position = UDim2.new(0, 0, 0.1, 0)
-    checkmark.BackgroundColor3 = Color3.fromRGB(0, 255, 140) -- Hijau
-    checkmark.Visible = false
-    checkmark.ZIndex = 12
-
-    -- Main button
+    
+    -- Purple highlight di kiri (sama kaya charm)
+    local highlight = Instance.new("Frame", row)
+    highlight.Name = "Highlight"
+    highlight.Size = UDim2.new(0, 3, 1, 0)
+    highlight.BackgroundColor3 = Color3.fromRGB(138, 43, 226) -- Ungu
+    highlight.BorderSizePixel = 0
+    highlight.Visible = false
+    highlight.ZIndex = 12
+    
+    -- Button dengan teks
     local btn = Instance.new("TextButton", row)
     btn.Size = UDim2.new(1, -6, 1, 0)
     btn.Position = UDim2.new(0, 6, 0, 0)
     btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
-    btn.TextColor3 = THEME.TEXT
+    btn.Text = "  " .. rod.Name .. "\n  " .. FormatPrice(rod.Price) .. " Coins"
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
     btn.Font = Enum.Font.Gotham
     btn.TextSize = 11
     btn.TextXAlignment = Enum.TextXAlignment.Left
-    btn.Text = "  " .. rodData.Name .. "  |  " .. FormatPrice(rodData.Price)
+    btn.TextYAlignment = Enum.TextYAlignment.Top
     btn.ZIndex = 11
-    CreateCorner(btn, 6)
-
+    CC(btn, 6)
+    
     -- Hover effects
     btn.MouseEnter:Connect(function()
-        if not SelectedRods[rodData] then
+        if not SelectedRods[rod] then
             btn.BackgroundColor3 = Color3.fromRGB(45, 45, 70)
         end
     end)
     
     btn.MouseLeave:Connect(function()
-        if not SelectedRods[rodData] then
+        if not SelectedRods[rod] then
             btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
         else
-            btn.BackgroundColor3 = Color3.fromRGB(40, 70, 40) -- Hijau gelap kalau selected
+            btn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
         end
     end)
-
+    
     -- Click = TOGGLE SELECT
     btn.MouseButton1Click:Connect(function()
-        if SelectedRods[rodData] then
+        if SelectedRods[rod] then
             -- Deselect
-            SelectedRods[rodData] = nil
-            checkmark.Visible = false
+            SelectedRods[rod] = nil
+            highlight.Visible = false
             btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
         else
             -- Select
-            SelectedRods[rodData] = true
-            checkmark.Visible = true
-            btn.BackgroundColor3 = Color3.fromRGB(40, 70, 40) -- Hijau gelap
+            SelectedRods[rod] = true
+            highlight.Visible = true
+            btn.BackgroundColor3 = Color3.fromRGB(40, 70, 40)
         end
         UpdateTotalPrice()
     end)
 end
 
--- Populate list
-for _, rod in ipairs(RODS_DATA) do
-    CreateRodEntry(rod)
-end
-
-UpdateCanvasSize()
-
 --==================================================
--- TOTAL PRICE & BUY BUTTON (DI LUAR PANEL - BAWAH)
+-- TOTAL PRICE & BUY BUTTON (DI SECTION - SAMA KAYA CHARM)
 --==================================================
 
--- Container di luar panel kanan
-local bottomContainer = Instance.new("Frame", Main)
-bottomContainer.Name = "BuyRodBottomContainer"
-bottomContainer.Size = UDim2.new(0, 220, 0, 90)
-bottomContainer.AnchorPoint = Vector2.new(1, 0)
-bottomContainer.Position = UDim2.new(1, -10, 0, 40 + BuyRodPanel.Size.Y.Offset + 10) -- Di bawah panel
-bottomContainer.BackgroundColor3 = THEME.CARD
-bottomContainer.BackgroundTransparency = 0.25
-bottomContainer.BorderSizePixel = 0
-bottomContainer.Visible = false -- Sync dengan panel
-bottomContainer.ZIndex = 10
-bottomContainer.ClipsDescendants = true
+-- Total Price Row (sama kaya charm quantity row)
+local TotalPriceRow = Instance.new("Frame", BuyRodSection)
+TotalPriceRow.Size = UDim2.new(1, 0, 0, 30)
+TotalPriceRow.BackgroundTransparency = 1
 
-CreateCorner(bottomContainer, 10)
-CreateStroke(bottomContainer, THEME.MAIN, 0.5)
-
--- Total Price Label
-TotalPriceLabel = CreateLabel(bottomContainer, {
-    Size = UDim2.new(1, -20, 0, 30),
-    Position = UDim2.new(0, 10, 0, 10),
+CL(TotalPriceRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
     BackgroundTransparency = 1,
-    Font = Enum.Font.GothamBold,
-    TextSize = 16,
-    TextXAlignment = Enum.TextXAlignment.Center,
-    TextColor3 = Color3.fromRGB(150, 150, 150),
-    ZIndex = 11,
-    Text = "Total: --"
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Total Price:"
 })
 
--- Buy Button
-local buyButton = Instance.new("TextButton", bottomContainer)
-buyButton.Size = UDim2.new(1, -20, 0, 36)
-buyButton.Position = UDim2.new(0, 10, 0, 45)
-buyButton.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
-buyButton.Text = "BUY SELECTED"
-buyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-buyButton.Font = Enum.Font.GothamBold
-buyButton.TextSize = 14
-buyButton.ZIndex = 11
-CreateCorner(buyButton, 8)
+TotalPriceLabel = CL(TotalPriceRow, {
+    Size = UDim2.new(0.6, -10, 1, 0),
+    Position = UDim2.new(0.4, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(150, 150, 150),
+    Text = "--"
+})
 
-buyButton.MouseEnter:Connect(function()
-    buyButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
-end)
+-- Buy Button Row (sama kaya charm)
+local BuyButtonRow = Instance.new("Frame", BuyRodSection)
+BuyButtonRow.Size = UDim2.new(1, 0, 0, 36)
+BuyButtonRow.BackgroundTransparency = 1
 
-buyButton.MouseLeave:Connect(function()
-    buyButton.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
-end)
+CL(BuyButtonRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Buy Selected"
+})
 
-buyButton.MouseButton1Click:Connect(function()
+BuyRodButton = Instance.new("TextButton", BuyButtonRow)
+BuyRodButton.Size = UDim2.new(0, 80, 0, 24)
+BuyRodButton.Position = UDim2.new(1, -90, 0.5, -12)
+BuyRodButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60) -- Disabled color
+BuyRodButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+BuyRodButton.Font = Enum.Font.GothamBold
+BuyRodButton.TextSize = 12
+BuyRodButton.Text = "BUY"
+CC(BuyRodButton, 8)
+
+BuyRodButton.MouseButton1Click:Connect(function()
     local rodList = {}
     for rod, _ in pairs(SelectedRods) do
         table.insert(rodList, rod)
     end
     
     if #rodList == 0 then
-        TotalPriceLabel.Text = "Select rods first!"
-        TotalPriceLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-        task.delay(2, function()
-            UpdateTotalPrice()
-        end)
+        if NotifyFeature then NotifyFeature("No rods selected!", false) end
         return
     end
     
-    buyButton.Text = "Buying..."
-    buyButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    BuyRodButton.Text = "Buying..."
+    BuyRodButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
     
     task.spawn(function()
         local successCount = 0
-        local failCount = 0
         
         for _, rod in ipairs(rodList) do
             local success, result = pcall(function()
@@ -4491,20 +4464,18 @@ buyButton.MouseButton1Click:Connect(function()
             
             if success and result then
                 successCount = successCount + 1
-            else
-                failCount = failCount + 1
             end
             
-            task.wait(0.1) -- Delay antar purchase
+            task.wait(0.1)
         end
         
         -- Clear selection after buy
         SelectedRods = {}
         for _, child in ipairs(BuyRodScroll:GetChildren()) do
             if child:IsA("Frame") then
-                local check = child:FindFirstChild("Checkmark")
+                local hl = child:FindFirstChild("Highlight")
                 local btn = child:FindFirstChildOfClass("TextButton")
-                if check then check.Visible = false end
+                if hl then hl.Visible = false end
                 if btn then btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50) end
             end
         end
@@ -4512,101 +4483,32 @@ buyButton.MouseButton1Click:Connect(function()
         
         -- Feedback
         if successCount > 0 then
-            buyButton.Text = "BOUGHT " .. successCount .. "!"
-            buyButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+            BuyRodButton.Text = "BOUGHT!"
+            BuyRodButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
             if NotifyFeature then
                 NotifyFeature("Purchased " .. successCount .. " rods!", true)
             end
         else
-            buyButton.Text = "FAILED!"
-            buyButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+            BuyRodButton.Text = "FAILED!"
+            BuyRodButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
             if NotifyFeature then
                 NotifyFeature("Failed to buy rods!", false)
             end
         end
         
         task.wait(1.5)
-        buyButton.Text = "BUY SELECTED"
-        buyButton.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
+        UpdateTotalPrice()
     end)
 end)
 
 --==================================================
--- CLOSE PANEL ON OUTSIDE CLICK
+-- OPEN/CLOSE PANEL (SAMA KAYA CHARM)
 --==================================================
 
-local function isInsidePanel(pos)
-    local absPos = BuyRodPanel.AbsolutePosition
-    local absSize = BuyRodPanel.AbsoluteSize
-    local inMainPanel = pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
-                        pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
-    
-    -- Cek juga bottom container
-    local botAbsPos = bottomContainer.AbsolutePosition
-    local botAbsSize = bottomContainer.AbsoluteSize
-    local inBottom = pos.X >= botAbsPos.X and pos.X <= botAbsPos.X + botAbsSize.X and
-                     pos.Y >= botAbsPos.Y and pos.Y <= botAbsPos.Y + botAbsSize.Y
-    
-    return inMainPanel or inBottom
-end
-
-UIS.InputBegan:Connect(function(input, gameProcessed)
-    if not BuyRodPanel.Visible then return end
-    if gameProcessed then return end
-    if input.UserInputType ~= Enum.UserInputType.MouseButton1 and 
-       input.UserInputType ~= Enum.UserInputType.Touch then 
-        return 
-    end
-    
-    if not isInsidePanel(input.Position) then
-        BuyRodPanel.Visible = false
-        bottomContainer.Visible = false
-    end
+CSR(BuyRodSection, "Rod Panel", "Open", function()
+    BuyRodPanel.Visible = not BuyRodPanel.Visible
 end)
 
---==================================================
--- OPEN PANEL BUTTON (DI SECTION)
---==================================================
+table.insert(AllPanels, BuyRodPanel)
 
-local openRow = Instance.new("Frame", BuyRodSection)
-openRow.Size = UDim2.new(1, 0, 0, 40)
-openRow.BackgroundTransparency = 1
-
-CreateLabel(openRow, {
-    Size = UDim2.new(1, -110, 1, 0),
-    Position = UDim2.new(0, 16, 0, 0),
-    BackgroundTransparency = 1,
-    Font = Enum.Font.Gotham,
-    TextSize = 13,
-    TextXAlignment = Enum.TextXAlignment.Left,
-    TextColor3 = THEME.TEXT,
-    Text = "Open Rod Shop"
-})
-
-local openBtn = Instance.new("TextButton", openRow)
-openBtn.Size = UDim2.new(0, 80, 0, 26)
-openBtn.Position = UDim2.new(1, -100, 0.5, -13)
-openBtn.BackgroundColor3 = THEME.MAIN
-openBtn.BackgroundTransparency = 0.1
-openBtn.Text = "Open"
-openBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-openBtn.Font = Enum.Font.GothamBold
-openBtn.TextSize = 12
-CreateCorner(openBtn, 8)
-
-openBtn.MouseButton1Click:Connect(function()
-    local isOpen = not BuyRodPanel.Visible
-    BuyRodPanel.Visible = isOpen
-    bottomContainer.Visible = isOpen
-    openBtn.Text = isOpen and "Close" or "Open"
-    openBtn.BackgroundColor3 = isOpen and Color3.fromRGB(200, 60, 60) or THEME.MAIN
-end)
-
--- Sync visibility
-BuyRodPanel:GetPropertyChangedSignal("Visible"):Connect(function()
-    bottomContainer.Visible = BuyRodPanel.Visible
-    openBtn.Text = BuyRodPanel.Visible and "Close" or "Open"
-    openBtn.BackgroundColor3 = BuyRodPanel.Visible and Color3.fromRGB(200, 60, 60) or THEME.MAIN
-end)
-
-print("[BuyRod] Multi-select section loaded")
+print("[BuyRod] Section loaded (Charm style)")
