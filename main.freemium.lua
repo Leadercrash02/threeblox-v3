@@ -4175,4 +4175,486 @@ end)
 
 table.insert(AllPanels, CharmPanel)
 
-print("[Charm] Tier in data only, not displayed")
+--==================================================
+-- BUY ROD SECTION
+--==================================================
+
+local BuyRodSection = CreateSectionDropdown(ShopPage, "Buy Rod")
+Instance.new("UIListLayout", BuyRodSection).SortOrder = Enum.SortOrder.LayoutOrder
+BuyRodSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Format harga ke K/M
+local function FormatPrice(num)
+    if num >= 1000000 then
+        return string.format("%.1fM", num / 1000000)
+    elseif num >= 1000 then
+        return string.format("%.1fK", num / 1000)
+    else
+        return tostring(num)
+    end
+end
+
+-- Data Rods (dari decompile lu)
+local RODS_DATA = {
+    {Id = 657, Name = "Carbon Rod", Price = 750, Tier = 1},
+    {Id = 85, Name = "Grass Rod", Price = 1500, Tier = 2},
+    {Id = 78, Name = "Ice Rod", Price = 5000, Tier = 2},
+    {Id = 4, Name = "Lucky Rod", Price = 15000, Tier = 3},
+    {Id = 80, Name = "Midnight Rod", Price = 50000, Tier = 3},
+    {Id = 6, Name = "Steampunk Rod", Price = 215000, Tier = 4},
+    {Id = 7, Name = "Chrome Rod", Price = 437000, Tier = 4},
+    {Id = 255, Name = "Fluorescent Rod", Price = 715000, Tier = 5},
+    {Id = 5, Name = "Astral Rod", Price = 1000000, Tier = 5},
+    {Id = 126, Name = "Ares Rod", Price = 3000000, Tier = 6},
+    {Id = 168, Name = "Angler Rod", Price = 8000000, Tier = 6},
+    {Id = 258, Name = "Bamboo Rod", Price = 12000000, Tier = 6},
+}
+
+-- Sort by price
+table.sort(RODS_DATA, function(a, b) return a.Price < b.Price end)
+
+-- Remote Function
+local PurchaseRF = ReplicatedStorage
+    :WaitForChild("Packages")
+    :WaitForChild("_Index")
+    :WaitForChild("sleitnick_net@0.2.0")
+    :WaitForChild("net")
+    :WaitForChild("RF/PurchaseFishingRod")
+
+-- Variables
+local SelectedRod = nil
+local BuyAmount = 1
+local BuyRodPanel = nil
+local BuyRodScroll = nil
+
+--==================================================
+-- RIGHT PANEL
+--==================================================
+
+BuyRodPanel = Instance.new("Frame", Main)
+BuyRodPanel.Name = "BuyRodRightPanel"
+BuyRodPanel.Size = UDim2.new(0, 260, 1, -46)
+BuyRodPanel.AnchorPoint = Vector2.new(1, 0)
+BuyRodPanel.Position = UDim2.new(1, -10, 0, 40)
+BuyRodPanel.BackgroundColor3 = THEME.CARD
+BuyRodPanel.BackgroundTransparency = 0.25
+BuyRodPanel.BorderSizePixel = 0
+BuyRodPanel.Visible = false
+BuyRodPanel.ZIndex = 10
+BuyRodPanel.ClipsDescendants = true
+
+CreateCorner(BuyRodPanel, 10)
+CreateStroke(BuyRodPanel, THEME.MAIN, 0.5)
+
+-- Header dengan Close Button
+local headerFrame = Instance.new("Frame", BuyRodPanel)
+headerFrame.Name = "Header"
+headerFrame.Size = UDim2.new(1, 0, 0, 30)
+headerFrame.BackgroundTransparency = 1
+headerFrame.ZIndex = 11
+
+CreateLabel(headerFrame, {
+    Size = UDim2.new(1, -35, 1, 0),
+    Position = UDim2.new(0, 10, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    ZIndex = 12,
+    Text = "Buy Fishing Rod"
+})
+
+-- Close Button X
+local closeBtn = Instance.new("TextButton", headerFrame)
+closeBtn.Size = UDim2.new(0, 22, 0, 22)
+closeBtn.Position = UDim2.new(1, -26, 0.5, -11)
+closeBtn.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+closeBtn.Text = "X"
+closeBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+closeBtn.Font = Enum.Font.GothamBold
+closeBtn.TextSize = 12
+closeBtn.ZIndex = 12
+CreateCorner(closeBtn, 4)
+
+closeBtn.MouseButton1Click:Connect(function()
+    BuyRodPanel.Visible = false
+end)
+
+-- Selected Rod Info
+local selectedRodLabel = CreateLabel(BuyRodPanel, {
+    Size = UDim2.new(1, -10, 0, 18),
+    Position = UDim2.new(0, 5, 0, 32),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    ZIndex = 11,
+    Text = "Select a rod..."
+})
+
+local selectedPriceLabel = CreateLabel(BuyRodPanel, {
+    Size = UDim2.new(1, -10, 0, 18),
+    Position = UDim2.new(0, 5, 0, 50),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(255, 215, 0),
+    ZIndex = 11,
+    Text = "Price: --"
+})
+
+-- Scrolling Frame
+BuyRodScroll = Instance.new("ScrollingFrame", BuyRodPanel)
+BuyRodScroll.Name = "RodListScroll"
+BuyRodScroll.Size = UDim2.new(1, -10, 1, -160)
+BuyRodScroll.Position = UDim2.new(0, 5, 0, 75)
+BuyRodScroll.BackgroundTransparency = 1
+BuyRodScroll.BorderSizePixel = 0
+BuyRodScroll.ScrollBarThickness = 3
+BuyRodScroll.ScrollingDirection = Enum.ScrollingDirection.Y
+BuyRodScroll.ScrollBarImageColor3 = THEME.MAIN
+BuyRodScroll.ZIndex = 10
+BuyRodScroll.ClipsDescendants = true
+
+local listLayout = Instance.new("UIListLayout", BuyRodScroll)
+listLayout.SortOrder = Enum.SortOrder.LayoutOrder
+listLayout.Padding = UDim.new(0, 4)
+
+local function UpdateCanvasSize()
+    BuyRodScroll.CanvasSize = UDim2.new(0, 0, 0, listLayout.AbsoluteContentSize.Y + 10)
+end
+listLayout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvasSize)
+
+-- Create Rod Entry
+local function CreateRodEntry(rodData)
+    local row = Instance.new("Frame")
+    row.Name = rodData.Name .. "_Row"
+    row.Size = UDim2.new(1, -4, 0, 32)
+    row.BackgroundTransparency = 1
+    row.ZIndex = 11
+    row.Parent = BuyRodScroll
+
+    -- Highlight
+    local highlight = Instance.new("Frame", row)
+    highlight.Name = "Highlight"
+    highlight.Size = UDim2.new(0, 3, 0.8, 0)
+    highlight.Position = UDim2.new(0, 0, 0.1, 0)
+    highlight.BackgroundColor3 = THEME.MAIN
+    highlight.Visible = false
+    highlight.ZIndex = 12
+
+    -- Main button
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(1, -6, 1, 0)
+    btn.Position = UDim2.new(0, 4, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    btn.TextColor3 = THEME.TEXT
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 11
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.Text = "  " .. rodData.Name .. "  |  " .. FormatPrice(rodData.Price)
+    btn.ZIndex = 11
+    CreateCorner(btn, 6)
+
+    -- Hover effects
+    btn.MouseEnter:Connect(function()
+        if SelectedRod ~= rodData then
+            btn.BackgroundColor3 = Color3.fromRGB(45, 45, 70)
+        end
+    end)
+    
+    btn.MouseLeave:Connect(function()
+        if SelectedRod ~= rodData then
+            btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+        end
+    end)
+
+    -- Click
+    btn.MouseButton1Click:Connect(function()
+        SelectedRod = rodData
+        UpdateTotalPrice()
+        selectedRodLabel.Text = "Selected: " .. rodData.Name
+        selectedPriceLabel.Text = "Unit Price: " .. FormatPrice(rodData.Price)
+        
+        -- Update highlights
+        for _, child in ipairs(BuyRodScroll:GetChildren()) do
+            if child:IsA("Frame") and child:FindFirstChild("Highlight") then
+                child.Highlight.Visible = false
+                local b = child:FindFirstChildOfClass("TextButton")
+                if b then b.BackgroundColor3 = Color3.fromRGB(30, 30, 50) end
+            end
+        end
+        
+        highlight.Visible = true
+        btn.BackgroundColor3 = Color3.fromRGB(55, 55, 85)
+    end)
+end
+
+-- Populate list
+for _, rod in ipairs(RODS_DATA) do
+    CreateRodEntry(rod)
+end
+
+UpdateCanvasSize()
+
+--==================================================
+-- AMOUNT & TOTAL PRICE CONTROLS
+--==================================================
+
+local amountFrame = Instance.new("Frame", BuyRodPanel)
+amountFrame.Size = UDim2.new(1, -20, 0, 30)
+amountFrame.Position = UDim2.new(0, 10, 1, -110)
+amountFrame.BackgroundTransparency = 1
+amountFrame.ZIndex = 11
+
+-- Amount Label
+CreateLabel(amountFrame, {
+    Size = UDim2.new(0, 60, 1, 0),
+    Position = UDim2.new(0, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    ZIndex = 12,
+    Text = "Amount:"
+})
+
+-- Minus Button
+local minusBtn = Instance.new("TextButton", amountFrame)
+minusBtn.Size = UDim2.new(0, 28, 0, 24)
+minusBtn.Position = UDim2.new(0, 65, 0.5, -12)
+minusBtn.BackgroundColor3 = Color3.fromRGB(80, 40, 40)
+minusBtn.Text = "-"
+minusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minusBtn.Font = Enum.Font.GothamBold
+minusBtn.TextSize = 14
+minusBtn.ZIndex = 12
+CreateCorner(minusBtn, 4)
+
+-- Amount Display
+local amountDisplay = Instance.new("TextBox", amountFrame)
+amountDisplay.Size = UDim2.new(0, 50, 0, 24)
+amountDisplay.Position = UDim2.new(0, 98, 0.5, -12)
+amountDisplay.BackgroundColor3 = Color3.fromRGB(20, 20, 35)
+amountDisplay.Text = "1"
+amountDisplay.TextColor3 = Color3.fromRGB(255, 255, 255)
+amountDisplay.Font = Enum.Font.GothamBold
+amountDisplay.TextSize = 12
+amountDisplay.ClearTextOnFocus = false
+amountDisplay.ZIndex = 12
+CreateCorner(amountDisplay, 4)
+
+-- Plus Button
+local plusBtn = Instance.new("TextButton", amountFrame)
+plusBtn.Size = UDim2.new(0, 28, 0, 24)
+plusBtn.Position = UDim2.new(0, 151, 0.5, -12)
+plusBtn.BackgroundColor3 = Color3.fromRGB(40, 80, 40)
+plusBtn.Text = "+"
+plusBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+plusBtn.Font = Enum.Font.GothamBold
+plusBtn.TextSize = 14
+plusBtn.ZIndex = 12
+CreateCorner(plusBtn, 4)
+
+-- Total Price Label
+local totalPriceLabel = CreateLabel(BuyRodPanel, {
+    Size = UDim2.new(1, -20, 0, 20),
+    Position = UDim2.new(0, 10, 1, -75),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 14,
+    TextXAlignment = Enum.TextXAlignment.Center,
+    TextColor3 = Color3.fromRGB(255, 215, 0),
+    ZIndex = 11,
+    Text = "Total: --"
+})
+
+-- Update total price function
+function UpdateTotalPrice()
+    if not SelectedRod then
+        totalPriceLabel.Text = "Total: --"
+        return
+    end
+    local amount = tonumber(amountDisplay.Text) or 1
+    BuyAmount = math.max(1, amount)
+    local total = SelectedRod.Price * BuyAmount
+    totalPriceLabel.Text = "Total: " .. FormatPrice(total)
+end
+
+-- Button logic
+minusBtn.MouseButton1Click:Connect(function()
+    local current = tonumber(amountDisplay.Text) or 1
+    current = math.max(1, current - 1)
+    amountDisplay.Text = tostring(current)
+    UpdateTotalPrice()
+end)
+
+plusBtn.MouseButton1Click:Connect(function()
+    local current = tonumber(amountDisplay.Text) or 1
+    current = current + 1
+    amountDisplay.Text = tostring(current)
+    UpdateTotalPrice()
+end)
+
+amountDisplay.FocusLost:Connect(function()
+    local num = tonumber(amountDisplay.Text)
+    if not num or num < 1 then
+        num = 1
+        amountDisplay.Text = "1"
+    end
+    UpdateTotalPrice()
+end)
+
+--==================================================
+-- BUY BUTTON
+--==================================================
+
+local buyButton = Instance.new("TextButton", BuyRodPanel)
+buyButton.Size = UDim2.new(1, -20, 0, 32)
+buyButton.Position = UDim2.new(0, 10, 1, -42)
+buyButton.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
+buyButton.Text = "BUY"
+buyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+buyButton.Font = Enum.Font.GothamBold
+buyButton.TextSize = 14
+buyButton.ZIndex = 11
+CreateCorner(buyButton, 8)
+
+buyButton.MouseEnter:Connect(function()
+    buyButton.BackgroundColor3 = Color3.fromRGB(50, 150, 50)
+end)
+
+buyButton.MouseLeave:Connect(function()
+    buyButton.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
+end)
+
+buyButton.MouseButton1Click:Connect(function()
+    if not SelectedRod then
+        selectedRodLabel.Text = "Select a rod first!"
+        selectedRodLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+        task.delay(2, function()
+            selectedRodLabel.Text = "Select a rod..."
+            selectedRodLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+        end)
+        return
+    end
+    
+    local amount = tonumber(amountDisplay.Text) or 1
+    if amount < 1 then amount = 1 end
+    
+    buyButton.Text = "Buying..."
+    buyButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+    
+    task.spawn(function()
+        local successCount = 0
+        local failCount = 0
+        
+        for i = 1, amount do
+            local success, result = pcall(function()
+                return PurchaseRF:InvokeServer(SelectedRod.Id)
+            end)
+            
+            if success and result then
+                successCount = successCount + 1
+            else
+                failCount = failCount + 1
+            end
+            
+            -- Small delay between purchases
+            if i < amount then
+                task.wait(0.1)
+            end
+        end
+        
+        -- Feedback
+        if successCount > 0 then
+            buyButton.Text = "BOUGHT " .. successCount .. "!"
+            buyButton.BackgroundColor3 = Color3.fromRGB(50, 180, 50)
+            if NotifyFeature then
+                NotifyFeature("Purchased " .. successCount .. "x " .. SelectedRod.Name, true)
+            end
+        else
+            buyButton.Text = "FAILED!"
+            buyButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+            if NotifyFeature then
+                NotifyFeature("Failed to buy " .. SelectedRod.Name, false)
+            end
+        end
+        
+        task.wait(1.5)
+        buyButton.Text = "BUY"
+        buyButton.BackgroundColor3 = Color3.fromRGB(40, 120, 40)
+    end)
+end)
+
+--==================================================
+-- CLOSE PANEL ON OUTSIDE CLICK
+--==================================================
+
+local function isInsidePanel(pos)
+    local absPos = BuyRodPanel.AbsolutePosition
+    local absSize = BuyRodPanel.AbsoluteSize
+    return pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and
+           pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y
+end
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if not BuyRodPanel.Visible then return end
+    if gameProcessed then return end
+    if input.UserInputType ~= Enum.UserInputType.MouseButton1 and 
+       input.UserInputType ~= Enum.UserInputType.Touch then 
+        return 
+    end
+    
+    if not isInsidePanel(input.Position) then
+        BuyRodPanel.Visible = false
+    end
+end)
+
+--==================================================
+-- OPEN PANEL BUTTON (DI SECTION)
+--==================================================
+
+local openRow = Instance.new("Frame", BuyRodSection)
+openRow.Size = UDim2.new(1, 0, 0, 40)
+openRow.BackgroundTransparency = 1
+
+CreateLabel(openRow, {
+    Size = UDim2.new(1, -110, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Open Rod Shop"
+})
+
+local openBtn = Instance.new("TextButton", openRow)
+openBtn.Size = UDim2.new(0, 80, 0, 26)
+openBtn.Position = UDim2.new(1, -100, 0.5, -13)
+openBtn.BackgroundColor3 = THEME.MAIN
+openBtn.BackgroundTransparency = 0.1
+openBtn.Text = "Open"
+openBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+openBtn.Font = Enum.Font.GothamBold
+openBtn.TextSize = 12
+CreateCorner(openBtn, 8)
+
+openBtn.MouseButton1Click:Connect(function()
+    BuyRodPanel.Visible = not BuyRodPanel.Visible
+    openBtn.Text = BuyRodPanel.Visible and "Close" or "Open"
+    openBtn.BackgroundColor3 = BuyRodPanel.Visible and Color3.fromRGB(200, 60, 60) or THEME.MAIN
+end)
+
+-- Sync button state
+BuyRodPanel:GetPropertyChangedSignal("Visible"):Connect(function()
+    openBtn.Text = BuyRodPanel.Visible and "Close" or "Open"
+    openBtn.BackgroundColor3 = BuyRodPanel.Visible and Color3.fromRGB(200, 60, 60) or THEME.MAIN
+end)
+
+print("[BuyRod] Section loaded with amount control")
