@@ -1366,12 +1366,93 @@ if type(oldGetAnimationData) ~= "function" then
     warn("[SkinOverride] GetAnimationData tidak ada di AnimationController")
 end
 
+-- LIST SKIN (UI)
 local SKINS = {
+    -- Original
     "Eclipse Katana", "Holy Trident", "Soul Scythe",
     "Oceanic Harpoon", "Binary Edge", "The Vanquisher", "1x1x1x1 Ban Hammer",
-    "Ethereal Sword",        -- baru
-    "Cursed Katana",         -- baru
-    "Blackhole"              -- baru
+    
+    -- Tambahan baru dari decompiled
+    "Ethereal Sword",
+    "Cursed Katana",
+    "Blackhole Sword",
+    "Gingerbread Katana",
+    "Christmas Parasol",
+    "Princess Parasol",
+    "Corruption Edge",
+    "Frozen Krampus Scythe",
+    "Eternal Flower",
+    "Cupid's Harp",
+    "Aurelian Bow",
+    "Chromatic Katana",
+    "Crescendo Scythe",
+    "Electric Guitar",
+    "Pirate Banjo",
+    "Kraken Anchor",
+    "Undead Guitar",
+    "Royal Spider",
+    "Trick O' Treat",
+    "Reaver Scythe",
+    "Spirit Staff",
+    "Divine Blade",
+    "Heartfelt Blade",
+    "Candy Cane Trident",
+    "Ornament Axe",
+    "Gingerbread Sword",
+    "Xmas Tree Rod",
+    "Pink Present Lance",
+    "Aether Monarch",
+    "Wings of Everlove",
+    "Voidpunk Axe",
+    "Crimson Rose",
+    "Heartbreaker Surge",
+}
+
+-- MAPPING KE ANIMATION KEY (format: "Skin Name - RodThrow")
+local SKIN_TO_ANIM = {
+    -- Original
+    ["Eclipse Katana"] = "Eclipse Katana - RodThrow",
+    ["Holy Trident"] = "Holy Trident - RodThrow",
+    ["Soul Scythe"] = "Soul Scythe - RodThrow",
+    ["Oceanic Harpoon"] = "Oceanic Harpoon - RodThrow",
+    ["Binary Edge"] = "Binary Edge - RodThrow",
+    ["The Vanquisher"] = "The Vanquisher - RodThrow",
+    ["1x1x1x1 Ban Hammer"] = "1x1x1x1 Ban Hammer - RodThrow",
+    
+    -- Tambahan baru
+    ["Ethereal Sword"] = "Ethereal Sword - RodThrow",
+    ["Cursed Katana"] = "CursedKatanaThrow",  -- dari file pertama
+    ["Blackhole Sword"] = "Blackhole Sword - RodThrow",
+    ["Gingerbread Katana"] = "Gingerbread Katana - RodThrow",
+    ["Christmas Parasol"] = "Christmas Parasol - RodThrow",
+    ["Princess Parasol"] = "Princess Parasol - RodThrow",
+    ["Corruption Edge"] = "Corruption Edge - RodThrow",
+    ["Frozen Krampus Scythe"] = "Frozen Krampus Scythe - RodThrow",
+    ["Eternal Flower"] = "Eternal Flower - RodThrow",
+    ["Cupid's Harp"] = "Cupid's Harp - RodThrow",
+    ["Aurelian Bow"] = "Aurelian Bow - RodThrow",
+    ["Chromatic Katana"] = "Chromatic Katana - RodThrow",
+    ["Crescendo Scythe"] = "Crescendo Scythe - RodThrow",
+    ["Electric Guitar"] = "Electric Guitar - RodThrow",
+    ["Pirate Banjo"] = "Pirate Banjo - RodThrow",
+    ["Kraken Anchor"] = "Kraken Anchor - RodThrow",
+    ["Undead Guitar"] = "Undead Guitar - RodThrow",
+    ["Royal Spider"] = "Royal Spider - RodThrow",
+    ["Trick O' Treat"] = "Trick O' Treat - RodThrow",
+    ["Reaver Scythe"] = "Reaver Scythe - RodThrow",
+    ["Spirit Staff"] = "Spirit Staff - RodThrow",
+    ["Divine Blade"] = "Divine Blade - RodThrow",
+    ["Heartfelt Blade"] = "Heartfelt Blade - RodThrow",
+    ["Candy Cane Trident"] = "Candy Cane Trident - RodThrow",
+    ["Ornament Axe"] = "Ornament Axe - RodThrow",
+    ["Gingerbread Sword"] = "Gingerbread Sword - RodThrow",
+    ["Xmas Tree Rod"] = "Xmas Tree Rod - RodThrow",
+    ["Pink Present Lance"] = "Pink Present Lance - RodThrow",
+    ["Aether Monarch"] = "Aether Monarch - RodThrow",
+    ["Wings of Everlove"] = "Wings of Everlove - RodThrow",
+    ["Voidpunk Axe"] = "Voidpunk Axe - RodThrow",
+    ["Crimson Rose"] = "Crimson Rose - RodThrow",
+    ["Heartbreaker Surge"] = "Heartbreaker Surge - RodThrow",
 }
 
 local SelectedAnimSkin, OverrideEnabled = nil, false
@@ -1389,7 +1470,10 @@ AnimModule.GetAnimationData = function(self, animName)
     if not baseData then return nil, nil end
     if not OverrideEnabled or not SelectedAnimSkin then return baseData, baseKey end
     
-    local overrideKey = ("%s - %s"):format(SelectedAnimSkin, animName)
+    -- Pake mapping
+    local overrideKey = SKIN_TO_ANIM[SelectedAnimSkin]
+    if not overrideKey then return baseData, baseKey end
+    
     local overrideData = Animations_upvr[overrideKey]
     
     return (overrideData and overrideData.AnimationId) and overrideData, overrideKey or baseData, baseKey
@@ -1408,7 +1492,7 @@ RightPanel.BackgroundTransparency = 0.25
 RightPanel.BorderSizePixel = 0
 RightPanel.Visible = false
 RightPanel.ZIndex = 10
-RightPanel.ClipsDescendants = true  -- FIX: prevent bleed
+RightPanel.ClipsDescendants = true
 
 CreateCorner(RightPanel, 10)
 CreateStroke(RightPanel, THEME.MAIN, 0.5)
@@ -1466,12 +1550,12 @@ end
 
 -- FIXED: ScrollingFrame dengan proper canvas size
 local rpScroll = Instance.new("ScrollingFrame", RightPanel)
-rpScroll.Size = UDim2.new(1, -10, 1, -75)  -- 75 = 30(header) + 18(label) + padding
+rpScroll.Size = UDim2.new(1, -10, 1, -75)
 rpScroll.Position = UDim2.new(0, 5, 0, 55)
 rpScroll.BackgroundTransparency = 1
 rpScroll.BorderSizePixel = 0
 rpScroll.ScrollBarThickness = 3
-rpScroll.ScrollingDirection = Enum.ScrollingDirection.Y  -- FIX: Y only
+rpScroll.ScrollingDirection = Enum.ScrollingDirection.Y
 rpScroll.ScrollBarImageColor3 = THEME.MAIN
 rpScroll.ZIndex = 10
 rpScroll.ClipsDescendants = true
@@ -1493,7 +1577,7 @@ local function CreateSkinEntry(skinName)
     row.Size = UDim2.new(1, -4, 0, 24)
     row.BackgroundTransparency = 1
     row.ZIndex = 11
-    row.Parent = rpScroll  -- FIX: parent after setup
+    row.Parent = rpScroll
 
     local line = Instance.new("Frame", row)
     line.Name = "Highlight"
@@ -1529,13 +1613,13 @@ local function CreateSkinEntry(skinName)
 end
 
 for _, sn in ipairs(SKINS) do CreateSkinEntry(sn) end
-UpdateCanvasSize()  -- FIX: initial update
+UpdateCanvasSize()
 UpdateRightSkinLabel()
 
--- Close panel on outside click - FIXED dengan gameProcessed check
+-- Close panel on outside click
 UIS.InputBegan:Connect(function(input, gameProcessed)
     if not RightPanel.Visible then return end
-    if gameProcessed then return end  -- FIX: jangan close pas typing
+    if gameProcessed then return end
     if input.UserInputType ~= Enum.UserInputType.MouseButton1 and input.UserInputType ~= Enum.UserInputType.Touch then return end
     
     local pos = input.Position
