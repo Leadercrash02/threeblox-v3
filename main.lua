@@ -1353,265 +1353,140 @@ end)
 
 
 --==================================================
--- SKIN ANIMATION SYSTEM - FULL EFFECT (COMPLETE)
+-- SKIN ANIMATION SYSTEM - FULL EFFECT (CHARACTER BASED)
 --==================================================
 local Players, ReplicatedStorage, RunService, UIS = game:GetService("Players"), game:GetService("ReplicatedStorage"), game:GetService("RunService"), game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 
--- Dapatkan semua service yang diperlukan
-local Controllers = ReplicatedStorage:WaitForChild("Controllers")
-local Modules = ReplicatedStorage:WaitForChild("Modules")
-local VFX = ReplicatedStorage:WaitForChild("VFX")
-local Packages = ReplicatedStorage:WaitForChild("Packages")
-
--- Cari Tools di berbagai lokasi
-local Tools = ReplicatedStorage:FindFirstChild("Tools") or ReplicatedStorage:FindFirstChild("Skins") or ReplicatedStorage:FindFirstChild("Items") or ReplicatedStorage
-
--- Dapatkan module
+local Controllers, Modules, VFX = ReplicatedStorage:WaitForChild("Controllers"), ReplicatedStorage:WaitForChild("Modules"), ReplicatedStorage:WaitForChild("VFX")
 local AnimModule = require(Controllers:WaitForChild("AnimationController"))
 local Animations_upvr = require(Modules:WaitForChild("Animations"))
 local oldGetAnimationData = AnimModule.GetAnimationData
 
--- Dapatkan VFXController dan Effects
-local VFXModule, VFXEffects = nil, nil
-pcall(function() 
-    VFXModule = require(Controllers:WaitForChild("VFXController"))
-    VFXEffects = Controllers.VFXController:FindFirstChild("Effects")
-end)
-
--- Dapatkan FishingController Effects
-local FishingEffects = nil
-pcall(function()
-    local FishingController = Controllers:FindFirstChild("FishingController")
-    if FishingController then
-        FishingEffects = FishingController:FindFirstChild("Effects")
+-- Cari skin folders
+local SkinFolder = nil
+for _, folder in ipairs({ReplicatedStorage, workspace}) do
+    for _, child in ipairs(folder:GetChildren()) do
+        if child:IsA("Folder") and (child:FindFirstChild("Eclipse Katana") or child:FindFirstChild("Blackhole Sword")) then
+            SkinFolder = child
+            break
+        end
     end
-end)
+    if SkinFolder then break end
+end
+if not SkinFolder then SkinFolder = ReplicatedStorage end
 
--- Dapatkan RemoteEvents untuk efek
-local NetFolder = Packages:WaitForChild("_Index"):WaitForChild("sleitnick_net@0.2.0"):WaitForChild("net")
-local PlayFishingEffectRE = NetFolder:WaitForChild("RE/PlayFishingEffect")
-local DestroyEffectRE = NetFolder:WaitForChild("RE/DestroyEffect")
-
--- Dapatkan AcworksUtils TagEffect
-local TagEffectModule = nil
-pcall(function()
-    TagEffectModule = require(ReplicatedStorage:WaitForChild("AcworksUtils"):WaitForChild("TagEffect"))
-end)
-
-if type(oldGetAnimationData) ~= "function" then warn("[SkinOverride] GetAnimationData tidak ada di AnimationController") end
-
--- LIST SKIN
 local SKINS = {"Eclipse Katana", "Holy Trident", "Soul Scythe", "Oceanic Harpoon", "Binary Edge", "The Vanquisher", "1x1x1x1 Ban Hammer", "Ethereal Sword", "Cursed Katana", "Blackhole Sword", "Gingerbread Katana", "Christmas Parasol", "Princess Parasol", "Corruption Edge", "Frozen Krampus Scythe", "Eternal Flower", "Cupid's Harp", "Aurelian Bow", "Chromatic Katana", "Crescendo Scythe", "Electric Guitar", "Pirate Banjo", "Kraken Anchor", "Undead Guitar", "Royal Spider", "Trick O' Treat", "Reaver Scythe", "Spirit Staff", "Divine Blade", "Heartfelt Blade", "Candy Cane Trident", "Ornament Axe", "Gingerbread Sword", "Xmas Tree Rod", "Pink Present Lance", "Aether Monarch", "Wings of Everlove", "Voidpunk Axe", "Crimson Rose", "Heartbreaker Surge"}
 
 local SelectedAnimSkin, OverrideEnabled = nil, false
-local CurrentTool = nil
-local SkinConnections = {}
+local ActiveSkinFolder = nil
 
 --==================================================
--- EFFECT SYSTEM HOOK
+-- APPLY SKIN EFFECTS TO CHARACTER
 --==================================================
-
--- Hook PlayFishingEffect RemoteEvent
-local oldPlayFishingEffect = PlayFishingEffectRE.FireServer
-PlayFishingEffectRE.FireServer = function(self, effectName, ...)
-    if OverrideEnabled and SelectedAnimSkin then
-        -- Cek apakah ada efek khusus untuk skin ini
-        local skinEffectName = SelectedAnimSkin:gsub(" ", "") .. "_" .. effectName
-        local skinEffect = VFX:FindFirstChild(skinEffectName) or (VFXEffects and VFXEffects:FindFirstChild(skinEffectName))
-        
-        if skinEffect then
-            print("[Effect Hook] " .. effectName .. " -> " .. skinEffectName)
-            return oldPlayFishingEffect(self, skinEffectName, ...)
-        end
-    end
-    return oldPlayFishingEffect(self, effectName, ...)
-end
-
--- Hook VFXModule.emitParticles jika ada
-if VFXModule and VFXModule.emitParticles then
-    local oldEmit = VFXModule.emitParticles
-    VFXModule.emitParticles = function(data)
-        if OverrideEnabled and SelectedAnimSkin and data then
-            local particleName = data.particleName
-            
-            -- Cari efek skin dengan berbagai format
-            local searchNames = {
-                SelectedAnimSkin:gsub(" ", "") .. "_" .. particleName,
-                SelectedAnimSkin .. "_" .. particleName,
-                particleName .. "_" .. SelectedAnimSkin:gsub(" ", ""),
-                particleName .. "_" .. SelectedAnimSkin,
-            }
-            
-            for _, name in ipairs(searchNames) do
-                local found = VFX:FindFirstChild(name) or (VFXEffects and VFXEffects:FindFirstChild(name))
-                if found then
-                    data.particleName = name
-                    -- Override position ke tool player
-                    if CurrentTool and CurrentTool:FindFirstChild("Handle") then
-                        data.position = CurrentTool.Handle.Position
-                        data.parent = CurrentTool.Handle
-                    end
-                    break
-                end
-            end
-        end
-        return oldEmit(data)
-    end
-end
-
--- Hook TagEffect jika ada
-if TagEffectModule and TagEffectModule.createTagEffect then
-    local oldCreateTag = TagEffectModule.createTagEffect
-    TagEffectModule.createTagEffect = function(tag, ...)
-        if OverrideEnabled and SelectedAnimSkin then
-            local skinTag = SelectedAnimSkin:gsub(" ", "") .. "_" .. tag
-            if VFX:FindFirstChild(skinTag) or (VFXEffects and VFXEffects:FindFirstChild(skinTag)) then
-                return oldCreateTag(skinTag, ...)
-            end
-        end
-        return oldCreateTag(tag, ...)
-    end
-end
-
---==================================================
--- TOOL & SKIN APPLICATION
---==================================================
-
 local function getChar() return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait() end
 
-local function findTool()
+local function clearSkinEffects()
+    if ActiveSkinFolder then
+        ActiveSkinFolder:Destroy()
+        ActiveSkinFolder = nil
+    end
+end
+
+local function applySkinEffects(skinName)
+    clearSkinEffects()
+    
     local char = getChar()
-    for _, v in ipairs(char:GetChildren()) do if v:IsA("Tool") then return v end end
-    return nil
-end
-
-local function findSkinTool(skinName)
-    -- Cari di Tools
-    local found = Tools:FindFirstChild(skinName)
-    if found then return found end
+    if not char then return false end
     
-    -- Cari di subfolder
-    for _, child in ipairs(Tools:GetChildren()) do
-        if child:IsA("Folder") or child:IsA("Model") then
-            found = child:FindFirstChild(skinName)
-            if found then return found end
-        end
-    end
-    
-    -- Cari di ReplicatedStorage langsung
-    found = ReplicatedStorage:FindFirstChild(skinName)
-    if found then return found end
-    
-    -- Cari di VFX (kadang skin disimpan sebagai efek)
-    found = VFX:FindFirstChild(skinName) or VFX:FindFirstChild(skinName:gsub(" ", ""))
-    if found then return found end
-    
-    return nil
-end
-
-local function copyEffects(source, destination)
-    -- Copy semua tipe efek
-    for _, v in ipairs(source:GetDescendants()) do
-        if v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then
-            local clone = v:Clone()
-            -- Cari parent yang sesuai di destination
-            local parentName = v.Parent and v.Parent.Name
-            local newParent = parentName and destination:FindFirstChild(parentName, true) or destination:FindFirstChild("Handle") or destination
-            clone.Parent = newParent
-            
-            -- Mark sebagai skin effect
-            clone:SetAttribute("SkinEffect", true)
-        elseif v:IsA("Sound") then
-            local clone = v:Clone()
-            clone.Parent = destination
-            clone:SetAttribute("SkinEffect", true)
-        elseif v:IsA("PointLight") or v:IsA("SpotLight") or v:IsA("SurfaceLight") then
-            local clone = v:Clone()
-            local parentName = v.Parent and v.Parent.Name
-            local newParent = parentName and destination:FindFirstChild(parentName, true) or destination:FindFirstChild("Handle") or destination
-            clone.Parent = newParent
-            clone:SetAttribute("SkinEffect", true)
-        end
-    end
-end
-
-local function clearSkinEffects(tool)
-    for _, v in ipairs(tool:GetDescendants()) do
-        if v:GetAttribute("SkinEffect") then
-            v:Destroy()
-        end
-    end
-end
-
-local function applySkin(skinName)
-    local tool = findTool()
-    if not tool then return false end
-    
-    CurrentTool = tool
-    clearSkinEffects(tool)
-    
-    -- Cari skin tool/efek
-    local skinTool = findSkinTool(skinName)
-    if not skinTool then
-        warn("[Skin] Skin tidak ditemukan: " .. skinName)
+    -- Cari skin source
+    local skinSource = SkinFolder:FindFirstChild(skinName)
+    if not skinSource then
+        warn("[Skin] Source not found: " .. skinName)
         return false
     end
     
-    -- Copy efek dari skin
-    copyEffects(skinTool, tool)
+    -- Clone skin ke character
+    ActiveSkinFolder = skinSource:Clone()
+    ActiveSkinFolder.Name = "ActiveSkin_" .. skinName:gsub(" ", "_")
     
-    -- Jika skinTool adalah tool lengkap, copy juga mesh dan animasi
-    if skinTool:IsA("Tool") then
-        -- Copy mesh
-        local skinHandle = skinTool:FindFirstChild("Handle")
-        local currentHandle = tool:FindFirstChild("Handle")
-        
-        if skinHandle and currentHandle then
-            -- Hapus mesh lama
-            for _, v in ipairs(currentHandle:GetChildren()) do
-                if v:IsA("SpecialMesh") or v:IsA("MeshPart") then
-                    v:Destroy()
+    -- Parent ke character atau workspace (tergantung struktur)
+    ActiveSkinFolder.Parent = char
+    
+    -- Kalau struktur Folder dengan body parts (Eclipse Katana style)
+    if skinSource:IsA("Folder") then
+        -- Cari dan parent ke body parts yang sesuai
+        for _, part in ipairs(ActiveSkinFolder:GetChildren()) do
+            local bodyPartName = part.Name
+            local charPart = char:FindFirstChild(bodyPartName)
+            if charPart and charPart:IsA("BasePart") then
+                -- Pindahkan particle ke character part
+                for _, effect in ipairs(part:GetDescendants()) do
+                    if effect:IsA("ParticleEmitter") or effect:IsA("Trail") or effect:IsA("Beam") then
+                        local clone = effect:Clone()
+                        clone.Parent = charPart
+                        clone:SetAttribute("SkinEffect", true)
+                    end
                 end
             end
-            
-            -- Copy mesh baru
-            for _, v in ipairs(skinHandle:GetChildren()) do
-                if v:IsA("SpecialMesh") or v:IsA("MeshPart") then
-                    local clone = v:Clone()
-                    clone.Parent = currentHandle
+        end
+        -- Hapus folder setelah extract
+        ActiveSkinFolder:Destroy()
+        ActiveSkinFolder = nil
+        
+    -- Kalau struktur Part dengan attachment (Blackhole style)
+    elseif skinSource:IsA("BasePart") or skinSource:IsA("Model") then
+        -- Weld ke character atau copy attachment
+        for _, attach in ipairs(skinSource:GetDescendants()) do
+            if attach:IsA("Attachment") then
+                -- Cari body part yang sesuai
+                local parentName = attach.Parent and attach.Parent.Name
+                local charPart = parentName and char:FindFirstChild(parentName)
+                if charPart then
+                    for _, effect in ipairs(attach:GetChildren()) do
+                        if effect:IsA("ParticleEmitter") or effect:IsA("Trail") or effect:IsA("Beam") then
+                            local clone = effect:Clone()
+                            -- Buat attachment di char part
+                            local newAttach = Instance.new("Attachment")
+                            newAttach.Name = attach.Name
+                            newAttach.Position = attach.Position
+                            newAttach.Orientation = attach.Orientation
+                            newAttach.Parent = charPart
+                            clone.Parent = newAttach
+                            clone:SetAttribute("SkinEffect", true)
+                        end
+                    end
+                end
+            elseif attach:IsA("ParticleEmitter") and attach.Parent and attach.Parent:IsA("BasePart") then
+                -- Langsung di part
+                local parentName = attach.Parent.Name
+                local charPart = char:FindFirstChild(parentName)
+                if charPart then
+                    local clone = attach:Clone()
+                    clone.Parent = charPart
+                    clone:SetAttribute("SkinEffect", true)
                 end
             end
-            
-            -- Copy size dan properties
-            currentHandle.Size = skinHandle.Size
         end
-        
-        -- Copy scripts (kalau ada)
-        for _, v in ipairs(skinTool:GetChildren()) do
-            if v:IsA("Script") or v:IsA("LocalScript") then
-                local clone = v:Clone()
-                clone.Parent = tool
-            end
-        end
+        ActiveSkinFolder:Destroy()
+        ActiveSkinFolder = nil
     end
     
-    print("[Skin] Applied: " .. skinName)
+    print("[Skin] Applied effects: " .. skinName)
     return true
 end
 
 --==================================================
 -- ANIMATION OVERRIDE
 --==================================================
-
 function AnimModule:SetAnimationSkin(skinName)
     SelectedAnimSkin = (typeof(skinName) == "string" and #skinName > 0) and skinName or nil
-    if OverrideEnabled and SelectedAnimSkin then applySkin(SelectedAnimSkin) end
+    if OverrideEnabled and SelectedAnimSkin then applySkinEffects(SelectedAnimSkin) else clearSkinEffects() end
 end
 
 function AnimModule:SetSkinOverrideEnabled(enabled)
     OverrideEnabled = not not enabled
-    if OverrideEnabled and SelectedAnimSkin then applySkin(SelectedAnimSkin) else clearSkinEffects(findTool() or {}) end
+    if OverrideEnabled and SelectedAnimSkin then applySkinEffects(SelectedAnimSkin) else clearSkinEffects() end
 end
 
 AnimModule.GetAnimationData = function(self, animName)
@@ -1619,7 +1494,6 @@ AnimModule.GetAnimationData = function(self, animName)
     if not baseData then return nil, nil end
     if not OverrideEnabled or not SelectedAnimSkin then return baseData, baseKey end
     
-    -- Cari animasi override
     local overrideKey = ("%s - %s"):format(SelectedAnimSkin, animName)
     local overrideData = Animations_upvr[overrideKey]
     
@@ -1633,26 +1507,12 @@ AnimModule.GetAnimationData = function(self, animName)
         overrideData = Animations_upvr[overrideKey]
     end
     
-    -- Trigger efek saat animasi override dipakai
-    if overrideData and CurrentTool then
-        task.spawn(function()
-            task.wait(0.05)
-            -- Trigger semua particle di tool
-            for _, v in ipairs(CurrentTool:GetDescendants()) do
-                if v:GetAttribute("SkinEffect") and v:IsA("ParticleEmitter") then
-                    v:Emit(v:GetAttribute("EmitCount") or 10)
-                end
-            end
-        end)
-    end
-    
     return (overrideData and overrideData.AnimationId) and overrideData, overrideKey or baseData, baseKey
 end
 
 --==================================================
 -- UI - SAMA SEPERTI SEBELUMNYA
 --==================================================
-
 local RightPanel = Instance.new("Frame", Main)
 RightPanel.Name, RightPanel.Size, RightPanel.AnchorPoint, RightPanel.Position = "SkinAnimationRightPanel", UDim2.new(0, 220, 1, -46), Vector2.new(1, 0), UDim2.new(1, -10, 0, 40)
 RightPanel.BackgroundColor3, RightPanel.BackgroundTransparency, RightPanel.BorderSizePixel, RightPanel.Visible, RightPanel.ZIndex, RightPanel.ClipsDescendants = THEME.CARD, 0.25, 0, false, 10, true
@@ -1721,14 +1581,14 @@ if AutoPage then
     end
 end
 
-LocalPlayer.Character.ChildAdded:Connect(function(c)
-    if c:IsA("Tool") then
-        task.wait(0.2)
-        if OverrideEnabled and SelectedAnimSkin then applySkin(SelectedAnimSkin) end
-    end
+-- Reapply saat respawn
+LocalPlayer.CharacterAdded:Connect(function()
+    task.wait(0.5)
+    if OverrideEnabled and SelectedAnimSkin then applySkinEffects(SelectedAnimSkin) end
 end)
 
-print("[SkinAnimation] Full effect system loaded with " .. #SKINS .. " skins")
+print("[SkinAnimation] Character-based effect system loaded")
+
 --==================================================
 -- AUTO SELL SYSTEM - FIXED DEFAULT OFF
 --==================================================
@@ -3989,4 +3849,324 @@ local AutoWeatherGet, AutoWeatherSet = CreateTogglePill(AutoWeatherRow, "Auto We
         if NotifyFeature then NotifyFeature("Auto Weather: OFF", false) end
     end
 end)
+
+--==================================================
+-- CHARM PRESET SECTION (SHOP PAGE) - TIER IN DATA ONLY
+--==================================================
+CharmSection = CreateSectionDropdown(ShopPage, "Charm Preset")
+Instance.new("UIListLayout", CharmSection).SortOrder = Enum.SortOrder.LayoutOrder
+CharmSection.UIListLayout.Padding = UDim.new(0, 6)
+
+-- Panel kanan untuk Charm
+CharmPanel = Instance.new("Frame", Main)
+CharmPanel.Name = "CharmPresetRightPanel"
+CharmPanel.Size = UDim2.new(0, 220, 1, -46)
+CharmPanel.AnchorPoint = Vector2.new(1, 0)
+CharmPanel.Position = UDim2.new(1, -10, 0, 40)
+CharmPanel.BackgroundColor3 = THEME.CARD
+CharmPanel.BackgroundTransparency = 0.25
+CharmPanel.BorderSizePixel = 0
+CharmPanel.Visible = false
+CharmPanel.ZIndex = 10
+
+CC(CharmPanel, 10)
+CS(CharmPanel, THEME.MAIN, 0.5)
+
+-- Title
+CL(CharmPanel, {
+    Size = UDim2.new(1, -10, 0, 24),
+    Position = UDim2.new(0, 5, 0, 6),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 16,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    ZIndex = 11,
+    Text = "Charm Preset"
+})
+
+-- Subtitle
+CL(CharmPanel, {
+    Size = UDim2.new(1, -10, 0, 18),
+    Position = UDim2.new(0, 5, 0, 30),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(200, 200, 200),
+    ZIndex = 11,
+    Text = "Select charm to purchase/craft"
+})
+
+-- Scrolling Frame
+CharmScroll = Instance.new("ScrollingFrame", CharmPanel)
+CharmScroll.Name = "CharmScroll"
+CharmScroll.Size = UDim2.new(1, -10, 1, -70)
+CharmScroll.Position = UDim2.new(0, 5, 0, 54)
+CharmScroll.BackgroundTransparency = 1
+CharmScroll.BorderSizePixel = 0
+CharmScroll.ScrollBarThickness = 3
+CharmScroll.ScrollBarImageColor3 = THEME.MAIN
+CharmScroll.ZIndex = 10
+CharmScroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+CharmScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+
+local charmLayout = Instance.new("UIListLayout", CharmScroll)
+charmLayout.SortOrder = Enum.SortOrder.LayoutOrder
+charmLayout.Padding = UDim.new(0, 4)
+
+-- FIX: Ambil remote langsung
+local netPath = ReplicatedStorage.Packages["_Index"]["sleitnick_net@0.2.0"].net
+local purchaseRemote = netPath:WaitForChild("RF/PurchaseCharm")
+local startCraftRemote = netPath:WaitForChild("RF/StartCrafting")
+local confirmCraftRemote = netPath:WaitForChild("RF/ConfirmCrafting")
+
+print("[Charm] All remotes loaded!")
+
+-- Data Charm (tier tetap ada di data tapi tidak ditampilkan)
+local CHARM_DATA = {
+    -- SHOP CHARMS
+    {type = "shop", id = 14, name = "Heart Charm", price = "20k", tier = 3},
+    {type = "shop", id = 4, name = "Clover Charm", price = "5k", tier = 3},
+    {type = "shop", id = 1, name = "Bone Charm", price = "70k", tier = 6},
+    {type = "shop", id = 2, name = "Algae Charm", price = "40k", tier = 5},
+    {type = "shop", id = 3, name = "Magma Charm", price = "20k", tier = 6},
+    
+    -- CRAFT CHARMS
+    {type = "craft", name = "Hook Charm", mats = "3x Rope", tier = 3},
+    {type = "craft", name = "Winged Charm", mats = "2x Rope + Driftwood", tier = 3},
+    {type = "craft", name = "Anchor Charm", mats = "Pyrafruit + Embercrux", tier = 5},
+    {type = "craft", name = "Oculus Charm", mats = "Full Recipe", tier = 6},
+    
+    -- INFO ONLY
+    {type = "info", name = "Silver Kraken", tier = 5},
+    {type = "info", name = "Black Kraken", tier = 7},
+    {type = "info", name = "Coral Charm", tier = 2},
+    {type = "info", name = "Mermaid Charm", tier = 4}
+}
+
+-- Global variables
+_G.RAY = _G.RAY or {}
+_G.RAY.SelectedCharmItem = nil
+_G.RAY.CharmBuyQty = 1
+
+local selectedCharms = {}
+
+local function updateCharmRows()
+    for _, row in ipairs(CharmScroll:GetChildren()) do
+        if row:IsA("Frame") and row.Name:match("^CharmRow_") then
+            local highlight = row:FindFirstChild("Highlight")
+            if highlight then
+                local charmName = row.Name:gsub("CharmRow_", "")
+                highlight.Visible = selectedCharms[charmName] == true
+            end
+        end
+    end
+end
+
+-- Buat list charm (hanya nama, tanpa ID, tanpa emoji, TANPA TIER DI DISPLAY)
+for i, charm in ipairs(CHARM_DATA) do
+    local row = Instance.new("Frame", CharmScroll)
+    row.Size = UDim2.new(1, -4, 0, 32)
+    row.BackgroundTransparency = 1
+    row.Name = "CharmRow_" .. charm.name
+    row.LayoutOrder = i
+    row.ZIndex = 11
+    
+    -- Purple highlight di kiri
+    local highlight = Instance.new("Frame", row)
+    highlight.Name = "Highlight"
+    highlight.Size = UDim2.new(0, 3, 1, 0)
+    highlight.BackgroundColor3 = Color3.fromRGB(138, 43, 226)
+    highlight.BorderSizePixel = 0
+    highlight.Visible = false
+    highlight.ZIndex = 12
+    
+    -- Button dengan teks
+    local btn = Instance.new("TextButton", row)
+    btn.Size = UDim2.new(1, -6, 1, 0)
+    btn.Position = UDim2.new(0, 6, 0, 0)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 50)
+    
+    -- FIX: Format display text (tanpa tier!)
+    local displayText = "  " .. charm.name
+    if charm.type == "shop" then
+        displayText = displayText .. "\n  " .. charm.price .. " Coins"
+    elseif charm.type == "craft" then
+        displayText = displayText .. " [Craft]"
+    elseif charm.type == "info" then
+        displayText = displayText .. " [Info]"
+    end
+    -- TIDAK ADA TIER DI SINI!
+    
+    btn.Text = displayText
+    btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 11
+    btn.TextXAlignment = Enum.TextXAlignment.Left
+    btn.TextYAlignment = Enum.TextYAlignment.Top
+    btn.ZIndex = 11
+    CC(btn, 6)
+    
+    btn.MouseButton1Click:Connect(function()
+        -- Single select
+        for k, _ in pairs(selectedCharms) do
+            selectedCharms[k] = nil
+        end
+        
+        selectedCharms[charm.name] = true
+        _G.RAY.SelectedCharmItem = charm
+        
+        updateCharmRows()
+        
+        if SelectedCharmLabel then
+            SelectedCharmLabel.Text = charm.name
+            SelectedCharmLabel.TextColor3 = Color3.fromRGB(0, 255, 140)
+        end
+        
+        if NotifyFeature then
+            NotifyFeature("Selected: " .. charm.name, true)
+        end
+    end)
+end
+
+-- Selected Row
+local SelectedCharmRow = Instance.new("Frame", CharmSection)
+SelectedCharmRow.Size = UDim2.new(1, 0, 0, 30)
+SelectedCharmRow.BackgroundTransparency = 1
+
+CL(SelectedCharmRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Selected:"
+})
+
+SelectedCharmLabel = CL(SelectedCharmRow, {
+    Size = UDim2.new(0.6, -10, 1, 0),
+    Position = UDim2.new(0.4, 0, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.GothamBold,
+    TextSize = 12,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = Color3.fromRGB(150, 150, 150),
+    Text = "None"
+})
+
+-- Quantity Row
+local CharmQtyRow = Instance.new("Frame", CharmSection)
+CharmQtyRow.Size = UDim2.new(1, 0, 0, 36)
+CharmQtyRow.BackgroundTransparency = 1
+
+CL(CharmQtyRow, {
+    Size = UDim2.new(0.4, -10, 1, 0),
+    Position = UDim2.new(0, 16, 0, 0),
+    BackgroundTransparency = 1,
+    Font = Enum.Font.Gotham,
+    TextSize = 13,
+    TextXAlignment = Enum.TextXAlignment.Left,
+    TextColor3 = THEME.TEXT,
+    Text = "Quantity"
+})
+
+-- Quantity Input
+local charmQtyBox = Instance.new("TextBox", CharmQtyRow)
+charmQtyBox.Size = UDim2.new(0, 60, 0, 24)
+charmQtyBox.Position = UDim2.new(0.4, -10, 0.5, -12)
+charmQtyBox.BackgroundColor3 = THEME.CARD
+charmQtyBox.BackgroundTransparency = 0.1
+charmQtyBox.Text = tostring(_G.RAY.CharmBuyQty)
+charmQtyBox.TextColor3 = THEME.TEXT
+charmQtyBox.Font = Enum.Font.Gotham
+charmQtyBox.TextSize = 12
+charmQtyBox.ClearTextOnFocus = false
+CC(charmQtyBox, 8)
+
+charmQtyBox.FocusLost:Connect(function()
+    local n = tonumber(charmQtyBox.Text)
+    if not n or n < 1 then
+        n = 1
+    end
+    _G.RAY.CharmBuyQty = math.min(n, 99)
+    charmQtyBox.Text = tostring(_G.RAY.CharmBuyQty)
+end)
+
+-- BUY Button
+local charmBuyBtn = Instance.new("TextButton", CharmQtyRow)
+charmBuyBtn.Size = UDim2.new(0, 80, 0, 24)
+charmBuyBtn.Position = UDim2.new(1, -90, 0.5, -12)
+charmBuyBtn.BackgroundColor3 = Color3.fromRGB(40, 100, 40)
+charmBuyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+charmBuyBtn.Font = Enum.Font.GothamBold
+charmBuyBtn.TextSize = 12
+charmBuyBtn.Text = "BUY"
+CC(charmBuyBtn, 8)
+
+-- Function Execute Charm
+function ExecuteCharm(charmData, qty)
+    qty = math.max(1, tonumber(qty) or 1)
+    
+    if charmData.type == "shop" then
+        for i = 1, qty do
+            task.spawn(function()
+                pcall(function()
+                    purchaseRemote:InvokeServer(charmData.id)
+                    print("[Charm] Purchased:", charmData.name)
+                end)
+            end)
+            task.wait(0.1)
+        end
+        return true
+        
+    elseif charmData.type == "craft" then
+        for i = 1, qty do
+            task.spawn(function()
+                pcall(function()
+                    startCraftRemote:InvokeServer(charmData.name)
+                    task.wait(0.1)
+                    confirmCraftRemote:InvokeServer()
+                    print("[Charm] Crafted:", charmData.name)
+                end)
+            end)
+            task.wait(0.2)
+        end
+        return true
+        
+    elseif charmData.type == "info" then
+        if NotifyFeature then
+            NotifyFeature(charmData.name .. " is info only!", false)
+        end
+        return false
+    end
+    
+    return false
+end
+
+charmBuyBtn.MouseButton1Click:Connect(function()
+    if not _G.RAY.SelectedCharmItem then
+        if NotifyFeature then NotifyFeature("No charm selected!", false) end
+        return
+    end
+    
+    local charm = _G.RAY.SelectedCharmItem
+    local qty = _G.RAY.CharmBuyQty or 1
+    
+    local success = ExecuteCharm(charm, qty)
+    
+    if success and NotifyFeature then
+        local action = charm.type == "shop" and "Buying" or "Crafting"
+        NotifyFeature(action .. " " .. charm.name .. " x" .. qty, true)
+    end
+end)
+
+-- Open/Close panel
+CSR(CharmSection, "Charm Panel", "Open", function()
+    CharmPanel.Visible = not CharmPanel.Visible
+end)
+
+table.insert(AllPanels, CharmPanel)
 
