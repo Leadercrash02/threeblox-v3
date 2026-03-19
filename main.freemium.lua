@@ -45,7 +45,7 @@ local net = ReplicatedStorage:WaitForChild("Packages")
     :WaitForChild("net")
 
 -- GANTI: Remote donate all
-local remoteSellAll = net:WaitForChild("RF/5b6f1e07accce625e6466fe52ae7a9ef1c1d7ab8661490c5d74b7310ac042c1b")
+local remoteSellAll = net:WaitForChild("RF/0b62ff5e5cc0c77cb1b5ca5bf89d3dd73f1e54d689156ae345c138bc409d657f")
 
 local Replion = require(ReplicatedStorage.Packages.Replion)
 local AtlantisConfig = require(ReplicatedStorage.Shared.AtlantisMachineConfig)
